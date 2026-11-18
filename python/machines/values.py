@@ -6,6 +6,10 @@ already loaded), so the module imports on a bare interpreter and costs nothing w
 
 Token numbering starts at 0 for both objects (``v0.0``) and scalars (``s0``).
 Nothing derived from ``id()``, addresses or time reaches a token or a summary.
+
+Known transparency limit: objects that cannot be weakly referenced (lists, dicts, tuples, sets)
+are kept alive from their first token until ``reset()``. Fingerprints never hold strong
+references (weakref per weakref-able item, id and type otherwise), so cycles still collect.
 """
 
 from __future__ import annotations
@@ -38,7 +42,9 @@ _LABEL_TYPES = (
     types.ClassMethodDescriptorType,
     type,
 )
-_ADDRESS = re.compile(r" at 0x[0-9a-fA-F]+")
+_ANGLE = re.compile(r"<[^<>]*>")
+_ADDRESS = re.compile(r"\s(?:at\s)?0x[0-9a-fA-F]+")
+_MAX_ATTRS = 64
 _CELL_MAX = 40
 _PREVIEW_ROWS = 5
 _PREVIEW_COLS = 8
@@ -54,6 +60,11 @@ def _clip(text: str, n: int = _CELL_MAX) -> str:
     return text if len(text) <= n else text[: n - 1] + "…"
 
 
+def _strip_addresses(s: str) -> str:
+    """Remove memory addresses from `<...>` object reprs only (determinism)."""
+    return _ANGLE.sub(lambda m: _ADDRESS.sub("", m.group()), s)
+
+
 def _cell(x: Any) -> str:
     """Format one preview cell: str(), NaN shown as NaN, at most 40 characters."""
     if isinstance(x, float) and x != x:
@@ -62,7 +73,7 @@ def _cell(x: Any) -> str:
         s = str(x)
     except Exception:
         s = f"<{type(x).__name__}>"
-    return _clip(_ADDRESS.sub("", s))
+    return _clip(s if isinstance(x, str) else _strip_addresses(s))
 
 
 def _repr(obj: Any) -> str:
@@ -70,23 +81,43 @@ def _repr(obj: Any) -> str:
         s = reprlib.repr(obj)
     except Exception:
         s = f"<{type(obj).__name__}>"
-    return _clip(_ADDRESS.sub("", s))
+    return _clip(s if isinstance(obj, str) else _strip_addresses(s))
 
 
-def _same_item(a: Any, b: Any) -> bool:
-    if a is b:
+def _key(x: Any) -> tuple[Any, ...]:
+    """A reference to an item that never keeps it alive (fingerprints must not hold objects).
+
+    Simple scalars compare by value, weakref-able objects by a weakref, others by id and type.
+    """
+    if type(x) in _SIMPLE_TYPES:
+        return ("v", x)
+    try:
+        return ("w", weakref.ref(x))
+    except TypeError:
+        return ("i", id(x), type(x))
+
+
+def _same_item(a: tuple[Any, ...], b: tuple[Any, ...]) -> bool:
+    if a[0] != b[0]:
+        return False
+    if a[0] == "w":
+        x = a[1]()
+        return x is not None and x is b[1]()
+    if a[0] == "i":
+        return a[1:] == b[1:]
+    x, y = a[1], b[1]
+    if x is y:
         return True
-    ta = type(a)
-    if ta is type(b) and ta in _SIMPLE_TYPES:
-        try:
-            return bool(a == b) or bool(a != a and b != b)
-        except Exception:
-            return False
-    return False
+    if type(x) is not type(y):
+        return False
+    try:
+        return bool(x == y) or bool(x != x and y != y)
+    except Exception:
+        return False
 
 
 def _same_fp(a: Any, b: Any) -> bool:
-    """Fingerprints are (struct, refs): struct compares by ==, refs by identity."""
+    """Fingerprints are (struct, keys): struct compares by ==, keys by `_same_item`."""
     if a is None or b is None:
         return a is b
     if a[0] != b[0]:
@@ -297,20 +328,45 @@ class ValueTable:
             return (("sparse", obj.format, obj.shape, obj.nnz, str(obj.dtype), h), ())
         t = type(obj)
         if t is list or t is tuple:
-            return (("seq", t.__name__, len(obj)), tuple(x for x in obj if x is not obj))
+            return (("seq", t.__name__, len(obj)), tuple(_key(x) for x in obj))
         if t is dict:
             refs: list[Any] = []
             for k, v in obj.items():
                 refs.append(k)
                 refs.append(v)
-            return (("dict", len(obj)), tuple(x for x in refs if x is not obj))
+            return (("dict", len(obj)), tuple(_key(x) for x in refs))
         if t is set:
-            return (("set", frozenset(obj)), ())
+            return (("set", frozenset((id(x), type(x)) for x in obj)), ())
+        names: list[str] = []
+        keys: list[tuple[Any, ...]] = []
         attrs = getattr(obj, "__dict__", None)
         if isinstance(attrs, dict):
-            names = tuple(attrs)
-            return (("obj", names), tuple(attrs[k] for k in names if attrs[k] is not obj))
-        return None
+            for k in tuple(attrs):
+                names.append(str(k))
+                keys.append(_key(attrs[k]))
+        for k in self._slot_names(t):
+            try:
+                v = getattr(obj, k)
+            except AttributeError:
+                continue
+            names.append("slot:" + k)
+            keys.append(_key(v))
+        if not names and not isinstance(attrs, dict) and not self._slot_names(t):
+            return None
+        return (("obj", tuple(names)), tuple(keys))
+
+    @staticmethod
+    def _slot_names(t: type) -> list[str]:
+        out: list[str] = []
+        for c in t.__mro__:
+            sl = c.__dict__.get("__slots__", ())
+            for k in (sl,) if isinstance(sl, str) else sl:
+                if k in ("__dict__", "__weakref__"):
+                    continue
+                if k.startswith("__") and not k.endswith("__"):
+                    k = f"_{c.__name__.lstrip('_')}{k}"  # private-name mangling
+                out.append(k)
+        return out
 
     @staticmethod
     def _pandas_hash(pd: Any, obj: Any) -> str | None:
@@ -339,46 +395,53 @@ class ValueTable:
         summary["preview"] = preview
 
     def summarize(self, token: str, obj: Any) -> None:
+        self._summarize(token, obj, 0)
+
+    def _summarize(self, token: str, obj: Any, depth: int) -> None:
         if token in self.values:
             return
         kind = self.classify(obj)
         if kind == "label":
             return
-        try:
-            summary = self._summary(obj, kind)
-        except Exception:
-            summary = {"type": type(obj).__name__}
+        # Minimal entry first: a BaseException from a student __repr__ (stop) must still leave
+        # every issued token with a values entry.
+        summary: dict[str, Any] = {"type": type(obj).__name__}
         self._put(token, summary)
+        try:
+            summary.update(self._summary(obj, kind))
+        except Exception:
+            pass
         if kind == "reference" and self.is_machine(obj):
+            summary["machine"] = True
             try:
-                attrs = self._machine_attrs(obj)
+                attrs = self._machine_attrs(obj, depth) if depth == 0 else {}
             except Exception:
                 attrs = {}
-            summary["machine"] = True
             if attrs:
                 summary["attrs"] = attrs
 
-    def _machine_attrs(self, obj: Any) -> dict[str, str]:
-        items: list[tuple[str, Any]] = []
+    def _machine_attrs(self, obj: Any, depth: int) -> dict[str, str]:
+        items: dict[str, Any] = {}
         base = _mod("sklearn.base")
         if base is not None and isinstance(obj, base.BaseEstimator):
             params = obj.get_params(deep=False)
-            items.extend(params.items())
+            items.update((str(k), v) for k, v in params.items())
             for k, v in vars(obj).items():
                 if k.endswith("_") and not k.startswith("_") and k not in params:
-                    items.append((k, v))
+                    items[k] = v
         else:
             for k, v in vars(obj).items():
                 if not k.startswith("_"):
-                    items.append((k, v))
+                    items[k] = v
         out: dict[str, str] = {}
-        for k, v in items:
+        for k in sorted(items)[:_MAX_ATTRS]:
+            v = items[k]
             kind = self.classify(v)
             if kind == "label":
                 continue
             tok = self.fresh_scalar(v) if kind == "scalar" else self.token(v)
-            self.summarize(tok, v)
-            out[str(k)] = tok
+            self._summarize(tok, v, depth + 1)
+            out[k] = tok
         return out
 
     def _summary(self, obj: Any, kind: Kind) -> dict[str, Any]:

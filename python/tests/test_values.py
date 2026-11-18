@@ -484,3 +484,153 @@ def test_no_heavy_imports_on_bare_interpreter() -> None:
     )
     r = subprocess.run([sys.executable, "-I", "-c", code], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
+
+
+# -- review fixes ----------------------------------------------------------------------------
+
+
+def test_fingerprint_does_not_keep_cycles_alive(vt: ValueTable) -> None:
+    log: list[str] = []
+
+    class M:
+        def run(self) -> None: ...
+
+    class A:
+        def __init__(self) -> None:
+            self.m = M()
+            self.cb = self.m.run  # bound method
+            self.me = self
+            self.kids = [self]
+
+        def __del__(self) -> None:
+            log.append("del")
+
+    a = A()
+    vt.token(a)
+    vt.check(a)
+    r = weakref.ref(a)
+    del a
+    gc.collect()
+    assert log == ["del"] and r() is None
+
+
+def test_cycle_through_bound_method_attribute(vt: ValueTable) -> None:
+    log: list[str] = []
+
+    class A:
+        def __init__(self) -> None:
+            self.cb = self.method  # self -> bound method -> self
+
+        def method(self) -> None: ...
+
+        def __del__(self) -> None:
+            log.append("del")
+
+    a = A()
+    vt.token(a)
+    del a
+    gc.collect()
+    assert log == ["del"]
+
+
+def test_attribute_replaced_by_new_object_is_detected(vt: ValueTable) -> None:
+    class Holder:
+        pass
+
+    h = Holder()
+    h.arr = np.zeros(3)
+    vt.token(h)
+    h.arr = np.zeros(3)  # old array died, new one may reuse the address
+    assert vt.check(h) is not None
+
+
+def test_slots_object_mutation_detected(vt: ValueTable) -> None:
+    class S:
+        __slots__ = ("x", "y")
+
+        def __init__(self) -> None:
+            self.x = [1]
+
+    s = S()
+    vt.token(s)
+    assert vt.check(s) is None
+    s.x = [2]
+    assert vt.check(s) is not None
+    s.y = 1  # slot set for the first time
+    assert vt.check(s) is not None
+
+
+def make_node_class() -> type:
+    ns: dict[str, object] = {"__name__": "__main__"}
+    src = (
+        "class Node:\n    def __init__(self, nxt=None):\n"
+        "        self.nxt = nxt\n        self.v = 1\n"
+    )
+    exec(src, ns)
+    return ns["Node"]  # type: ignore[return-value]
+
+
+def test_machine_attrs_one_level_and_long_chain() -> None:
+    node = make_node_class()
+
+    def run() -> dict[str, dict[str, object]]:
+        vt = ValueTable()
+        head = None
+        for _ in range(3000):
+            head = node(head)
+        t = vt.token(head)
+        vt.summarize(t, head)
+        return vt.values
+
+    v1, v2 = run(), run()
+    assert json.dumps(v1) == json.dumps(v2)
+    assert len(v1) <= 4
+    top = v1["v0.0"]
+    assert top["machine"] is True and set(top["attrs"]) == {"nxt", "v"}  # type: ignore[call-overload]
+    child = v1[top["attrs"]["nxt"]]  # type: ignore[index]
+    assert "attrs" not in child and child["machine"] is True
+
+
+def test_attr_cap_is_sorted_and_deterministic() -> None:
+    ns: dict[str, object] = {"__name__": "__main__"}
+    body = "".join(f"        self.a{i:03d} = {i}\n" for i in range(100))
+    exec("class W:\n    def __init__(self):\n" + body, ns)
+    vt = ValueTable()
+    w = ns["W"]()  # type: ignore[operator]
+    t = vt.token(w)
+    vt.summarize(t, w)
+    assert list(vt.values[t]["attrs"]) == [f"a{i:03d}" for i in range(64)]
+
+
+def test_base_exception_in_repr_propagates_with_minimal_entry(vt: ValueTable) -> None:
+    class Boom:
+        def __repr__(self) -> str:
+            raise KeyboardInterrupt
+
+    b = Boom()
+    t = vt.token(b)
+    with pytest.raises(KeyboardInterrupt):
+        vt.summarize(t, b)
+    assert vt.values[t] == {"type": "Boom"}
+
+
+def test_address_stripping_only_in_angle_reprs(vt: ValueTable) -> None:
+    class R2:
+        def __repr__(self) -> str:
+            return "<R2 id 0x7f00bb>"
+
+    r = R2()
+    t = vt.token(r)
+    vt.summarize(t, r)
+    assert vt.values[t]["repr"] == "<R2 id>"
+    vt.summarize("s0", "at 0x1f is a string")
+    assert vt.values["s0"]["repr"] == "'at 0x1f is a string'"
+    df = pd.DataFrame({"a": ["at 0x1f <x 0x2>"]})
+    t = vt.token(df)
+    vt.summarize(t, df)
+    assert vt.values[t]["preview"]["rows"][0][0] == "at 0x1f <x 0x2>"
+
+
+def test_numpy_scalar_type_is_class_name(vt: ValueTable) -> None:
+    vt.summarize("s0", np.float64(2.5))
+    assert vt.values["s0"] == {"type": "float64", "repr": "2.5"}
