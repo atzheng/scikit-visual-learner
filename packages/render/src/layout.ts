@@ -1,13 +1,19 @@
 // GraphModel -> ELK -> Laid (CONTRACTS.md section 8, SPEC "Layout").
 // `buildElkGraph` is a pure function (model + measure -> ELK input); `layout` runs ELK on it.
 import type { CallNode, GEdge, GNode, GraphModel, InstanceNode } from '@machines/log';
-import ELK from 'elkjs/lib/elk.bundled.js';
-import type { ElkExtendedEdge, ElkNode, ElkPort } from 'elkjs/lib/elk-api';
+import ELKApi from 'elkjs/lib/elk-api';
+import type { ELK, ElkExtendedEdge, ElkNode, ElkPort } from 'elkjs/lib/elk-api';
 
 export type Measure = (text: string, font: string) => number;
 
 export interface LayoutOptions {
+  /** Ignored until M4 (expand/collapse). */
   expanded?: Set<string>;
+  /**
+   * An ELK instance, e.g. from `createElk({ workerUrl })`. Browsers should pass one backed by the elkjs
+   * worker build so layout stays off the main thread. Default: the in-thread bundled build, loaded lazily.
+   */
+  elk?: ELK;
   /** Text width in px. Default: canvas measureText in a browser, a character-count estimate elsewhere. */
   measure?: Measure;
   /**
@@ -38,6 +44,8 @@ export interface Laid {
   height: number;
   nodes: Record<string, LaidNode>;
   edges: Record<string, { points: [number, number][] }>;
+  /** Edges left out because an endpoint (node or port) does not exist; they would be false wires. */
+  dropped: number;
 }
 
 /** Fonts, shared with the SVG renderer so ELK and SVG agree on sizes. */
@@ -168,11 +176,21 @@ export function buildElkGraph(
   model: GraphModel,
   opts: { measure?: Measure; attrRows?: Record<string, string[]> } = {},
 ): ElkNode {
+  return buildElk(model, opts).graph;
+}
+
+/** As `buildElkGraph`, also reporting how many edges were dropped for naming a missing node or port. */
+export function buildElk(
+  model: GraphModel,
+  opts: { measure?: Measure; attrRows?: Record<string, string[]> } = {},
+): { graph: ElkNode; dropped: number } {
   const measure = opts.measure ?? defaultMeasure;
   const ids = new Set(model.nodes.map((n) => n.id));
+  const instIds = new Set(model.nodes.filter((n) => n.kind === 'instance').map((n) => n.id));
   const kids = new Map<string | null, GNode[]>();
   for (const n of [...model.nodes].sort(byOrder)) {
-    const p = n.parent !== null && ids.has(n.parent) ? n.parent : null;
+    // M1-3: only instances have children; a node whose parent is missing or not an instance is top-level.
+    const p = n.parent !== null && instIds.has(n.parent) ? n.parent : null;
     let list = kids.get(p);
     if (!list) kids.set(p, (list = []));
     list.push(n);
@@ -228,28 +246,45 @@ export function buildElkGraph(
 
   const callById = new Map<string, CallNode>();
   for (const n of model.nodes) if (n.kind === 'call') callById.set(n.id, n);
-  const endpoint = (r: GEdge['from']): string => {
+  const endpoint = (r: GEdge['from']): string | null => {
+    if (!ids.has(r.node)) return null;
     if (r.port === null) return r.node;
     const n = callById.get(r.node);
     const has = n !== undefined && [...n.inPorts, ...n.outPorts].some((p) => p.id === r.port);
-    return has ? portKey(r.node, r.port) : r.node;
+    return has ? portKey(r.node, r.port) : null;
   };
 
+  // Sorted by id so the output does not depend on the input order.
   const edges: ElkExtendedEdge[] = [];
-  for (const ed of model.edges) {
-    if (!ids.has(ed.from.node) || !ids.has(ed.to.node)) continue;
-    edges.push({ id: ed.id, sources: [endpoint(ed.from)], targets: [endpoint(ed.to)] });
+  let dropped = 0;
+  for (const ed of [...model.edges].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
+    const from = endpoint(ed.from);
+    const to = endpoint(ed.to);
+    if (from === null || to === null) dropped++;
+    else edges.push({ id: ed.id, sources: [from], targets: [to] });
   }
 
   return {
-    id: 'root',
-    layoutOptions: { ...ROOT_OPTIONS },
-    children: (kids.get(null) ?? []).map(build),
-    edges,
+    graph: {
+      id: 'root',
+      layoutOptions: { ...ROOT_OPTIONS },
+      children: (kids.get(null) ?? []).map(build),
+      edges,
+    },
+    dropped,
   };
 }
 
-let elk: InstanceType<typeof ELK> | undefined;
+/** An ELK instance running in the elkjs worker build (`workerUrl` = URL of `elkjs/lib/elk-worker.min.js`). */
+export function createElk(opts: { workerUrl: string }): ELK {
+  return new ELKApi({ workerUrl: opts.workerUrl });
+}
+
+let bundled: Promise<ELK> | undefined;
+async function defaultElk(): Promise<ELK> {
+  bundled ??= import('elkjs/lib/elk.bundled.js').then((m) => new m.default());
+  return bundled;
+}
 
 /** Convert ELK's output (child coordinates relative to the parent) to absolute coordinates. */
 export function toLaid(
@@ -258,7 +293,13 @@ export function toLaid(
   measure: Measure = defaultMeasure,
   attrRows?: Record<string, string[]>,
 ): Laid {
-  const laid: Laid = { width: root.width ?? 0, height: root.height ?? 0, nodes: {}, edges: {} };
+  const laid: Laid = {
+    width: root.width ?? 0,
+    height: root.height ?? 0,
+    nodes: {},
+    edges: {},
+    dropped: 0,
+  };
   const byId = new Map(model.nodes.map((n) => [n.id, n]));
   const walk = (n: ElkNode, ox: number, oy: number, isRoot: boolean): void => {
     const x = ox + (n.x ?? 0);
@@ -301,8 +342,19 @@ export function toLaid(
 
 export async function layout(model: GraphModel, opts: LayoutOptions = {}): Promise<Laid> {
   const measure = opts.measure ?? defaultMeasure;
-  const input = buildElkGraph(model, { measure, attrRows: opts.attrRows });
-  elk ??= new ELK();
-  const out = await elk.layout(input);
-  return toLaid(out, model, measure, opts.attrRows);
+  const { graph, dropped } = buildElk(model, { measure, attrRows: opts.attrRows });
+  if (dropped > 0) console.warn(`layout: dropped ${dropped} edge(s) naming a missing node or port`);
+  let out: ElkNode;
+  try {
+    out = await (opts.elk ?? (await defaultElk())).layout(graph);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `ELK layout failed for a model with ${model.nodes.length} nodes and ${model.edges.length} edges: ${msg}`,
+      { cause: err },
+    );
+  }
+  const laid = toLaid(out, model, measure, opts.attrRows);
+  laid.dropped = dropped;
+  return laid;
 }

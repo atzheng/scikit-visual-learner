@@ -1,4 +1,5 @@
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
+import type { ELK } from 'elkjs/lib/elk-api';
 import type {
   CallNode,
   Execution,
@@ -8,7 +9,7 @@ import type {
   InstanceNode,
   Port,
 } from '@machines/log';
-import { buildElkGraph, layout } from './layout';
+import { buildElk, buildElkGraph, layout } from './layout';
 import type { Laid, LaidNode } from './layout';
 
 const measure = (text: string): number => text.length * 7;
@@ -340,15 +341,51 @@ describe('buildElkGraph (pure)', () => {
     expect(buildElkGraph(m, { measure }).children!.map((c) => c.id)).toEqual(['n:a']);
   });
 
-  test('edges to unknown nodes are dropped; unknown ports fall back to the node border', () => {
+  test('edges naming a missing node or port are dropped and counted (no false wires)', async () => {
     const m = splitModel();
     m.edges.push(
       edge('bad', ['nope', null], ['n:split', 'in:X']),
       edge('fb', ['x:X', null], ['n:split', 'in:zzz']),
+      edge('np', ['x:X', null], ['x:y', 'in:X']),
     );
-    const g = buildElkGraph(m, { measure });
-    expect(g.edges!.some((e) => e.id === 'bad')).toBe(false);
-    expect(g.edges!.find((e) => e.id === 'fb')!.targets).toEqual(['n:split']);
+    const r = buildElk(m, { measure });
+    expect(r.dropped).toBe(3);
+    expect(r.graph.edges!.map((e) => e.id)).toEqual(['e1', 'e2', 'e3', 'e4']);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const laid = await layout(m, { measure });
+    expect(laid.dropped).toBe(3);
+    expect(laid.edges.fb).toBeUndefined();
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+
+  test('output does not depend on node or edge input order', async () => {
+    for (const mk of [splitModel, linregModel, pipelineModel]) {
+      const a = mk();
+      const b = mk();
+      b.edges.reverse();
+      b.nodes.reverse();
+      expect(JSON.stringify(buildElkGraph(b, { measure }))).toBe(
+        JSON.stringify(buildElkGraph(a, { measure })),
+      );
+      expect(JSON.stringify(await layout(b, { measure }))).toBe(
+        JSON.stringify(await layout(a, { measure })),
+      );
+    }
+  });
+
+  test('children of non-instance parents are top-level (M1-3)', () => {
+    const m = model([call('n:a', 'a', 1, [], []), call('n:b', 'b', 2, [], [], 'n:a')], []);
+    expect(buildElkGraph(m, { measure }).children!.map((c) => c.id)).toEqual(['n:a', 'n:b']);
+  });
+
+  test('ELK failures reject with a clear error naming the model size', async () => {
+    const elk = {
+      layout: () => Promise.reject(new Error('JsonImportException')),
+    } as unknown as ELK;
+    await expect(layout(splitModel(), { measure, elk })).rejects.toThrow(
+      /4 nodes and 4 edges.*JsonImportException/,
+    );
   });
 });
 

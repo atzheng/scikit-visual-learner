@@ -7,6 +7,9 @@ export const RENDER_DEPENDS_ON = LOG_PACKAGE;
 export {
   layout,
   buildElkGraph,
+  buildElk,
+  createElk,
+  createElk,
   defaultMeasure,
   FONT_MONO,
   FONT_NAME,
