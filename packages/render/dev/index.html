@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@machines/render dev</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 12px 16px;
+        font:
+          14px system-ui,
+          sans-serif;
+        background: var(--md-bg);
+        color: var(--md-text);
+      }
+      .bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      #stage {
+        overflow: auto;
+        border: 1px solid var(--md-wire-dashed);
+        padding: 8px;
+        min-height: 200px;
+      }
+      #log {
+        font:
+          12px ui-monospace,
+          monospace;
+        color: var(--md-text-muted);
+        margin: 8px 0;
+        white-space: pre-wrap;
+        min-height: 1.4em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bar">
+      <label
+        >Scenario
+        <select id="scenario"></select
+      ></label>
+      <label
+        >Theme
+        <select id="theme">
+          <option value="">system</option>
+          <option value="light">light</option>
+          <option value="dark">dark</option>
+        </select>
+      </label>
+      <label style="flex: 1 1 300px; display: flex; gap: 8px; align-items: center">
+        Step <input id="slider" type="range" min="0" max="0" value="0" style="flex: 1" />
+        <output id="label"></output>
+      </label>
+    </div>
+    <div id="legend"></div>
+    <div id="log" aria-live="polite"></div>
+    <div id="stage"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
