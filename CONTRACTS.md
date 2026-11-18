@@ -415,7 +415,7 @@ interface CallNode extends NodeBase {
   student: boolean;             // student_function: collapsible in M4
 }
 interface Execution { i: number; ret: number; inputs: Record<string /*port id*/, Token>; outputs: Record<string, Token>;
-                      count: number; error: EventError | null; interrupted: boolean }
+                      count: number; owner: Token | null; error: EventError | null; interrupted: boolean }
 interface InstanceNode extends NodeBase {
   kind: 'instance'; className: string; varName: string | null;   // "model: LinearRegression"
   createdAt: number;            // i of the creating event (constructor or a function returning it)
@@ -429,8 +429,8 @@ interface SourceNode extends NodeBase { kind: 'source'; label: string; token: To
 interface Port { id: string; param: string; typeLabel: string; nameLabel: string | null;
                  constText?: string; changedInPlace?: boolean }
 interface GEdge {
-  id: string; from: { node: string; port: string | null /* null: instance border */ };
-  to: { node: string; port: string };
+  id: string; from: { node: string; port: string | null /* null: node without ports (instance, expr, store, source) */ };
+  to: { node: string; port: string | null };   // null: same
   dashed: boolean;              // into or out of an expr node
   uses: { i: number; token: Token }[];    // per consumer execution: which value travelled
   nameLabel: string | null;     // the bound name of the latest token in the drawn scope; superseded names get "′"
@@ -438,14 +438,28 @@ interface GEdge {
 ```
 
 Construction follows SPEC "Graph construction" with these decisions:
-- Method boxes are one per call site (merge key) inside their instance (decided).
+- Method boxes are one per (call site, owner instance) inside that instance (decided): `for m in models: m.fit(X, y)` gives one `fit` box in each model's instance, and `models["rf"].fit(...)` is drawn on the right instance. Node id is `n:<h>@<instance id>`; `count` and the x-n badge are per box. `Execution.owner` is the owner token (null for non-methods).
 - `make_pipeline(...)` is a function box whose output creates an instance node (`createdBy`). Step instances wire into it. There are no nested step boxes in M1–3 (decided).
 - A `method` event whose owner is data is a call node with a `self` in-port. A method event on a machine is a call node with `parent` set to the instance node, owner input not drawn as a port.
 - A machine passed as an argument is an edge from the instance border (`port: null`).
 - `returns_self` gives no out-port. `mutates` on data gives an out-port with `changedInPlace: true`. `mutates` on the owner updates `versions`.
 - Expr nodes whose output reaches no call/store/instance node are dropped, transitively.
 - More than 300 nodes after merging: return only the first 300 by `order`, and set `tooMany` to the total.
-- Port and node ids are stable across re-runs of the same source (built from site ids and param names), so the layout stays put.
+- Port and node ids are stable across re-runs of the same source, so the layout stays put. Ids are `n:<h>` (call), `i:<h>` (instance), `x:<h>` (expr), `t:<h>` (store), `src:<consumer id>:<param>` (source), with `<h>` = hash of the site's kind and text plus the occurrence number among sites with equal text. They use no site ids or tokens, so editing an unrelated line (even adding one) keeps them. Port ids: `in:<param>`, `out:<k>` (k = index in `outputs`), `out:mut:<param>` (changed in place).
+
+Decisions made while building `graph.ts` (SPEC was silent):
+- Edges are keyed by endpoints (one edge per from/to pair); `uses` has one entry per consumer execution. Ports exist only on call nodes. Edges into and out of expr, store, source and instance nodes use `port: null`; `to.port` is nullable for that reason (contract change). An edge is `dashed` when either end is an expr node.
+- A machine is a value with `values[t].machine`. Its tokens map to an instance by object number (`v12.*`), so any version resolves to the same instance. Instances merge by creating merge key (and output index). A machine with no producing event gets a lazy instance (`createdAt` = first event that mentions it).
+- A function that returns a machine has an out-port for it, and an edge from that port to the instance border (`createdBy`), so layout can place the instance below the function box. A failed machine constructor is a plain call node with the error.
+- Constructor args: const and label args are `params` text; scalar args use `Input.text`, else the value's `repr`; reference args show their type and are wired to the instance border.
+- Port text: wired in-port has `typeLabel` = value type and `param` is the gray name (`nameLabel` is null on in-ports). Const and label inputs have `typeLabel: ''` and `constText` = the full string `param = text`. Out-port `param` is the output index as text, `nameLabel` is the bound name. A `mutates` on data adds an `out:mut:<param>` port (`changedInPlace`); `mutates` on any machine only adds an instance version `{ i: event.i, token: after }` (including nested machines such as a scaler inside a pipeline).
+- Name labels: names come from scope 0 bindings, matched by object (`v12`) for reference values and by token for scalars. The label is the first name bound to the value; if the last binding of that name is a different value, it gets `′`. Edges from source nodes and instances have `nameLabel: null` (the node says it). The label of an edge is that of its latest use.
+- A loop's source tokens (a new token each iteration, no producer) share one source node per consumer node and param; `SourceNode.token` is the latest.
+- `steps` = every execution `i` of drawn nodes plus every instance version `i`, sorted and unique. Dropped expr events and events outside scope 0 are not steps.
+- Truncation keeps the first 300 nodes by `order` (sources sort just before their first consumer); a kept node whose parent was cut gets `parent: null`.
+- A merged node takes its name, module and `student` flag from its own first non-interrupted event.
+- Self-edges occur: `x = g(x)` in a loop gives an edge from a box's out-port to its own in-port (uses per iteration).
+- Ids of lazy instances (no producing event) and of instances for outputs after the first use object numbers (`!v12`, `#k`), so they are less stable across edits than other ids.
 
 `timeline.ts`: `stateAt(model: GraphModel, log: EventLog, step: number): StepState`.
 
