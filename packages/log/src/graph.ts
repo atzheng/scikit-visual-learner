@@ -106,7 +106,7 @@ function hash(s: string): string {
   return (h >>> 0).toString(36);
 }
 
-const keyOf = (t: Token): string => (t.startsWith('v') ? t.slice(0, t.indexOf('.')) : t);
+export const keyOf = (t: Token): string => (t.startsWith('v') ? t.slice(0, t.indexOf('.')) : t);
 
 export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): GraphModel {
   void _opts; // expansion of student functions is M4
