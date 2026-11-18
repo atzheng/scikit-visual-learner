@@ -34,6 +34,8 @@ export interface LaidLabel {
   y: number;
   w: number;
   h: number;
+  /** Set when no free spot lies within `LABEL_MAX_DIST` of the wire: a line from the label (x1,y1) to the wire (x2,y2). */
+  leader?: [number, number, number, number];
 }
 
 export interface LaidPort {
@@ -114,7 +116,6 @@ export const ROOT_OPTIONS: Record<string, string> = {
   'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
   'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
   'elk.edgeRouting': 'ORTHOGONAL',
-  'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
   'elk.json.edgeCoords': 'ROOT',
   'elk.spacing.nodeNode': '28',
   'elk.layered.spacing.nodeNodeBetweenLayers': '56',
@@ -438,6 +439,8 @@ export async function layout(model: GraphModel, opts: LayoutOptions = {}): Promi
 // Wire labels
 
 const LABEL_H = 18;
+/** Furthest a label may sit from its wire (px) before it gets a leader line. */
+export const LABEL_MAX_DIST = 24;
 const LABEL_PLACEHOLDER = 'DataFrame (000, 0)';
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -531,6 +534,8 @@ export function placeLabels(
       for (const pl of placed) if (overlap(c.r, pl, 2)) cost += 300;
       for (const sg of segs) if (sg.id !== ed.id && segHits(c.r, sg.a, sg.b)) cost += 40;
       if (c.r.x < 0) cost += 500;
+      const d = nearestOnWire(c.r, pts).d;
+      if (d > LABEL_MAX_DIST) cost += 150 + d / 4;
       return cost;
     };
     const best: { r: Rect | null; cost: number } = { r: null, cost: Infinity };
@@ -560,7 +565,34 @@ export function placeLabels(
     }
     if (best.r === null) continue;
     placed.push(best.r);
+    const near = nearestOnWire(best.r, pts);
     out[ed.id] = { ...best.r };
+    if (near.d > LABEL_MAX_DIST) {
+      const r = best.r;
+      const [wx, wy] = near.p;
+      const sx = Math.min(Math.max(wx, r.x), r.x + r.w);
+      const sy = Math.min(Math.max(wy, r.y), r.y + r.h);
+      out[ed.id]!.leader = [sx, sy, wx, wy];
+    }
   }
   return out;
+}
+
+/** The point of the polyline nearest the rectangle, and its distance to it (0 when they touch). */
+function nearestOnWire(r: Rect, pts: [number, number][]): { d: number; p: [number, number] } {
+  let best = { d: Infinity, p: pts[0]! };
+  const cx = r.x + r.w / 2;
+  const cy = r.y + r.h / 2;
+  for (let k = 0; k + 1 < pts.length; k++) {
+    const a = pts[k]!;
+    const b = pts[k + 1]!;
+    // nearest point of the (axis-aligned) segment to the rectangle's centre, then its distance to the rectangle
+    const px = Math.min(Math.max(cx, Math.min(a[0], b[0])), Math.max(a[0], b[0]));
+    const py = Math.min(Math.max(cy, Math.min(a[1], b[1])), Math.max(a[1], b[1]));
+    const dx = Math.max(r.x - px, px - (r.x + r.w), 0);
+    const dy = Math.max(r.y - py, py - (r.y + r.h), 0);
+    const d = Math.hypot(dx, dy);
+    if (d < best.d) best = { d, p: [px, py] };
+  }
+  return best;
 }

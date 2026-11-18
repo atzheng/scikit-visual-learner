@@ -9,7 +9,7 @@ import type {
   InstanceNode,
   Port,
 } from '@machines/log';
-import { buildElk, buildElkGraph, layout } from './layout';
+import { buildElk, buildElkGraph, layout, LABEL_MAX_DIST } from './layout';
 import type { Laid, LaidNode } from './layout';
 
 const measure = (text: string): number => text.length * 7;
@@ -565,4 +565,48 @@ describe('wire routing and labels (geometry)', () => {
       for (const [, y] of inside) expect(y).toBeGreaterThanOrEqual(i.y + 28 + 54);
     }
   });
+});
+
+describe('label distance and dense graphs', () => {
+  test('every label is within the cap of its wire or has a leader line', async () => {
+    for (const mk of [splitModel, linregModel, pipelineModel]) {
+      const m = mk();
+      const edgeLabels = Object.fromEntries(m.edges.map((e) => [e.id, 'DataFrame (404, 5)']));
+      const laid = await layout(m, { measure, edgeLabels });
+      for (const e of m.edges) {
+        const r = laid.labels[e.id]!;
+        const pts = E(laid, e.id);
+        let d = Infinity;
+        for (let k = 0; k + 1 < pts.length; k++) {
+          const [a, b] = [pts[k]!, pts[k + 1]!];
+          const dx = Math.max(Math.min(a[0], b[0]) - (r.x + r.w), r.x - Math.max(a[0], b[0]), 0);
+          const dy = Math.max(Math.min(a[1], b[1]) - (r.y + r.h), r.y - Math.max(a[1], b[1]), 0);
+          d = Math.min(d, Math.hypot(dx, dy));
+        }
+        expect(d <= LABEL_MAX_DIST + 0.5 || r.leader !== undefined, `label of ${e.id}`).toBe(true);
+      }
+    }
+  });
+
+  test('dense graph (300 nodes, chain plus fan-in from 7 hubs) lays out without throwing', async () => {
+    const nodes: GNode[] = [];
+    const edges: GEdge[] = [];
+    for (let k = 0; k < 300; k++) {
+      const ins = [inP('a'), inP('b'), inP('c')];
+      nodes.push(call(`n:${k}`, `f${k}`, (k + 1) * 100000, ins, [outP(0, 'DF', `v${k}`)]));
+      if (k > 0) edges.push(edge(`c${k}`, [`n:${k - 1}`, 'out:0'], [`n:${k}`, 'in:a']));
+      if (k >= 7) {
+        edges.push(edge(`h${k}`, [`n:${k % 7}`, 'out:0'], [`n:${k}`, 'in:b']));
+      }
+    }
+    const m = model(nodes, edges);
+    const t0 = performance.now();
+    const laid = await layout(m, { measure });
+    const dt = performance.now() - t0;
+    console.log(
+      `dense layout: ${m.nodes.length} nodes, ${m.edges.length} edges, ${dt.toFixed(0)} ms`,
+    );
+    expect(Object.keys(laid.nodes)).toHaveLength(300);
+    expect(Object.keys(laid.edges)).toHaveLength(m.edges.length);
+  }, 120000);
 });

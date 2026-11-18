@@ -9,7 +9,7 @@ exports[`snapshots > linreg, error 1`] = `
 </marker>
 </defs>
 <g class="md-layer-bg">
-<rect x="314" y="230" width="255" height="185" rx="10" data-node="i:czvr3a.0" class="md-inst-box">
+<rect x="313.6" y="230" width="255" height="185" rx="10" data-node="i:czvr3a.0" class="md-inst-box">
 </rect>
 </g>
 <g class="md-layer-edges">
@@ -26,31 +26,31 @@ exports[`snapshots > linreg, error 1`] = `
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:0>n:12gqu2d.0@i:czvr3a.0.in:X" class="md-edge">
-<path d="M107 174L107 288Q107 296 115 296L306 296Q314 296 322 296L395 296Q403 296 403 304L403 326" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M107.2 174L107.2 288Q107.2 296 115.2 296L305.6 296Q313.6 296 321.6 296L394.6 296Q402.6 296 402.6 304L402.6 326" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
-<path d="M107 174L107 288Q107 296 115 296L306 296Q314 296 322 296L395 296Q403 296 403 304L403 326" class="md-wire-hit">
+<path d="M107.2 174L107.2 288Q107.2 296 115.2 296L305.6 296Q313.6 296 321.6 296L394.6 296Q402.6 296 402.6 304L402.6 326" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:2>n:12gqu2d.0@i:czvr3a.0.in:y" class="md-edge">
-<path d="M298 174L298 278Q298 286 306 286L306 286Q314 286 322 286L472 286Q480 286 480 294L480 326" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M297.6 174L297.6 278Q297.6 286 305.6 286L305.6 286Q313.6 286 321.6 286L471.6 286Q479.6 286 479.6 294L479.6 326" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
-<path d="M298 174L298 278Q298 286 306 286L306 286Q314 286 322 286L472 286Q480 286 480 294L480 326" class="md-wire-hit">
+<path d="M297.6 174L297.6 278Q297.6 286 305.6 286L305.6 286Q313.6 286 321.6 286L471.6 286Q479.6 286 479.6 294L479.6 326" class="md-wire-hit">
 </path>
 </g>
 </g>
 <g class="md-layer-nodes">
 <g data-node="src:n:88c6wt.0:arrays[0]" data-kind="source" class="md-node md-source" aria-label="value X">
-<rect x="119" y="12" width="23" height="22" class="md-hit">
+<rect x="119.5" y="12" width="23" height="22" class="md-hit">
 </rect>
-<text x="130.5" y="27" class="md-source-text">X</text>
-<rect x="116" y="9" width="29" height="28" rx="11" class="md-focus-ring">
+<text x="131" y="27" class="md-source-text">X</text>
+<rect x="116.5" y="9" width="29" height="28" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="src:n:88c6wt.0:arrays[1]" data-kind="source" class="md-node md-source" aria-label="value y">
-<rect x="238" y="12" width="23" height="22" class="md-hit">
+<rect x="238.5" y="12" width="23" height="22" class="md-hit">
 </rect>
-<text x="249.5" y="27" class="md-source-text">y</text>
-<rect x="235" y="9" width="29" height="28" rx="11" class="md-focus-ring">
+<text x="250" y="27" class="md-source-text">y</text>
+<rect x="235.5" y="9" width="29" height="28" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:88c6wt.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="function train_test_split">
@@ -66,22 +66,22 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="250" y="103" class="md-ptype">Series</text>
 <text x="250" y="115" class="md-pname">arrays[1]</text>
 <text x="369" y="108" class="md-ptype">test_size = 0.2</text>
-<circle cx="107" cy="174" r="3" class="md-port">
+<circle cx="107.2" cy="174" r="3" class="md-port">
 </circle>
-<text x="107" y="157" class="md-ptype">DataFrame</text>
-<text x="107" y="169" class="md-pname">X_train</text>
-<circle cx="202" cy="174" r="3" class="md-port">
+<text x="107.2" y="157" class="md-ptype">DataFrame</text>
+<text x="107.2" y="169" class="md-pname">X_train</text>
+<circle cx="202.4" cy="174" r="3" class="md-port">
 </circle>
-<text x="202" y="157" class="md-ptype">DataFrame</text>
-<text x="202" y="169" class="md-pname">X_test</text>
-<circle cx="298" cy="174" r="3" class="md-port">
+<text x="202.4" y="157" class="md-ptype">DataFrame</text>
+<text x="202.4" y="169" class="md-pname">X_test</text>
+<circle cx="297.6" cy="174" r="3" class="md-port">
 </circle>
-<text x="298" y="157" class="md-ptype">Series</text>
-<text x="298" y="169" class="md-pname">y_train</text>
-<circle cx="393" cy="174" r="3" class="md-port">
+<text x="297.6" y="157" class="md-ptype">Series</text>
+<text x="297.6" y="169" class="md-pname">y_train</text>
+<circle cx="392.8" cy="174" r="3" class="md-port">
 </circle>
-<text x="393" y="157" class="md-ptype">Series</text>
-<text x="393" y="169" class="md-pname">y_test</text>
+<text x="392.8" y="157" class="md-ptype">Series</text>
+<text x="392.8" y="169" class="md-pname">y_test</text>
 <g class="md-badge md-hidden">
 <rect x="458" y="71" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
@@ -94,34 +94,34 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-node="i:czvr3a.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="machine model: LinearRegression">
-<rect x="320" y="234" width="243" height="22" rx="11" class="md-pill">
+<rect x="319.6" y="234" width="243" height="22" rx="11" class="md-pill">
 </rect>
-<text x="441.5" y="249" text-anchor="middle" class="md-pill-text">model: LinearRegression</text>
-<text x="441.5" y="430" class="md-msg md-halo md-hidden">
+<text x="441.1" y="249" text-anchor="middle" class="md-pill-text">model: LinearRegression</text>
+<text x="441.1" y="430" class="md-msg md-halo md-hidden">
 </text>
-<rect x="311" y="227" width="261" height="191" rx="11" class="md-focus-ring">
+<rect x="310.6" y="227" width="261" height="191" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:12gqu2d.0@i:czvr3a.0" data-kind="call" class="md-node md-call md-current md-error" tabindex="0" role="button" aria-label="method LinearRegression.fit, ValueError: Input X contains NaN., current step" aria-current="step">
-<rect x="326" y="326" width="231" height="60" rx="9" class="md-box">
+<rect x="325.6" y="326" width="231" height="60" rx="9" class="md-box">
 </rect>
-<text x="441.5" y="372" class="md-name">LinearRegression.fit</text>
-<circle cx="403" cy="326" r="3" class="md-port">
+<text x="441.1" y="372" class="md-name">LinearRegression.fit</text>
+<circle cx="402.6" cy="326" r="3" class="md-port">
 </circle>
-<text x="403" y="339" class="md-ptype">DataFrame</text>
-<text x="403" y="351" class="md-pname">X</text>
-<circle cx="480" cy="326" r="3" class="md-port">
+<text x="402.6" y="339" class="md-ptype">DataFrame</text>
+<text x="402.6" y="351" class="md-pname">X</text>
+<circle cx="479.6" cy="326" r="3" class="md-port">
 </circle>
-<text x="480" y="339" class="md-ptype">Series</text>
-<text x="480" y="351" class="md-pname">y</text>
+<text x="479.6" y="339" class="md-ptype">Series</text>
+<text x="479.6" y="351" class="md-pname">y</text>
 <g class="md-badge md-hidden">
-<rect x="527" y="307" width="30" height="16" rx="8" class="md-badge-bg">
+<rect x="526.6" y="307" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="542" y="319" class="md-badge-text">
+<text x="541.6" y="319" class="md-badge-text">
 </text>
 </g>
-<text x="441.5" y="401" class="md-msg md-halo">⚠ ValueError: Input X contains NaN.</text>
-<rect x="323" y="323" width="237" height="66" rx="11" class="md-focus-ring">
+<text x="441.1" y="401" class="md-msg md-halo">⚠ ValueError: Input X contains NaN.</text>
+<rect x="322.6" y="323" width="237" height="66" rx="11" class="md-focus-ring">
 </rect>
 </g>
 </g>
@@ -136,6 +136,8 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:src:n:88c6wt.0:arrays[1].>n:88c6wt.0.in:arrays[1]" tabindex="0" role="button" class="md-edge-label" aria-label="wire: Series (506)">
+<line x1="278" y1="62" x2="250" y2="62" class="md-leader">
+</line>
 <text x="281" y="66" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">Series (506)</tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -145,19 +147,19 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:88c6wt.0.out:0>n:12gqu2d.0@i:czvr3a.0.in:X" tabindex="0" role="button" class="md-edge-label" aria-label="wire: DataFrame (404, 5), named X_train">
-<text x="120" y="311" text-anchor="start" class="md-halo">
+<text x="119.9" y="311" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">DataFrame (404, 5)</tspan>
 <tspan dx="4" dy="3" class="md-wname">X_train</tspan>
 </text>
-<rect x="117" y="299" width="168.8" height="18" rx="4" class="md-focus-ring">
+<rect x="116.9" y="299" width="168.8" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
 <g data-edge="e:n:88c6wt.0.out:2>n:12gqu2d.0@i:czvr3a.0.in:y" tabindex="0" role="button" class="md-edge-label" aria-label="wire: Series (404), named y_train">
-<text x="305" y="205.8" text-anchor="start" class="md-halo">
+<text x="304.6" y="205.8" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">Series (404)</tspan>
 <tspan dx="4" dy="3" class="md-wname">y_train</tspan>
 </text>
-<rect x="302" y="193.8" width="129.2" height="18" rx="4" class="md-focus-ring">
+<rect x="301.6" y="193.8" width="129.2" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
 </g>
@@ -173,40 +175,40 @@ exports[`snapshots > loop, step 2 1`] = `
 </marker>
 </defs>
 <g class="md-layer-bg">
-<rect x="91" y="90" width="255" height="186" rx="10" data-node="i:vwx6qg.0" class="md-inst-box">
+<rect x="90.5" y="90" width="255" height="186" rx="10" data-node="i:vwx6qg.0" class="md-inst-box">
 </rect>
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:X.>n:12u9exh.0@i:vwx6qg.0.in:X" class="md-edge">
-<path d="M24 34L24 166Q24 174 32 174L83 174Q91 174 99 174L172 174Q180 174 180 182L180 204" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M23.5 34L23.5 166Q23.5 174 31.5 174L82.5 174Q90.5 174 98.5 174L171.5 174Q179.5 174 179.5 182L179.5 204" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M24 34L24 166Q24 174 32 174L83 174Q91 174 99 174L172 174Q180 174 180 182L180 204" class="md-wire-hit">
+<path d="M23.5 34L23.5 166Q23.5 174 31.5 174L82.5 174Q90.5 174 98.5 174L171.5 174Q179.5 174 179.5 182L179.5 204" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:y.>n:12u9exh.0@i:vwx6qg.0.in:y" class="md-edge">
-<path d="M75 34L75 156Q75 164 83 164L83 164Q91 164 99 164L249 164Q257 164 257 172L257 204" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M74.5 34L74.5 156Q74.5 164 82.5 164L82.5 164Q90.5 164 98.5 164L248.5 164Q256.5 164 256.5 172L256.5 204" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M75 34L75 156Q75 164 83 164L83 164Q91 164 99 164L249 164Q257 164 257 172L257 204" class="md-wire-hit">
+<path d="M74.5 34L74.5 156Q74.5 164 82.5 164L82.5 164Q90.5 164 98.5 164L248.5 164Q256.5 164 256.5 172L256.5 204" class="md-wire-hit">
 </path>
 </g>
 </g>
 <g class="md-layer-nodes">
 <g data-node="i:vwx6qg.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="machine model: SGDRegressor, changed: n_iter_">
-<rect x="97" y="94" width="243" height="22" rx="11" class="md-pill">
+<rect x="96.5" y="94" width="243" height="22" rx="11" class="md-pill">
 </rect>
-<text x="218.5" y="109" text-anchor="middle" class="md-pill-text">model: SGDRegressor</text>
+<text x="218" y="109" text-anchor="middle" class="md-pill-text">model: SGDRegressor</text>
 <g class="md-attr md-changed md-flash">
-<rect x="94" y="118" width="249" height="18" rx="4" class="md-flash-bg">
+<rect x="93.5" y="118" width="249" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="95" y="131" class="md-bullet">●</text>
-<text x="103" y="131">
+<text x="94.5" y="131" class="md-bullet">●</text>
+<text x="102.5" y="131">
 <tspan class="md-aname">n_iter_</tspan>
 <tspan dx="6" class="md-atype">int</tspan>
 </text>
 </g>
-<text x="218.5" y="291" class="md-msg md-halo md-hidden">
+<text x="218" y="291" class="md-msg md-halo md-hidden">
 </text>
-<rect x="88" y="87" width="261" height="192" rx="11" class="md-focus-ring">
+<rect x="87.5" y="87" width="261" height="192" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="src:n:12u9exh.0@i:vwx6qg.0:X" data-kind="source" class="md-node md-source" aria-label="value X">
@@ -224,45 +226,45 @@ exports[`snapshots > loop, step 2 1`] = `
 </rect>
 </g>
 <g data-node="n:12u9exh.0@i:vwx6qg.0" data-kind="call" class="md-node md-call md-current" tabindex="0" role="button" aria-label="method SGDRegressor.partial_fit, run 1 of 3, current step" aria-current="step">
-<rect x="103" y="204" width="231" height="60" rx="9" class="md-box">
+<rect x="102.5" y="204" width="231" height="60" rx="9" class="md-box">
 </rect>
-<text x="218.5" y="250" class="md-name">SGDRegressor.partial_fit</text>
-<circle cx="180" cy="204" r="3" class="md-port">
+<text x="218" y="250" class="md-name">SGDRegressor.partial_fit</text>
+<circle cx="179.5" cy="204" r="3" class="md-port">
 </circle>
-<text x="180" y="217" class="md-ptype">DataFrame</text>
-<text x="180" y="229" class="md-pname">X</text>
-<circle cx="257" cy="204" r="3" class="md-port">
+<text x="179.5" y="217" class="md-ptype">DataFrame</text>
+<text x="179.5" y="229" class="md-pname">X</text>
+<circle cx="256.5" cy="204" r="3" class="md-port">
 </circle>
-<text x="257" y="217" class="md-ptype">Series</text>
-<text x="257" y="229" class="md-pname">y</text>
+<text x="256.5" y="217" class="md-ptype">Series</text>
+<text x="256.5" y="229" class="md-pname">y</text>
 <g class="md-badge">
-<rect x="281.2" y="185" width="52.8" height="16" rx="8" class="md-badge-bg">
+<rect x="280.7" y="185" width="52.8" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="307.6" y="197" class="md-badge-text">1 of 3</text>
+<text x="307.1" y="197" class="md-badge-text">1 of 3</text>
 </g>
-<text x="218.5" y="279" class="md-msg md-halo md-hidden">
+<text x="218" y="279" class="md-msg md-halo md-hidden">
 </text>
-<rect x="100" y="201" width="237" height="66" rx="11" class="md-focus-ring">
+<rect x="99.5" y="201" width="237" height="66" rx="11" class="md-focus-ring">
 </rect>
 </g>
 </g>
 <g class="md-layer-labels">
 <g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:X.>n:12u9exh.0@i:vwx6qg.0.in:X" tabindex="0" role="button" class="md-edge-label" aria-label="wire: DataFrame (100, 3)">
-<text x="31" y="71.4" text-anchor="start" class="md-halo">
+<text x="30.5" y="71.4" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">DataFrame (100, 3)</tspan>
 <tspan dx="0" dy="3" class="md-wname">
 </tspan>
 </text>
-<rect x="28" y="59.400000000000006" width="126.8" height="18" rx="4" class="md-focus-ring">
+<rect x="27.5" y="59.400000000000006" width="126.8" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
 <g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:y.>n:12u9exh.0@i:vwx6qg.0.in:y" tabindex="0" role="button" class="md-edge-label" aria-label="wire: Series (100)">
-<text x="110" y="157" text-anchor="start" class="md-halo">
+<text x="109.5" y="157" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">Series (100)</tspan>
 <tspan dx="0" dy="3" class="md-wname">
 </tspan>
 </text>
-<rect x="107" y="145" width="87.19999999999999" height="18" rx="4" class="md-focus-ring">
+<rect x="106.5" y="145" width="87.19999999999999" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
 </g>
@@ -287,15 +289,15 @@ exports[`snapshots > split, end 1`] = `
 </path>
 </g>
 <g data-edge="e:n:vx1anp.0.out:0>n:sn2g45.0.in:arrays[0]" class="md-edge">
-<path d="M261 236L261 292" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M260.5 236L260.5 292" marker-end="url(#md-arrow-15)" class="md-wire">
 </path>
-<path d="M261 236L261 292" class="md-wire-hit">
+<path d="M260.5 236L260.5 292" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:x:12opl3.0.>n:sn2g45.0.in:arrays[1]" class="md-edge">
-<path d="M521 236L521 241Q521 246 516 246L395 246Q387 246 387 254L387 292" marker-end="url(#md-arrow-15)" class="md-wire md-dashed">
+<path d="M520.5 236L520.5 241Q520.5 246 515.5 246L394.5 246Q386.5 246 386.5 254L386.5 292" marker-end="url(#md-arrow-15)" class="md-wire md-dashed">
 </path>
-<path d="M521 236L521 241Q521 246 516 246L395 246Q387 246 387 254L387 292" class="md-wire-hit">
+<path d="M520.5 236L520.5 241Q520.5 246 515.5 246L394.5 246Q386.5 246 386.5 254L386.5 292" class="md-wire-hit">
 </path>
 </g>
 </g>
@@ -329,10 +331,10 @@ exports[`snapshots > split, end 1`] = `
 <text x="194" y="165" class="md-ptype">DataFrame</text>
 <text x="194" y="177" class="md-pname">self</text>
 <text x="327" y="170" class="md-ptype">columns = "price"</text>
-<circle cx="261" cy="236" r="3" class="md-port">
+<circle cx="260.5" cy="236" r="3" class="md-port">
 </circle>
-<text x="261" y="219" class="md-ptype">DataFrame</text>
-<text x="261" y="231" class="md-pname">X</text>
+<text x="260.5" y="219" class="md-ptype">DataFrame</text>
+<text x="260.5" y="231" class="md-pname">X</text>
 <g class="md-badge md-hidden">
 <rect x="430" y="133" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
@@ -360,44 +362,44 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-node="n:sn2g45.0" data-kind="call" class="md-node md-call md-current" tabindex="0" role="button" aria-label="function train_test_split, current step" aria-current="step">
-<rect x="135" y="292" width="630" height="84" rx="9" class="md-box">
+<rect x="134.5" y="292" width="630" height="84" rx="9" class="md-box">
 </rect>
-<text x="450" y="338" class="md-name">train_test_split</text>
-<circle cx="261" cy="292" r="3" class="md-port">
+<text x="449.5" y="338" class="md-name">train_test_split</text>
+<circle cx="260.5" cy="292" r="3" class="md-port">
 </circle>
-<text x="261" y="305" class="md-ptype">DataFrame</text>
-<text x="261" y="317" class="md-pname">arrays[0]</text>
-<circle cx="387" cy="292" r="3" class="md-port">
+<text x="260.5" y="305" class="md-ptype">DataFrame</text>
+<text x="260.5" y="317" class="md-pname">arrays[0]</text>
+<circle cx="386.5" cy="292" r="3" class="md-port">
 </circle>
-<text x="387" y="305" class="md-ptype">Series</text>
-<text x="387" y="317" class="md-pname">arrays[1]</text>
-<text x="513" y="310" class="md-ptype">test_size = 0.2</text>
-<text x="639" y="310" class="md-ptype">random_state = 0</text>
-<circle cx="261" cy="376" r="3" class="md-port">
+<text x="386.5" y="305" class="md-ptype">Series</text>
+<text x="386.5" y="317" class="md-pname">arrays[1]</text>
+<text x="512.5" y="310" class="md-ptype">test_size = 0.2</text>
+<text x="638.5" y="310" class="md-ptype">random_state = 0</text>
+<circle cx="260.5" cy="376" r="3" class="md-port">
 </circle>
-<text x="261" y="359" class="md-ptype">DataFrame</text>
-<text x="261" y="371" class="md-pname">X_train</text>
-<circle cx="387" cy="376" r="3" class="md-port">
+<text x="260.5" y="359" class="md-ptype">DataFrame</text>
+<text x="260.5" y="371" class="md-pname">X_train</text>
+<circle cx="386.5" cy="376" r="3" class="md-port">
 </circle>
-<text x="387" y="359" class="md-ptype">DataFrame</text>
-<text x="387" y="371" class="md-pname">X_test</text>
-<circle cx="513" cy="376" r="3" class="md-port">
+<text x="386.5" y="359" class="md-ptype">DataFrame</text>
+<text x="386.5" y="371" class="md-pname">X_test</text>
+<circle cx="512.5" cy="376" r="3" class="md-port">
 </circle>
-<text x="513" y="359" class="md-ptype">Series</text>
-<text x="513" y="371" class="md-pname">y_train</text>
-<circle cx="639" cy="376" r="3" class="md-port">
+<text x="512.5" y="359" class="md-ptype">Series</text>
+<text x="512.5" y="371" class="md-pname">y_train</text>
+<circle cx="638.5" cy="376" r="3" class="md-port">
 </circle>
-<text x="639" y="359" class="md-ptype">Series</text>
-<text x="639" y="371" class="md-pname">y_test</text>
+<text x="638.5" y="359" class="md-ptype">Series</text>
+<text x="638.5" y="371" class="md-pname">y_test</text>
 <g class="md-badge md-hidden">
-<rect x="735" y="273" width="30" height="16" rx="8" class="md-badge-bg">
+<rect x="734.5" y="273" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="750" y="285" class="md-badge-text">
+<text x="749.5" y="285" class="md-badge-text">
 </text>
 </g>
-<text x="450" y="391" class="md-msg md-halo md-hidden">
+<text x="449.5" y="391" class="md-msg md-halo md-hidden">
 </text>
-<rect x="132" y="289" width="636" height="90" rx="11" class="md-focus-ring">
+<rect x="131.5" y="289" width="636" height="90" rx="11" class="md-focus-ring">
 </rect>
 </g>
 </g>
@@ -411,19 +413,19 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:vx1anp.0.out:0>n:sn2g45.0.in:arrays[0]" tabindex="0" role="button" class="md-edge-label" aria-label="wire: DataFrame (506, 5), named X">
-<text x="115" y="268" text-anchor="start" class="md-halo">
+<text x="114.5" y="268" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">DataFrame (506, 5)</tspan>
 <tspan dx="4" dy="3" class="md-wname">X</tspan>
 </text>
-<rect x="112" y="256" width="132.8" height="18" rx="4" class="md-focus-ring">
+<rect x="111.5" y="256" width="132.8" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
 <g data-edge="e:x:12opl3.0.>n:sn2g45.0.in:arrays[1]" tabindex="0" role="button" class="md-edge-label" aria-label="wire: Series (506), named y">
-<text x="384.5" y="261" text-anchor="start" class="md-halo">
+<text x="384" y="261" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">Series (506)</tspan>
 <tspan dx="4" dy="3" class="md-wname">y</tspan>
 </text>
-<rect x="381.5" y="249" width="93.19999999999999" height="18" rx="4" class="md-focus-ring">
+<rect x="381" y="249" width="93.19999999999999" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
 </g>

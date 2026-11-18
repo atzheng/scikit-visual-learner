@@ -496,6 +496,10 @@ export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'
     const nameEl = s(doc, 'tspan', { dx: 4, dy: 3 }, 'md-wname');
     text.append(typeEl, nameEl);
     label.append(text, s(doc, 'rect', { x: 0, y: 0, width: 0, height: 0, rx: 4 }, 'md-focus-ring'));
+    if (lr?.leader) {
+      const [x1, y1, x2, y2] = lr.leader;
+      label.prepend(s(doc, 'line', { x1, y1, x2, y2 }, 'md-leader'));
+    }
     labelLayer.append(label);
     edges.set(e.id, { id: e.id, edge: e, g, label, typeEl, nameEl, anchor });
   }
