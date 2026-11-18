@@ -193,7 +193,7 @@ def test_traceback_student_function_frames() -> None:
 def test_traceback_keeps_real_recursion_frames() -> None:
     src = "def f(n):\n    return f(n - 1) if n else 1 // n\n\nf(3)\n"
     tb = record(src)["error"]["traceback"]
-    assert [f["name"] for f in tb] == ["<module>", "f", "f", "f", "f"]
+    assert [(f["name"], f.get("repeat")) for f in tb] == [("<module>", None), ("f", 3)]
 
 
 def test_student_traceback_direct() -> None:

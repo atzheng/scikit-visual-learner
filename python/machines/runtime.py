@@ -23,9 +23,24 @@ from .recorder import Recorder, RunConfig
 from .tracebacks import STUDENT_FILE, student_traceback
 from .transform import instrument
 
-__all__ = ["record", "reset_between_runs", "run"]
+__all__ = ["after_reset_hooks", "record", "reset_between_runs", "run"]
 
 _MESSAGE_MAX = 4000
+_SKLEARN_DEFAULTS: dict[str, Any] = {
+    "assume_finite": False,
+    "working_memory": 1024,
+    "print_changed_only": True,
+    "display": "diagram",
+    "pairwise_dist_chunk_size": 256,
+    "enable_cython_pairwise_dist": True,
+    "array_api_dispatch": False,
+    "transform_output": "default",
+    "enable_metadata_routing": False,
+    "skip_parameter_validation": False,
+}
+# Called at the end of every reset_between_runs(): the worker re-applies the pandas options it
+# sets at startup here, since reset_option("all") wipes them.
+after_reset_hooks: list[Callable[[], None]] = []
 
 
 def _safe_str(exc: BaseException) -> str:
@@ -77,6 +92,7 @@ class _Stream(io.TextIOBase):
     def __init__(self, out: _Output, name: str) -> None:
         self._out = out
         self._name = name
+        self.name = f"<{name}>"
 
     def write(self, s: str, /) -> int:
         if not isinstance(s, str):
@@ -86,6 +102,9 @@ class _Stream(io.TextIOBase):
 
     def writable(self) -> bool:
         return True
+
+    def fileno(self) -> int:
+        raise io.UnsupportedOperation("fileno")
 
     def isatty(self) -> bool:
         return False
@@ -109,10 +128,16 @@ def reset_between_runs() -> None:
                 pd.reset_option("all")
         except Exception:  # noqa: BLE001
             pass
-    mutated = getattr(warnings, "_filters_mutated", None)
-    if mutated is not None:  # forget "already warned" registries so a rerun warns again
+    sk = sys.modules.get("sklearn")
+    if sk is not None:  # transform_output and friends change what the program does
         try:
-            mutated()
+            current = sk.get_config()
+            sk.set_config(**{k: v for k, v in _SKLEARN_DEFAULTS.items() if k in current})
+        except Exception:  # noqa: BLE001
+            pass
+    for hook in after_reset_hooks:
+        try:
+            hook()
         except Exception:  # noqa: BLE001
             pass
 
@@ -159,6 +184,7 @@ def _execute(
     main = types.ModuleType("__main__")
     ns = main.__dict__
     ns["__builtins__"] = builtins
+    ns["__file__"] = STUDENT_FILE
 
     holder: list[_Output] = []
 
@@ -189,35 +215,55 @@ def _execute(
     error: dict[str, Any] | None = None
     exc: BaseException | None = None
     emit({"type": "started", "sites": inst.sites})
+    undo: list[Callable[[], None]] = []  # restores, registered before each change, run in reverse
+    cw = warnings.catch_warnings()
+    cw_state = {"entered": False}
+    write_to_file = getattr(warnings, "_showwarning_orig", warnings.showwarning)
     saved_main = sys.modules.get("__main__")
-    saved = (sys.stdout, sys.stderr, builtins.input, sys.getrecursionlimit())
+    saved_in = (sys.stdout, sys.stderr, builtins.input, sys.getrecursionlimit())
+
+    def exit_warnings() -> None:
+        if cw_state["entered"]:
+            cw_state["entered"] = False
+            cw.__exit__(None, None, None)
+
+    def restore_main() -> None:
+        if saved_main is not None:
+            sys.modules["__main__"] = saved_main
+        else:
+            sys.modules.pop("__main__", None)
+
+    def restore_streams() -> None:
+        sys.stdout, sys.stderr, builtins.input = saved_in[:3]
+
     try:
-        with warnings.catch_warnings():
-            write_to_file = getattr(warnings, "_showwarning_orig", warnings.showwarning)
-            warnings.showwarning = showwarning
-            sys.stdout = _Stream(out, "stdout")
-            sys.stderr = _Stream(out, "stderr")
-            builtins.input = _input
-            sys.setrecursionlimit(saved[3] * 2)
-            sys.modules["__main__"] = main
-            mpl.install()
-            rec.install()
-            try:
-                exec(code, ns)
-            except BaseException as e:  # noqa: BLE001 - everything the program raises ends the run
-                exc = e
-            finally:
-                out.commit()
-                rec.uninstall()
-                mpl.uninstall()
-                sys.stdout, sys.stderr, builtins.input = saved[:3]
-                sys.setrecursionlimit(saved[3])
-                if saved_main is not None:
-                    sys.modules["__main__"] = saved_main
-                else:
-                    sys.modules.pop("__main__", None)
-    finally:
-        reset_between_runs()
+        undo.append(exit_warnings)
+        cw.__enter__()
+        cw_state["entered"] = True
+        warnings.showwarning = showwarning
+        undo.append(restore_streams)
+        sys.stdout = _Stream(out, "stdout")
+        sys.stderr = _Stream(out, "stderr")
+        builtins.input = _input
+        undo.append(lambda: sys.setrecursionlimit(saved_in[3]))
+        sys.setrecursionlimit(saved_in[3] * 2)
+        undo.append(restore_main)
+        sys.modules["__main__"] = main
+        undo.append(mpl.uninstall)
+        mpl.install()
+        undo.append(rec.uninstall)
+        rec.install()
+        exec(code, ns)
+    except SystemExit as e:
+        exc = e
+        _exit_message(e, out)
+    except BaseException as e:  # noqa: BLE001 - everything the program raises ends the run
+        exc = e
+    late = _guarded(out.commit)
+    late = _teardown(undo) or late
+    late = _guarded(reset_between_runs) or late
+    if isinstance(late, KeyboardInterrupt) and exc is None:
+        exc = late
     if exc is not None:
         if isinstance(exc, KeyboardInterrupt):
             status = "stopped"
@@ -226,10 +272,51 @@ def _execute(
         else:
             status = "error"
             error = _run_error(exc)
-    rec.close_open(exc)
+    closed = _guarded(lambda: rec.close_open(exc))
+    if isinstance(closed, KeyboardInterrupt) and status == "ok":
+        status = "stopped"
     status = rec.final_status(status)
-    emit({"type": "done", "status": status, "error": error})
+    for _ in range(3):  # a late interrupt must still end in `done`
+        try:
+            emit({"type": "done", "status": status, "error": error})
+            break
+        except KeyboardInterrupt:
+            if error is None and status == "ok":
+                status = "stopped"
     return rec, status, error
+
+
+def _guarded(fn: Callable[[], object]) -> BaseException | None:
+    """Run `fn`, retrying once after an interrupt; return what it raised, if anything."""
+    caught: BaseException | None = None
+    for _ in range(2):
+        try:
+            fn()
+            return caught
+        except BaseException as e:  # noqa: BLE001 - teardown must not stop half way
+            caught = caught or e
+    return caught
+
+
+def _teardown(undo: list[Callable[[], None]]) -> BaseException | None:
+    """Run every restore, last registered first, each in its own guard."""
+    first: BaseException | None = None
+    while undo:
+        err = _guarded(undo.pop())
+        if err is not None and (first is None or isinstance(err, KeyboardInterrupt)):
+            first = err
+    return first
+
+
+def _exit_message(e: SystemExit, out: _Output) -> None:
+    """What plain Python writes to stderr for `sys.exit(arg)`: the text of a non-int argument."""
+    code = e.code
+    if code is None or isinstance(code, int):
+        return
+    try:
+        out.write("stderr", f"{code}\n")
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def run(

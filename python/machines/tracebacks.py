@@ -29,7 +29,8 @@ def student_traceback(exc: BaseException) -> list[dict[str, Any]]:
 
     Each recorded call adds recorder frames and a second `<student>` frame at the same line; when
     recorder frames were dropped between two identical student frames, they are merged into one.
-    Real recursion (identical frames with nothing dropped between) is kept.
+    Real recursion (identical frames with nothing dropped between) is folded into one frame whose
+    `repeat` is the number of additional occurrences.
     """
     frames: list[dict[str, Any]] = []
     dropped = False  # a recorder frame was dropped since the last kept frame
@@ -41,7 +42,18 @@ def student_traceback(exc: BaseException) -> list[dict[str, Any]]:
         if filename == STUDENT_FILE:
             text = (linecache.getline(STUDENT_FILE, line) or "").strip()
             fr = {"kind": "student", "line": line, "text": text, "name": f.f_code.co_name}
-            if not (dropped and frames and frames[-1] == fr):
+            last = frames[-1] if frames else None
+            same = (
+                last is not None
+                and last["kind"] == "student"
+                and (last["line"], last["name"], last["text"])
+                == (fr["line"], fr["name"], fr["text"])
+            )
+            if same and dropped:
+                pass  # the eval frame of a recorded call: same line as the caller's frame
+            elif same and last is not None:
+                last["repeat"] = last.get("repeat", 0) + 1  # recursion: "repeated N more times"
+            else:
                 frames.append(fr)
             dropped = False
         elif _is_recorder_file(filename):
