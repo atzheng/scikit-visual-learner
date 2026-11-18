@@ -482,10 +482,15 @@ Step `steps.length` (the end) shows everything. `step` 0 shows nothing.
 **Renderer** (`@machines/render`):
 
 ```ts
-function layout(model: GraphModel, opts?: { expanded?: Set<string> }): Promise<Laid>;   // elkjs worker
+function layout(model: GraphModel, opts?: { expanded?: Set<string>; measure?: (text: string, font: string) => number;
+  attrRows?: Record<string, string[]> /* instance id -> attribute row texts to reserve; default one row per ctor param */;
+  elk?: ELK /* createElk({ workerUrl }): elkjs worker build; default: elk.bundled.js, lazily imported, in-thread (Node, tests) */ }): Promise<Laid>;   // expanded ignored until M4
 interface Laid { width: number; height: number;
-  nodes: Record<string, { x: number; y: number; w: number; h: number; ports: Record<string, { x: number; y: number }> }>;
-  edges: Record<string, { points: [number, number][] }> }
+  nodes: Record<string, { x: number; y: number; w: number; h: number;
+    ports: Record<string, { x: number; y: number; w: number /* label width, centred on x */ }>;
+    headerH?: number; attrsH?: number /* instances: name pill and attribute list heights, at the top of the box */ }>;
+  edges: Record<string, { points: [number, number][] }>;
+  dropped: number /* edges left out for naming a missing node or port */ }   // all coordinates absolute (root origin)
 function mount(el: HTMLElement, opts: { onSelectNode(id: string): void; onHoverEdge(id: string | null, at: DOMPoint): void;
   onClickEdge(id: string): void }): DiagramController;
 interface DiagramController {
