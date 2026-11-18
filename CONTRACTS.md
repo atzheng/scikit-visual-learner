@@ -496,19 +496,25 @@ interface Laid { width: number; height: number;
     headerH?: number; attrsH?: number /* instances: name pill and attribute list heights, at the top of the box */ }>;
   edges: Record<string, { points: [number, number][] }>;
   dropped: number /* edges left out for naming a missing node or port */ }   // all coordinates absolute (root origin)
-function mount(el: HTMLElement, opts: { onSelectNode(id: string): void; onHoverEdge(id: string | null, at: DOMPoint): void;
+function mount(el: HTMLElement, opts: { onSelectNode(id: string): void; onHoverEdge(id: string | null, at: DOMPoint /* viewport coords */): void;
   onClickEdge(id: string): void }): DiagramController;
 interface DiagramController {
-  setGraph(model: GraphModel, laid: Laid): void;
-  setState(state: StepState): void;           // reveal, highlight current, badges, active tokens; no re-layout
-  focusNode(id: string): void;                // scroll into view
+  setGraph(model: GraphModel, laid: Laid): void;   // builds the SVG once; re-applies the last state
+  setState(state: StepState, log?: EventLog): void;   // reveal, highlight current, badges, active tokens; no re-layout. `log` supplies value types (wire labels) and attributes
+  focusNode(id: string): void;                // scroll into view (keyboard focus is not moved)
+  hoverNode(id: string | null): void;         // hover style (editor cursor sync)
+  setSelectedNode(id: string | null): void;   // selected style
+  nodeBounds(id: string): { x: number; y: number; w: number; h: number } | null;   // diagram coordinates
+  readonly svg: SVGSVGElement | null;         // width/height = layout size in px; the caller pans and zooms it
   destroy(): void;
 }
+function createLegend(doc?: Document, open?: boolean): HTMLElement;   // collapsible legend, needs theme.css
+function attrRowsFor(model: GraphModel, log: EventLog): Record<string, string[]>;   // pass as layout's attrRows so instance boxes never resize
 ```
 
 ELK options exactly as in SPEC "Layout": `elk.algorithm: layered`, `elk.direction: DOWN`, `elk.portConstraints: FIXED_ORDER` with inputs `NORTH`, outputs `SOUTH` and `elk.port.index` set, `elk.layered.considerModelOrder.strategy: NODES_AND_EDGES` with children sorted by `order`, `elk.hierarchyHandling: INCLUDE_CHILDREN` on the root. Node sizes come from measured label text (canvas `measureText` with the theme font) so ELK and SVG agree.
 
-`theme.css` variables: `--md-fn-fill`, `--md-fn-stroke`, `--md-inst-fill`, `--md-inst-pill`, `--md-inst-pill-text`, `--md-wire`, `--md-wire-dashed`, `--md-text`, `--md-text-muted`, `--md-error`, `--md-handled`, `--md-current-stroke-width`, `--md-font-mono`, `--md-bg`. Light and dark values are set under `prefers-color-scheme` and `[data-theme]`, as SPEC "Visual style" describes. Error boxes carry ⚠ and text; changed attributes carry ●. Nothing is conveyed by colour alone. Animations are off under `prefers-reduced-motion`.
+`theme.css` variables: `--md-fn-fill`, `--md-fn-stroke`, `--md-inst-fill`, `--md-inst-pill`, `--md-inst-pill-text`, `--md-wire`, `--md-wire-dashed`, `--md-text`, `--md-text-muted`, `--md-error`, `--md-handled`, `--md-current-stroke-width`, `--md-font-mono`, `--md-bg`, plus `--md-store-fill`, `--md-focus`, `--md-changed-flash`, `--md-badge-fill`, `--md-badge-text`. The file is `packages/render/theme.css`; apps import `@machines/render/theme.css` once. State classes on the SVG: `md-hidden`, `md-current`, `md-error`, `md-handled`, `md-stopped`, `md-hover`, `md-selected`. Light and dark values are set under `prefers-color-scheme` and `[data-theme]`, as SPEC "Visual style" describes. Error boxes carry ⚠ and text; changed attributes carry ●. Nothing is conveyed by colour alone. Animations are off under `prefers-reduced-motion`.
 
 ## 9. Fixtures, commands and scripts
 

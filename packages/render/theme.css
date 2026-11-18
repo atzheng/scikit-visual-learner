@@ -1,0 +1,336 @@
+/*
+ * @machines/render theme (CONTRACTS.md section 8). Import once: `@import '@machines/render/theme.css'`.
+ * Light values are the default; dark follows prefers-color-scheme unless [data-theme='light'] is set,
+ * and [data-theme='dark'] forces dark. Courses can override any --md-* variable.
+ * Nothing in the diagram relies on colour alone: errors carry a warning sign and text, changed attributes a bullet.
+ */
+:root {
+  --md-fn-fill: #fbc9b8;
+  --md-fn-stroke: #b9553a;
+  --md-inst-fill: #dcebfa;
+  --md-inst-stroke: #4f81b8;
+  --md-inst-pill: #2f5f94;
+  --md-inst-pill-text: #ffffff;
+  --md-store-fill: #eceff3;
+  --md-wire: #2b3138;
+  --md-wire-dashed: #6a7480;
+  --md-text: #1c2026;
+  --md-text-muted: #4d5663;
+  --md-error: #b42318;
+  --md-handled: #a35200;
+  --md-current-stroke-width: 3.5px;
+  --md-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --md-bg: #ffffff;
+  --md-focus: #1f5fbf;
+  --md-changed-flash: rgba(255, 196, 0, 0.55);
+  --md-badge-fill: #1c2026;
+  --md-badge-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --md-fn-fill: #6a3a2d;
+    --md-fn-stroke: #f0a38b;
+    --md-inst-fill: #1d3450;
+    --md-inst-stroke: #7fb0e6;
+    --md-inst-pill: #3d78b8;
+    --md-inst-pill-text: #ffffff;
+    --md-store-fill: #2a303a;
+    --md-wire: #d3d9e1;
+    --md-wire-dashed: #98a3b1;
+    --md-text: #e6e9ee;
+    --md-text-muted: #aab3bf;
+    --md-error: #ff8077;
+    --md-handled: #ffb454;
+    --md-bg: #14171c;
+    --md-focus: #8dbbff;
+    --md-changed-flash: rgba(255, 180, 84, 0.5);
+    --md-badge-fill: #e6e9ee;
+    --md-badge-text: #14171c;
+  }
+}
+
+:root[data-theme='dark'] {
+  --md-fn-fill: #6a3a2d;
+  --md-fn-stroke: #f0a38b;
+  --md-inst-fill: #1d3450;
+  --md-inst-stroke: #7fb0e6;
+  --md-inst-pill: #3d78b8;
+  --md-inst-pill-text: #ffffff;
+  --md-store-fill: #2a303a;
+  --md-wire: #d3d9e1;
+  --md-wire-dashed: #98a3b1;
+  --md-text: #e6e9ee;
+  --md-text-muted: #aab3bf;
+  --md-error: #ff8077;
+  --md-handled: #ffb454;
+  --md-bg: #14171c;
+  --md-focus: #8dbbff;
+  --md-changed-flash: rgba(255, 180, 84, 0.5);
+  --md-badge-fill: #e6e9ee;
+  --md-badge-text: #14171c;
+}
+
+/* ---- diagram ---- */
+.md-diagram {
+  display: block;
+  font-family: var(--md-font-mono);
+  font-size: 12px;
+  color: var(--md-text);
+  overflow: visible;
+}
+.md-hidden {
+  display: none;
+}
+.md-diagram text {
+  fill: var(--md-text);
+  font-family: var(--md-font-mono);
+}
+.md-diagram .md-pname,
+.md-diagram .md-atype {
+  fill: var(--md-text-muted);
+}
+.md-diagram .md-halo {
+  paint-order: stroke;
+  stroke: var(--md-bg);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.md-diagram .md-name {
+  font-weight: bold;
+  font-size: 13px;
+  text-anchor: middle;
+}
+.md-diagram .md-ptype,
+.md-diagram .md-pname {
+  text-anchor: middle;
+}
+.md-diagram .md-pname {
+  font-size: 11px;
+}
+
+.md-node {
+  cursor: pointer;
+  outline: none;
+}
+.md-box,
+.md-inst-box {
+  stroke-width: 1.5px;
+}
+.md-call .md-box {
+  fill: var(--md-fn-fill);
+  stroke: var(--md-fn-stroke);
+}
+.md-inst-box {
+  fill: var(--md-inst-fill);
+  stroke: var(--md-inst-stroke);
+  cursor: pointer;
+}
+.md-pill {
+  fill: var(--md-inst-pill);
+}
+.md-diagram .md-pill-text {
+  fill: var(--md-inst-pill-text);
+  font-weight: bold;
+  font-size: 13px;
+}
+.md-store .md-box {
+  fill: var(--md-store-fill);
+  stroke: var(--md-wire-dashed);
+}
+.md-diagram .md-expr-text {
+  font-style: italic;
+  fill: var(--md-text-muted);
+  text-anchor: middle;
+}
+.md-diagram .md-source-text,
+.md-diagram .md-store-text {
+  text-anchor: middle;
+}
+.md-port {
+  fill: var(--md-wire);
+}
+.md-hit {
+  fill: transparent;
+}
+.md-focus-ring {
+  fill: none;
+  stroke: none;
+  pointer-events: none;
+}
+.md-node:focus-visible > .md-focus-ring,
+.md-edge-label:focus-visible > .md-focus-ring {
+  stroke: var(--md-focus);
+  stroke-width: 2.5px;
+  stroke-dasharray: 5 3;
+}
+
+/* current event: thicker outline */
+.md-node.md-current .md-box,
+.md-inst-box.md-current {
+  stroke: var(--md-wire);
+  stroke-width: var(--md-current-stroke-width);
+}
+/* errors: red outline plus a warning sign and message (see .md-msg) */
+.md-node.md-error .md-box,
+.md-inst-box.md-error {
+  stroke: var(--md-error);
+  stroke-width: var(--md-current-stroke-width);
+}
+.md-node.md-handled .md-box,
+.md-inst-box.md-handled {
+  stroke: var(--md-handled);
+  stroke-width: var(--md-current-stroke-width);
+}
+.md-node.md-stopped .md-box {
+  stroke-dasharray: 6 3;
+}
+.md-diagram .md-msg {
+  font-size: 11px;
+  text-anchor: middle;
+  font-weight: bold;
+}
+.md-diagram .md-error .md-msg {
+  fill: var(--md-error);
+}
+.md-diagram .md-handled .md-msg {
+  fill: var(--md-handled);
+}
+.md-node.md-selected > .md-focus-ring {
+  stroke: var(--md-focus);
+  stroke-width: 2px;
+}
+.md-node.md-hover > .md-focus-ring {
+  stroke: var(--md-focus);
+  stroke-width: 2px;
+  stroke-dasharray: 2 3;
+}
+
+/* badge */
+.md-badge-bg {
+  fill: var(--md-badge-fill);
+}
+.md-diagram .md-badge-text {
+  fill: var(--md-badge-text);
+  font-size: 11px;
+  font-weight: bold;
+  text-anchor: middle;
+}
+
+/* instance attributes */
+.md-diagram .md-attr {
+  font-size: 12px;
+}
+.md-attr.md-changed .md-aname {
+  font-weight: bold;
+}
+.md-diagram .md-bullet {
+  font-size: 10px;
+  font-weight: bold;
+}
+.md-flash-bg {
+  fill: var(--md-changed-flash);
+  opacity: 0;
+}
+.md-attr.md-flash .md-flash-bg {
+  opacity: 1;
+}
+
+/* wires */
+.md-wire {
+  fill: none;
+  stroke: var(--md-wire);
+  stroke-width: 1.5px;
+}
+.md-wire.md-dashed {
+  stroke: var(--md-wire-dashed);
+  stroke-dasharray: 5 4;
+}
+.md-arrow {
+  fill: var(--md-wire);
+}
+.md-wire-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14px;
+  cursor: pointer;
+  pointer-events: stroke;
+}
+.md-edge.md-hover .md-wire {
+  stroke-width: 3px;
+}
+.md-edge-label {
+  cursor: pointer;
+  outline: none;
+}
+.md-diagram .md-wtype {
+  font-size: 11px;
+}
+.md-diagram .md-wname {
+  font-size: 10px;
+  fill: var(--md-text-muted);
+}
+.md-edge-label.md-hover .md-wtype {
+  font-weight: bold;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .md-node,
+  .md-edge,
+  .md-edge-label,
+  .md-inst-box {
+    animation: md-in 0.2s ease-out;
+  }
+  .md-flash-bg {
+    transition: opacity 1.2s ease-out;
+  }
+  .md-attr.md-flash .md-flash-bg {
+    transition: none;
+  }
+}
+@keyframes md-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .md-diagram * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* legend */
+.md-legend {
+  font-family: var(--md-font-mono);
+  font-size: 12px;
+  color: var(--md-text);
+}
+.md-legend summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+.md-legend ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 6px 16px;
+}
+.md-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.md-legend svg {
+  flex: none;
+}
+.md-legend svg text {
+  fill: var(--md-text);
+  font-family: var(--md-font-mono);
+  font-size: 11px;
+}
