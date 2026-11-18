@@ -1,1 +1,2 @@
 {"id":"int-3d1307f2","kind":"field_change","created_at":"2026-11-18T18:58:17.684208Z","actor":"Andrew Zheng","issue_id":"svl-0xk.3","extra":{"field":"status","new_value":"deferred","old_value":"open"}}
+{"id":"int-945945cd","kind":"field_change","created_at":"2026-11-18T19:13:18.476549Z","actor":"Andrew Zheng","issue_id":"svl-3jf.1","extra":{"field":"status","new_value":"closed","old_value":"open","reason":"Remote exists, main pushed with SPEC/CONTRACTS/CLAUDE/AGENTS/.beads, gh auth works"}}
