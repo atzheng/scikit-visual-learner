@@ -147,6 +147,27 @@ describe('assembler', () => {
     expect(a.finish('timeout', { i: 0, site: 0 }).events).toHaveLength(1);
   });
 
+  test('currentCall that is an outer call with finished inner events is kept', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    a.push(batch(1, { events: [ev(4, 1), ev(5, 2)], values: vals(4, 5) }));
+    const log = a.finish('stopped', { i: 3, site: 0 });
+    expect(log.events.map((e) => e.i)).toEqual([3, 4, 5]);
+    expect(log.events[0]).toMatchObject({ interrupted: true, site: 0, name: 'f0', ret: 3 });
+    validateLog(log);
+  });
+
+  test('currentCall equal to a finished event i is not duplicated', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    a.push(batch(1, { events: [ev(1, 1), ev(2, 2)], values: vals(1, 2) }));
+    const log = a.finish('stopped', { i: 1, site: 1 });
+    expect(log.events.map((e) => [e.i, e.interrupted === true])).toEqual([
+      [1, false],
+      [2, false],
+    ]);
+  });
+
   test('done ok clears stubs; error status and error are kept', () => {
     const a = createAssembler();
     a.push({ type: 'started', runId: 1, sites });
