@@ -346,7 +346,9 @@ interface RunConfig { draw_modules: string[]; draw_builtins: boolean; draw_conta
 - An event is sent once it has finished (or in its slot form). `open` is the full stack of started, unfinished recorded calls at flush time, outermost first.
 - `currentCall` (only when `crossOriginIsolated`): an `Int32Array(2)` = `[i + 1, site]` of the innermost open recorded call, `0` when none, written by `on_enter`/`on_exit`.
 
-**Assembler** (`assemble.ts`): `createAssembler() → { push(msg: FromWorker): void; finish(status?: RunStatus): EventLog; snapshot(): EventLog }`.
+**Assembler** (`assemble.ts`): `createAssembler() → { push(msg: FromWorker): void; finish(status?: RunStatus, currentCall?: { i: number; site: number } | null): EventLog; snapshot(): EventLog }`. `finish`'s `status` overrides the one from `done`; `currentCall` is the decoded buffer (`i = buffer[0] - 1`), passed by the client when it kills the worker.
+- Messages with a `runId` other than the current one are ignored; a `started` with a lower `runId` than the current one is ignored, a higher one resets the assembler. `done` with `ok`, `error` or `limit` drops any remaining open stubs. `snapshot()` has status `ok` and `error: null` until `done`, and leaves out open stubs. Scopes other than 0 seen in `bindings` get a placeholder scope (`<scope n>`) until M4 sends real ones. Interrupted events from stubs take `kind`, `name` and `module` from the stub; the one from `currentCall` is `kind: 'function'`, `name` the site's `func_text`, `module: null`; both have `scope: 0` and `merge_key: 's<site>'`.
+- `validateLog(x: unknown): EventLog` (`validate.ts`) throws an `Error` naming the path of the first violation, including the rule that every token has a `values` entry.
 - A slot event replaces any earlier event with the same `merge_key` and `slot: true`.
 - `open` stubs are kept until a later batch carries the finished event.
 - `finish('timeout' | 'stopped')` is called by the client when the worker is killed. It turns each remaining open stub, plus the `currentCall` call if it is newer, into an `Event` with `interrupted: true`, empty outputs and `ret = i`.
