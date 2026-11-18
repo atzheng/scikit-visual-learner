@@ -9,10 +9,11 @@ Nothing derived from ``id()``, addresses or time reaches a token or a summary.
 
 Known transparency limit: objects that cannot be weakly referenced (lists, dicts, tuples, sets)
 are kept alive after their first token, in an LRU bounded by ``_KEEP_MAX`` entries and
-``_KEEP_BYTES`` of estimated size (shallow size plus the fingerprint's item keys). An evicted object loses its number (``id`` -> number mapping
-dropped, so no id-reuse risk): a later sighting of it gets a fresh token, a missing wire and
-never a false one. Fingerprints never hold strong references (weakref per weakref-able item,
-id and type otherwise), so cycles still collect.
+``_KEEP_BYTES`` of estimated size (shallow size plus the fingerprint's item keys). An evicted
+object loses its number (``id`` -> number mapping dropped, so no id-reuse risk): a later
+sighting of it gets a fresh token, a missing wire and never a false one. Fingerprints never hold
+strong references (weakref per weakref-able item, id and type otherwise), so cycles still
+collect.
 """
 
 from __future__ import annotations
