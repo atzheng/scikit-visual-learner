@@ -109,11 +109,11 @@ interface Site {
   unpack?: number;              // the call is the RHS of a tuple-unpacking assignment with this many Name targets
   // kind 'bind'
   targets?: string[];           // Name targets in order; for a tuple target, the flattened names
-  value?: Origin;               // RHS origin for Assign/AugAssign/AnnAssign; absent for for/with targets
+  value?: Origin;               // RHS origin for Assign/AugAssign/AnnAssign; absent for for/with targets and for destructuring targets (section 3)
   where?: 'local' | 'global' | 'nonlocal';   // M1–3: always 'local' (module)
   // kind 'store'
   root?: string;                // the root Name of the target (df in df.loc[m, "c"])
-  value?: Origin;               // RHS origin; only when the target is the whole left-hand side of Assign/AnnAssign
+  value?: Origin;               // RHS origin; only when the target is the whole left-hand side of Assign/AnnAssign and no target is a tuple, list or starred (section 3)
 }
 
 interface Scope {
@@ -216,6 +216,9 @@ Rules for M1–3 (SPEC "Transformer rules", narrowed):
 - Bind and store sites take the span and text of the whole statement (`for`: the target; `with`: `expr as target`). `for` and `with` targets give no `__store__`. Annotations and function bodies are not visited; defaults are. Site ids are assigned in post-order (inner calls first).
 - For `AugAssign` the bind `value` is an `expr` origin (text: the whole statement, reads: the target names then the RHS reads), not the RHS origin: `x += f(y)` must not wire f's output to x.
 - `unpack` is set on a call site when it is the whole RHS of an assignment whose single target is a tuple or list of n plain `Name`s (no starred, no nesting).
+- **No `value` on destructuring.** A bind or store site carries `value` only when no target of the statement is a tuple, list or starred target, or in the one `unpack` case (single tuple/list target of plain Names whose RHS is a wrapped call). Omitted for `a, *b = f(x)`, `a, b = c = f(1)`, `x[0], y = f(1)`, `a, b = c` and `(a, b), c = f(1), 2`: the names hold parts of the value, so an origin would be a false wire. A missing wire is acceptable.
+- **Shadowed names.** A bare Name inside a comprehension that refers to one of that comprehension's own targets, or inside a class body that the class body itself binds, does not get a `name` origin: it is `{origin: 'expr', text: <name>, reads: []}`. Such names are also dropped from `reads` of other `expr` origins. (`n = 5; [f(n) for n in xs]` must not wire the outer `n` to `f`.)
+- **Unsupported frame tricks.** Aliased `eval`/`exec`/`locals` (`e = eval; e("x")`, `builtins.eval`) are wrapped, so they see the hook's frame: unsupported. Other frame-sensitive callees (`sys._getframe`, `warnings.warn` with `stacklevel`) also see the hook frame. The recorder handles warning locations (svl-a8j.3).
 
 ## 4. Recorder (`recorder.py`)
 

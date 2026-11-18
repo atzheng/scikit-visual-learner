@@ -155,6 +155,34 @@ def _is_unwrapped(node: ast.Call) -> bool:
     return isinstance(node.func, ast.Name) and node.func.id in UNWRAPPED_CALLS
 
 
+def _class_scope_names(node: ast.ClassDef) -> frozenset[str]:
+    """Names the class body itself binds (not those bound inside nested scopes)."""
+    out: set[str] = set()
+
+    def walk(n: ast.AST) -> None:
+        if isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del)):
+            out.add(n.id)
+        elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            out.add(n.name)
+            return  # the body is another scope
+        elif isinstance(n, (ast.Import, ast.ImportFrom)):
+            out.update((a.asname or a.name).split(".")[0] for a in n.names)
+        elif isinstance(n, ast.ExceptHandler) and n.name:
+            out.add(n.name)
+        elif isinstance(n, ast.MatchAs | ast.MatchStar) and n.name:
+            out.add(n.name)
+        elif isinstance(n, ast.MatchMapping) and n.rest:
+            out.add(n.rest)
+        elif isinstance(n, ast.Lambda):
+            return
+        for c in ast.iter_child_nodes(n):
+            walk(c)
+
+    for stmt in node.body:
+        walk(stmt)
+    return frozenset(out)
+
+
 class _Pending:
     """An origin computed before the children are rewritten (a call origin needs its site id)."""
 
@@ -169,6 +197,7 @@ class _Instrument(ast.NodeTransformer):
         self.sites: list[dict[str, Any]] = []
         self.site_of: dict[ast.Call, int] = {}  # original Call node -> site id (wrapped only)
         self.in_class = False
+        self.shadow: frozenset[str] = frozenset()  # names that do not mean the enclosing binding
 
     # -- helpers -----------------------------------------------------------------------------
 
@@ -195,10 +224,15 @@ class _Instrument(ast.NodeTransformer):
         if _is_const(node):
             return _Pending({"origin": "const", "text": self._text(node)})
         if isinstance(node, ast.Name):
+            if node.id in self.shadow:
+                return _Pending({"origin": "expr", "text": node.id, "reads": []})
             return _Pending({"origin": "name", "name": node.id})
         if isinstance(node, ast.Call) and not _is_unwrapped(node):
             return _Pending(None, node)
-        return _Pending({"origin": "expr", "text": self._text(node), "reads": _reads(node)})
+        return _Pending({"origin": "expr", "text": self._text(node), "reads": self._reads(node)})
+
+    def _reads(self, node: ast.AST) -> list[str]:
+        return [n for n in _reads(node) if n not in self.shadow]
 
     def _resolve(self, pending: _Pending) -> dict[str, Any]:
         if pending.call is not None:
@@ -306,7 +340,9 @@ class _Instrument(ast.NodeTransformer):
         node.bases = [self.visit(b) for b in node.bases]
         node.keywords = [self.visit(k) for k in node.keywords]
         outer = self.in_class
+        outer_shadow = self.shadow
         self.in_class = True
+        self.shadow = outer_shadow | _class_scope_names(node)
         try:
             body: list[ast.stmt] = []
             for s in node.body:
@@ -315,7 +351,25 @@ class _Instrument(ast.NodeTransformer):
             node.body = body
         finally:
             self.in_class = outer
+            self.shadow = outer_shadow
         return node
+
+    def _visit_comprehension(self, node: ast.expr) -> ast.expr:
+        outer = self.shadow
+        gens: list[ast.comprehension] = node.generators  # type: ignore[attr-defined]
+        self.shadow = outer | {
+            n.id for g in gens for n in ast.walk(g.target) if isinstance(n, ast.Name)
+        }
+        try:
+            self.generic_visit(node)
+        finally:
+            self.shadow = outer
+        return node
+
+    visit_ListComp = _visit_comprehension  # type: ignore[assignment]
+    visit_SetComp = _visit_comprehension  # type: ignore[assignment]
+    visit_DictComp = _visit_comprehension  # type: ignore[assignment]
+    visit_GeneratorExp = _visit_comprehension  # type: ignore[assignment]
 
     # -- binds and stores --------------------------------------------------------------------
 
@@ -328,7 +382,7 @@ class _Instrument(ast.NodeTransformer):
             if augmented:
                 # `x += f(y)` binds x to a combination of x and f(y), not to f(y) itself: an
                 # `expr` origin keeps the recorder from wiring f's output to x.
-                reads = list(dict.fromkeys([*_names(targets[0]), *_reads(value)]))
+                reads = list(dict.fromkeys([*_names(targets[0]), *self._reads(value)]))
                 pre = _Pending({"origin": "expr", "text": self.src.text(span), "reads": reads})
             else:
                 pre = self._pre_origin(value)
@@ -338,25 +392,30 @@ class _Instrument(ast.NodeTransformer):
         origin = self._resolve(pre)
 
         names = [n for t in targets for n in _names(t)]
+        destructure = any(isinstance(t, (ast.Tuple, ast.List, ast.Starred)) for t in targets)
+        unpack = (
+            not augmented
+            and len(targets) == 1
+            and isinstance(targets[0], (ast.Tuple, ast.List))
+            and bool(targets[0].elts)
+            and all(isinstance(e, ast.Name) for e in targets[0].elts)
+            and pre.call is not None
+        )
+        # A destructuring target gets a value origin only in the unpack case: otherwise the
+        # names hold parts of the value (or something else), and an origin would be a false wire.
+        bind_value = origin if unpack or not destructure else None
         extra: list[ast.stmt] = []
         if names:
-            extra.append(self._bind_stmt(list(dict.fromkeys(names)), span, origin, node))
+            extra.append(self._bind_stmt(list(dict.fromkeys(names)), span, bind_value, node))
         for t in targets:
             for leaf in _flatten_targets(t):
                 root = _store_root(leaf)
                 if root is not None:
                     # The value is only recorded when the target is the whole left-hand side.
-                    single = leaf is t and not augmented
+                    single = leaf is t and not augmented and not destructure
                     extra.append(self._store_stmt(root, span, origin if single else None, node))
-        if (
-            not augmented
-            and len(targets) == 1
-            and isinstance(targets[0], (ast.Tuple, ast.List))
-            and targets[0].elts
-            and all(isinstance(e, ast.Name) for e in targets[0].elts)
-            and pre.call is not None
-        ):
-            self.sites[origin["site"]]["unpack"] = len(targets[0].elts)
+        if unpack:
+            self.sites[origin["site"]]["unpack"] = len(targets[0].elts)  # type: ignore[attr-defined]
         return [node, *extra] if extra else node
 
     def visit_Assign(self, node: ast.Assign) -> ast.stmt | list[ast.stmt]:

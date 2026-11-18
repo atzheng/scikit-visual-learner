@@ -3,6 +3,8 @@ from __future__ import annotations
 import ast
 import builtins
 import os
+import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -477,26 +479,99 @@ def test_class_body_name_mangling_unaffected(passthrough_hooks: None) -> None:
     assert (out, err) == ("3 2\n", None)
 
 
-def test_fixture_programs_transparent(passthrough_hooks: None) -> None:
-    root = Path(__file__).resolve().parents[2] / "fixtures"
-    programs = sorted((root / "programs").glob("*.py"))
-    if not programs:
-        pytest.skip("fixtures/programs not merged yet")
-    cwd = os.getcwd()
-    os.chdir(root.parent)
-    try:
-        for path in programs:
-            source = path.read_text()
-            try:
-                ast.parse(source)
-            except SyntaxError:
-                with pytest.raises(SyntaxError):
-                    instrument(source)
-                continue
-            if "input(" in source:
-                continue  # needs stdin; covered by the recorder beads
-            _, plain_out, plain_err = run_source(source)
-            _, out, err = run_source(instrument(source))
-            assert (out, err) == (plain_out, plain_err), path.name
-    finally:
-        os.chdir(cwd)
+FIXTURES = Path(__file__).resolve().parents[2] / "fixtures"
+FIXTURE_PROGRAMS = sorted(p.name for p in (FIXTURES / "programs").glob("*.py"))
+
+_RUNNER = """
+import sys
+from machines.transform import instrument
+import builtins
+builtins.__rec__ = lambda site, fn, /, *a, **k: fn(*a, **k)
+builtins.__bind__ = lambda site, m, /: None
+builtins.__store__ = lambda site, b, /: None
+builtins.__scope__ = lambda fn, /: fn
+builtins.__ret__ = lambda site, v, /: v
+path, mode = sys.argv[1], sys.argv[2]
+source = open(path).read()
+sys.argv = [path]
+ns = {"__name__": "__main__", "__file__": path}
+if mode == "plain":
+    code = compile(source, "<student>", "exec")
+else:
+    code = compile(instrument(source).tree, "<student>", "exec")
+exec(code, ns)
+"""
+
+
+def _run_fixture(name: str, mode: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-c", _RUNNER, str(FIXTURES / "programs" / name), mode],
+        cwd=FIXTURES / "data",
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        timeout=240,
+        env={**os.environ, "PYTHONHASHSEED": "0", "MPLBACKEND": "Agg"},
+    )
+
+
+def _last_line(stderr: str) -> str:
+    lines = stderr.strip().splitlines()
+    return lines[-1].split(": ", 1)[-1] if lines else ""
+
+
+def test_fixture_programs_exist() -> None:
+    assert len(FIXTURE_PROGRAMS) >= 26  # the parametrized test below must run, not skip
+
+
+@pytest.mark.parametrize("name", FIXTURE_PROGRAMS)
+def test_fixture_program_transparent(name: str) -> None:
+    """Pass-through hooks: same stdout, exit status and final error line as plain Python."""
+    plain = _run_fixture(name, "plain")
+    inst = _run_fixture(name, "instrumented")
+    assert inst.returncode == plain.returncode
+    assert inst.stdout == plain.stdout
+    # warning locations differ (the hook frame is the caller; CONTRACTS section 3): compare text
+    assert _last_line(inst.stderr) == _last_line(plain.stderr)
+
+
+# -- review fixes: false wires --------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "a, *b = f(x)",
+        "a, b = c = f(1)",
+        "x[0], y = f(1)",
+        "a, b = c",
+        "(a, b), c = f(1), 2",
+    ],
+)
+def test_destructuring_binds_have_no_value(code: str) -> None:
+    for s in kind(code, "bind") + kind(code, "store"):
+        assert "value" not in s, code
+    assert all("unpack" not in s for s in kind(code, "call"))
+
+
+def test_plain_name_targets_keep_value() -> None:
+    assert kind("x = f()", "bind")[0]["value"] == {"origin": "call", "site": 0}
+    assert kind("a = b = f()", "bind")[0]["value"] == {"origin": "call", "site": 0}
+    assert kind("a, b = f()", "bind")[0]["value"] == {"origin": "call", "site": 0}
+
+
+def test_comprehension_target_is_not_a_name_origin() -> None:
+    (s,) = kind("n = 5; ys = [f(n) for n in [5]]", "call")
+    assert s["args"] == [{"origin": "expr", "text": "n", "reads": []}]
+    (s,) = kind("ys = [f(n + k) for n in z]", "call")
+    assert s["args"][0]["reads"] == ["k"]
+    # outside the comprehension the name is still a name
+    assert kind("[g(n) for n in z]; f(n)", "call")[-1]["args"] == [{"origin": "name", "name": "n"}]
+
+
+def test_class_body_assigned_name_is_not_a_name_origin() -> None:
+    source = "x = 5\nclass A:\n    x = 5\n    y = f(x)\n    z = f(w + x)\nf(x)"
+    a, b, c = kind(source, "call")
+    assert a["args"] == [{"origin": "expr", "text": "x", "reads": []}]
+    assert b["args"][0]["reads"] == ["w"]
+    assert c["args"] == [{"origin": "name", "name": "x"}]
