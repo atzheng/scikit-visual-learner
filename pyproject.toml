@@ -26,6 +26,8 @@ packages = ["python/machines"]
 [tool.pytest.ini_options]
 testpaths = ["python/tests"]
 pythonpath = ["python"]
+addopts = "-m 'not slow'"
+markers = ["slow: runs every fixture program in a subprocess; run with `pnpm test:slow`"]
 
 [tool.ruff]
 line-length = 100

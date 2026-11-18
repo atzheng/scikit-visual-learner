@@ -13,6 +13,14 @@
   --bad: #b42318;
   --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --syn-keyword: #7a3e9d;
+  --syn-string: #a31515;
+  --syn-number: #0b6b57;
+  --syn-comment: #5b6573;
+  --syn-func: #1f5fbf;
+  --hl-site: rgba(31, 95, 191, 0.22);
+  --selection: rgba(255, 196, 0, 0.35);
+  --hl-error: rgba(180, 35, 24, 0.14);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,6 +35,14 @@
     --focus: #ffb454;
     --ok: #56d364;
     --bad: #ff8077;
+    --syn-keyword: #d2a8ff;
+    --syn-string: #ffa198;
+    --syn-number: #7ee7c7;
+    --syn-comment: #a0a9b6;
+    --syn-func: #8dbbff;
+    --hl-site: rgba(106, 163, 245, 0.32);
+    --selection: rgba(255, 180, 84, 0.38);
+    --hl-error: rgba(255, 128, 119, 0.18);
   }
 }
 
@@ -42,10 +58,26 @@
   --focus: #ffb454;
   --ok: #56d364;
   --bad: #ff8077;
+  --syn-keyword: #d2a8ff;
+  --syn-string: #ffa198;
+  --syn-number: #7ee7c7;
+  --syn-comment: #a0a9b6;
+  --syn-func: #8dbbff;
+  --hl-site: rgba(106, 163, 245, 0.32);
+  --selection: rgba(255, 180, 84, 0.38);
+  --hl-error: rgba(255, 128, 119, 0.18);
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
+  --syn-keyword: #7a3e9d;
+  --syn-string: #a31515;
+  --syn-number: #0b6b57;
+  --syn-comment: #5b6573;
+  --syn-func: #1f5fbf;
+  --hl-site: rgba(31, 95, 191, 0.22);
+  --selection: rgba(255, 196, 0, 0.35);
+  --hl-error: rgba(180, 35, 24, 0.14);
 }
 
 * {
@@ -183,16 +215,12 @@ button:disabled {
   background: var(--accent);
 }
 
-.editor-placeholder {
-  display: block;
-  width: 100%;
+.editor-host {
   height: 100%;
-  resize: none;
-  border: 0;
-  padding: 8px 12px;
-  background: var(--surface);
-  color: var(--text);
-  font: 13px/1.5 var(--mono);
+}
+
+.editor-host .cm-editor {
+  height: 100%;
 }
 
 .placeholder,
@@ -250,4 +278,13 @@ button:disabled {
     transition: none !important;
     animation: none !important;
   }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

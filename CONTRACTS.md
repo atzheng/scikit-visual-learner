@@ -126,7 +126,7 @@ interface Scope {
 
 interface ValueSummary {
   type: string;                 // DF, Series, array, sparse, int, float, complex, str, bytes, bool, None,
-                                // list[n], dict[n], tuple[n], set[n], or the class name
+                                // list[n], dict[n], tuple[n], set[n], or the class name (numpy scalars: the class name, e.g. float64, int64)
   shape?: number[];
   dtype?: string;               // Series/array: dtype; DF: omitted (see dtypes)
   dtypes?: string[];            // DF: one per column in columns
@@ -299,6 +299,10 @@ class ValueTable:
 **Object table.** Keep `id → n` with a `weakref.finalize` for objects that support weak references. Keep others alive in a list until the run ends.
 
 **Machines.** `isinstance(obj, sklearn.base.BaseEstimator)` (import lazily), or a class whose `__module__` is `__main__`, or a class in `machine_classes`. `attrs` for estimators: `get_params(deep=False)` plus public attributes ending in `_` (from `vars`). For student classes: public entries of `vars(obj)`. Scalar attrs get fresh tokens per summary.
+
+**Attrs depth and cap.** Only the summarized machine's own attributes are expanded: attribute values get a token and a summary but, even if they are machines, no `attrs` of their own. At most 64 attributes per machine are kept, in sorted name order. The summary of a token is written (`{type}` at least) before any student `__repr__` runs; a `BaseException` from a repr (stop) propagates.
+
+**Known limits.** Fingerprints hold no strong references (weakref per weakref-able item, id and type otherwise). Objects that cannot be weakly referenced (lists, dicts, tuples, sets) that were given a token live until the table is reset. Mutation of an object nested in an attribute (`est.coef_[0] = 1`) is invisible to the parent; the recorder checks tracked attributes itself.
 
 **Summaries.** Pre-format with `str()` of each cell, truncated to 40 characters. `NaN` shows as `NaN`. Count the preview budget in UTF-8 bytes of the JSON-encoded preview.
 
