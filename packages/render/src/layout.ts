@@ -21,6 +21,19 @@ export interface LayoutOptions {
    * Default: one row per constructor param. Pass the union over all versions so the box never resizes.
    */
   attrRows?: Record<string, string[]>;
+  /**
+   * The type text of each wire label (the part before the name), by edge id: `edgeLabelsFor` gives the
+   * longest over the run. Default: a placeholder of the usual length. The edge's `nameLabel` follows it.
+   */
+  edgeLabels?: Record<string, string>;
+}
+
+/** Where a wire label goes: the rectangle it occupies (absolute coordinates). */
+export interface LaidLabel {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 export interface LaidPort {
@@ -44,12 +57,16 @@ export interface Laid {
   height: number;
   nodes: Record<string, LaidNode>;
   edges: Record<string, { points: [number, number][] }>;
+  /** Wire label rectangles by edge id. They overlap no box, instance header or other label where room allows. */
+  labels: Record<string, LaidLabel>;
   /** Edges left out because an endpoint (node or port) does not exist; they would be false wires. */
   dropped: number;
 }
 
 /** Fonts, shared with the SVG renderer so ELK and SVG agree on sizes. */
 export const FONT_MONO = '12px ui-monospace, SFMono-Regular, Menlo, monospace';
+export const FONT_WTYPE = '11px ui-monospace, SFMono-Regular, Menlo, monospace';
+export const FONT_WNAME = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
 export const FONT_NAME = 'bold 13px ui-monospace, SFMono-Regular, Menlo, monospace';
 
 /** Metrics in px. A call box is: [port labels (top)] [name row] [port labels (bottom)]. */
@@ -66,6 +83,7 @@ export const M = {
   storeH: 28,
   textPadX: 8,
   emptyPortH: 6,
+  laneGap: 8, // spacing of wires entering an instance below its attribute rows
 };
 
 export function estimateMeasure(text: string, font: string): number {
@@ -96,6 +114,7 @@ export const ROOT_OPTIONS: Record<string, string> = {
   'elk.layered.considerModelOrder.strategy': 'NODES_AND_EDGES',
   'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
   'elk.edgeRouting': 'ORTHOGONAL',
+  'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
   'elk.json.edgeCoords': 'ROOT',
   'elk.spacing.nodeNode': '28',
   'elk.layered.spacing.nodeNodeBetweenLayers': '56',
@@ -104,6 +123,9 @@ export const ROOT_OPTIONS: Record<string, string> = {
   'elk.padding': '[top=12,left=12,bottom=12,right=12]',
 };
 
+const SPLIT_A = '~a';
+const SPLIT_B = '~b';
+const laneKey = (inst: string, edge: string): string => `${inst}#lane:${edge}`;
 const portKey = (node: string, port: string): string => `${node}#${port}`;
 
 export function instanceTitle(n: InstanceNode): string {
@@ -196,6 +218,50 @@ export function buildElk(
     list.push(n);
   }
 
+  const callById = new Map<string, CallNode>();
+  for (const n of model.nodes) if (n.kind === 'call') callById.set(n.id, n);
+  const endpoint = (r: GEdge['from']): string | null => {
+    if (!ids.has(r.node)) return null;
+    if (r.port === null) return r.node;
+    const n = callById.get(r.node);
+    const has = n !== undefined && [...n.inPorts, ...n.outPorts].some((p) => p.id === r.port);
+    return has ? portKey(r.node, r.port) : null;
+  };
+
+  // Sorted by id so the output does not depend on the input order.
+  const resolved: { id: string; from: string; to: string; fromNode: string; toNode: string }[] = [];
+  let dropped = 0;
+  for (const ed of [...model.edges].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
+    const from = endpoint(ed.from);
+    const to = endpoint(ed.to);
+    if (from === null || to === null) dropped++;
+    else resolved.push({ id: ed.id, from, to, fromNode: ed.from.node, toNode: ed.to.node });
+  }
+  // An edge from outside into an instance's method box goes through a hierarchical port on the instance's
+  // west border, placed below the attribute rows, so it never runs through the header or the rows.
+  const effParent = new Map<string, string | null>();
+  for (const [p, list] of kids) for (const k of list) effParent.set(k.id, p);
+  const intoInst = new Map<string, string[]>();
+  const lane = new Map<string, string>(); // edge id -> instance id
+  for (const r of resolved) {
+    const inst = effParent.get(r.toNode) ?? null;
+    if (inst === null || r.fromNode === inst || effParent.get(r.fromNode) === inst) continue;
+    lane.set(r.id, inst);
+    let l = intoInst.get(inst);
+    if (!l) intoInst.set(inst, (l = []));
+    l.push(r.id);
+  }
+
+  const edges: ElkExtendedEdge[] = [];
+  for (const r of resolved) {
+    const inst = lane.get(r.id);
+    if (inst === undefined) edges.push({ id: r.id, sources: [r.from], targets: [r.to] });
+    else {
+      edges.push({ id: `${r.id}${SPLIT_A}`, sources: [r.from], targets: [laneKey(inst, r.id)] });
+      edges.push({ id: `${r.id}${SPLIT_B}`, sources: [laneKey(inst, r.id)], targets: [r.to] });
+    }
+  }
+
   const build = (n: GNode): ElkNode => {
     const e: ElkNode = { id: n.id };
     const children = kids.get(n.id);
@@ -230,9 +296,24 @@ export function buildElk(
       e.ports = ports;
     } else if (n.kind === 'instance' && children?.length) {
       const rows = instanceRows(n, opts.attrRows);
-      const top = M.instHeaderH + rows.length * M.instRowH + M.instPad;
+      const top =
+        M.instHeaderH +
+        rows.length * M.instRowH +
+        M.instPad +
+        (intoInst.get(n.id)?.length ?? 0) * M.laneGap;
       e.children = children.map(build);
+      // Wires from outside enter through the west border below the attribute rows (hierarchical ports).
+      const lanes = intoInst.get(n.id) ?? [];
+      e.ports = lanes.map((edgeId, k) => ({
+        id: laneKey(n.id, edgeId),
+        x: 0,
+        y: top - M.instPad + M.laneGap * (k + 1),
+        width: 0,
+        height: 0,
+        layoutOptions: { 'elk.port.side': 'WEST' },
+      }));
       e.layoutOptions = {
+        'elk.portConstraints': 'FIXED_POS',
         'elk.padding': `[top=${top},left=${M.instPad},bottom=${M.instPad},right=${M.instPad}]`,
         'elk.nodeSize.constraints': 'MINIMUM_SIZE',
         'elk.nodeSize.minimum': `(${size.w},${size.h})`,
@@ -243,26 +324,6 @@ export function buildElk(
     }
     return e;
   };
-
-  const callById = new Map<string, CallNode>();
-  for (const n of model.nodes) if (n.kind === 'call') callById.set(n.id, n);
-  const endpoint = (r: GEdge['from']): string | null => {
-    if (!ids.has(r.node)) return null;
-    if (r.port === null) return r.node;
-    const n = callById.get(r.node);
-    const has = n !== undefined && [...n.inPorts, ...n.outPorts].some((p) => p.id === r.port);
-    return has ? portKey(r.node, r.port) : null;
-  };
-
-  // Sorted by id so the output does not depend on the input order.
-  const edges: ElkExtendedEdge[] = [];
-  let dropped = 0;
-  for (const ed of [...model.edges].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))) {
-    const from = endpoint(ed.from);
-    const to = endpoint(ed.to);
-    if (from === null || to === null) dropped++;
-    else edges.push({ id: ed.id, sources: [from], targets: [to] });
-  }
 
   return {
     graph: {
@@ -286,6 +347,10 @@ async function defaultElk(): Promise<ELK> {
   return bundled;
 }
 
+function dedupe(pts: [number, number][]): [number, number][] {
+  return pts.filter((p, k) => k === 0 || p[0] !== pts[k - 1]![0] || p[1] !== pts[k - 1]![1]);
+}
+
 /** Convert ELK's output (child coordinates relative to the parent) to absolute coordinates. */
 export function toLaid(
   root: ElkNode,
@@ -298,6 +363,7 @@ export function toLaid(
     height: root.height ?? 0,
     nodes: {},
     edges: {},
+    labels: {},
     dropped: 0,
   };
   const byId = new Map(model.nodes.map((n) => [n.id, n]));
@@ -335,7 +401,15 @@ export function toLaid(
       for (const b of s.bendPoints ?? []) pts.push([b.x, b.y]);
       pts.push([s.endPoint.x, s.endPoint.y]);
     }
-    laid.edges[e.id] = { points: pts };
+    const half = e.id.endsWith(SPLIT_A) ? SPLIT_A : e.id.endsWith(SPLIT_B) ? SPLIT_B : null;
+    if (half === null) laid.edges[e.id] = { points: pts };
+    else {
+      // the two halves of an edge split at an instance port: join them (the port point appears once)
+      const id = e.id.slice(0, -half.length);
+      const cur = laid.edges[id]?.points ?? [];
+      const joined = half === SPLIT_A ? [...pts, ...cur] : [...cur, ...pts];
+      laid.edges[id] = { points: dedupe(joined) };
+    }
   }
   return laid;
 }
@@ -355,6 +429,138 @@ export async function layout(model: GraphModel, opts: LayoutOptions = {}): Promi
     );
   }
   const laid = toLaid(out, model, measure, opts.attrRows);
+  laid.labels = placeLabels(model, laid, opts.edgeLabels ?? {}, measure);
   laid.dropped = dropped;
   return laid;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Wire labels
+
+const LABEL_H = 18;
+const LABEL_PLACEHOLDER = 'DataFrame (000, 0)';
+type Rect = { x: number; y: number; w: number; h: number };
+
+const overlap = (a: Rect, b: Rect, pad = 0): boolean =>
+  a.x < b.x + b.w + pad && b.x < a.x + a.w + pad && a.y < b.y + b.h + pad && b.y < a.y + a.h + pad;
+
+function segHits(r: Rect, a: [number, number], b: [number, number]): boolean {
+  const x0 = Math.min(a[0], b[0]);
+  const x1 = Math.max(a[0], b[0]);
+  const y0 = Math.min(a[1], b[1]);
+  const y1 = Math.max(a[1], b[1]);
+  return x0 <= r.x + r.w && x1 >= r.x && y0 <= r.y + r.h && y1 >= r.y;
+}
+
+/**
+ * Choose a rectangle for each wire label beside its wire, avoiding boxes, instance headers and
+ * attribute rows, other wires and other labels. Greedy in edge-id order, so the result is deterministic.
+ */
+export function placeLabels(
+  model: GraphModel,
+  laid: Laid,
+  texts: Record<string, string>,
+  measure: Measure,
+): Record<string, LaidLabel> {
+  const hasKids = new Set<string>();
+  for (const n of model.nodes) if (n.parent !== null) hasKids.add(n.parent);
+  const boxes: Rect[] = [];
+  for (const n of model.nodes) {
+    const l = laid.nodes[n.id];
+    if (!l) continue;
+    if (n.kind === 'instance' && hasKids.has(n.id)) {
+      boxes.push({ x: l.x, y: l.y, w: l.w, h: (l.headerH ?? 0) + (l.attrsH ?? 0) });
+    } else boxes.push({ x: l.x, y: l.y, w: l.w, h: l.h });
+  }
+  const segs: { id: string; a: [number, number]; b: [number, number] }[] = [];
+  for (const [id, e] of Object.entries(laid.edges)) {
+    for (let k = 0; k + 1 < e.points.length; k++)
+      segs.push({ id, a: e.points[k]!, b: e.points[k + 1]! });
+  }
+  for (const n of model.nodes) {
+    const l = laid.nodes[n.id];
+    if (n.kind !== 'instance' || !l) continue;
+    const [x0, y0, x1, y1] = [l.x, l.y, l.x + l.w, l.y + l.h];
+    segs.push({ id: '', a: [x0, y0], b: [x1, y0] }, { id: '', a: [x1, y0], b: [x1, y1] });
+    segs.push({ id: '', a: [x0, y1], b: [x1, y1] }, { id: '', a: [x0, y0], b: [x0, y1] });
+  }
+  const placed: Rect[] = [];
+  const out: Record<string, LaidLabel> = {};
+  const edges = [...model.edges].sort((p, q) => (p.id < q.id ? -1 : p.id > q.id ? 1 : 0));
+  for (const ed of edges) {
+    const pts = laid.edges[ed.id]?.points;
+    if (!pts || pts.length < 2) continue;
+    const type = texts[ed.id] ?? LABEL_PLACEHOLDER;
+    const name = ed.nameLabel ?? '';
+    const w = Math.ceil(
+      measure(type, FONT_WTYPE) + (type && name ? 4 : 0) + measure(name, FONT_WNAME) + 8,
+    );
+    const cands: { r: Rect; pref: number }[] = [];
+    const order = pts
+      .slice(1)
+      .map((p, k) => ({ k, len: Math.abs(p[0] - pts[k]![0]) + Math.abs(p[1] - pts[k]![1]) }))
+      .sort((p, q) => q.len - p.len || p.k - q.k);
+    order.forEach(({ k, len }, rank) => {
+      const a = pts[k]!;
+      const b = pts[k + 1]!;
+      const x0 = Math.min(a[0], b[0]);
+      const y0 = Math.min(a[1], b[1]);
+      if (len < 4) return;
+      const base = rank * 4 + (len < 24 ? 30 : 0);
+      if (a[1] === b[1]) {
+        const fits = len >= w;
+        for (const [fi, f] of [0.5, 0.2, 0.8, 0.05, 0.95].entries()) {
+          const cx = fits ? x0 + w / 2 + (len - w) * f : x0 + len / 2;
+          for (const [si, side] of [-1, 1].entries()) {
+            const y = side < 0 ? a[1] - LABEL_H - 2 : a[1] + 2;
+            cands.push({ r: { x: cx - w / 2, y, w, h: LABEL_H }, pref: base + fi * 2 + si });
+          }
+        }
+      } else {
+        for (const [fi, f] of [0.5, 0.2, 0.8, 0.05, 0.95].entries()) {
+          const cy = len >= LABEL_H ? y0 + LABEL_H / 2 + (len - LABEL_H) * f : y0 + len / 2;
+          for (const [si, x] of [b[0] + 4, b[0] - 4 - w].entries()) {
+            cands.push({ r: { x, y: cy - LABEL_H / 2, w, h: LABEL_H }, pref: base + fi * 2 + si });
+          }
+        }
+      }
+    });
+    const score = (c: { r: Rect; pref: number }): number => {
+      let cost = c.pref;
+      for (const bx of boxes) if (overlap(c.r, bx, 2)) cost += 1000;
+      for (const pl of placed) if (overlap(c.r, pl, 2)) cost += 300;
+      for (const sg of segs) if (sg.id !== ed.id && segHits(c.r, sg.a, sg.b)) cost += 40;
+      if (c.r.x < 0) cost += 500;
+      return cost;
+    };
+    const best: { r: Rect | null; cost: number } = { r: null, cost: Infinity };
+    const consider = (list: { r: Rect; pref: number }[]): void => {
+      for (const c of list) {
+        const cost = score(c);
+        if (cost < best.cost) {
+          best.r = c.r;
+          best.cost = cost;
+        }
+      }
+    };
+    consider(cands);
+    if (best.cost >= 300) {
+      // crowded: scan outwards from the middle of the longest segment, preferring nearby spots
+      const k = order[0]?.k ?? 0;
+      const mx = (pts[k]![0] + pts[k + 1]![0]) / 2;
+      const my = (pts[k]![1] + pts[k + 1]![1]) / 2;
+      const scan: { r: Rect; pref: number }[] = [];
+      for (let dy = -120; dy <= 120; dy += 10) {
+        for (const dx of [4, -4 - w, 28, -28 - w, 60, -60 - w, 120, -120 - w]) {
+          const r = { x: mx + dx, y: my + dy - LABEL_H / 2, w, h: LABEL_H };
+          scan.push({ r, pref: 50 + (Math.abs(dx) + Math.abs(dy)) / 4 });
+        }
+      }
+      consider(scan);
+    }
+    if (best.r === null) continue;
+    placed.push(best.r);
+    out[ed.id] = { ...best.r };
+  }
+  return out;
 }

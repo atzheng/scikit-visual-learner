@@ -12,14 +12,16 @@ export {
   defaultMeasure,
   FONT_MONO,
   FONT_NAME,
+  placeLabels,
   M as LAYOUT_METRICS,
 } from './layout';
-export type { Laid, LaidNode, LaidPort, LayoutOptions, Measure } from './layout';
+export type { Laid, LaidLabel, LaidNode, LaidPort, LayoutOptions, Measure } from './layout';
 export { mount } from './mount';
 export type { DiagramController, MountOptions } from './mount';
 export { createLegend, LEGEND_ITEMS } from './legend';
 export {
   attrRowsFor,
+  edgeLabelsFor,
   badgeText,
   buildSvg,
   applyState,

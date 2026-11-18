@@ -153,6 +153,20 @@ export function attrRowsFor(model: GraphModel, log: EventLog): Record<string, st
   return out;
 }
 
+/** Type text to reserve for each wire label in `layout`: the longest `summaryLabel` over the edge's uses. */
+export function edgeLabelsFor(model: GraphModel, log: EventLog): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const e of model.edges) {
+    let best = '';
+    for (const u of e.uses) {
+      const t = summaryLabel(log.values[u.token]);
+      if (t.length > best.length) best = t;
+    }
+    out[e.id] = best;
+  }
+  return out;
+}
+
 export type StatusKind = 'error' | 'handled' | 'stopped';
 export interface Status {
   kind: StatusKind;
@@ -462,7 +476,10 @@ export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'
     );
     edgeLayer.append(g);
 
-    const anchor = labelAnchor(pts);
+    const lr = laid.labels?.[e.id];
+    const anchor: LabelAnchor | null = lr
+      ? { x: lr.x + 3, y: lr.y + 13, anchor: 'start' }
+      : labelAnchor(pts);
     const label = s(
       doc,
       'g',

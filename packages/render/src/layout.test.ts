@@ -326,7 +326,7 @@ describe('buildElkGraph (pure)', () => {
     expect(g.children!.map((c) => c.id)).toEqual(['src:X', 'src:y', 'n:split', 'i:m']);
     const i = g.children!.find((c) => c.id === 'i:m')!;
     expect(i.children!.map((c) => c.id)).toEqual(['n:fit@i:m', 'n:pred@i:m']);
-    expect(i.layoutOptions!['elk.padding']).toBe('[top=58,left=12,bottom=12,right=12]'); // 28 header + 1 row*18 + 12
+    expect(i.layoutOptions!['elk.padding']).toBe('[top=82,left=12,bottom=12,right=12]'); // 28 header + 1 row*18 + 12, + 3 entering wires * 8
   });
 
   test('sizes follow the measured text; a node whose parent is missing goes to the root', () => {
@@ -479,5 +479,90 @@ describe('layout (ELK)', () => {
     console.log(`layout of 300 nodes: ${dt.toFixed(0)} ms`);
     expect(Object.keys(laid.nodes)).toHaveLength(300);
     expect(dt).toBeLessThan(1000);
+  });
+});
+
+describe('wire routing and labels (geometry)', () => {
+  const golden: [string, () => GraphModel][] = [
+    ['split', splitModel],
+    ['linreg', linregModel],
+    ['pipeline', pipelineModel],
+  ];
+  const rows = { 'i:m': ['coef_ array', 'intercept_ float', 'n_features_in_ int'] };
+
+  /** A segment (axis-aligned bounding box) strictly crosses the rectangle's interior. */
+  const crosses = (
+    a: [number, number],
+    b: [number, number],
+    r: { x: number; y: number; w: number; h: number },
+  ): boolean =>
+    Math.max(a[0], b[0]) > r.x + 0.5 &&
+    Math.min(a[0], b[0]) < r.x + r.w - 0.5 &&
+    Math.max(a[1], b[1]) > r.y + 0.5 &&
+    Math.min(a[1], b[1]) < r.y + r.h - 0.5;
+
+  for (const [name, mk] of golden) {
+    for (const attrRows of [undefined, rows]) {
+      const tag = `${name}${attrRows ? ' (3 attribute rows)' : ''}`;
+      test(`${tag}: no wire crosses an instance header or attribute rows`, async () => {
+        const m = mk();
+        const laid = await layout(m, { measure, attrRows });
+        for (const n of m.nodes) {
+          if (n.kind !== 'instance' || !m.nodes.some((c) => c.parent === n.id)) continue;
+          const l = N(laid, n.id);
+          const band = { x: l.x, y: l.y, w: l.w, h: (l.headerH ?? 0) + (l.attrsH ?? 0) };
+          for (const e of m.edges) {
+            if (e.from.node === n.id || e.to.node === n.id) continue; // ends at the instance border
+            const pts = E(laid, e.id);
+            for (let k = 0; k + 1 < pts.length; k++) {
+              expect(crosses(pts[k]!, pts[k + 1]!, band), `${e.id} segment ${k}`).toBe(false);
+            }
+          }
+        }
+      });
+
+      test(`${tag}: no wire label overlaps a box or another label`, async () => {
+        const m = mk();
+        const edgeLabels = Object.fromEntries(m.edges.map((e) => [e.id, 'DataFrame (404, 5)']));
+        const laid = await layout(m, { measure, attrRows, edgeLabels });
+        const rects: [string, { x: number; y: number; w: number; h: number }][] = [];
+        for (const n of m.nodes) {
+          const l = N(laid, n.id);
+          const hasKids = m.nodes.some((c) => c.parent === n.id);
+          rects.push([n.id, hasKids ? { ...l, h: (l.headerH ?? 0) + (l.attrsH ?? 0) } : l]);
+        }
+        const labels = m.edges.map((e) => {
+          const r = laid.labels[e.id];
+          if (!r) throw new Error(`no label for ${e.id}`);
+          return [e.id, r] as const;
+        });
+        for (const [eid, r] of labels) {
+          expect(r.w).toBeGreaterThan(0);
+          for (const [nid, b] of rects) {
+            const hit = r.x < b.x + b.w && b.x < r.x + r.w && r.y < b.y + b.h && b.y < r.y + r.h;
+            expect(hit, `label of ${eid} overlaps ${nid}`).toBe(false);
+          }
+        }
+        for (let a = 0; a < labels.length; a++) {
+          for (let b = a + 1; b < labels.length; b++) {
+            const p = labels[a]![1];
+            const q = labels[b]![1];
+            const hit = p.x < q.x + q.w && q.x < p.x + p.w && p.y < q.y + q.h && q.y < p.y + p.h;
+            expect(hit, `labels ${labels[a]![0]} and ${labels[b]![0]}`).toBe(false);
+          }
+        }
+      });
+    }
+  }
+
+  test('linreg: wires enter the instance below its attribute rows', async () => {
+    const m = linregModel();
+    const laid = await layout(m, { measure, attrRows: rows });
+    const i = N(laid, 'i:m');
+    for (const id of ['e3', 'e4', 'e5']) {
+      const pts = E(laid, id);
+      const inside = pts.filter(([x, y]) => x > i.x && x < i.x + i.w && y > i.y && y < i.y + i.h);
+      for (const [, y] of inside) expect(y).toBeGreaterThanOrEqual(i.y + 28 + 54);
+    }
   });
 });

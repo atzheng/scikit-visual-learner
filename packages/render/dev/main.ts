@@ -2,7 +2,7 @@
 import '../theme.css';
 import { buildGraph, eventLabel, stateAt } from '@machines/log';
 import type { EventLog, GraphModel } from '@machines/log';
-import { attrRowsFor, createLegend, layout, mount } from '../src/index';
+import { attrRowsFor, edgeLabelsFor, createLegend, layout, mount } from '../src/index';
 import type { DiagramController } from '../src/index';
 import { SCENARIOS } from './models';
 
@@ -43,7 +43,10 @@ async function load(): Promise<void> {
   const sc = SCENARIOS[Number(scenario.value)]!;
   log = sc.log();
   model = buildGraph(log, { expanded: new Set() });
-  const laid = await layout(model, { attrRows: attrRowsFor(model, log) });
+  const laid = await layout(model, {
+    attrRows: attrRowsFor(model, log),
+    edgeLabels: edgeLabelsFor(model, log),
+  });
   controller().setGraph(model, laid);
   slider.max = String(model.steps.length);
   const at = params.get('step');
