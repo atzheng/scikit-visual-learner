@@ -1,0 +1,30 @@
+{
+  "name": "@machines/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "tsx scripts/fetch-pyodide.ts",
+    "dev": "vite",
+    "prebuild": "tsx scripts/fetch-pyodide.ts",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@machines/log": "workspace:*",
+    "@machines/render": "workspace:*",
+    "pyodide": "314.0.8",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "tsx": "^4.23.15",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  }
+}

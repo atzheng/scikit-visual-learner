@@ -65,8 +65,10 @@ Skeleton beads create placeholder files at these paths so that later beads fill 
 
 **Pinned versions.** The scaffold bead records here the Pyodide version (latest stable that ships pandas and scikit-learn), its CPython minor, and its numpy, pandas, scikit-learn and matplotlib versions. The uv dev dependencies use exactly those versions, so CPython tests and Pyodide agree.
 
-- Pyodide: _TBD by scaffold bead_
-- CPython: _TBD_ · numpy _TBD_ · pandas _TBD_ · scikit-learn _TBD_ · matplotlib _TBD_
+- Pyodide: 314.0.8 (npm `pyodide@314.0.8`, exact; abi `2026_0`, emscripten 5.0.3). Pyodide's version scheme changed: 314 means CPython 3.14.
+- CPython: 3.14 (Pyodide ships 3.14.2; `.python-version` and `requires-python` are the minor, `>=3.14,<3.15`) · numpy 2.4.6 · pandas 3.0.2 · scikit-learn 1.8.0 · scipy 1.18.0 · matplotlib 3.10.8 (all from `pyodide-lock.json`; `pyproject.toml` pins them with `==`)
+- JS tooling: TypeScript 6 (typescript-eslint does not yet support 7), Vite 8, Vitest 5, React 19, ESLint 10, Prettier 3.
+- The `pyodide` npm package ships no wheels. `packages/web/scripts/fetch-pyodide.ts` downloads the GitHub release tarball `pyodide-314.0.8.tar.bz2` (about 340 MB) once, extracts only the wheels for numpy, pandas, scipy, scikit-learn and matplotlib and their dependencies, and caches the result in `packages/web/node_modules/.cache/pyodide/<version>/dist`. `pnpm dev` and `pnpm build` run it first (dev serves the cache at `/pyodide/`; build copies it to `packages/web/dist/pyodide/`). Tests never need it. When bumping Pyodide, update the `pyodide` version in `packages/web/package.json`, the pins in `pyproject.toml` and this list.
 
 ## 2. Event log (`types.ts`; produced by `machines.record`)
 

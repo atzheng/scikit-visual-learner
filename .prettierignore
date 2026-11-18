@@ -1,0 +1,13 @@
+.beads/
+.claude/
+.venv/
+node_modules/
+dist/
+coverage/
+fixtures/
+pnpm-lock.yaml
+uv.lock
+SPEC.md
+CONTRACTS.md
+CLAUDE.md
+AGENTS.md
