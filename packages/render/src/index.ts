@@ -9,7 +9,6 @@ export {
   buildElkGraph,
   buildElk,
   createElk,
-  createElk,
   defaultMeasure,
   FONT_MONO,
   FONT_NAME,
