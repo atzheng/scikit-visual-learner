@@ -32,6 +32,7 @@ export interface Site {
   end_col: number;
   text: string;
   func_text?: string;
+  func_line?: number;
   args?: Origin[];
   keywords?: Record<string, Origin>;
   unpack?: number;

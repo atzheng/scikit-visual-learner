@@ -8,8 +8,11 @@ Token numbering starts at 0 for both objects (``v0.0``) and scalars (``s0``).
 Nothing derived from ``id()``, addresses or time reaches a token or a summary.
 
 Known transparency limit: objects that cannot be weakly referenced (lists, dicts, tuples, sets)
-are kept alive from their first token until ``reset()``. Fingerprints never hold strong
-references (weakref per weakref-able item, id and type otherwise), so cycles still collect.
+are kept alive after their first token, in an LRU bounded by ``_KEEP_MAX`` entries and
+``_KEEP_BYTES`` of estimated size (shallow size plus the fingerprint's item keys). An evicted object loses its number (``id`` -> number mapping
+dropped, so no id-reuse risk): a later sighting of it gets a fresh token, a missing wire and
+never a false one. Fingerprints never hold strong references (weakref per weakref-able item,
+id and type otherwise), so cycles still collect.
 """
 
 from __future__ import annotations
@@ -21,6 +24,7 @@ import reprlib
 import sys
 import types
 import weakref
+from collections import OrderedDict
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any, Literal
@@ -45,6 +49,9 @@ _LABEL_TYPES = (
 _ANGLE = re.compile(r"<[^<>]*>")
 _ADDRESS = re.compile(r"\s(?:at\s)?0x[0-9a-fA-F]+")
 _MAX_ATTRS = 64
+_KEEP_MAX = 256
+_KEEP_BYTES = 16 * 1024 * 1024
+_KEY_BYTES = 100
 _CELL_MAX = 40
 _PREVIEW_ROWS = 5
 _PREVIEW_COLS = 8
@@ -150,7 +157,8 @@ class ValueTable:
         self._ids: dict[int, int] = {}  # id(obj) -> object number
         self._versions: dict[int, int] = {}
         self._fps: dict[int, Any] = {}
-        self._keep: list[Any] = []  # objects without weakref support
+        self._keep: OrderedDict[int, tuple[Any, int]] = OrderedDict()  # no weakref support: LRU
+        self._keep_bytes = 0
         self._next_obj = 0
         self._next_scalar = 0
         self.values: dict[str, dict[str, Any]] = {}
@@ -227,6 +235,8 @@ class ValueTable:
     def _number(self, obj: Any) -> int:
         n = self._ids.get(id(obj))
         if n is not None:
+            if self._keep and id(obj) in self._keep:
+                self._keep.move_to_end(id(obj))
             return n
         n = self._next_obj
         self._next_obj += 1
@@ -235,9 +245,28 @@ class ValueTable:
         try:
             weakref.finalize(obj, self._drop, self._gen, id(obj), n).atexit = False
         except TypeError:
-            self._keep.append(obj)
+            self._retain(obj)
         self._fps[n] = self._fingerprint(obj)
         return n
+
+    def _retain(self, obj: Any) -> None:
+        """Keep an unweakrefable object alive (so its id stays valid), within a bound."""
+        try:
+            # shallow size plus the fingerprint's per-item keys (about 100 bytes each)
+            size = sys.getsizeof(obj) + _KEY_BYTES * len(obj)
+        except Exception:
+            size = 64
+        self._keep[id(obj)] = (obj, size)
+        self._keep_bytes += size
+        while len(self._keep) > 1 and (
+            len(self._keep) > _KEEP_MAX or self._keep_bytes > _KEEP_BYTES
+        ):
+            oid, (_, sz) = self._keep.popitem(last=False)
+            self._keep_bytes -= sz
+            n = self._ids.pop(oid, None)
+            if n is not None:
+                self._versions.pop(n, None)
+                self._fps.pop(n, None)
 
     def _drop(self, gen: int, oid: int, n: int) -> None:
         if gen != self._gen:

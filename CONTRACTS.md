@@ -104,6 +104,7 @@ interface Site {
   text: string;                 // exact source text of the node
   // kind 'call'
   func_text?: string;           // source text of the callee expression ("model.fit", "pd.read_csv")
+  func_line?: number;           // the line CPython reports for the call (end line of the callee expression), only when it differs from `line`
   args?: Origin[];
   keywords?: Record<string, Origin>;   // "**" for a double-starred argument: { origin: 'unknown' }
   unpack?: number;              // the call is the RHS of a tuple-unpacking assignment with this many Name targets
@@ -218,7 +219,7 @@ Rules for M1–3 (SPEC "Transformer rules", narrowed):
 - `unpack` is set on a call site when it is the whole RHS of an assignment whose single target is a tuple or list of n plain `Name`s (no starred, no nesting).
 - **No `value` on destructuring.** A bind or store site carries `value` only when no target of the statement is a tuple, list or starred target, or in the one `unpack` case (single tuple/list target of plain Names whose RHS is a wrapped call). Omitted for `a, *b = f(x)`, `a, b = c = f(1)`, `x[0], y = f(1)`, `a, b = c` and `(a, b), c = f(1), 2`: the names hold parts of the value, so an origin would be a false wire. A missing wire is acceptable.
 - **Shadowed names.** A bare Name inside a comprehension that refers to one of that comprehension's own targets, or inside a class body that the class body itself binds, does not get a `name` origin: it is `{origin: 'expr', text: <name>, reads: []}`. Such names are also dropped from `reads` of other `expr` origins. (`n = 5; [f(n) for n in xs]` must not wire the outer `n` to `f`.)
-- **Unsupported frame tricks.** Aliased `eval`/`exec`/`locals` (`e = eval; e("x")`, `builtins.eval`) are wrapped, so they see the hook's frame: unsupported. Other frame-sensitive callees (`sys._getframe`, `warnings.warn` with `stacklevel`) also see the hook frame. The recorder handles warning locations (svl-a8j.3).
+- **Frame-sensitive callees.** The recorder makes each call from a `<student>` eval frame that shares the caller's globals and locals (section 4), so `sys._getframe(1)`, `locals()`/`eval`/`exec` aliases (`e = eval; e("x")`), pandas' `df.query("a > @t")` / `pd.eval` and `warnings.warn(stacklevel=...)` see the student's namespace, at the call's reported line, as in plain Python. Known limit: stack *listings* made by student code (`traceback.format_exc()`, `traceback.extract_stack()`, `inspect.stack()`) show the recorder's frames (`_rec_hook`, `_rec`, `_call`) and the extra `<student>` frame; svl-a8j.4's `student_traceback` cleans only the tracebacks the runtime formats itself.
 
 ## 4. Recorder (`recorder.py`)
 
@@ -303,13 +304,13 @@ class ValueTable:
 
 **Fingerprints.** Use the SPEC "Versions" fingerprint: shape, columns, dtypes; an estimator's attribute names and the identity of their values; a container's length and item identities. Add a content hash for tables and arrays at or under `hash_cells` (`pd.util.hash_pandas_object`, or `hashlib` over `ndarray.tobytes()`). Fall back to structural only when hashing raises (unhashable cells).
 
-**Object table.** Keep `id → n` with a `weakref.finalize` for objects that support weak references. Keep others alive in a list until the run ends.
+**Object table.** Keep `id → n` with a `weakref.finalize` for objects that support weak references. Keep others (lists, dicts, tuples, sets) alive in an LRU bounded by 256 entries and 16 MiB of estimated size (shallow size plus about 100 bytes per item for the fingerprint) (newest always kept); an evicted object also loses its `id → n` entry, so a later sighting gets a fresh object number.
 
 **Machines.** `isinstance(obj, sklearn.base.BaseEstimator)` (import lazily), or a class whose `__module__` is `__main__`, or a class in `machine_classes`. `attrs` for estimators: `get_params(deep=False)` plus public attributes ending in `_` (from `vars`). For student classes: public entries of `vars(obj)`. Scalar attrs get fresh tokens per summary.
 
 **Attrs depth and cap.** Only the summarized machine's own attributes are expanded: attribute values get a token and a summary but, even if they are machines, no `attrs` of their own. At most 64 attributes per machine are kept, in sorted name order. The summary of a token is written (`{type}` at least) before any student `__repr__` runs; a `BaseException` from a repr (stop) propagates.
 
-**Known limits.** Fingerprints hold no strong references (weakref per weakref-able item, id and type otherwise). Objects that cannot be weakly referenced (lists, dicts, tuples, sets) that were given a token live until the table is reset. Mutation of an object nested in an attribute (`est.coef_[0] = 1`) is invisible to the parent; the recorder checks tracked attributes itself.
+**Known limits.** Fingerprints hold no strong references (weakref per weakref-able item, id and type otherwise). Objects that cannot be weakly referenced (lists, dicts, tuples, sets) that were given a token are kept alive only while they are among the 256 most recently used (and within 16 MiB of estimated size), so a deleted container's `__del__` can run late by at most that window; an evicted object that is still alive is a missing wire, never a false one (it gets a fresh token on its next sighting). Mutation of an object nested in an attribute (`est.coef_[0] = 1`) is invisible to the parent; the recorder checks tracked attributes itself.
 
 **Summaries.** Pre-format with `str()` of each cell, truncated to 40 characters. `NaN` shows as `NaN`. Count the preview budget in UTF-8 bytes of the JSON-encoded preview.
 
@@ -593,9 +594,10 @@ Generated fixtures are reviewed like code. A PR that changes them must say why i
 17. **Hosting** is Cloudflare Pages on a dedicated subdomain, with COOP/COEP and the CSP in `_headers` (section 11).
 18. **Binding slots**: the batch `bindings` tuple has an optional fifth element `slot_key` (`b<site>.<name>`) for bindings past the per-site cap. The assembler keeps only the newest per key in each scope, and the log's `Scope.bindings` stay 3-tuples (section 7).
 19. **Method event names** are `<owner class>.<method>`, so the box says `LinearRegression.predict` even though the method is defined on `LinearModel`.
-20. **Warning locations**: every call goes through a per-site trampoline compiled as `<student>` at the call's line (section 4), so warnings raised at the call's own level blame the student's line and the warning registry is the student's. Warnings raised deeper in a library keep the library's location: the runtime attributes them with `Recorder.current_line()`. Tracebacks contain the trampoline as a second `<student>` frame (`<module>`, same line) after each hook frame; `student_traceback` should merge it with the frame above.
+20. **Calls are made from a `<student>` eval frame** that shares the caller's globals and locals and is positioned at the line CPython reports for the call (`func_line` when it differs from `line`). Warnings raised at the call's own level blame the student's line, the warning registry is the student's, and `df.query("@x")`, `sys._getframe(1)` and `locals()` aliases behave as in plain Python. Warnings raised deeper in a library keep the library's location: the runtime attributes them with `Recorder.current_line()`. Tracebacks contain that eval frame (named like the caller's frame, same line) after each hook frame; `student_traceback` should merge it with the frame above. Student-printed stack listings show recorder frames (section 3).
 21. **Expression events from arguments, owners and hidden calls** carry synthetic merge keys (section 4), and a store's expression RHS is wired through the names it reads (the hook does not receive the RHS object).
 22. **Binding rows are capped** at `4 * max_events` (section 4).
+23. **Unweakrefable containers are kept in a bounded LRU** (section 5), not until the end of the run.
 
 ## 11. Hosting and security headers
 

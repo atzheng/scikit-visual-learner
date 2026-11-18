@@ -41,6 +41,8 @@ _UNKNOWN: dict[str, Any] = {"origin": "unknown"}
 _CONTAINER_TYPES = frozenset({str, list, dict, set, tuple, frozenset, bytes, bytearray})
 _P = inspect.Parameter
 _MESSAGE_MAX = 500
+_BUILTINS_DICT = builtins.__dict__
+_STRONG_PLANS = 512  # cache bound for callables that cannot be weakly referenced
 _BIND_CAP_FACTOR = 4  # binding rows allowed per `max_events`
 
 
@@ -117,18 +119,23 @@ def _clip(s: str, n: int = _MESSAGE_MAX) -> str:
 
 
 def _tramp_code(site: dict[str, Any]) -> types.CodeType:
-    tree = ast.parse("def __t(f, a, k):\n    return f(*a, **k)\n")
-    line, end_line = site["line"], site["end_line"]
-    col, end_col = site["col"], site["end_col"]
+    """`__rc__[0](*__rc__[1], **__rc__[2])` as an eval code object at the call's own position.
+
+    It runs with the *caller's* globals and locals (see `Recorder._call`), so the callee's immediate
+    caller frame is the student's namespace: `df.query("a > @t")`, `sys._getframe(1).f_locals`
+    and warnings blamed on a stack level all behave as in plain Python.
+    """
+    tree = ast.parse("__rc__[0](*__rc__[1], **__rc__[2])", mode="eval")
+    line = site.get("func_line", site["line"])  # the line CPython reports for the call
+    end_line = site["end_line"]
+    col, end_col = (site["col"], site["end_col"]) if line == site["line"] else (0, site["end_col"])
     if line == end_line and end_col < col:
         end_col = col
     for n in ast.walk(tree):
         if hasattr(n, "lineno"):
             n.lineno, n.end_lineno = line, end_line  # type: ignore[attr-defined]
             n.col_offset, n.end_col_offset = col, end_col  # type: ignore[attr-defined]
-    module = compile(tree, "<student>", "exec")
-    inner = next(c for c in module.co_consts if isinstance(c, types.CodeType))
-    return inner.replace(co_name="<module>", co_qualname="<module>")
+    return compile(tree, "<student>", "eval")
 
 
 def _is_student_code(fn: Any) -> bool:
@@ -217,8 +224,13 @@ class Recorder:
             self.config.preview_bytes, self.config.hash_cells, self.config.machine_classes
         )
         self._draw = frozenset(self.config.draw_modules)
-        self._plans: dict[Any, _Plan | None] = {}
-        self._tramps: list[Callable[..., Any] | None] = [None] * len(sites)
+        self._plans: weakref.WeakKeyDictionary[Any, dict[Any, _Plan | None]] = (
+            weakref.WeakKeyDictionary()
+        )
+        self._strong: dict[Any, _Plan | None] = {}
+        self._fresh_site: int | None = None  # site of the call that just finished
+        self._chk: set[int] = set()  # ids fingerprinted in the current phase of a call
+        self._codes: dict[tuple[int, str], types.CodeType] = {}
         self._meta: dict[int, _SiteMeta] = {}
         self._reads_cache: dict[str, list[str]] = {}
         self._reset_state()
@@ -292,22 +304,41 @@ class Recorder:
     # -- plans (call filtering) ---------------------------------------------------------------
 
     def _plan(self, fn: Any) -> _Plan | None:
+        """The cached decision for a callable. The cache never keeps callables alive."""
         t = type(fn)
+        sub: Any = None
         try:
             if t is types.MethodType:
-                key: Any = ("m", type(fn.__self__), fn.__func__)
-            elif t is types.BuiltinFunctionType or t is types.BuiltinMethodType:
-                s = getattr(fn, "__self__", None)
-                key = ("b", type(s), getattr(fn, "__name__", None)) if _is_instance(s) else fn
+                s = fn.__self__
+                owner_key: Any = fn.__func__
+                sub = "cm" if isinstance(s, type) else type(s)
+            elif (t is types.BuiltinFunctionType or t is types.BuiltinMethodType) and _is_instance(
+                getattr(fn, "__self__", None)
+            ):
+                owner_key = type(fn.__self__)
+                sub = getattr(fn, "__name__", None)
             else:
-                key = fn
-            hash(key)
+                owner_key = fn
+            try:
+                slot = self._plans.get(owner_key)
+                if slot is None:
+                    slot = self._plans[owner_key] = {}
+            except TypeError:  # not weakly referenceable (or unhashable): bounded strong cache
+                key = (owner_key, sub)
+                hash(key)
+                if len(self._strong) > _STRONG_PLANS:
+                    self._strong.clear()
+                try:
+                    return self._strong[key]
+                except KeyError:
+                    plan = self._strong[key] = self._decide(fn)
+                    return plan
         except TypeError:
             return self._decide(fn)
         try:
-            return self._plans[key]
+            return slot[sub]
         except KeyError:
-            plan = self._plans[key] = self._decide(fn)
+            plan = slot[sub] = self._decide(fn)
             return plan
 
     def _decide(self, fn: Any) -> _Plan | None:
@@ -370,21 +401,34 @@ class Recorder:
 
     # -- hook entry points --------------------------------------------------------------------
 
-    def _tramp(self, site: int, frame: types.FrameType) -> Callable[..., Any]:
-        g = frame.f_globals
-        t = self._tramps[site]
-        if t is None or t.__globals__ is not g:
-            t = self._tramps[site] = types.FunctionType(_tramp_code(self.sites[site]), g)
-        return t
-
     def _call(self, site: int, fn: Any, args: Any, kwargs: Any, frame: types.FrameType) -> Any:
-        """Make the call through the trampoline (falls back to a plain call)."""
+        """Make the call from a `<student>` frame that shares the caller's namespace.
+
+        The callee's immediate caller is then an eval frame whose globals and locals are the
+        student's own (at module level `f_locals is f_globals`), at the call's reported line.
+        """
         try:
-            t = self._tramp(site, frame)
+            fc = frame.f_code
+            key = (
+                site,
+                fc.co_qualname,
+            )  # the frame is named like the caller's (`C` in a class body)
+            code = self._codes.get(key)
+            if code is None:
+                code = self._codes[key] = _tramp_code(self.sites[site]).replace(
+                    co_name=fc.co_name, co_qualname=fc.co_qualname
+                )
+            g = frame.f_globals
+            loc = frame.f_locals
         except Exception as e:  # noqa: BLE001
             self._degrade("trampoline", e)
             return fn(*args, **kwargs)
-        return t(fn, args, kwargs)
+        bdict = _BUILTINS_DICT
+        bdict["__rc__"] = (fn, args, kwargs)
+        try:
+            return eval(code, g) if loc is g else eval(code, g, loc)  # noqa: S307
+        finally:
+            bdict["__rc__"] = None
 
     def _tick(self) -> None:
         """Common hook entry: continuing code means an earlier exception was caught."""
@@ -463,6 +507,8 @@ class Recorder:
         try:
             info = self.sites[site]
             key = f"s{site}"
+            self._chk = set()
+            self._fresh_site = None
             owner_obj: Any = None
             owner_tok: str | None = None
             inputs: list[dict[str, Any]] = []
@@ -471,7 +517,7 @@ class Recorder:
                 owner_obj = fn.__self__
                 machine = vt.classify(owner_obj) == "reference" and vt.is_machine(owner_obj)
                 if machine:
-                    vt.check(owner_obj)
+                    self._check(owner_obj)
                     owner_tok = vt.token(owner_obj)
                     vt.summarize(owner_tok, owner_obj)
                 else:
@@ -540,7 +586,13 @@ class Recorder:
         for j in range(idx, npos):  # more positionals than the signature takes: the call fails
             out.append((f"arg{j}", args[j], j))
         if has_var_kw or any(k not in named for k in kwargs):
-            out.extend((k, v, k) for k, v in kwargs.items() if k not in named)
+            taken = {n for n, _ in params}  # a **kw key equal to a positional-only name
+            var_kw = next((n for n, k in params if k is _P.VAR_KEYWORD), "kwargs")
+            out.extend(
+                (f"{var_kw}[{k}]" if k in taken else k, v, k)
+                for k, v in kwargs.items()
+                if k not in named
+            )
         return out
 
     def _origin(self, site: int, info: dict[str, Any], ref: int | str) -> dict[str, Any]:
@@ -621,10 +673,17 @@ class Recorder:
             return self._expr_event(ex_site, ex_key, o["text"], o["reads"], value, ())
         if kind == "call" and not vt.seen(value) and self._out_token(o["site"], value) is None:
             return self._hidden_call(o["site"], value)
-        vt.check(value)
+        self._check(value)
         tok = vt.token(value)
         vt.summarize(tok, value)
         return tok
+
+    def _check(self, obj: Any) -> tuple[str, str] | None:
+        """`vt.check`, at most once per phase of a call (fingerprints can be expensive)."""
+        if id(obj) in self._chk:
+            return None
+        self._chk.add(id(obj))
+        return self.vt.check(obj)
 
     def _out_token(self, site: int, value: Any, pos: int | None = None) -> str | None:
         outs = self._site_out.get(site)
@@ -675,7 +734,7 @@ class Recorder:
                         continue
                     tok = rec[0]
                 else:
-                    vt.check(obj)
+                    self._check(obj)
                     tok = vt.token(obj)
                     vt.summarize(tok, obj)
             out.append({"param": name, "origin": "name", "value": tok})
@@ -695,6 +754,7 @@ class Recorder:
         scalar = vt.classify(value) == "scalar"
         inputs = self._read_inputs(reads, rebound)
         tok = vt.fresh_scalar(value) if scalar else vt.token(value)
+        self._chk.add(id(value))  # first sight: the baseline fingerprint was just taken
         alloc = self._alloc(key, counts)
         if alloc is None:
             return tok
@@ -748,13 +808,15 @@ class Recorder:
                     pass
         out.extend(extra)
         for o in out:  # baseline before the call (first sight) and unblamed changes
-            vt.check(o)
+            self._check(o)
         return out
 
     def _mutations(self, ctx: _Ctx) -> list[list[str]]:
         vt = self.vt
         out: list[list[str]] = []
+        self._chk = set()  # a new phase: what the call did to its inputs
         for o in ctx.targets:
+            self._chk.add(id(o))
             ch = vt.check(o)
             if ch is not None:
                 vt.summarize(ch[1], o)
@@ -813,6 +875,7 @@ class Recorder:
             )
         finally:
             vt.in_reentry = prev
+        self._fresh_site = ctx.site
         if self.on_exit is not None:
             self.on_exit(ctx.i)
 
@@ -824,7 +887,7 @@ class Recorder:
         if cls == "scalar":
             tok = vt.fresh_scalar(item)
         else:
-            vt.check(item)
+            self._check(item)
             tok = vt.token(item)
         vt.summarize(tok, item)
         return tok
@@ -903,6 +966,10 @@ class Recorder:
         vt = self.vt
         info = self.sites[site]
         o = info.get("value")
+        # `x = f(...)`: the call just fingerprinted its outputs, nothing ran since
+        if not (o is not None and o["origin"] == "call" and o["site"] == self._fresh_site):
+            self._chk = set()
+        self._fresh_site = None
         targets: list[str] = info.get("targets") or list(mapping)
         rebound = frozenset(mapping)
         rows: list[tuple[str, str | None]] = []
@@ -987,7 +1054,7 @@ class Recorder:
             inner = o["site"]  # type: ignore[index]
             if not vt.seen(obj) and self._out_token(inner, obj) is None:
                 return self._hidden_call(inner, obj)
-        vt.check(obj)
+        self._check(obj)
         return vt.token(obj)
 
     def _inplace_event(
@@ -1043,6 +1110,7 @@ class Recorder:
 
     def _store_inner(self, site: int, base: Any) -> None:
         vt = self.vt
+        self._chk = set()
         if vt.classify(base) != "reference":
             return
         info = self.sites[site]
@@ -1058,10 +1126,11 @@ class Recorder:
                 for r in self._read_inputs(o["reads"], frozenset({root})):
                     inputs.append({**r, "param": f"value[{r['param']}]", "origin": "expr"})
             elif kind == "call":
+                # the call's output is usually already freed (a temporary): use the token that was
+                # issued for it, which cannot be a false wire (a `call` origin is static)
                 out = self._site_out.get(o["site"])
-                obj = out[0][0]() if out else None
-                if obj is not None:
-                    inputs.append(self._input("value", o, obj, site, f"s{site}.value"))
+                if out and out[0][1] is not None:
+                    inputs.append({"param": "value", "origin": "call", "value": out[0][1]})
             else:
                 ns = self.namespace or {}
                 if kind == "name" and o["name"] in ns:

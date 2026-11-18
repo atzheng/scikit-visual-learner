@@ -993,6 +993,211 @@ def test_expr_event_keys_do_not_collide_with_their_consumer() -> None:
     assert full["merge_key"].startswith("s") and "." not in full["merge_key"]
 
 
+# -- review fixes (PR #13) -------------------------------------------------------------------------
+
+
+def _same_as_plain(src: str, prelude: bool = False) -> tuple[Result, Result]:
+    r = record(src, prelude=prelude)
+    p = plain(src, prelude=prelude)
+    assert type(r.err) is type(p.err), (r.err, p.err)
+    assert r.stdout == p.stdout
+    assert r.rec.diagnostics == []
+    return r, p
+
+
+def test_query_with_at_sees_the_callers_locals() -> None:
+    src = """
+import pandas as pd
+df = pd.DataFrame({'a': [1, 2, 3]})
+t = 1
+print(len(df.query('a > @t')))
+print([len(df.query('a > @t')) for t in (0, 1, 2)])
+print(list(df.eval('a + @t')))
+print(list(pd.eval('df.a + t')))
+print([list(df.eval('a * @k')) for k in (2, 3)])
+class K:
+    t = 1
+    n = len(df.query('a > @t'))
+    m = [len(df.query('a > @u')) for u in (0, 1)]
+print(K.n, K.m)
+gen = (len(df.query('a > @g')) for g in (0, 2))
+print(list(gen))
+"""
+    r, p = _same_as_plain(src)
+    assert r.err is None and "UndefinedVariableError" not in r.stdout
+
+
+def test_callee_sees_the_students_frame() -> None:
+    src = """
+import sys
+def who():
+    f = sys._getframe(1)
+    return f.f_locals is globals(), f.f_globals is globals(), f.f_code.co_name, f.f_code.co_filename
+print(who())
+print([who() for _ in range(1)])
+class C:
+    r = who()
+print(C.r)
+"""
+    r, p = _same_as_plain(src)
+    assert "(True, True, '<module>', '<student>')" in r.stdout
+
+
+def test_aliased_eval_exec_locals_see_the_callers_namespace() -> None:
+    src = """
+e = eval
+x = 5
+print(e("x + 1"))
+ex = exec
+ex("y = 7")
+print(y)
+lc = locals
+print(sorted(k for k in lc() if k in ("x", "y")))
+def f():
+    return [e("x * 2") for _ in range(1)]
+print(f())
+"""
+    r, _ = _same_as_plain(src)
+    assert r.err is None
+
+
+def test_pandas_stack_level_is_the_student_frame() -> None:
+    # pandas walks out of its own package to blame a frame: it must be `<student>`, not the hook
+    src = """import warnings
+import pandas as pd
+warnings.simplefilter("always")
+s = pd.Series([1, 2, 3])
+x = s.rank(
+    method="average")
+"""
+    with warnings.catch_warnings(record=True) as got:
+        record(src, prelude=False)
+    with warnings.catch_warnings(record=True) as want:
+        plain(src, prelude=False)
+    assert [(w.filename, w.lineno) for w in got] == [(w.filename, w.lineno) for w in want]
+
+
+def test_store_with_call_rhs_keeps_its_wire() -> None:
+    r = record(
+        """
+df = pd.DataFrame({'a': [1., 2, 3], 'b': [4., 5, 6]})
+m = LinearRegression().fit(df[['a']], df['b'])
+df['pred'] = m.predict(df[['a']])
+df['z'] = pd.Series([1, 2, 3])
+d = {}
+d['k'] = m.predict(df[['a']])
+"""
+    )
+    preds = r.by_name("LinearRegression.predict")
+    stores = [e for e in r.events if e["kind"] == "store"]
+    assert [s["name"] for s in stores] == [
+        "df['pred'] = m.predict(df[['a']])",
+        "df['z'] = pd.Series([1, 2, 3])",
+        "d['k'] = m.predict(df[['a']])",
+    ]
+    assert inp(stores[0], "value") == {
+        "param": "value",
+        "origin": "call",
+        "value": preds[0]["outputs"][0],
+    }
+    assert inp(stores[1], "value")["value"] == r.by_name("Series")[0]["outputs"][0]
+    assert inp(stores[2], "value")["value"] == preds[1]["outputs"][0]
+
+
+def test_warning_line_in_a_multiline_method_chain_matches_cpython() -> None:
+    src = """import warnings
+class A:
+    def m(self, *a):
+        warnings.warn("w", stacklevel=2)
+        return self
+a = A()
+warnings.simplefilter("default")
+(a
+   .m()
+   .m())
+a.m(
+    1,
+    2)
+a.m(1).m(
+    2).m(3)
+x = [a.m(i)
+     for i in range(2)]
+"""
+    with warnings.catch_warnings(record=True) as got:
+        r = record(src, prelude=False)
+    with warnings.catch_warnings(record=True) as want:
+        plain(src, prelude=False)
+    assert [(w.filename, w.lineno) for w in got] == [("<student>", w.lineno) for w in want]
+    assert len(got) >= 4
+    assert r.log["sites"][[s["text"] for s in r.log["sites"]].index("a\n   .m()")]["func_line"] == 9
+
+
+def test_positional_only_name_and_var_keyword_do_not_clash() -> None:
+    r = record(
+        """
+def f(a, /, **kw):
+    return (a, kw)
+
+out = f(1, a=2, b=3)
+""",
+        prelude=False,
+    )
+    assert r.ns["out"] == (1, {"a": 2, "b": 3})
+    ev = r.one("f")
+    assert [i["param"] for i in ev["inputs"]] == ["a", "kw[a]", "b"]
+
+
+def test_plan_cache_does_not_keep_callables_alive() -> None:
+    import gc
+
+    src = """
+import weakref
+refs = []
+for k in range(5):
+    f = lambda x, k=k: x
+    refs.append(weakref.ref(f))
+    f(1)
+"""
+    r = record(src, prelude=False)
+    del r.ns["f"]
+    gc.collect()
+    assert len(r.ns["refs"]) == 5 and all(w() is None for w in r.ns["refs"])
+    assert len(r.rec._strong) == 0
+
+
+def test_each_input_is_fingerprinted_at_most_twice_per_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from machines.values import ValueTable
+
+    calls: list[int] = []
+    orig = ValueTable._fingerprint
+
+    def counting(self: ValueTable, obj: Any) -> Any:
+        if isinstance(obj, pd.DataFrame):
+            calls.append(id(obj))
+        return orig(self, obj)
+
+    monkeypatch.setattr(ValueTable, "_fingerprint", counting)
+    r = record(FRAME + "x = df.mean()\n")
+    assert r.err is None
+    # one baseline (first sight) at the frame's creation, then pre- and post-call for `mean`
+    assert len(calls) <= 3, calls
+
+
+def test_deleted_list_runs_del_even_in_a_loop_of_big_lists() -> None:
+    src = """
+import numpy as np
+for i in range(30):
+    data = list(range(200000))
+    arr = np.array(data)
+    s = np.sum(arr)
+"""
+    r = record(src, prelude=False)
+    assert r.err is None
+    assert len(r.rec.vt._keep) <= 2  # 16 MiB budget; a 200k list weighs about 21 MB with keys
+
+
 # -- determinism ----------------------------------------------------------------------------------
 
 

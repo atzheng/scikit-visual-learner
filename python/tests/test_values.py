@@ -58,18 +58,87 @@ def test_dead_weakref_entries_removed(vt: ValueTable) -> None:
     assert vt._ids == {}
 
 
-def test_non_weakrefable_kept_alive_until_reset(vt: ValueTable) -> None:
+def test_non_weakrefable_kept_alive_within_bound_until_reset(vt: ValueTable) -> None:
     lst = [[1], [2]]
     with pytest.raises(TypeError):
         weakref.ref(lst)
     t = vt.token(lst)
-    assert any(x is lst for x in vt._keep)
+    assert any(o is lst for o, _ in vt._keep.values())
     del lst
     gc.collect()
     assert len(vt._keep) == 1
-    assert vt.token(vt._keep[0]) == t
+    kept = next(iter(vt._keep.values()))[0]
+    assert vt.token(kept) == t
     vt.reset()
-    assert vt._keep == []
+    assert len(vt._keep) == 0
+
+
+def test_keep_is_an_lru_and_eviction_drops_the_number(vt: ValueTable) -> None:
+    from machines import values
+
+    class A:
+        deleted: list[int] = []
+
+        def __init__(self, k: int) -> None:
+            self.k = k
+
+        def __del__(self) -> None:
+            A.deleted.append(self.k)
+
+    n = values._KEEP_MAX + 20
+    tokens = []
+    for k in range(n):
+        lst = [A(k)]
+        tokens.append(vt.token(lst))
+        del lst
+    gc.collect()
+    assert len(vt._keep) == values._KEEP_MAX
+    assert sorted(A.deleted) == list(range(20))  # the evicted ones were freed (`__del__` ran)
+    assert len(vt._ids) == values._KEEP_MAX  # their id -> number entries went with them
+
+
+def test_keep_has_a_byte_budget_and_always_holds_the_newest(vt: ValueTable) -> None:
+    from machines import values
+
+    big = [0] * (values._KEEP_BYTES // (8 + values._KEY_BYTES) + 10)
+    vt.token(big)
+    assert len(vt._keep) == 1  # alone over the budget, still kept: its number must stay valid
+    small = [1]
+    vt.token(small)
+    assert len(vt._keep) == 1 and next(iter(vt._keep.values()))[0] is small
+
+
+def test_no_false_wire_after_eviction_and_id_reuse(vt: ValueTable) -> None:
+    from machines import values
+
+    first = [1, 2, 3]
+    t_first = vt.token(first)
+    first_id = id(first)
+    others = [[i] for i in range(values._KEEP_MAX + 5)]
+    for o in others:
+        vt.token(o)
+    assert first_id not in vt._ids  # evicted
+    del first
+    gc.collect()
+    # new lists may reuse the freed id; none may inherit the old token
+    seen = set()
+    for _ in range(200):
+        fresh = [9, 9]
+        t = vt.token(fresh)
+        assert t != t_first and t not in seen
+        seen.add(t)
+    still = others[-1]
+    assert vt.token(still) == vt.token(still)  # a live, tracked object keeps its token
+
+
+def test_evicted_but_alive_object_gets_a_fresh_token(vt: ValueTable) -> None:
+    from machines import values
+
+    keep = [0]
+    t0 = vt.token(keep)
+    for i in range(values._KEEP_MAX + 1):
+        vt.token([i])
+    assert vt.token(keep) != t0  # a missing wire, never a false one
 
 
 def test_fresh_scalar_always_new(vt: ValueTable) -> None:
