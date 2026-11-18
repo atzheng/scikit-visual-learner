@@ -303,6 +303,9 @@ class _Instrument(ast.NodeTransformer):
 
         site = self._base("call", span)
         site["func_text"] = func_text
+        func_line = node.func.end_lineno
+        if func_line is not None and func_line != span[0]:
+            site["func_line"] = func_line  # the line CPython reports for the call (warnings)
         site["args"] = [self._resolve(p) if p else {"origin": "unknown"} for p in arg_pre]
         site["keywords"] = {k: self._resolve(p) if p else {"origin": "unknown"} for k, p in kw_pre}
         sid = self._add(site)
