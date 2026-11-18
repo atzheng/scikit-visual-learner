@@ -499,7 +499,7 @@ interface Laid { width: number; height: number;
 function mount(el: HTMLElement, opts: { onSelectNode(id: string): void; onHoverEdge(id: string | null, at: DOMPoint /* viewport coords */): void;
   onClickEdge(id: string): void }): DiagramController;
 interface DiagramController {
-  setGraph(model: GraphModel, laid: Laid): void;   // builds the SVG once; re-applies the last state
+  setGraph(model: GraphModel, laid: Laid): void;   // builds the SVG once. Re-applies the last state only if every node/edge id in it exists in the new model (a streamed re-layout of the same run keeps its step); otherwise the state is dropped. Callers should call setState right after setGraph. Calls onHoverEdge(null) if a hover was active. After destroy() it is a no-op
   setState(state: StepState, log?: EventLog): void;   // reveal, highlight current, badges, active tokens; no re-layout. `log` supplies value types (wire labels) and attributes
   focusNode(id: string): void;                // scroll into view (keyboard focus is not moved)
   hoverNode(id: string | null): void;         // hover style (editor cursor sync)

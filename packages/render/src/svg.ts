@@ -191,6 +191,10 @@ function s<K extends keyof SVGElementTagNameMap>(
 const setText = (el: Element, text: string): void => {
   if (el.textContent !== text) el.textContent = text;
 };
+/** Writes an attribute only when it changes. */
+const setAttr = (el: Element, k: string, v: string): void => {
+  if (el.getAttribute(k) !== v) el.setAttribute(k, v);
+};
 const toggle = (el: Element, cls: string, on: boolean): void => {
   el.classList.toggle(cls, on);
 };
@@ -231,8 +235,6 @@ export interface SvgDom {
   nodes: Map<string, NodeHandle>;
   edges: Map<string, EdgeHandle>;
 }
-
-const ARROW_ID = 'md-arrow';
 
 function nodeLabel(n: GNode): string {
   switch (n.kind) {
@@ -280,7 +282,9 @@ function buildCall(
   }
 }
 
-export function buildSvg(doc: Document, model: GraphModel, laid: Laid): SvgDom {
+/** `uid` makes the arrow marker id unique per diagram (several can share a page). */
+export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'): SvgDom {
+  const ARROW_ID = `md-arrow-${uid}`;
   const svg = s(
     doc,
     'svg',
@@ -504,10 +508,10 @@ function fitLabelRing(h: EdgeHandle): void {
     (h.typeEl.textContent?.length ?? 0) * 6.6 + (h.nameEl.textContent?.length ?? 0) * 6 + 8,
   );
   const x = h.anchor.anchor === 'start' ? h.anchor.x - 3 : h.anchor.x - w / 2;
-  ring.setAttribute('x', String(x));
-  ring.setAttribute('y', String(h.anchor.y - 12));
-  ring.setAttribute('width', String(w));
-  ring.setAttribute('height', '18');
+  setAttr(ring, 'x', String(x));
+  setAttr(ring, 'y', String(h.anchor.y - 12));
+  setAttr(ring, 'width', String(w));
+  setAttr(ring, 'height', '18');
 }
 
 export function applyState(
@@ -528,6 +532,12 @@ export function applyState(
     const exec = state.activeExecution.get(h.id);
     const status = statusOf(exec);
     const isCurrent = visible && state.currentNode === h.id;
+    // the instance whose method (or creation/mutation) is the current event
+    const ownsCurrent =
+      isCurrent ||
+      (visible &&
+        state.currentNode !== null &&
+        dom.nodes.get(state.currentNode)?.node.parent === h.id);
     for (const el of h.stateEls) {
       toggle(el, 'md-hidden', !visible);
       toggle(el, 'md-current', isCurrent);
@@ -535,8 +545,8 @@ export function applyState(
       toggle(el, 'md-handled', status?.kind === 'handled');
       toggle(el, 'md-stopped', status?.kind === 'stopped');
     }
-    if (isCurrent) h.g.setAttribute('aria-current', 'step');
-    else h.g.removeAttribute('aria-current');
+    if (isCurrent) setAttr(h.g, 'aria-current', 'step');
+    else if (h.g.hasAttribute('aria-current')) h.g.removeAttribute('aria-current');
     if (h.msg) {
       setText(h.msg, status?.text ?? '');
       toggle(h.msg, 'md-hidden', !status);
@@ -549,17 +559,16 @@ export function applyState(
         const t = badgeText(b.k, b.n, atEnd);
         setText(h.badge.text, t);
         const w = Math.max(30, t.length * 6.8 + 12);
-        h.badge.bg.setAttribute('width', String(w));
-        h.badge.bg.setAttribute('x', String(h.laid.x + h.laid.w - w));
-        h.badge.text.setAttribute('x', String(h.laid.x + h.laid.w - w / 2));
+        setAttr(h.badge.bg, 'width', String(w));
+        setAttr(h.badge.bg, 'x', String(h.laid.x + h.laid.w - w));
+        setAttr(h.badge.text, 'x', String(h.laid.x + h.laid.w - w / 2));
       }
     }
-    const aria =
+    let aria =
       h.label +
       (b ? `, run ${b.k} of ${b.n}` : '') +
       (status ? `, ${status.text.replace(/^(⚠|⏹) /, '')}` : '') +
       (isCurrent ? ', current step' : '');
-    if (h.g.getAttribute('aria-label') !== aria) h.g.setAttribute('aria-label', aria);
 
     if (h.rows && h.node.kind === 'instance') {
       const token = state.activeVersion.get(h.id);
@@ -567,7 +576,7 @@ export function applyState(
       const cap = h.rows.length;
       const overflow = rows.length > cap;
       const shown = overflow ? rows.slice(0, Math.max(cap - 1, 0)) : rows;
-      const flashing = isCurrent && stepping && !ctx.reducedMotion;
+      const flashing = ownsCurrent && stepping && !ctx.reducedMotion;
       h.rows.forEach((r, k) => {
         const row = shown[k];
         const more = overflow && k === cap - 1;
@@ -582,7 +591,7 @@ export function applyState(
         if (!row) return;
         setText(r.name, row.name);
         setText(r.detail, row.detail);
-        const isChanged = !row.param && changed.has(row.name);
+        const isChanged = ownsCurrent && !row.param && changed.has(row.name);
         toggle(r.g, 'md-changed', isChanged);
         toggle(r.bullet, 'md-hidden', !isChanged);
         if (isChanged && flashing) {
@@ -590,11 +599,14 @@ export function applyState(
           ctx.schedule(() => r.g.classList.remove('md-flash'));
         } else if (!isChanged) r.g.classList.remove('md-flash');
       });
-      const attrLine = rows.filter((r) => !r.param && changed.has(r.name)).map((r) => r.name);
+      const attrLine = rows
+        .filter((r) => ownsCurrent && !r.param && changed.has(r.name))
+        .map((r) => r.name);
       if (attrLine.length > 0) {
-        h.g.setAttribute('aria-label', `${aria}, changed: ${attrLine.join(', ')}`);
+        aria = `${aria}, changed: ${attrLine.join(', ')}`;
       }
     }
+    setAttr(h.g, 'aria-label', aria);
   }
 
   for (const h of dom.edges.values()) {
@@ -605,12 +617,12 @@ export function applyState(
     const name = visible ? (h.edge.nameLabel ?? '') : '';
     setText(h.typeEl, type);
     setText(h.nameEl, name);
-    h.nameEl.setAttribute('dx', type && name ? '4' : '0');
+    setAttr(h.nameEl, 'dx', type && name ? '4' : '0');
     const hasText = visible && (type !== '' || name !== '') && h.anchor !== null;
     toggle(h.label, 'md-hidden', !hasText);
     if (hasText) {
       const desc = [type, name && `named ${name}`].filter(Boolean).join(', ');
-      h.label.setAttribute('aria-label', `wire: ${desc}`);
+      setAttr(h.label, 'aria-label', `wire: ${desc}`);
       fitLabelRing(h);
     }
   }

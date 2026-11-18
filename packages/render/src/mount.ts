@@ -45,6 +45,8 @@ function closest(target: EventTarget | null, attr: string): Element | null {
   return target instanceof Element ? target.closest(`[${attr}]`) : null;
 }
 
+let uidCounter = 0;
+
 export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
   const doc = el.ownerDocument;
   let dom: SvgDom | null = null;
@@ -54,6 +56,8 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
   let hoverNodeId: string | null = null;
   let selectedId: string | null = null;
   let ctx: ApplyContext | null = null;
+  let destroyed = false;
+  const uid = String(uidCounter++);
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const reduced = (): boolean =>
     typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -138,9 +142,11 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
 
   const controller: DiagramController = {
     setGraph(m, laid) {
+      if (destroyed) return;
+      if (hoverEdge) setHoverEdge(null, point(0, 0));
       if (dom) for (const [t, f] of listeners) dom.svg.removeEventListener(t, f);
       dom?.svg.remove();
-      dom = buildSvg(doc, m, laid);
+      dom = buildSvg(doc, m, laid, uid);
       for (const [t, f] of listeners) dom.svg.addEventListener(t, f);
       el.append(dom.svg);
       hoverEdge = null;
@@ -160,13 +166,22 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
       };
       applyNodeClass(hoverNodeId, 'md-hover');
       applyNodeClass(selectedId, 'md-selected');
-      // keep what the student was looking at across a re-layout (streamed updates)
+      // Keep the step across a re-layout of the same run (streamed updates), but only when every id the
+      // state refers to exists in the new model; otherwise drop it, and the caller sets a fresh state.
+      if (lastState) {
+        const ids = new Set([...m.nodes.map((n) => n.id), ...m.edges.map((e) => e.id)]);
+        const ok = [...lastState.visibleNodes, ...lastState.visibleEdges].every((id) =>
+          ids.has(id),
+        );
+        if (!ok) lastState = null;
+      }
       if (lastState) {
         ctx.prevCurrent = lastState.current;
         applyState(dom, lastState, lastLog, ctx);
       }
     },
     setState(state, log) {
+      if (destroyed) return;
       lastState = state;
       if (log) lastLog = log;
       if (!dom || !ctx) return;
@@ -205,6 +220,10 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
       dom?.svg.remove();
       dom = null;
       lastState = null;
+      hoverEdge = null;
+      hoverNodeId = null;
+      selectedId = null;
+      destroyed = true;
     },
   };
   return controller;

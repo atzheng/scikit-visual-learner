@@ -171,6 +171,16 @@
   stroke: var(--md-wire);
   stroke-width: var(--md-current-stroke-width);
 }
+.md-node.md-current .md-hit {
+  stroke: var(--md-wire);
+  stroke-width: 2px;
+  rx: 4px;
+}
+.md-node.md-current .md-expr-text,
+.md-node.md-current .md-source-text {
+  font-weight: bold;
+  text-decoration: underline;
+}
 /* errors: red outline plus a warning sign and message (see .md-msg) */
 .md-node.md-error .md-box,
 .md-inst-box.md-error {

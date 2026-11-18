@@ -4,7 +4,7 @@ import ELKBundled from 'elkjs/lib/elk.bundled.js';
 import type { ELK } from 'elkjs/lib/elk-api';
 import { buildGraph, stateAt } from '@machines/log';
 import type { EventLog, GraphModel } from '@machines/log';
-import { linregLog, loopLog, splitLog } from '../dev/models';
+import { linregLog, loopLog, splitLog, twoModelsLog } from '../dev/models';
 import { layout } from './layout';
 import type { Laid } from './layout';
 import { createLegend, LEGEND_ITEMS } from './legend';
@@ -190,6 +190,96 @@ describe('setState', () => {
     const after = [...host.querySelectorAll('.md-attr:not(.md-hidden)')];
     expect(after.length).toBe(3);
     expect(after.some((r) => r.classList.contains('md-changed'))).toBe(false);
+  });
+});
+
+describe('review fixes', () => {
+  test('only the instance whose method is current shows changed attributes', async () => {
+    const log = twoModelsLog();
+    const { model, laid } = await prepare(log);
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log); // the last event is b.fit
+    const insts = [...host.querySelectorAll('.md-instance')];
+    expect(insts.length).toBe(2);
+    const changedPer = insts.map((g) => g.querySelectorAll('.md-attr.md-changed').length);
+    expect(changedPer.sort()).toEqual([0, 1]);
+    const cur = host.querySelector('.md-node.md-current')!;
+    expect(cur.querySelector('.md-name')?.textContent).toBe('Ridge.fit');
+    // the changed one is the instance that contains the current box
+    const owner = insts.find((g) => g.querySelector('.md-attr.md-changed'))!;
+    expect(owner.getAttribute('aria-label')).toContain('changed: coef_');
+    const other = insts.find((g) => g !== owner)!;
+    expect(other.getAttribute('aria-label')).not.toContain('changed');
+  });
+
+  test('the current expression gets a non-colour highlight hook', async () => {
+    const log = splitLog();
+    const { model, laid } = await prepare(log);
+    const expr = model.nodes.find((n) => n.kind === 'expr');
+    const c = setup();
+    c.setGraph(model, laid);
+    const step =
+      model.steps.indexOf((expr as { executions: { i: number }[] }).executions[0]!.i) + 1;
+    c.setState(stateAt(model, log, step), log);
+    const g = host.querySelector(`.md-expr[data-node="${expr!.id}"]`)!;
+    expect(g.classList.contains('md-current')).toBe(true);
+    expect(g.getAttribute('aria-current')).toBe('step');
+    expect(g.querySelector('.md-hit')).not.toBeNull();
+  });
+
+  test('setGraph clears an active hover, drops a stale state, and ids are per controller', async () => {
+    const log = splitLog();
+    const { model, laid } = await prepare(log);
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log);
+    const edge = host.querySelector('.md-edge')!;
+    edge
+      .querySelector('.md-wire-hit')!
+      .dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    c.setGraph(model, laid);
+    expect(calls.hover.at(-1)).toBeNull();
+    // same model: the step is kept
+    expect(host.querySelectorAll('.md-node:not(.md-hidden)').length).toBeGreaterThan(0);
+    // another run: the old state is dropped, everything hidden until setState
+    const other = linregLog();
+    const p = await prepare(other);
+    c.setGraph(p.model, p.laid);
+    expect(host.querySelectorAll('.md-node:not(.md-hidden)').length).toBe(0);
+    const host2 = document.createElement('div');
+    document.body.append(host2);
+    const c2 = mount(host2, { onSelectNode() {}, onHoverEdge() {}, onClickEdge() {} });
+    c2.setGraph(p.model, p.laid);
+    const id = (r: HTMLElement): string => r.querySelector('marker')!.id;
+    expect(id(host2)).not.toBe(id(host));
+    c2.destroy();
+    host2.remove();
+  });
+
+  test('destroy clears state; setGraph afterwards is a no-op', async () => {
+    const log = splitLog();
+    const { model, laid } = await prepare(log);
+    const c = setup();
+    c.setGraph(model, laid);
+    c.hoverNode(model.nodes[0]!.id);
+    c.destroy();
+    c.setGraph(model, laid);
+    expect(host.querySelector('svg')).toBeNull();
+  });
+
+  test('identical setState calls write no attributes', async () => {
+    const log = linregLog();
+    const { model, laid } = await prepare(log);
+    const c = setup();
+    c.setGraph(model, laid);
+    const st = stateAt(model, log, 3);
+    c.setState(st, log);
+    const spy = vi.spyOn(Element.prototype, 'setAttribute');
+    c.setState(st, log);
+    c.setState(stateAt(model, log, 3), log);
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
 

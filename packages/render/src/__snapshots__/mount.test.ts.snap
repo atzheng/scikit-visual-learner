@@ -3,7 +3,7 @@
 exports[`snapshots > linreg, error 1`] = `
 "<svg width="500" height="432" viewBox="0 0 500 432" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
-<marker id="md-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+<marker id="md-arrow-16" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
 </path>
 </marker>
@@ -14,25 +14,25 @@ exports[`snapshots > linreg, error 1`] = `
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:src:n:88c6wt.0:arrays[0].>n:88c6wt.0.in:arrays[0]" class="md-edge">
-<path d="M131 34L131 90" marker-end="url(#md-arrow)" class="md-wire">
+<path d="M131 34L131 90" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M131 34L131 90" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:src:n:88c6wt.0:arrays[1].>n:88c6wt.0.in:arrays[1]" class="md-edge">
-<path d="M250 34L250 90" marker-end="url(#md-arrow)" class="md-wire">
+<path d="M250 34L250 90" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M250 34L250 90" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:0>n:12gqu2d.0@i:czvr3a.0.in:X" class="md-edge">
-<path d="M107.2 174L107.2 275" marker-end="url(#md-arrow)" class="md-wire">
+<path d="M107.2 174L107.2 275" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M107.2 174L107.2 275" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:2>n:12gqu2d.0@i:czvr3a.0.in:y" class="md-edge">
-<path d="M297.6 174L297.6 179Q297.6 184 292.6 184L192.2 184Q184.2 184 184.2 192L184.2 275" marker-end="url(#md-arrow)" class="md-wire">
+<path d="M297.6 174L297.6 179Q297.6 184 292.6 184L192.2 184Q184.2 184 184.2 192L184.2 275" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M297.6 174L297.6 179Q297.6 184 292.6 184L192.2 184Q184.2 184 184.2 192L184.2 275" class="md-wire-hit">
 </path>
@@ -167,7 +167,7 @@ exports[`snapshots > linreg, error 1`] = `
 exports[`snapshots > loop, step 2 1`] = `
 "<svg width="279" height="264" viewBox="0 0 279 264" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
-<marker id="md-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+<marker id="md-arrow-17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
 </path>
 </marker>
@@ -178,13 +178,13 @@ exports[`snapshots > loop, step 2 1`] = `
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:X.>n:12u9exh.0@i:vwx6qg.0.in:X" class="md-edge">
-<path d="M101 34L101 153" marker-end="url(#md-arrow)" class="md-wire">
+<path d="M101 34L101 153" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M101 34L101 153" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:y.>n:12u9exh.0@i:vwx6qg.0.in:y" class="md-edge">
-<path d="M178 34L178 153" marker-end="url(#md-arrow)" class="md-wire">
+<path d="M178 34L178 153" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M178 34L178 153" class="md-wire-hit">
 </path>
@@ -195,7 +195,7 @@ exports[`snapshots > loop, step 2 1`] = `
 <rect x="18" y="99" width="243" height="22" rx="11" class="md-pill">
 </rect>
 <text x="139.5" y="114" text-anchor="middle" class="md-pill-text">model: SGDRegressor</text>
-<g class="md-attr md-changed">
+<g class="md-attr md-changed md-flash">
 <rect x="15" y="123" width="249" height="18" rx="4" class="md-flash-bg">
 </rect>
 <text x="16" y="136" class="md-bullet">●</text>
@@ -272,7 +272,7 @@ exports[`snapshots > loop, step 2 1`] = `
 exports[`snapshots > split, end 1`] = `
 "<svg width="777" height="388" viewBox="0 0 777 388" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
-<marker id="md-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+<marker id="md-arrow-15" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
 </path>
 </marker>
@@ -281,19 +281,19 @@ exports[`snapshots > split, end 1`] = `
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:n:im9bq3.0.out:0>n:vx1anp.0.in:self" class="md-edge">
-<path d="M194 96L194 152" marker-end="url(#md-arrow)" class="md-wire">
+<path d="M194 96L194 152" marker-end="url(#md-arrow-15)" class="md-wire">
 </path>
 <path d="M194 96L194 152" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:vx1anp.0.out:0>n:sn2g45.0.in:arrays[0]" class="md-edge">
-<path d="M260.5 236L260.5 292" marker-end="url(#md-arrow)" class="md-wire">
+<path d="M260.5 236L260.5 292" marker-end="url(#md-arrow-15)" class="md-wire">
 </path>
 <path d="M260.5 236L260.5 292" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:x:12opl3.0.>n:sn2g45.0.in:arrays[1]" class="md-edge">
-<path d="M520.5 236L520.5 241Q520.5 246 515.5 246L394.5 246Q386.5 246 386.5 254L386.5 292" marker-end="url(#md-arrow)" class="md-wire md-dashed">
+<path d="M520.5 236L520.5 241Q520.5 246 515.5 246L394.5 246Q386.5 246 386.5 254L386.5 292" marker-end="url(#md-arrow-15)" class="md-wire md-dashed">
 </path>
 <path d="M520.5 236L520.5 241Q520.5 246 515.5 246L394.5 246Q386.5 246 386.5 254L386.5 292" class="md-wire-hit">
 </path>

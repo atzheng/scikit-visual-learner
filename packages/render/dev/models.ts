@@ -247,6 +247,43 @@ export function loopLog(): EventLog {
   return x.log();
 }
 
+/** Two Ridge instances fitted one after the other: stepping onto b.fit must not mark a's attributes changed. */
+export function twoModelsLog(): EventLog {
+  const x = new Builder();
+  const s0 = x.site('a = Ridge()', 1);
+  const s1 = x.site('b = Ridge()', 2);
+  const s2 = x.site('a.fit(X, y)', 3);
+  const s3 = x.site('b.fit(X, y)', 4);
+  x.val('v1.0', 'DataFrame', df(100, 3));
+  x.val('v2.0', 'Series', { shape: [100] });
+  x.bind('X', 'v1.0');
+  x.bind('y', 'v2.0');
+  x.val('v3.0', 'Ridge', { machine: true, attrs: {} });
+  x.ev(s0, 'constructor', 'Ridge', { outputs: ['v3.0'] });
+  x.bind('a', 'v3.0');
+  x.val('v4.0', 'Ridge', { machine: true, attrs: {} });
+  x.ev(s1, 'constructor', 'Ridge', { outputs: ['v4.0'] });
+  x.bind('b', 'v4.0');
+  x.val('ca', 'ndarray', { shape: [3] });
+  x.val('cb', 'ndarray', { shape: [3] });
+  x.val('v3.1', 'Ridge', { machine: true, attrs: { coef_: 'ca' } });
+  x.val('v4.1', 'Ridge', { machine: true, attrs: { coef_: 'cb' } });
+  const fitArgs = [wired('X', 'v1.0'), wired('y', 'v2.0')];
+  x.ev(s2, 'method', 'Ridge.fit', {
+    owner: 'v3.0',
+    inputs: fitArgs,
+    returns_self: true,
+    mutates: [['v3.0', 'v3.1']],
+  });
+  x.ev(s3, 'method', 'Ridge.fit', {
+    owner: 'v4.0',
+    inputs: fitArgs,
+    returns_self: true,
+    mutates: [['v4.0', 'v4.1']],
+  });
+  return x.log();
+}
+
 export const SCENARIOS: { name: string; log: () => EventLog }[] = [
   { name: 'golden_split-shaped', log: splitLog },
   { name: 'golden_linreg-shaped', log: () => linregLog() },
