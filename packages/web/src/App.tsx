@@ -1,4 +1,11 @@
-import { useCallback, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react';
 import { DiagramPane } from './diagram/DiagramPane';
 import { Editor } from './editor/Editor';
 import { OutputPane } from './output/OutputPane';
@@ -126,6 +133,16 @@ export function App() {
   const mainRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLElement>(null);
   const rightRef = useRef<HTMLElement>(null);
+  // While running, Esc anywhere on the page stops the run.
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      const s = useStore.getState();
+      if (s.running) s.stop();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
   const focusEditor = useCallback(() => document.getElementById('pane-editor')?.focus(), []);
   return (
     <div className="app">

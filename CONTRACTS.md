@@ -109,10 +109,11 @@ interface Site {
   unpack?: number;              // the call is the RHS of a tuple-unpacking assignment with this many Name targets
   // kind 'bind'
   targets?: string[];           // Name targets in order; for a tuple target, the flattened names
-  value?: Origin;               // RHS origin for Assign/AugAssign/AnnAssign; absent for for/with targets
+  value?: Origin;               // RHS origin for Assign/AugAssign/AnnAssign; absent for for/with targets and for destructuring targets (section 3)
   where?: 'local' | 'global' | 'nonlocal';   // M1–3: always 'local' (module)
   // kind 'store'
   root?: string;                // the root Name of the target (df in df.loc[m, "c"])
+  value?: Origin;               // RHS origin; only when the target is the whole left-hand side of Assign/AnnAssign and no target is a tuple, list or starred (section 3)
 }
 
 interface Scope {
@@ -125,7 +126,7 @@ interface Scope {
 
 interface ValueSummary {
   type: string;                 // DF, Series, array, sparse, int, float, complex, str, bytes, bool, None,
-                                // list[n], dict[n], tuple[n], set[n], or the class name
+                                // list[n], dict[n], tuple[n], set[n], or the class name (numpy scalars: the class name, e.g. float64, int64)
   shape?: number[];
   dtype?: string;               // Series/array: dtype; DF: omitted (see dtypes)
   dtypes?: string[];            // DF: one per column in columns
@@ -212,7 +213,12 @@ Rules for M1–3 (SPEC "Transformer rules", narrowed):
 - Assignment statements (`Assign`, `AugAssign`, `AnnAssign` with a value), `for` targets and `with … as` targets at module level → a `__bind__(site, {name: value, …})` statement after the assignment, or as the first statement of the body for `for`/`with`. Nested tuple and starred targets flatten to their Names. Subscript and attribute targets whose root is a `Name` → `__store__(site, <root name>)` after the statement. Statements directly in a class body get neither.
 - `NamedExpr`, `import`, `del`, `except … as`, `match` captures, `global` and class/def names are not bound (resolution falls back as in section 5).
 - Origins: `Constant` and unary minus on a numeric constant → `const`. Tuples, lists, sets and dicts whose elements are all `const` → `const` with the source text. `Name` → `name`. A `Call` that is itself wrapped → `call` with its site id. Everything else → `expr`, with `reads` the `Name` loads inside it, excluding names under nested lambdas and comprehension targets.
+- Bind and store sites take the span and text of the whole statement (`for`: the target; `with`: `expr as target`). `for` and `with` targets give no `__store__`. Annotations and function bodies are not visited; defaults are. Site ids are assigned in post-order (inner calls first).
+- For `AugAssign` the bind `value` is an `expr` origin (text: the whole statement, reads: the target names then the RHS reads), not the RHS origin: `x += f(y)` must not wire f's output to x.
 - `unpack` is set on a call site when it is the whole RHS of an assignment whose single target is a tuple or list of n plain `Name`s (no starred, no nesting).
+- **No `value` on destructuring.** A bind or store site carries `value` only when no target of the statement is a tuple, list or starred target, or in the one `unpack` case (single tuple/list target of plain Names whose RHS is a wrapped call). Omitted for `a, *b = f(x)`, `a, b = c = f(1)`, `x[0], y = f(1)`, `a, b = c` and `(a, b), c = f(1), 2`: the names hold parts of the value, so an origin would be a false wire. A missing wire is acceptable.
+- **Shadowed names.** A bare Name inside a comprehension that refers to one of that comprehension's own targets, or inside a class body that the class body itself binds, does not get a `name` origin: it is `{origin: 'expr', text: <name>, reads: []}`. Such names are also dropped from `reads` of other `expr` origins. (`n = 5; [f(n) for n in xs]` must not wire the outer `n` to `f`.)
+- **Unsupported frame tricks.** Aliased `eval`/`exec`/`locals` (`e = eval; e("x")`, `builtins.eval`) are wrapped, so they see the hook's frame: unsupported. Other frame-sensitive callees (`sys._getframe`, `warnings.warn` with `stacklevel`) also see the hook frame. The recorder handles warning locations (svl-a8j.3).
 
 ## 4. Recorder (`recorder.py`)
 
@@ -293,6 +299,10 @@ class ValueTable:
 **Object table.** Keep `id → n` with a `weakref.finalize` for objects that support weak references. Keep others alive in a list until the run ends.
 
 **Machines.** `isinstance(obj, sklearn.base.BaseEstimator)` (import lazily), or a class whose `__module__` is `__main__`, or a class in `machine_classes`. `attrs` for estimators: `get_params(deep=False)` plus public attributes ending in `_` (from `vars`). For student classes: public entries of `vars(obj)`. Scalar attrs get fresh tokens per summary.
+
+**Attrs depth and cap.** Only the summarized machine's own attributes are expanded: attribute values get a token and a summary but, even if they are machines, no `attrs` of their own. At most 64 attributes per machine are kept, in sorted name order. The summary of a token is written (`{type}` at least) before any student `__repr__` runs; a `BaseException` from a repr (stop) propagates.
+
+**Known limits.** Fingerprints hold no strong references (weakref per weakref-able item, id and type otherwise). Objects that cannot be weakly referenced (lists, dicts, tuples, sets) that were given a token live until the table is reset. Mutation of an object nested in an attribute (`est.coef_[0] = 1`) is invisible to the parent; the recorder checks tracked attributes itself.
 
 **Summaries.** Pre-format with `str()` of each cell, truncated to 40 characters. `NaN` shows as `NaN`. Count the preview budget in UTF-8 bytes of the JSON-encoded preview.
 
