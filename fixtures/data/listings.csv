@@ -1,0 +1,501 @@
+beds,baths,sqft,neighbourhood,room_type,year_built,price
+1,1.0,884.0,Riverside,private_room,1975.0,83.11
+3,2.0,1254.0,Riverside,entire_home,1963.0,248.24
+2,2.0,1004.0,Uptown,shared_room,1938.0,70.46
+5,4.5,1828.0,Midtown,entire_home,,370.31
+2,1.0,1063.0,Downtown,entire_home,1926.0,279.37
+5,4.0,1710.0,Uptown,private_room,1975.0,217.69
+2,2.5,1058.0,Downtown,entire_home,1988.0,343.18
+2,2.5,1037.0,Riverside,entire_home,1962.0,219.86
+4,3.5,1562.0,Uptown,entire_home,2011.0,312.82
+1,1.0,574.0,Suburbs,entire_home,,119.22
+4,4.5,1586.0,Suburbs,private_room,1974.0,123.69
+4,3.0,1528.0,Old Town,entire_home,,306.88
+2,1.5,964.0,Midtown,entire_home,1960.0,245.87
+1,1.0,713.0,Uptown,entire_home,1971.0,157.47
+4,4.0,1479.0,Old Town,private_room,1976.0,162.34
+5,4.5,1775.0,Suburbs,entire_home,2010.0,317.44
+2,2.0,1005.0,Suburbs,private_room,1967.0,80.86
+3,2.5,1317.0,Suburbs,entire_home,1985.0,212.26
+4,3.0,1273.0,Uptown,private_room,1987.0,179.95
+2,1.0,916.0,Riverside,entire_home,1939.0,163.01
+2,1.0,993.0,Suburbs,entire_home,1946.0,127.4
+3,2.5,1238.0,Suburbs,entire_home,2018.0,170.99
+4,4.0,1425.0,Suburbs,private_room,2008.0,134.46
+1,1.0,623.0,Suburbs,entire_home,2005.0,120.21
+5,5.5,1760.0,Midtown,entire_home,1960.0,463.09
+2,1.5,1043.0,Riverside,entire_home,1948.0,217.65
+3,2.0,1288.0,Midtown,shared_room,1946.0,93.66
+3,2.0,1411.0,Suburbs,entire_home,1954.0,217.35
+1,1.0,664.0,Suburbs,shared_room,1950.0,27.61
+2,2.5,931.0,Downtown,entire_home,1921.0,260.09
+1,1.0,689.0,Old Town,private_room,1985.0,95.9
+5,4.5,2049.0,Suburbs,entire_home,1927.0,307.36
+3,3.0,1273.0,Old Town,shared_room,2015.0,73.32
+1,1.5,805.0,Midtown,entire_home,1958.0,209.26
+1,1.5,729.0,Midtown,entire_home,1951.0,214.51
+1,1.0,677.0,Midtown,entire_home,,168.92
+1,1.0,713.0,Uptown,private_room,1964.0,98.65
+3,2.5,1440.0,Riverside,entire_home,1988.0,232.12
+1,1.5,647.0,Midtown,private_room,1944.0,94.29
+1,1.0,513.0,Suburbs,entire_home,1927.0,86.15
+1,1.5,566.0,Suburbs,entire_home,1963.0,118.5
+2,2.5,852.0,Old Town,private_room,1988.0,107.96
+3,2.5,,Riverside,private_room,1999.0,154.48
+1,1.5,678.0,Riverside,private_room,1922.0,79.04
+1,1.0,329.0,Downtown,entire_home,1975.0,155.47
+2,2.0,915.0,Downtown,shared_room,1932.0,75.78
+2,1.5,919.0,Old Town,entire_home,1930.0,146.69
+1,1.0,679.0,Suburbs,entire_home,1926.0,117.87
+1,1.5,678.0,Riverside,private_room,1954.0,85.79
+2,1.0,1153.0,Suburbs,entire_home,1966.0,168.11
+3,3.5,1471.0,Riverside,private_room,1979.0,156.68
+1,1.5,475.0,Downtown,entire_home,1982.0,232.66
+2,1.0,1031.0,Downtown,private_room,1966.0,167.05
+4,3.0,1522.0,Riverside,entire_home,1925.0,244.53
+3,2.5,1154.0,Downtown,entire_home,1923.0,321.63
+4,3.0,1418.0,Downtown,entire_home,2021.0,388.62
+2,1.0,947.0,Suburbs,private_room,2013.0,75.53
+1,1.0,611.0,Uptown,entire_home,1960.0,168.5
+1,1.5,643.0,Downtown,entire_home,1981.0,230.85
+1,1.5,425.0,Uptown,entire_home,1981.0,152.91
+3,2.0,1347.0,Suburbs,entire_home,1956.0,175.48
+4,4.0,1680.0,Riverside,entire_home,1960.0,356.97
+2,1.5,1214.0,Suburbs,entire_home,1976.0,174.43
+1,1.0,562.0,Downtown,entire_home,1956.0,216.3
+3,3.5,1142.0,Old Town,shared_room,1984.0,70.37
+3,3.0,1165.0,Riverside,private_room,1971.0,159.79
+1,1.0,588.0,Suburbs,entire_home,1994.0,108.69
+3,3.0,1554.0,Old Town,entire_home,2002.0,300.66
+1,1.0,853.0,Downtown,private_room,1928.0,122.4
+1,1.5,701.0,Uptown,private_room,2010.0,91.86
+1,1.0,,Old Town,private_room,1951.0,78.78
+2,1.0,1079.0,Riverside,entire_home,1995.0,190.02
+3,2.5,1162.0,Old Town,entire_home,1922.0,214.97
+1,1.0,618.0,Midtown,entire_home,1933.0,160.68
+2,2.0,930.0,Suburbs,private_room,1967.0,92.83
+2,2.5,971.0,Downtown,entire_home,1966.0,308.85
+3,3.0,1207.0,Old Town,entire_home,1966.0,212.97
+2,1.0,1040.0,Suburbs,private_room,1997.0,94.29
+2,1.5,1063.0,Riverside,entire_home,1977.0,209.23
+3,2.0,1296.0,Uptown,private_room,1997.0,160.22
+1,1.5,813.0,Uptown,private_room,1980.0,86.92
+2,1.5,878.0,Downtown,entire_home,1963.0,277.14
+5,4.0,2094.0,Downtown,entire_home,2007.0,511.39
+1,1.5,548.0,Midtown,private_room,1957.0,84.38
+2,1.5,856.0,Downtown,private_room,1998.0,179.82
+1,1.5,852.0,Midtown,entire_home,1937.0,218.49
+2,2.0,933.0,Suburbs,entire_home,1924.0,157.4
+2,1.0,794.0,Uptown,shared_room,1942.0,48.79
+1,1.5,665.0,Riverside,private_room,1956.0,75.99
+3,2.0,1084.0,Uptown,shared_room,1996.0,68.99
+1,1.0,756.0,Midtown,entire_home,1955.0,190.21
+1,1.5,796.0,Old Town,private_room,1953.0,94.32
+2,1.5,893.0,Suburbs,entire_home,1998.0,160.56
+3,2.5,1091.0,Midtown,private_room,2016.0,191.09
+3,3.0,1355.0,Old Town,private_room,,135.1
+1,1.0,724.0,Downtown,shared_room,1957.0,73.69
+1,1.0,508.0,Suburbs,entire_home,1991.0,115.69
+1,1.5,571.0,Riverside,entire_home,1925.0,140.36
+3,3.0,1305.0,Riverside,entire_home,1992.0,301.61
+4,3.0,1671.0,Uptown,entire_home,1998.0,363.4
+3,2.5,1291.0,Old Town,shared_room,1941.0,65.61
+3,2.0,,Downtown,private_room,1926.0,159.19
+2,2.0,874.0,Midtown,private_room,2000.0,150.67
+1,1.0,685.0,Midtown,private_room,2006.0,109.71
+2,1.5,745.0,Uptown,private_room,1968.0,105.12
+2,1.5,948.0,Old Town,entire_home,1940.0,197.41
+1,1.0,672.0,Uptown,entire_home,1947.0,143.54
+1,1.5,,Downtown,private_room,1970.0,125.67
+5,4.5,1673.0,Old Town,entire_home,1922.0,289.07
+2,2.5,1023.0,Downtown,shared_room,2002.0,88.25
+2,2.0,777.0,Suburbs,entire_home,2018.0,142.75
+1,1.5,676.0,Downtown,entire_home,1975.0,268.84
+1,1.5,673.0,Midtown,private_room,1920.0,89.69
+2,2.5,796.0,Downtown,entire_home,1940.0,275.58
+4,4.5,1614.0,Riverside,entire_home,1947.0,336.24
+2,1.0,904.0,Riverside,entire_home,2003.0,223.68
+1,1.0,825.0,Downtown,entire_home,1987.0,293.82
+5,5.0,1862.0,Downtown,entire_home,1977.0,488.26
+1,1.5,633.0,Riverside,private_room,2020.0,98.98
+3,2.5,1187.0,Midtown,shared_room,1993.0,97.94
+5,5.0,1836.0,Riverside,private_room,2007.0,201.63
+5,4.5,1781.0,Old Town,entire_home,1976.0,370.03
+2,2.5,709.0,Riverside,entire_home,1967.0,162.91
+1,1.0,766.0,Downtown,entire_home,1968.0,231.37
+2,2.0,827.0,Midtown,shared_room,1996.0,76.48
+1,1.0,512.0,Suburbs,entire_home,1957.0,111.44
+4,3.5,1602.0,Riverside,entire_home,1978.0,308.87
+1,1.0,664.0,Riverside,shared_room,1944.0,39.51
+3,2.0,1267.0,Riverside,entire_home,1987.0,256.19
+2,2.5,1114.0,Suburbs,entire_home,2015.0,183.82
+2,2.0,1084.0,Downtown,shared_room,1973.0,108.79
+3,2.5,1359.0,Uptown,entire_home,1954.0,312.82
+4,3.5,1450.0,Midtown,entire_home,1941.0,319.35
+2,1.0,949.0,Riverside,private_room,2017.0,114.73
+4,3.5,1692.0,Suburbs,entire_home,1933.0,241.47
+3,2.0,1111.0,Uptown,shared_room,2019.0,83.96
+1,1.0,546.0,Midtown,private_room,1996.0,101.44
+5,4.0,2048.0,Riverside,shared_room,1937.0,106.15
+2,1.0,897.0,Riverside,entire_home,1999.0,206.66
+3,3.0,1199.0,Uptown,entire_home,1954.0,324.6
+1,1.0,722.0,Old Town,private_room,1965.0,82.94
+1,1.0,599.0,Downtown,entire_home,1932.0,180.4
+2,1.5,1034.0,Old Town,entire_home,1975.0,209.33
+1,1.5,695.0,Old Town,entire_home,1987.0,142.7
+2,1.5,1119.0,Midtown,private_room,1922.0,126.89
+2,2.0,881.0,Midtown,private_room,1942.0,120.02
+1,1.5,410.0,Downtown,entire_home,1967.0,209.24
+2,1.5,1101.0,Downtown,entire_home,2012.0,342.83
+3,2.5,983.0,Downtown,entire_home,1936.0,341.3
+4,3.5,1818.0,Uptown,entire_home,1949.0,335.22
+2,1.0,1006.0,Old Town,shared_room,1989.0,59.65
+2,1.5,930.0,Old Town,private_room,1943.0,96.53
+1,1.5,731.0,Riverside,entire_home,1982.0,165.6
+3,3.5,1457.0,Old Town,shared_room,2002.0,78.68
+2,2.5,1065.0,Suburbs,private_room,1997.0,96.13
+2,2.5,1160.0,Downtown,entire_home,1927.0,333.42
+2,1.5,943.0,Riverside,entire_home,2014.0,195.52
+1,1.0,683.0,Suburbs,private_room,1981.0,67.03
+3,2.5,1330.0,Midtown,private_room,1988.0,185.52
+3,3.0,1075.0,Old Town,private_room,1982.0,130.64
+5,4.0,1909.0,Midtown,private_room,1985.0,265.84
+2,1.0,795.0,Riverside,entire_home,2004.0,202.5
+4,3.5,1543.0,Uptown,shared_room,1951.0,98.48
+2,2.5,970.0,Old Town,entire_home,1921.0,206.57
+2,1.0,890.0,Midtown,private_room,1964.0,112.05
+3,2.5,1347.0,Midtown,private_room,1953.0,154.78
+2,2.0,1187.0,Riverside,entire_home,1955.0,214.01
+2,2.5,1031.0,Suburbs,shared_room,1991.0,53.17
+4,4.5,1444.0,Old Town,private_room,1920.0,128.16
+2,2.5,1103.0,Suburbs,entire_home,1989.0,188.93
+3,2.5,1346.0,Midtown,private_room,1999.0,194.72
+2,2.5,1087.0,Suburbs,entire_home,2007.0,183.94
+3,2.5,1028.0,Downtown,entire_home,1982.0,334.68
+4,3.5,1659.0,Midtown,private_room,2016.0,224.29
+2,2.0,757.0,Suburbs,entire_home,1980.0,159.86
+2,2.5,,Riverside,entire_home,1936.0,161.52
+3,2.5,1048.0,Suburbs,entire_home,1950.0,167.38
+2,1.0,848.0,Uptown,private_room,2013.0,120.88
+2,1.5,,Uptown,entire_home,1984.0,197.45
+4,3.5,1495.0,Downtown,entire_home,1996.0,463.62
+1,1.0,453.0,Old Town,shared_room,2017.0,44.78
+1,1.0,747.0,Uptown,entire_home,2001.0,158.32
+1,1.0,725.0,Uptown,private_room,2005.0,88.6
+2,2.0,1129.0,Suburbs,entire_home,1993.0,153.74
+1,1.0,522.0,Suburbs,private_room,1938.0,53.77
+3,3.5,1335.0,Downtown,entire_home,1930.0,367.68
+2,2.5,961.0,Downtown,shared_room,2004.0,108.21
+1,1.0,548.0,Old Town,entire_home,1974.0,124.47
+3,3.5,1363.0,Old Town,entire_home,1991.0,296.11
+4,3.5,1521.0,Midtown,entire_home,1961.0,421.86
+1,1.5,673.0,Riverside,entire_home,1920.0,137.72
+2,1.5,996.0,Downtown,entire_home,1999.0,295.83
+1,1.5,603.0,Suburbs,private_room,1987.0,75.98
+2,2.0,1018.0,Old Town,entire_home,1989.0,173.71
+1,1.5,456.0,Midtown,private_room,1957.0,86.96
+3,2.0,1406.0,Suburbs,entire_home,2004.0,227.87
+1,1.0,697.0,Midtown,shared_room,1933.0,56.11
+1,1.5,705.0,Riverside,entire_home,2021.0,168.51
+5,5.0,1873.0,Downtown,entire_home,1991.0,561.77
+5,5.5,1992.0,Downtown,entire_home,2014.0,607.54
+4,4.0,1478.0,Old Town,entire_home,1992.0,295.79
+2,2.5,965.0,Old Town,private_room,2004.0,120.23
+2,1.0,,Uptown,private_room,1991.0,136.19
+2,1.5,796.0,Downtown,entire_home,2000.0,303.95
+1,1.0,725.0,Riverside,entire_home,1977.0,161.86
+1,1.0,528.0,Midtown,entire_home,1976.0,173.34
+1,1.5,497.0,Uptown,private_room,1927.0,73.22
+2,1.5,801.0,Suburbs,private_room,1944.0,65.31
+1,1.0,630.0,Uptown,entire_home,1920.0,135.61
+1,1.5,535.0,Riverside,entire_home,1986.0,157.11
+2,1.5,885.0,Uptown,entire_home,1926.0,170.04
+2,2.5,1265.0,Midtown,entire_home,1960.0,332.1
+1,1.0,769.0,Suburbs,entire_home,1930.0,102.34
+4,4.5,1472.0,Riverside,entire_home,1933.0,331.14
+2,2.0,991.0,Riverside,entire_home,2012.0,194.44
+1,1.5,709.0,Uptown,private_room,1982.0,94.66
+3,3.0,983.0,Old Town,private_room,1963.0,121.89
+1,1.0,710.0,Downtown,entire_home,1968.0,259.49
+2,1.5,952.0,Downtown,private_room,1930.0,171.43
+1,1.0,495.0,Suburbs,entire_home,1923.0,87.4
+2,2.0,941.0,Old Town,private_room,2000.0,101.06
+2,2.5,1115.0,Suburbs,private_room,1957.0,100.16
+4,3.5,1356.0,Old Town,private_room,1927.0,145.11
+1,1.5,745.0,Suburbs,entire_home,1998.0,138.73
+2,1.0,974.0,Midtown,entire_home,1963.0,216.65
+2,2.0,1119.0,Downtown,private_room,1966.0,159.67
+2,2.5,1165.0,Suburbs,private_room,1947.0,87.11
+2,2.0,1195.0,Riverside,entire_home,1940.0,198.43
+1,1.5,562.0,Downtown,entire_home,1942.0,177.05
+2,1.5,901.0,Downtown,private_room,1926.0,160.47
+1,1.5,433.0,Old Town,private_room,1981.0,70.21
+2,2.5,674.0,Riverside,entire_home,1998.0,195.95
+3,2.0,1265.0,Riverside,entire_home,1960.0,218.34
+2,2.5,992.0,Suburbs,private_room,1986.0,89.97
+1,1.5,672.0,Uptown,entire_home,1989.0,179.31
+2,1.0,863.0,Riverside,entire_home,1996.0,190.06
+3,2.5,1309.0,Downtown,shared_room,1999.0,110.64
+5,5.0,1848.0,Suburbs,entire_home,1933.0,266.33
+1,1.0,638.0,Riverside,entire_home,2010.0,147.63
+2,2.0,900.0,Midtown,entire_home,2004.0,233.16
+1,1.0,555.0,Riverside,private_room,,75.39
+1,1.0,606.0,Suburbs,entire_home,1989.0,109.95
+1,1.5,673.0,Uptown,private_room,1966.0,104.04
+2,1.0,839.0,Riverside,entire_home,1953.0,151.15
+1,1.0,479.0,Old Town,entire_home,1963.0,122.63
+2,1.5,950.0,Midtown,shared_room,1923.0,57.04
+4,4.0,1567.0,Midtown,entire_home,1941.0,343.64
+2,2.0,1162.0,Suburbs,entire_home,1979.0,178.21
+2,2.5,1047.0,Midtown,shared_room,,80.94
+2,1.0,993.0,Downtown,private_room,1939.0,153.09
+3,3.5,1159.0,Midtown,entire_home,2013.0,356.23
+2,2.0,1057.0,Riverside,entire_home,1995.0,255.1
+3,3.5,1234.0,Midtown,entire_home,1984.0,328.86
+4,3.0,1553.0,Downtown,shared_room,1972.0,135.49
+1,1.5,640.0,Midtown,private_room,1932.0,101.54
+2,1.0,866.0,Suburbs,private_room,1921.0,71.39
+2,2.0,905.0,Old Town,private_room,1965.0,92.93
+2,2.0,1001.0,Old Town,private_room,1994.0,106.37
+1,1.0,617.0,Old Town,entire_home,1962.0,141.04
+2,2.0,916.0,Suburbs,private_room,2007.0,90.25
+2,2.5,808.0,Riverside,private_room,1974.0,101.08
+2,2.0,879.0,Old Town,entire_home,1922.0,172.42
+3,3.0,1259.0,Old Town,entire_home,2009.0,254.35
+4,3.5,1657.0,Old Town,private_room,2021.0,184.91
+4,3.5,1426.0,Uptown,private_room,1956.0,188.36
+2,1.5,898.0,Uptown,entire_home,1943.0,183.29
+1,1.0,546.0,Uptown,private_room,1924.0,78.2
+3,2.5,1250.0,Suburbs,private_room,1946.0,96.85
+1,1.0,966.0,Midtown,private_room,2010.0,128.22
+2,1.5,1054.0,Uptown,private_room,1954.0,118.86
+5,4.5,1943.0,Downtown,private_room,1978.0,317.17
+2,1.5,,Uptown,entire_home,1955.0,170.19
+5,4.5,1850.0,Suburbs,entire_home,1979.0,318.08
+3,3.5,1172.0,Uptown,private_room,1957.0,150.86
+3,2.0,1357.0,Old Town,entire_home,1964.0,223.33
+2,1.5,788.0,Downtown,entire_home,2008.0,299.12
+1,1.5,716.0,Uptown,entire_home,1959.0,171.73
+2,1.0,957.0,Midtown,private_room,1996.0,131.7
+1,1.5,789.0,Midtown,entire_home,1982.0,215.88
+3,2.0,1464.0,Midtown,private_room,1948.0,183.92
+2,2.5,773.0,Uptown,private_room,2001.0,125.09
+2,1.0,952.0,Old Town,entire_home,1922.0,154.87
+1,1.5,488.0,Suburbs,entire_home,1997.0,115.62
+1,1.0,745.0,Midtown,entire_home,1969.0,245.19
+2,2.0,913.0,Old Town,shared_room,1931.0,52.44
+2,2.0,879.0,Suburbs,entire_home,1992.0,154.01
+2,2.5,,Downtown,private_room,1994.0,163.86
+1,1.0,601.0,Downtown,private_room,1968.0,129.96
+1,1.5,511.0,Riverside,shared_room,2022.0,45.85
+1,1.5,674.0,Downtown,private_room,1978.0,133.43
+4,4.0,1527.0,Uptown,entire_home,1956.0,311.24
+1,1.5,590.0,Old Town,entire_home,1939.0,120.01
+2,1.5,,Riverside,private_room,,104.98
+2,1.0,995.0,Downtown,shared_room,1949.0,78.35
+2,1.0,929.0,Uptown,entire_home,1956.0,180.57
+1,1.0,685.0,Suburbs,entire_home,2000.0,122.93
+3,3.5,1092.0,Uptown,private_room,1995.0,151.19
+1,1.5,710.0,Old Town,shared_room,1936.0,37.62
+1,1.0,540.0,Midtown,entire_home,1952.0,155.54
+3,2.5,1303.0,Old Town,entire_home,1990.0,271.13
+3,3.5,1409.0,Midtown,entire_home,1959.0,323.57
+3,3.0,,Old Town,entire_home,1959.0,275.17
+2,1.0,1023.0,Midtown,entire_home,1968.0,196.91
+5,5.5,1774.0,Suburbs,entire_home,1981.0,277.41
+2,2.0,1027.0,Suburbs,entire_home,1999.0,158.67
+1,1.5,598.0,Midtown,private_room,1966.0,108.81
+1,1.0,669.0,Midtown,entire_home,1980.0,207.76
+2,1.0,,Uptown,shared_room,1941.0,57.12
+1,1.0,758.0,Riverside,private_room,2012.0,86.85
+3,2.0,1329.0,Riverside,entire_home,1929.0,264.96
+5,5.5,1741.0,Downtown,entire_home,1929.0,551.21
+4,3.0,1506.0,Suburbs,private_room,1943.0,103.23
+2,1.0,744.0,Riverside,entire_home,2019.0,205.66
+2,1.5,756.0,Old Town,shared_room,1998.0,48.5
+1,1.0,624.0,Midtown,entire_home,2021.0,181.24
+2,2.0,822.0,Riverside,shared_room,2003.0,57.83
+1,1.5,550.0,Uptown,private_room,1948.0,79.72
+3,3.5,1255.0,Riverside,entire_home,1967.0,243.9
+4,3.5,1710.0,Uptown,entire_home,1953.0,419.62
+2,2.0,987.0,Uptown,entire_home,2012.0,271.59
+1,1.5,466.0,Downtown,private_room,1934.0,105.11
+1,1.0,560.0,Uptown,private_room,1963.0,80.57
+1,1.5,663.0,Uptown,entire_home,1933.0,166.44
+2,2.5,1116.0,Downtown,private_room,1932.0,170.97
+2,1.0,994.0,Downtown,entire_home,2017.0,319.63
+2,2.0,851.0,Suburbs,entire_home,1969.0,149.67
+3,2.5,1040.0,Suburbs,entire_home,1998.0,169.93
+2,2.5,1029.0,Downtown,entire_home,2012.0,307.26
+3,3.5,1427.0,Old Town,private_room,1931.0,135.77
+4,4.5,1784.0,Downtown,entire_home,1979.0,471.76
+2,2.5,953.0,Downtown,private_room,2001.0,185.58
+1,1.0,721.0,Riverside,entire_home,1955.0,140.46
+2,1.5,1009.0,Suburbs,entire_home,2005.0,159.13
+1,1.0,734.0,Suburbs,private_room,1949.0,57.03
+1,1.5,745.0,Midtown,entire_home,1951.0,182.09
+2,2.5,895.0,Midtown,entire_home,1965.0,275.2
+2,1.5,975.0,Midtown,entire_home,1970.0,197.27
+2,1.5,1175.0,Suburbs,entire_home,2007.0,164.68
+1,1.5,683.0,Midtown,private_room,1921.0,92.6
+2,1.0,1108.0,Downtown,private_room,1930.0,172.75
+2,2.0,1024.0,Riverside,entire_home,1921.0,220.35
+4,3.5,1675.0,Downtown,private_room,1991.0,251.46
+2,1.0,1033.0,Suburbs,entire_home,,139.07
+5,5.5,1963.0,Midtown,entire_home,2020.0,493.94
+3,3.0,1057.0,Suburbs,shared_room,1987.0,50.03
+2,1.5,942.0,Old Town,private_room,1927.0,93.22
+2,2.0,,Downtown,shared_room,1989.0,92.72
+2,2.5,935.0,Downtown,shared_room,1995.0,98.69
+1,1.5,551.0,Suburbs,private_room,1927.0,60.15
+2,2.5,1039.0,Suburbs,entire_home,1977.0,161.76
+2,2.0,1102.0,Riverside,entire_home,2010.0,232.02
+2,1.0,996.0,Uptown,entire_home,1956.0,191.24
+2,2.0,971.0,Riverside,private_room,1936.0,95.24
+1,1.0,471.0,Suburbs,entire_home,2008.0,109.66
+1,1.0,623.0,Old Town,private_room,1944.0,77.29
+3,3.0,1185.0,Old Town,entire_home,2011.0,280.7
+3,2.0,1236.0,Downtown,shared_room,1983.0,115.6
+1,1.5,643.0,Suburbs,entire_home,1992.0,113.54
+1,1.5,548.0,Suburbs,entire_home,,132.47
+2,1.5,975.0,Midtown,private_room,,124.59
+3,3.0,1279.0,Old Town,private_room,1921.0,134.37
+3,2.5,1091.0,Uptown,private_room,1923.0,122.1
+2,1.0,965.0,Uptown,private_room,2020.0,129.69
+2,1.0,805.0,Suburbs,entire_home,1937.0,150.02
+1,1.5,462.0,Riverside,shared_room,2017.0,53.33
+1,1.0,819.0,Suburbs,private_room,1984.0,67.27
+2,2.0,719.0,Uptown,entire_home,2009.0,211.03
+1,1.5,770.0,Uptown,entire_home,1975.0,191.73
+4,4.5,1593.0,Downtown,entire_home,2020.0,504.68
+2,1.0,823.0,Suburbs,entire_home,1988.0,154.9
+2,2.5,1137.0,Uptown,entire_home,1924.0,260.92
+2,1.0,877.0,Suburbs,entire_home,1960.0,135.24
+1,1.0,612.0,Riverside,entire_home,2012.0,156.62
+4,3.0,1677.0,Riverside,entire_home,1969.0,308.58
+4,3.0,1535.0,Midtown,entire_home,1997.0,366.65
+4,4.5,1575.0,Uptown,entire_home,1935.0,332.7
+3,2.5,1443.0,Midtown,shared_room,1980.0,111.06
+4,4.0,,Riverside,private_room,1990.0,189.18
+2,1.5,1069.0,Riverside,entire_home,1986.0,208.38
+1,1.5,528.0,Suburbs,entire_home,1995.0,122.19
+2,1.0,1069.0,Uptown,entire_home,1957.0,218.91
+2,1.5,1090.0,Old Town,private_room,1999.0,109.55
+2,1.0,838.0,Suburbs,entire_home,,141.7
+1,1.0,693.0,Midtown,entire_home,1943.0,175.59
+1,1.5,614.0,Downtown,private_room,1942.0,132.34
+1,1.0,712.0,Uptown,shared_room,1963.0,58.6
+2,2.0,817.0,Old Town,private_room,2008.0,102.64
+2,2.0,942.0,Riverside,shared_room,1948.0,58.26
+1,1.0,559.0,Old Town,entire_home,1994.0,129.43
+1,1.0,604.0,Downtown,private_room,1956.0,108.37
+1,1.5,479.0,Midtown,shared_room,1937.0,47.94
+1,1.0,573.0,Old Town,entire_home,1978.0,137.16
+2,1.0,1027.0,Midtown,private_room,1937.0,135.55
+1,1.5,586.0,Uptown,entire_home,1969.0,167.75
+5,5.0,1801.0,Uptown,private_room,1955.0,228.79
+2,1.0,819.0,Old Town,entire_home,,144.57
+1,1.5,627.0,Riverside,private_room,,80.98
+1,1.0,684.0,Uptown,entire_home,1988.0,167.06
+2,2.0,828.0,Riverside,entire_home,1955.0,183.53
+2,2.0,804.0,Suburbs,private_room,1965.0,79.74
+4,4.5,1342.0,Riverside,entire_home,2021.0,343.5
+1,1.0,583.0,Old Town,entire_home,1997.0,149.84
+2,2.5,893.0,Downtown,private_room,,160.06
+5,5.0,1812.0,Old Town,entire_home,2003.0,341.16
+2,1.5,761.0,Midtown,entire_home,2022.0,244.9
+1,1.0,677.0,Uptown,entire_home,1932.0,143.88
+2,2.0,939.0,Uptown,private_room,1974.0,120.21
+2,1.5,840.0,Midtown,entire_home,2013.0,267.09
+1,1.5,806.0,Suburbs,entire_home,1935.0,123.56
+1,1.5,579.0,Suburbs,shared_room,1964.0,32.36
+2,2.0,838.0,Downtown,entire_home,2018.0,328.02
+4,4.5,1474.0,Old Town,entire_home,2003.0,331.46
+3,3.5,1241.0,Midtown,private_room,1993.0,193.28
+2,2.5,699.0,Riverside,entire_home,1961.0,179.14
+2,2.5,886.0,Old Town,shared_room,1968.0,50.68
+1,1.5,720.0,Midtown,entire_home,1930.0,172.59
+2,1.0,882.0,Midtown,entire_home,1991.0,221.01
+1,1.0,791.0,Midtown,entire_home,1957.0,200.95
+4,4.5,1382.0,Downtown,private_room,1924.0,275.81
+1,1.0,527.0,Uptown,entire_home,2010.0,158.63
+4,3.5,1685.0,Downtown,entire_home,1984.0,452.52
+2,2.0,631.0,Old Town,shared_room,1958.0,45.14
+1,1.0,787.0,Riverside,entire_home,1974.0,159.37
+4,3.0,1530.0,Riverside,entire_home,1928.0,287.66
+1,1.5,748.0,Downtown,entire_home,2008.0,255.96
+1,1.0,806.0,Suburbs,entire_home,1971.0,122.71
+1,1.5,618.0,Suburbs,entire_home,1997.0,135.74
+1,1.5,682.0,Suburbs,shared_room,1928.0,29.35
+2,1.5,,Old Town,private_room,1944.0,100.77
+1,1.0,676.0,Uptown,entire_home,1979.0,185.71
+2,1.0,1076.0,Suburbs,private_room,1959.0,102.05
+2,1.5,783.0,Uptown,entire_home,2002.0,220.55
+2,2.0,1080.0,Suburbs,private_room,2015.0,116.57
+1,1.0,620.0,Suburbs,private_room,2018.0,64.91
+3,3.0,1249.0,Suburbs,private_room,1928.0,102.46
+1,1.0,738.0,Old Town,entire_home,1968.0,154.27
+1,1.5,514.0,Suburbs,shared_room,1948.0,28.03
+2,1.5,798.0,Midtown,entire_home,1987.0,250.44
+3,3.0,1160.0,Downtown,entire_home,1977.0,392.53
+2,2.5,1128.0,Uptown,entire_home,1980.0,242.33
+1,1.0,646.0,Midtown,entire_home,1946.0,169.94
+2,1.0,918.0,Downtown,entire_home,1994.0,259.08
+2,1.0,929.0,Uptown,private_room,1950.0,97.23
+1,1.5,816.0,Old Town,entire_home,2013.0,179.1
+4,3.5,1518.0,Downtown,entire_home,1933.0,452.64
+3,2.5,1142.0,Midtown,entire_home,1933.0,250.51
+2,2.0,984.0,Riverside,entire_home,1992.0,193.89
+4,3.5,1456.0,Downtown,private_room,1981.0,271.46
+1,1.5,486.0,Suburbs,entire_home,2001.0,120.9
+1,1.0,618.0,Downtown,entire_home,2010.0,223.76
+1,1.5,666.0,Uptown,entire_home,2004.0,178.03
+2,2.0,691.0,Uptown,entire_home,2020.0,204.02
+3,2.5,1389.0,Downtown,private_room,1942.0,207.45
+1,1.0,625.0,Old Town,entire_home,1936.0,123.91
+2,2.5,1083.0,Uptown,entire_home,2015.0,288.25
+2,1.5,1142.0,Old Town,private_room,1931.0,102.96
+2,1.0,987.0,Uptown,private_room,2020.0,123.21
+2,1.0,989.0,Old Town,entire_home,1983.0,164.64
+1,1.0,701.0,Uptown,entire_home,1935.0,166.22
+3,2.0,1189.0,Uptown,entire_home,2011.0,282.8
+1,1.5,680.0,Uptown,entire_home,1931.0,164.88
+1,1.0,813.0,Old Town,shared_room,2016.0,48.51
+2,1.0,1048.0,Midtown,entire_home,1920.0,214.47
+4,3.5,1522.0,Downtown,entire_home,1987.0,396.92
+3,3.0,1110.0,Downtown,shared_room,1920.0,89.03
+2,2.0,851.0,Old Town,entire_home,1991.0,212.77
+2,2.5,821.0,Downtown,entire_home,1998.0,280.52
+5,5.5,1617.0,Uptown,private_room,1995.0,197.22
+2,2.5,887.0,Old Town,entire_home,1972.0,191.54
+3,3.0,1303.0,Old Town,entire_home,1974.0,262.58
+2,2.5,881.0,Downtown,entire_home,1981.0,287.44
+3,2.0,1402.0,Riverside,entire_home,1935.0,214.13
+2,1.5,1143.0,Downtown,entire_home,1979.0,288.53
+2,1.0,1032.0,Suburbs,shared_room,1938.0,44.06
+2,2.0,1004.0,Suburbs,private_room,1920.0,81.93
+1,1.5,728.0,Suburbs,private_room,1942.0,66.7
+2,2.0,993.0,Downtown,entire_home,1997.0,346.0
+2,1.0,938.0,Old Town,private_room,1964.0,98.37
+2,2.5,1037.0,Old Town,entire_home,1998.0,256.11
+2,2.5,940.0,Old Town,shared_room,2018.0,62.58
+5,4.0,1784.0,Midtown,shared_room,1953.0,136.72
+1,1.5,653.0,Downtown,private_room,1991.0,135.31
+2,1.5,976.0,Riverside,entire_home,1951.0,175.49
+3,3.5,1027.0,Old Town,entire_home,1926.0,195.74
+1,1.5,633.0,Uptown,entire_home,1975.0,163.97
+1,1.0,637.0,Downtown,entire_home,1926.0,195.47
+1,1.0,691.0,Suburbs,entire_home,1928.0,106.29
+1,1.0,488.0,Downtown,entire_home,1982.0,182.06
+3,2.5,1242.0,Old Town,entire_home,2012.0,279.25
+3,2.0,1252.0,Midtown,private_room,2020.0,185.58
+3,3.5,1276.0,Downtown,private_room,1986.0,226.97
+1,1.0,460.0,Midtown,private_room,1927.0,70.52
+2,1.5,1117.0,Suburbs,shared_room,1986.0,50.01
+1,1.5,516.0,Riverside,private_room,1993.0,85.06
+4,4.0,1334.0,Downtown,private_room,1921.0,247.41
+2,2.0,916.0,Uptown,shared_room,1957.0,58.96
+4,3.5,1711.0,Old Town,private_room,1933.0,161.1
+1,1.5,543.0,Riverside,entire_home,1962.0,109.94
+1,1.0,572.0,Midtown,entire_home,1929.0,148.98
+2,2.0,986.0,Midtown,shared_room,1980.0,84.97
