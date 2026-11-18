@@ -50,9 +50,16 @@ function pyodide(): Plugin {
   };
 }
 
+/** COOP/COEP make `crossOriginIsolated` true (SharedArrayBuffer for interrupts). CSP is left to public/_headers. */
+const isolationHeaders = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'require-corp',
+};
+
 export default defineConfig({
   plugins: [react(), pyodide()],
-  server: { port: 5173 },
+  server: { port: 5173, headers: isolationHeaders },
+  preview: { headers: isolationHeaders },
   optimizeDeps: { exclude: ['pyodide'] },
   test: { environment: 'node' },
 });

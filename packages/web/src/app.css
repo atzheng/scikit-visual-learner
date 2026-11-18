@@ -1,0 +1,253 @@
+/* App theme. TODO: import '@machines/render/theme.css' once that file exists (svl-q3a / render beads). */
+:root {
+  color-scheme: light dark;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #1c2026;
+  --muted: #5b6573;
+  --border: #c9d0d9;
+  --accent: #1f5fbf;
+  --accent-text: #ffffff;
+  --focus: #b45f00;
+  --ok: #1a7f37;
+  --bad: #b42318;
+  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #14171c;
+    --surface: #1c2027;
+    --text: #e6e9ee;
+    --muted: #a0a9b6;
+    --border: #3a414c;
+    --accent: #6aa3f5;
+    --accent-text: #0b1220;
+    --focus: #ffb454;
+    --ok: #56d364;
+    --bad: #ff8077;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #14171c;
+  --surface: #1c2027;
+  --text: #e6e9ee;
+  --muted: #a0a9b6;
+  --border: #3a414c;
+  --accent: #6aa3f5;
+  --accent-text: #0b1220;
+  --focus: #ffb454;
+  --ok: #56d364;
+  --bad: #ff8077;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.4 var(--font);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 10;
+  padding: 8px 12px;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-radius: 4px;
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+.app {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-width: 640px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar h1 {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.menu {
+  position: relative;
+}
+
+.menu-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 5;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+}
+
+.menu-list button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+}
+
+.panes,
+.column {
+  display: grid;
+  min-height: 0;
+  min-width: 0;
+}
+
+.pane {
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  background: var(--surface);
+}
+
+.splitter {
+  background: var(--border);
+}
+
+.splitter.vertical {
+  cursor: col-resize;
+}
+
+.splitter.horizontal {
+  cursor: row-resize;
+}
+
+.splitter:hover,
+.splitter:focus-visible {
+  background: var(--accent);
+}
+
+.editor-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  border: 0;
+  padding: 8px 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: 13px/1.5 var(--mono);
+}
+
+.placeholder,
+.output {
+  height: 100%;
+  padding: 12px;
+  color: var(--muted);
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.timeline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.timeline input[type='range'] {
+  flex: 1;
+}
+
+.event-list {
+  flex-basis: 100%;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.status .ok {
+  color: var(--ok);
+}
+
+.status .bad {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
