@@ -1104,6 +1104,45 @@ d['k'] = m.predict(df[['a']])
     assert inp(stores[2], "value")["value"] == preds[1]["outputs"][0]
 
 
+def test_unrecorded_execution_of_a_site_never_reuses_an_earlier_output() -> None:
+    src = """
+arr = np.array([3.0, 1.0, 2.0])
+df = pd.DataFrame({'a': [1, 2, 3]})
+d = {}
+for f in (np.sort, sorted):
+    df['x'] = f(arr)
+    d['k'] = f(arr)
+    y = f(arr)
+    z = np.full(2, len(f(arr)))
+"""
+    r = record(src)
+    assert r.err is None
+    sort_out = [e["outputs"][0] for e in r.by_name("sort")]
+    stores = [e for e in r.events if e["kind"] == "store"]
+    # first iteration: np.sort is recorded and wired; second: `sorted` is hidden, no wire
+    wired = [
+        inp(s, "value")["value"] for s in stores if any(i["param"] == "value" for i in s["inputs"])
+    ]
+    assert set(wired) <= set(sort_out) and len(wired) == 2 * 1
+    second = stores[2:]
+    assert all(not any(i["param"] == "value" for i in s["inputs"]) for s in second)
+    # bind: `y` in the second iteration is not the np.sort output
+    assert r.bound("y") not in sort_out
+    assert r.log["values"][r.bound("y")]["type"] in ("list[3]", "list")
+
+
+def test_student_global_named_rc_does_not_break_calls() -> None:
+    src = """
+__rc__ = 1
+import numpy as np
+x = np.zeros(2)
+print(__rc__, sorted(k for k in globals() if "rc" in k))
+"""
+    r = record(src, prelude=False)
+    p = plain(src, prelude=False)
+    assert r.err is None and r.stdout == p.stdout
+
+
 def test_warning_line_in_a_multiline_method_chain_matches_cpython() -> None:
     src = """import warnings
 class A:

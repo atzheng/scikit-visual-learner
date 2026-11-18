@@ -119,13 +119,13 @@ def _clip(s: str, n: int = _MESSAGE_MAX) -> str:
 
 
 def _tramp_code(site: dict[str, Any]) -> types.CodeType:
-    """`__rc__[0](*__rc__[1], **__rc__[2])` as an eval code object at the call's own position.
+    """The call `f(*a, **k)` (read from `__machines_rc__`) as an eval code object at its position.
 
     It runs with the *caller's* globals and locals (see `Recorder._call`), so the callee's immediate
     caller frame is the student's namespace: `df.query("a > @t")`, `sys._getframe(1).f_locals`
     and warnings blamed on a stack level all behave as in plain Python.
     """
-    tree = ast.parse("__rc__[0](*__rc__[1], **__rc__[2])", mode="eval")
+    tree = ast.parse("__machines_rc__[0](*__machines_rc__[1], **__machines_rc__[2])", mode="eval")
     line = site.get("func_line", site["line"])  # the line CPython reports for the call
     end_line = site["end_line"]
     col, end_col = (site["col"], site["end_col"]) if line == site["line"] else (0, site["end_col"])
@@ -424,11 +424,11 @@ class Recorder:
             self._degrade("trampoline", e)
             return fn(*args, **kwargs)
         bdict = _BUILTINS_DICT
-        bdict["__rc__"] = (fn, args, kwargs)
+        bdict["__machines_rc__"] = (fn, args, kwargs)
         try:
             return eval(code, g) if loc is g else eval(code, g, loc)  # noqa: S307
         finally:
-            bdict["__rc__"] = None
+            bdict["__machines_rc__"] = None
 
     def _tick(self) -> None:
         """Common hook entry: continuing code means an earlier exception was caught."""
@@ -440,6 +440,7 @@ class Recorder:
             self.flush()
 
     def _rec(self, site: int, fn: Any, args: Any, kwargs: Any, frame: types.FrameType) -> Any:
+        self._site_out.pop(site, None)  # a result from an earlier execution is not this one's
         if self.vt.in_reentry or self.limit_hit or "rec" in self._off:
             return self._call(site, fn, args, kwargs, frame)
         if self.namespace is None:
