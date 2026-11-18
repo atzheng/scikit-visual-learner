@@ -10,7 +10,8 @@
     "typecheck": "tsc -p ."
   },
   "dependencies": {
-    "@machines/log": "workspace:*"
+    "@machines/log": "workspace:*",
+    "elkjs": "^0.12.1"
   },
   "devDependencies": {
     "vitest": "^5.1.0"

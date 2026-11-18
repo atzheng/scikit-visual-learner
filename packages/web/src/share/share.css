@@ -1,0 +1,56 @@
+.share {
+  position: relative;
+}
+
+.share-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 5;
+  width: max-content;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.2);
+}
+
+.share-pop.error {
+  border-color: var(--bad);
+}
+
+.share-pop input {
+  width: 100%;
+  font: inherit;
+  font-family: var(--mono);
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+}
+
+.banner.error {
+  border-left-color: var(--bad);
+}
+
+.banner-text {
+  flex: 1;
+}
+
+.banner-hidden {
+  display: none;
+}
