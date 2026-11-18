@@ -588,25 +588,30 @@ describe('label distance and dense graphs', () => {
     }
   });
 
-  test('dense graph (300 nodes, chain plus fan-in from 7 hubs) lays out without throwing', async () => {
-    const nodes: GNode[] = [];
-    const edges: GEdge[] = [];
-    for (let k = 0; k < 300; k++) {
-      const ins = [inP('a'), inP('b'), inP('c')];
-      nodes.push(call(`n:${k}`, `f${k}`, (k + 1) * 100000, ins, [outP(0, 'DF', `v${k}`)]));
-      if (k > 0) edges.push(edge(`c${k}`, [`n:${k - 1}`, 'out:0'], [`n:${k}`, 'in:a']));
-      if (k >= 7) {
-        edges.push(edge(`h${k}`, [`n:${k % 7}`, 'out:0'], [`n:${k}`, 'in:b']));
+  // Slow (~30 s, almost all ELK): runs only under `pnpm test:slow` (MACHINES_SLOW=1). See svl-2ok.
+  test.skipIf(process.env.MACHINES_SLOW !== '1')(
+    'dense graph (300 nodes, chain plus fan-in from 7 hubs) lays out without throwing',
+    async () => {
+      const nodes: GNode[] = [];
+      const edges: GEdge[] = [];
+      for (let k = 0; k < 300; k++) {
+        const ins = [inP('a'), inP('b'), inP('c')];
+        nodes.push(call(`n:${k}`, `f${k}`, (k + 1) * 100000, ins, [outP(0, 'DF', `v${k}`)]));
+        if (k > 0) edges.push(edge(`c${k}`, [`n:${k - 1}`, 'out:0'], [`n:${k}`, 'in:a']));
+        if (k >= 7) {
+          edges.push(edge(`h${k}`, [`n:${k % 7}`, 'out:0'], [`n:${k}`, 'in:b']));
+        }
       }
-    }
-    const m = model(nodes, edges);
-    const t0 = performance.now();
-    const laid = await layout(m, { measure });
-    const dt = performance.now() - t0;
-    console.log(
-      `dense layout: ${m.nodes.length} nodes, ${m.edges.length} edges, ${dt.toFixed(0)} ms`,
-    );
-    expect(Object.keys(laid.nodes)).toHaveLength(300);
-    expect(Object.keys(laid.edges)).toHaveLength(m.edges.length);
-  }, 120000);
+      const m = model(nodes, edges);
+      const t0 = performance.now();
+      const laid = await layout(m, { measure });
+      const dt = performance.now() - t0;
+      console.log(
+        `dense layout: ${m.nodes.length} nodes, ${m.edges.length} edges, ${dt.toFixed(0)} ms`,
+      );
+      expect(Object.keys(laid.nodes)).toHaveLength(300);
+      expect(Object.keys(laid.edges)).toHaveLength(m.edges.length);
+    },
+    120000,
+  );
 });
