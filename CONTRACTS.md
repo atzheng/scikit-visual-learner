@@ -264,7 +264,7 @@ Hook signatures, all positional-only in their leading parameters: `__rec__(site,
 
 **Degrade.** Every recorder step runs inside `try/except Exception`. On an internal error, append a message to `diagnostics`, switch that hook to pass-through for the rest of the run, and continue the student's code. A recorder bug must never become a student-visible exception or change the program's behaviour.
 
-**Caps.** The first `per_site` executions of a merge key are recorded in full. After that, each execution is still recorded in full, but as `slot: true`, with a fresh `i`, replacing the previous slot of that key (the assembler drops the old one). Bindings from `bind` sites follow the same rule per site. `max_events` counts full and slot records. Once it is reached, recording stops, the code keeps running, and the status at the end is `limit`. Hidden calls never count.
+**Caps.** The first `per_site` executions of a merge key are recorded in full. After that, each execution is still recorded in full, but as `slot: true`, with a fresh `i`, replacing the previous slot of that key (the assembler drops the old one). Bindings from `bind` sites follow the same rule per site: past `per_site`, the recorder sends the binding with `slot_key = "b<site>.<name>"` (the fifth element of the batch `bindings` tuple, section 7). `max_events` counts full and slot records. Once it is reached, recording stops, the code keeps running, and the status at the end is `limit`. Hidden calls never count.
 
 **Streaming.** At every hook entry, if 100 ms have passed since the last flush, flush. Flush on `close_open`. When `emit` is set, also call `on_enter(i, site)` / `on_exit(i)` callbacks if they are provided (the worker uses them to write the current call into a SharedArrayBuffer, section 7).
 
@@ -335,7 +335,7 @@ type FromWorker =
   | { type: 'ready'; versions: Record<string, string> }        // pyodide, python, numpy, pandas, sklearn
   | { type: 'started'; runId: number; sites: Site[] }
   | { type: 'batch'; runId: number; events: Event[]; open: OpenEvent[]; values: Record<Token, ValueSummary>;
-      bindings: [scope: number, event: number, name: string, token: Token][]; output: OutputEntry[];
+      bindings: [scope: number, event: number, name: string, token: Token, slot_key?: string][]; output: OutputEntry[];
       diagnostics: string[] }
   | { type: 'done'; runId: number; status: RunStatus; error: RunError | null }
   | { type: 'fileWritten'; name: string; rows?: number };
@@ -349,7 +349,11 @@ interface RunConfig { draw_modules: string[]; draw_builtins: boolean; draw_conta
 - An event is sent once it has finished (or in its slot form). `open` is the full stack of started, unfinished recorded calls at flush time, outermost first.
 - `currentCall` (only when `crossOriginIsolated`): an `Int32Array(2)` = `[i + 1, site]` of the innermost open recorded call, `0` when none, written by `on_enter`/`on_exit`.
 
-**Assembler** (`assemble.ts`): `createAssembler() → { push(msg: FromWorker): void; finish(status?: RunStatus): EventLog; snapshot(): EventLog }`.
+**Assembler** (`assemble.ts`): `createAssembler(runId?: number) → { push(msg: FromWorker): void; finish(status?: RunStatus, currentCall?: { i: number; site: number } | null): EventLog; snapshot(): EventLog }`. `finish`'s `status` overrides the one from `done`; `currentCall` is the decoded buffer (`i = buffer[0] - 1`), passed by the client when it kills the worker.
+- Messages with a `runId` other than the current one are ignored. `started` with a `runId` <= the current one is ignored; a higher one resets the assembler. When `createAssembler(runId)` is given a `runId`, only that run is accepted, including the first `started`.
+- Each batch's `open` replaces the stub map (it is the full stack at flush time), minus events already finished. A slot event whose `i` is lower than the existing slot for its merge key is dropped. A binding with a `slot_key` replaces any earlier binding in the same scope with that key, unless the earlier one has a higher event; `Scope.bindings` stay 3-tuples, sorted by event. An interrupted event's `count` is the largest `count` seen for its merge key plus one. `done` with `ok`, `error` or `limit` drops any remaining open stubs. `snapshot()` has status `ok` and `error: null` until `done`, then the done status and error, and leaves out open stubs. Scopes other than 0 seen in `bindings` get a placeholder scope (`<scope n>`) until M4 sends real ones. Interrupted events from stubs take `kind`, `name` and `module` from the stub; the one from `currentCall` is `kind: 'function'`, `name` the site's `func_text`, `module: null`; both have `scope: 0` and `merge_key: 's<site>'`.
+- The `currentCall` path recovers only the innermost call (kind `function`, name = `func_text`, no owner). Without `crossOriginIsolated` there is no buffer, so a hang yields no interrupted event (an M1 limitation). If the worker crashes, the client calls `finish('error')` and supplies the `RunError` itself.
+- `validateLog(x: unknown): EventLog` (`validate.ts`) throws an `Error` naming the path of the first violation, including the rule that every token has a `values` entry.
 - A slot event replaces any earlier event with the same `merge_key` and `slot: true`.
 - `open` stubs are kept until a later batch carries the finished event.
 - `finish('timeout' | 'stopped')` is called by the client when the worker is killed. It turns each remaining open stub, plus the `currentCall` call if it is newer, into an `Event` with `interrupted: true`, empty outputs and `ret = i`.
@@ -545,6 +549,7 @@ Generated fixtures are reviewed like code. A PR that changes them must say why i
 15. **Classmethods** (`__self__` is a class) are functions, not methods.
 16. **No hard-coded SVG spike.** M1's exit (the slide example renders from real code) is met by the real recorder → graph → renderer path. Measurements are their own bead.
 17. **Hosting** is Cloudflare Pages on a dedicated subdomain, with COOP/COEP and the CSP in `_headers` (section 11).
+18. **Binding slots**: the batch `bindings` tuple has an optional fifth element `slot_key` (`b<site>.<name>`) for bindings past the per-site cap. The assembler keeps only the newest per key in each scope, and the log's `Scope.bindings` stay 3-tuples (section 7).
 
 ## 11. Hosting and security headers
 
