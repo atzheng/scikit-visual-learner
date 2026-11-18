@@ -1,0 +1,32 @@
+{
+  "name": "scikit-visual-learner",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "pnpm -r --workspace-concurrency=1 test && pnpm test:py",
+    "test:py": "uv run pytest",
+    "test:pyodide": "echo 'test:pyodide: not yet'",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint . && prettier --check . && uv run ruff check && uv run ruff format --check",
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @machines/web dev",
+    "preview": "pnpm --filter @machines/web preview",
+    "fixtures": "echo 'fixtures: not yet'",
+    "e2e": "echo 'e2e: not yet'",
+    "measure": "echo 'measure: not yet'"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^5.1.0"
+  }
+}
