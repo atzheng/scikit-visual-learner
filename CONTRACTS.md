@@ -179,7 +179,7 @@ interface RunError {
   traceback: TracebackFrame[];  // student frames, library frames folded
 }
 type TracebackFrame =
-  | { kind: 'student'; line: number; text: string; name: string }
+  | { kind: 'student'; line: number; text: string; name: string; repeat?: number }  // repeat: further identical consecutive frames (recursion), as CPython's "[Previous line repeated N more times]"
   | { kind: 'library'; count: number; modules: string[] };   // n consecutive library frames folded into one
 
 type OutputEntry =
@@ -322,17 +322,19 @@ def run(source: str, config: dict, emit: Callable[[dict], None], *, on_enter=Non
     # SyntaxError: emits started with sites [] then done(status='error', error with line) — nothing runs
 def record(source: str, config: dict | None = None) -> dict
     # CPython/test path: run() with an in-memory assembler; returns the EventLog (section 2)
-def reset_between_runs() -> None       # close matplotlib figures, pd.reset_option('all'), clear recorder tables
+def reset_between_runs() -> None       # close matplotlib figures, pd.reset_option('all'), reset sklearn.set_config, run `runtime.after_reset_hooks`, clear recorder tables
+# pd.reset_option('all') also wipes pandas options the worker set at startup: the worker appends a function that
+# re-applies them to `machines.runtime.after_reset_hooks`. numpy, rcParams, os.environ and random state are not reset (SPEC "Between runs").
 ```
 
 - Compile with filename `<student>` and register the *original* source in `linecache`.
-- Run in a fresh dict namespace with `__name__ = "__main__"` and `__builtins__` set.
-- Redirect `sys.stdout` and `sys.stderr` to writers that append `OutputEntry` tagged with `recorder.current_event`. Merge consecutive writes with the same tag and stream.
+- Run in the `__dict__` of a fresh module named `__main__`, which is also `sys.modules["__main__"]` during the run (so student classes, dataclasses and `inspect` find their module), with `__builtins__` and `__file__ = "<student>"` set. Everything the run changes (streams, `input`, recursion limit, `__main__`, warning filters and hook, `MPLBACKEND`) is restored before `done`. Each restore is registered before its change and run independently, so an interrupt or error anywhere in setup or teardown restores everything and `done` is still emitted (a late `KeyboardInterrupt` gives `stopped`). `SystemExit` is not an error: `exit()` ends the program with status `ok`, and a non-int argument is written to stderr as plain Python does. `KeyboardInterrupt` gives status `stopped` and `error: null`.
+- Redirect `sys.stdout` and `sys.stderr` to writers that append `OutputEntry` tagged with `recorder.current_event`. Merge consecutive writes with the same tag and stream; the pending entry is committed when the tag or stream changes, when a recorded call starts, and at the end of the run (so the log does not depend on timing). Warning and figure entries are never merged.
 - Warnings: override `warnings.showwarning` to emit `stream: 'warning'` entries formatted as `"<line>: <Category>: <message>"`. The line is the student line of the innermost open recorded call (or the warning's own line if it is `<student>`). Do not change warning filters.
-- `builtins.input` raises `RuntimeError("input() is not supported here")` during a run.
+- `builtins.input` raises `RuntimeError("input() is not supported here")` during a run. Plain Python with stdin closed raises `EOFError`, so `except EOFError` does not catch it here.
 - Recursion: raise `sys.setrecursionlimit` to twice its value during a run (each wrapped call adds one frame). Verify the Pyodide stack survives it, and lower it if not.
 - Wall clock: the worker enforces `wall_ms` (section 7). `runtime.py` itself doesn't time out.
-- `tracebacks.py`: `student_traceback(exc) -> list[TracebackFrame]`. Drop frames from `machines/*`. Keep `<student>` frames with their linecache text. Fold runs of other frames into `{kind:'library', count, modules}`.
+- `tracebacks.py`: `student_traceback(exc) -> list[TracebackFrame]`. Drop frames from `machines/*`. Keep `<student>` frames with their linecache text. Fold runs of other frames into `{kind:'library', count, modules}` (`modules`: top-level module names, in order, deduplicated). Each recorded call adds a second `<student>` frame at the same line; identical student frames with a dropped recorder frame between them are merged, and runs of identical consecutive student frames (recursion) become one frame with `repeat` = the number of further occurrences. `RunError.line` is the deepest student frame. A `SyntaxError` has one student frame with the offending line's text.
 - `mpl.py`: if `matplotlib` is imported by the run, force the `Agg` backend before the import completes, and patch `plt.show` to emit each open figure as a `figure` output entry (PNG, base64, 100 dpi) and close it.
 
 ## 7. Worker protocol and app state

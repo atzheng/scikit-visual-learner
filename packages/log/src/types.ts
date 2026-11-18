@@ -104,7 +104,7 @@ export interface Event {
 }
 
 export type TracebackFrame =
-  | { kind: 'student'; line: number; text: string; name: string }
+  | { kind: 'student'; line: number; text: string; name: string; repeat?: number }
   | { kind: 'library'; count: number; modules: string[] };
 
 export interface RunError {

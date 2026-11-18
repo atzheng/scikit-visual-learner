@@ -2,4 +2,4 @@ import machines
 
 
 def test_package_imports() -> None:
-    assert machines.__all__ == []
+    assert "record" in machines.__all__
