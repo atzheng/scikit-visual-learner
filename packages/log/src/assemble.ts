@@ -17,7 +17,7 @@ export interface Assembler {
   /**
    * Final log. `status` overrides the status from 'done' (the client passes 'timeout' or
    * 'stopped' when it kills the worker). For those two, remaining open stubs and
-   * `currentCall` (if newer than every stub and event) become interrupted events.
+   * `currentCall` (if no stub or event has its `i`) become interrupted events.
    */
   finish(status?: RunStatus, currentCall?: CurrentCall | null): EventLog;
   /** A valid EventLog of what has arrived so far; status 'ok' until 'done', then the done status and error. Open stubs are not included. */
@@ -183,8 +183,10 @@ export function createAssembler(expectedRunId?: number): Assembler {
         for (const s of stubs) {
           evs.push(interrupted(s.i, s.site, s.kind, s.name, s.module, evs));
         }
-        const maxI = evs.reduce((m, e) => Math.max(m, e.i), -1);
-        if (currentCall && currentCall.i > maxI) {
+        // evs now holds finished events and stub-derived events; add the currentCall
+        // event unless one with that `i` exists (it may be an outer call whose inner
+        // calls already finished, so its `i` can be lower than theirs).
+        if (currentCall && !evs.some((e) => e.i === currentCall.i)) {
           const site = sites[currentCall.site];
           const name = site?.func_text ?? site?.text ?? '?';
           evs.push(interrupted(currentCall.i, currentCall.site, 'function', name, null, evs));
