@@ -155,7 +155,8 @@ If a bead cannot be finished (missing input, unclear contract, blocked by someth
 ```bash
 pnpm install && uv sync
 pnpm test          # vitest (all packages) + pytest
-pnpm test:py       # pytest only
+pnpm test:py       # pytest only (skips tests marked slow)
+pnpm test:slow     # slow tests only: every fixture program in a subprocess
 pnpm test:pyodide  # recorder tests inside Pyodide on Node
 pnpm typecheck
 pnpm lint          # eslint, prettier, ruff
