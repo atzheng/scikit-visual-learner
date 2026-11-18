@@ -363,7 +363,7 @@ interface RunConfig { draw_modules: string[]; draw_builtins: boolean; draw_conta
 - `validateLog(x: unknown): EventLog` (`validate.ts`) throws an `Error` naming the path of the first violation, including the rule that every token has a `values` entry.
 - A slot event replaces any earlier event with the same `merge_key` and `slot: true`.
 - `open` stubs are kept until a later batch carries the finished event.
-- `finish('timeout' | 'stopped')` is called by the client when the worker is killed. It turns each remaining open stub, plus the `currentCall` call if it is newer, into an `Event` with `interrupted: true`, empty outputs and `ret = i`.
+- `finish('timeout' | 'stopped')` is called by the client when the worker is killed. It turns each remaining open stub, plus the `currentCall` call if no stub or finished event has its `i` (it may be an outer call with finished inner events, so its `i` can be lower than theirs), into an `Event` with `interrupted: true`, empty outputs and `ret = i`.
 - Cross-check: assembling `fixtures/streams/<p>.jsonl` gives `fixtures/logs/<p>.json` exactly.
 
 **RuntimeClient** (`runtime/client.ts`):
