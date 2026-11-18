@@ -36,6 +36,7 @@ def test_notebook_is_twenty_lines() -> None:
     assert len([ln for ln in lines if ln.strip()]) == 20
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("name", ALL)
 def test_program_runs(name: str) -> None:
     first = run(name)
