@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { buildGraph } from './graph';
 import type { CallNode, GraphModel, InstanceNode } from './graph';
-import { eventLabel, stateAt } from './timeline';
+import { attrsAround, eventLabel, stateAt, stepOfEvent } from './timeline';
 import type { Event, EventLog, Input, OutputEntry, Site, ValueSummary } from './types';
 import { validateLog } from './validate';
 
@@ -431,5 +431,54 @@ describe('performance', () => {
     for (let r = 0; r < reps; r++) stateAt(m, lg, 100 + r);
     const per = (performance.now() - t0) / reps;
     expect(per).toBeLessThan(5);
+  });
+});
+
+describe('review additions', () => {
+  const log = linregLog();
+  const m = build(log);
+
+  test('activeVersion follows the instance versions; currentNode names the current box', () => {
+    const i = inst(m);
+    expect(stateAt(m, log, 2).activeVersion.has(i.id)).toBe(false);
+    expect(stateAt(m, log, 3).activeVersion.get(i.id)).toBe('v4.0');
+    expect(stateAt(m, log, 3).currentNode).toBe(i.id); // constructor step
+    const fit = stateAt(m, log, 4);
+    expect(fit.activeVersion.get(i.id)).toBe('v4.1');
+    expect(fit.currentNode).toBe(call(m, 'LinearRegression.fit').id);
+    expect(stateAt(m, log, 0).currentNode).toBeNull();
+    expect(stateAt(m, log, m.steps.length).activeVersion.get(i.id)).toBe('v4.1');
+  });
+
+  test('stepOfEvent maps execution i to its step', () => {
+    expect(stepOfEvent(m, 3)).toBe(4);
+    expect(stateAt(m, log, stepOfEvent(m, 3)!).current).toBe(3);
+    expect(stepOfEvent(m, 99)).toBeNull();
+  });
+
+  test('attrsAround gives before/after for a chosen method execution', () => {
+    expect(attrsAround(m, log, 3)).toEqual({
+      before: {},
+      after: { coef_: 'v5.0', intercept_: 's1' },
+    });
+    expect(attrsAround(m, log, 0)).toBeNull(); // not a method on a machine
+    expect(attrsAround(m, log, 99)).toBeNull();
+  });
+
+  test('NaN clamps to step 0; Infinity to the end', () => {
+    const s = stateAt(m, log, NaN);
+    expect(s.current).toBeNull();
+    expect(s.visibleNodes.size).toBe(0);
+    expect(stateAt(m, log, Infinity).visibleNodes.size).toBe(m.nodes.length);
+  });
+
+  test('eventLabel never splits a surrogate pair', () => {
+    const b = new B();
+    const s = b.site('f("' + 'x'.repeat(75) + '😀😀😀😀")', 1);
+    b.ev(s, 'function', 'f');
+    const label = eventLabel(b.log(), 0);
+    expect(label.endsWith('…')).toBe(true);
+    expect(/[\ud800-\udbff](?![\udc00-\udfff])/.test(label)).toBe(false);
+    expect(/(?<![\ud800-\udbff])[\udc00-\udfff]/.test(label)).toBe(false);
   });
 });

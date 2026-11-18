@@ -19,5 +19,5 @@ export type {
   Execution,
   GEdge,
 } from './graph';
-export { stateAt, eventLabel } from './timeline';
+export { stateAt, eventLabel, stepOfEvent, attrsAround } from './timeline';
 export type { StepState } from './timeline';

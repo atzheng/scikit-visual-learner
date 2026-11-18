@@ -1,5 +1,6 @@
 // Timeline state (CONTRACTS.md section 8, SPEC "Timeline"). Pure: (model, log, step) -> StepState.
-import type { Execution, GEdge, GNode, GraphModel } from './graph';
+import { keyOf } from './graph';
+import type { Execution, GEdge, GNode, GraphModel, InstanceNode } from './graph';
 import type { Event, EventLog, OutputEntry, Token } from './types';
 
 export interface StepState {
@@ -17,6 +18,10 @@ export interface StepState {
   output: OutputEntry[];
   /** Merged boxes only (n > 1): k = count of the active execution, n = total count. */
   badge: Map<string, { k: number; n: number }>;
+  /** Per visible instance: its latest version token at or before the current step. */
+  activeVersion: Map<string, Token>;
+  /** Node whose execution (or, for instances, creation/mutation) is the current event; null if none. */
+  currentNode: string | null;
 }
 
 interface UseInfo {
@@ -41,9 +46,9 @@ interface Index {
   edges: EdgeIndex[];
   sourceEdges: Map<string, number[]>; // source node id -> indices into edges
   events: Event[];
+  instances: InstanceNode[];
+  nodeAt: Map<number, string>; // event i -> node drawn for it
 }
-
-const keyOf = (t: Token): string => (t.startsWith('v') ? t.slice(0, t.indexOf('.')) : t);
 
 function findEvent(events: Event[], i: number): Event | undefined {
   let lo = 0;
@@ -119,7 +124,55 @@ function buildIndex(model: GraphModel, log: EventLog): Index {
       else sourceEdges.set(from.id, [idx]);
     }
   }
-  return { first, execNodes, edges, sourceEdges, events: log.events };
+  const instances = model.nodes.filter((n): n is InstanceNode => n.kind === 'instance');
+  const nodeAt = new Map<number, string>();
+  for (const n of instances) {
+    nodeAt.set(n.createdAt, n.id);
+    for (const v of n.versions) nodeAt.set(v.i, n.id);
+  }
+  // Boxes win over instances (a method box is the current node of its own event).
+  for (const en of execNodes) for (const ex of en.executions) nodeAt.set(ex.i, en.id);
+  return { first, execNodes, edges, sourceEdges, events: log.events, instances, nodeAt };
+}
+
+/** Attrs of the owner machine before and after a method event; null unless it is a method on a machine. */
+function ownerAttrs(
+  log: EventLog,
+  ev: Event | undefined,
+): { before?: Record<string, Token>; after?: Record<string, Token> } | null {
+  if (!ev || ev.kind !== 'method' || !ev.owner || !log.values[ev.owner]?.machine) return null;
+  const owner = ev.owner;
+  const m = ev.mutates.find(([b]) => keyOf(b) === keyOf(owner));
+  const before = log.values[m ? m[0] : owner]?.attrs;
+  const after = log.values[m ? m[1] : owner]?.attrs;
+  return { ...(before && { before }), ...(after && { after }) };
+}
+
+/** Step index (1-based, as `stateAt` takes it) at which execution `i` is current, or null if `i` is not a step. */
+export function stepOfEvent(model: GraphModel, i: number): number | null {
+  let lo = 0;
+  let hi = model.steps.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const v = model.steps[mid]!;
+    if (v === i) return mid + 1;
+    if (v < i) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return null;
+}
+
+/**
+ * Attributes of the owner machine before and after the method execution `i` (for the inspect panel on
+ * a chosen call, not only the current step). Null when `i` is not a drawn method event on a machine.
+ */
+export function attrsAround(
+  model: GraphModel,
+  log: EventLog,
+  executionI: number,
+): { before?: Record<string, Token>; after?: Record<string, Token> } | null {
+  if (stepOfEvent(model, executionI) === null) return null;
+  return ownerAttrs(log, findEvent(log.events, executionI));
 }
 
 function indexFor(model: GraphModel, log: EventLog): Index {
@@ -153,7 +206,7 @@ function lastAtOrBefore(execs: Execution[], cur: number): number {
 export function stateAt(model: GraphModel, log: EventLog, step: number): StepState {
   const ix = indexFor(model, log);
   const total = model.steps.length;
-  const s = Math.max(0, Math.min(total, Math.trunc(step)));
+  const s = Number.isNaN(step) ? 0 : Math.max(0, Math.min(total, Math.trunc(step)));
   const atEnd = s === total;
   const current = s === 0 ? null : model.steps[s - 1]!;
   // At the end everything is shown, even things ready only after the last drawn step.
@@ -185,6 +238,13 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
       }
     }
   }
+  const activeVersion = new Map<string, Token>();
+  for (const n of ix.instances) {
+    if (!visibleNodes.has(n.id)) continue;
+    let tok = n.versions[0]?.token;
+    for (const v of n.versions) if (v.i <= cur) tok = v.token;
+    if (tok !== undefined) activeVersion.set(n.id, tok);
+  }
   // A source is shown when any consumer of its edges is.
   for (const [id, idxs] of ix.sourceEdges)
     if (idxs.some((k) => visibleEdges.has(ix.edges[k]!.id))) visibleNodes.add(id);
@@ -198,19 +258,14 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
     // Entries with i = -1 (before any event) are always visible; with nothing drawn, show all.
     output: atEnd ? log.output.slice() : log.output.filter((o) => o.i <= cur),
     badge,
+    activeVersion,
+    currentNode: current === null ? null : (ix.nodeAt.get(current) ?? null),
   };
 
   if (current !== null) {
-    const ev = findEvent(ix.events, current);
-    if (ev && ev.kind === 'method' && ev.owner && log.values[ev.owner]?.machine) {
-      const m = ev.mutates.find(([b]) => keyOf(b) === keyOf(ev.owner!));
-      const before = m ? m[0] : ev.owner;
-      const after = m ? m[1] : ev.owner;
-      const a = log.values[before]?.attrs;
-      const b = log.values[after]?.attrs;
-      if (a) state.attrsBefore = a;
-      if (b) state.attrsAfter = b;
-    }
+    const a = ownerAttrs(log, findEvent(ix.events, current));
+    if (a?.before) state.attrsBefore = a.before;
+    if (a?.after) state.attrsAfter = a.after;
   }
   return state;
 }
@@ -223,7 +278,8 @@ export function eventLabel(log: EventLog, i: number): string {
   if (!ev) return `event ${i}`;
   const site = log.sites[ev.site];
   let text = (site ? site.text : ev.name).replace(/\s+/g, ' ').trim();
-  if (text.length > MAX_LABEL) text = text.slice(0, MAX_LABEL - 1) + '…';
+  const points = Array.from(text); // by code point: never split a surrogate pair
+  if (points.length > MAX_LABEL) text = points.slice(0, MAX_LABEL - 1).join('') + '…';
   let label = `${site ? `line ${site.line}` : `event ${i}`}: ${text}`;
   if (ev.error && !ev.error.handled) label += ` (error: ${ev.error.type})`;
   else if (ev.error) label += ` (handled ${ev.error.type})`;

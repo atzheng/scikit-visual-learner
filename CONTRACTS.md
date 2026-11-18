@@ -470,14 +470,19 @@ interface StepState {
   visibleEdges: Set<string>;    // edge with a use whose consumer has started (use.i <= current) and whose producer has returned (producer ret <= current)
   activeExecution: Map<string, Execution>;   // per node: latest execution with i <= current
   activeToken: Map<string, Token>;           // per edge
+  activeVersion: Map<string, Token>;         // per visible instance node: its latest version token with version.i <= current (draw attrs from log.values[token].attrs)
+  currentNode: string | null;                // node of the current event: the call/expr/store box that executed, or the instance created or mutated by it; null at step 0
   attrsBefore?: Record<string, Token>; attrsAfter?: Record<string, Token>;   // when current is a method on an instance
   output: OutputEntry[];        // entries with i <= current
   badge: Map<string, { k: number; n: number }>;   // merged boxes only (n > 1): k = count of the active execution, n = count of the last one
 }
+function stepOfEvent(model: GraphModel, i: number): number | null;   // execution i -> step index for stateAt (click a box); null if i is not a step
+function attrsAround(model: GraphModel, log: EventLog, executionI: number):
+  { before?: Record<string, Token>; after?: Record<string, Token> } | null;   // owner attrs around a chosen machine-method execution (inspect panel); null if not one
 function eventLabel(log: EventLog, i: number): string;   // "line 10: train_test_split(X, y, test_size=0.2)" for the event list
 ```
 
-Step `steps.length` (the end) shows everything, including wires ready after the last drawn step. `step` 0 shows nothing except `output` entries with `i = -1`. Out-of-range steps are clamped. A source node is visible when any of its edges is. `activeToken` is per visible edge: the token of its latest use with `i <= current` and producer `ret <= current`. `activeExecution` has call, expr and store nodes only. `attrsBefore/After` come from the `mutates` entry on the owner (or the owner's own attrs for both when the method does not mutate it). `eventLabel` appends ` (error: T)`, ` (handled T)` or ` (stopped here)` for events with an error or `interrupted`, collapses whitespace and cuts the source text at 80 characters. `stateAt` caches an index per (model, log) object pair, so reuse the same objects while scrubbing.
+Step `steps.length` (the end) shows everything, including wires ready after the last drawn step. `step` 0 shows nothing (unless no step is drawn, when step 0 is also the end and shows everything) except `output` entries with `i = -1`. Out-of-range steps are clamped; NaN is step 0. An out-wire of a merged box lags the box: on iteration 3 of a loop the badge says 3 of n, but a wire to a later consumer keeps carrying iteration 2's token until that consumer's own iteration 3 starts (no false wires). A source node is visible when any of its edges is. `activeToken` is per visible edge: the token of its latest use with `i <= current` and producer `ret <= current`. `activeExecution` has call, expr and store nodes only. `attrsBefore/After` come from the `mutates` entry on the owner (or the owner's own attrs for both when the method does not mutate it). `eventLabel` appends ` (error: T)`, ` (handled T)` or ` (stopped here)` for events with an error or `interrupted`, collapses whitespace and cuts the source text at 80 characters. `stateAt` caches an index per (model, log) object pair, so reuse the same objects while scrubbing.
 
 **Renderer** (`@machines/render`):
 
