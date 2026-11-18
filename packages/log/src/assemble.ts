@@ -20,17 +20,18 @@ export interface Assembler {
    * `currentCall` (if newer than every stub and event) become interrupted events.
    */
   finish(status?: RunStatus, currentCall?: CurrentCall | null): EventLog;
-  /** A valid EventLog of what has arrived so far; status 'ok' until 'done'. Open stubs are not included. */
+  /** A valid EventLog of what has arrived so far; status 'ok' until 'done', then the done status and error. Open stubs are not included. */
   snapshot(): EventLog;
 }
 
-export function createAssembler(): Assembler {
+/** `runId`: when given, only that run is accepted (including its `started`). */
+export function createAssembler(expectedRunId?: number): Assembler {
   let runId: number | null = null;
   let sites: Site[] = [];
   let values: Record<Token, ValueSummary> = {};
   let events: Event[] = []; // sorted by i
   let open = new Map<number, OpenEvent>();
-  let bindings = new Map<number, [number, string, Token][]>();
+  let bindings = new Map<number, { b: [number, string, Token]; key?: string }[]>();
   let output: OutputEntry[] = [];
   let diagnostics: string[] = [];
   let status: RunStatus = 'ok';
@@ -50,6 +51,10 @@ export function createAssembler(): Assembler {
 
   function insert(ev: Event): void {
     if (ev.slot) {
+      const newer = events.some(
+        (e) => e.slot === true && e.merge_key === ev.merge_key && e.i > ev.i,
+      );
+      if (newer) return; // out-of-order batch: never let an older slot replace a newer one
       events = events.filter((e) => !(e.slot === true && e.merge_key === ev.merge_key));
     }
     let lo = 0;
@@ -66,7 +71,8 @@ export function createAssembler(): Assembler {
   function push(msg: FromWorker): void {
     switch (msg.type) {
       case 'started':
-        if (runId !== null && msg.runId < runId) return;
+        if (expectedRunId !== undefined && msg.runId !== expectedRunId) return;
+        if (runId !== null && msg.runId <= runId) return;
         runId = msg.runId;
         reset();
         sites = msg.sites;
@@ -77,14 +83,19 @@ export function createAssembler(): Assembler {
           insert(ev);
           open.delete(ev.i);
         }
+        // `open` is the full stack at flush time: replace, don't accumulate.
         const finished = new Set(events.map((e) => e.i));
-        for (const o of msg.open) {
-          if (!finished.has(o.i)) open.set(o.i, o);
-        }
+        open = new Map(msg.open.filter((o) => !finished.has(o.i)).map((o) => [o.i, o]));
         Object.assign(values, msg.values);
-        for (const [scope, event, name, token] of msg.bindings) {
-          const list = bindings.get(scope) ?? [];
-          list.push([event, name, token]);
+        for (const [scope, event, name, token, key] of msg.bindings) {
+          let list = bindings.get(scope) ?? [];
+          if (key !== undefined) {
+            if (list.some((x) => x.key === key && x.b[0] > event)) continue;
+            list = list.filter((x) => x.key !== key);
+          }
+          list.push(
+            key === undefined ? { b: [event, name, token] } : { b: [event, name, token], key },
+          );
           bindings.set(scope, list);
         }
         output.push(...msg.output);
@@ -111,7 +122,10 @@ export function createAssembler(): Assembler {
         name: id === 0 ? '<module>' : `<scope ${id}>`,
         parent_event: null,
         lexical_parent: id === 0 ? null : 0,
-        bindings: (bindings.get(id) ?? []).slice(),
+        bindings: (bindings.get(id) ?? [])
+          .map((x, k) => ({ x, k }))
+          .sort((a, c) => a.x.b[0] - c.x.b[0] || a.k - c.k)
+          .map(({ x }) => x.b),
       }));
   }
 
@@ -151,7 +165,7 @@ export function createAssembler(): Assembler {
       outputs: [],
       returns_self: false,
       mutates: [],
-      count: evs.filter((e) => e.merge_key === merge_key).length + 1,
+      count: evs.reduce((m, e) => (e.merge_key === merge_key ? Math.max(m, e.count) : m), 0) + 1,
       merge_key,
       error: null,
       interrupted: true,
@@ -160,7 +174,7 @@ export function createAssembler(): Assembler {
 
   return {
     push,
-    snapshot: () => build('ok', events.slice()),
+    snapshot: () => build(status, events.slice()),
     finish(override, currentCall) {
       const final = override ?? status;
       const evs = events.slice();

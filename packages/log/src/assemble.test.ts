@@ -268,3 +268,92 @@ describe('validateLog', () => {
     expect(() => validateLog(log)).toThrow(/sorted/);
   });
 });
+
+describe('assembler review fixes', () => {
+  test('snapshot after done returns the done status and error', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    const error = { type: 'ValueError', message: 'x', line: 1, traceback: [] };
+    a.push({ type: 'done', runId: 1, status: 'error', error });
+    const snap = a.snapshot();
+    expect(snap.status).toBe('error');
+    expect(snap.error).toEqual(error);
+  });
+
+  test('slot bindings replace earlier ones with the same slot_key (30 iterations)', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    const bindings: Batch['bindings'] = [];
+    for (let k = 0; k < 30; k++) {
+      bindings.push(k < 20 ? [0, k, 'x', `s${k}`] : [0, k, 'x', `s${k}`, 'b1.x']);
+    }
+    bindings.push([0, 5, 'y', 'sy', 'b2.y']); // other key survives
+    a.push(batch(1, { bindings: bindings.slice(0, 25) }));
+    a.push(batch(1, { bindings: bindings.slice(25) }));
+    const b = a.finish('ok').scopes[0]!.bindings;
+    expect(b.filter(([, n]) => n === 'x')).toHaveLength(21); // 20 full + the latest slot
+    expect(b.find(([e, n]) => e === 29 && n === 'x')).toEqual([29, 'x', 's29']);
+    expect(b.find(([, n]) => n === 'y')).toBeDefined();
+    expect(b.every((t) => t.length === 3)).toBe(true);
+    expect(b.map((t) => t[0])).toEqual([...b.map((t) => t[0])].sort((x, y) => x - y));
+  });
+
+  test('an older slot binding arriving late does not replace a newer one', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    a.push(batch(1, { bindings: [[0, 9, 'x', 's9', 'k']] }));
+    a.push(batch(1, { bindings: [[0, 3, 'x', 's3', 'k']] }));
+    expect(a.finish('ok').scopes[0]!.bindings).toEqual([[9, 'x', 's9']]);
+  });
+
+  test('open replaces the stub map instead of accumulating', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    const s0 = { i: 0, site: 0, kind: 'function' as const, name: 'f0', module: null };
+    const s1 = { i: 1, site: 1, kind: 'function' as const, name: 'f1', module: null };
+    a.push(batch(1, { open: [s0, s1] }));
+    a.push(batch(1, { open: [s0] })); // s1 is no longer on the stack
+    expect(a.finish('stopped').events.map((e) => e.i)).toEqual([0]);
+  });
+
+  test('interrupted count is the max count for the merge key plus one', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    a.push(
+      batch(1, {
+        events: [ev(0, 0, { count: 1 }), ev(5, 0, { slot: true, count: 25 })],
+        values: vals(0, 5),
+        open: [{ i: 6, site: 0, kind: 'function', name: 'f0', module: null }],
+      }),
+    );
+    const log = a.finish('timeout');
+    expect(log.events.find((e) => e.i === 6)!.count).toBe(26);
+  });
+
+  test('started with runId <= current is ignored', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 3, sites });
+    a.push(batch(3, { events: [ev(0, 0)], values: vals(0) }));
+    a.push({ type: 'started', runId: 3, sites: [] });
+    a.push({ type: 'started', runId: 2, sites: [] });
+    expect(a.finish('ok').events).toHaveLength(1);
+  });
+
+  test('createAssembler(runId) accepts only that run, including started', () => {
+    const a = createAssembler(4);
+    a.push({ type: 'started', runId: 3, sites });
+    a.push(batch(3, { events: [ev(0, 0)], values: vals(0) }));
+    expect(a.finish('ok').sites).toEqual([]);
+    a.push({ type: 'started', runId: 4, sites });
+    a.push(batch(4, { events: [ev(1, 1)], values: vals(1) }));
+    expect(a.finish('ok').events.map((e) => e.i)).toEqual([1]);
+  });
+
+  test('an incoming slot with a lower i does not replace a newer slot', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    a.push(batch(1, { events: [ev(7, 0, { slot: true, count: 8 })], values: vals(7) }));
+    a.push(batch(1, { events: [ev(3, 0, { slot: true, count: 4 })], values: vals(3) }));
+    expect(a.finish('ok').events.map((e) => e.i)).toEqual([7]);
+  });
+});

@@ -50,7 +50,7 @@ export type FromWorker =
       events: Event[];
       open: OpenEvent[];
       values: Record<Token, ValueSummary>;
-      bindings: [scope: number, event: number, name: string, token: Token][];
+      bindings: [scope: number, event: number, name: string, token: Token, slot_key?: string][];
       output: OutputEntry[];
       diagnostics: string[];
     }
