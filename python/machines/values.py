@@ -387,6 +387,9 @@ class ValueTable:
         if kind == "scalar":
             if t is tuple or t is frozenset:
                 return {"type": f"{name}[{len(obj)}]", "repr": _repr(obj)}
+            np = _mod("numpy")
+            if np is not None and isinstance(obj, np.generic):
+                return {"type": name, "repr": _cell(obj)}  # str(): "3", not "np.int64(3)"
             return {"type": "None" if obj is None else name, "repr": _repr(obj)}
         pd = _mod("pandas")
         np = _mod("numpy")
