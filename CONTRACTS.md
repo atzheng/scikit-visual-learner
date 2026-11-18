@@ -236,9 +236,16 @@ class RunConfig:                       # JSON-serializable; same shape as TS Run
     hash_cells: int = 100_000
 
 class Recorder:
-    def __init__(self, sites: list[dict], config: RunConfig, emit: Callable[[dict], None] | None): ...
-    def install(self) -> None          # put hooks into builtins (they pass through when no Recorder is active)
-    def uninstall(self) -> None
+    def __init__(self, sites: list[dict], config: RunConfig | dict, emit: Callable[[dict], None] | None = None, *,
+                 on_enter: Callable[[int, int], None] | None = None, on_exit: Callable[[int], None] | None = None,
+                 namespace: dict | None = None): ...   # namespace: the student's globals (default: taken from the first hook frame)
+    def install(self) -> None          # install_hooks() into builtins, and become the active recorder (hooks pass through when none is active)
+    def uninstall(self) -> None        # stop recording; the hooks stay in builtins and pass through
+    def add_output(self, entry: dict) -> None   # runtime seam: one finished OutputEntry, sent in the next batch and kept for log()
+    def current_line(self) -> int | None        # student line of the innermost open recorded call (warning attribution)
+    def final_status(self, status: str) -> str  # 'limit' instead of 'ok' when a cap was hit
+    limit_hit: bool
+    diagnostics: list[str]
     def flush(self, force: bool = False) -> None   # emit a 'batch' message (section 7) if anything is pending
     def close_open(self, exc: BaseException | None) -> None  # mark still-open events (error or interrupted)
     def log(self, status: str, error: dict | None) -> dict   # full EventLog (CPython record() path)
@@ -249,27 +256,27 @@ Hook signatures, all positional-only in their leading parameters: `__rec__(site,
 
 **Call filtering.** Recorded iff the callee's top-level module (from `inspect.getmodule`, or the `__module__` of a bound method's owner's type) is in `draw_modules`, or the callee is student-defined (function code filename `<student>`, or a class whose `__module__` is `__main__`), or builtins/container methods are toggled on. Everything else is called directly with no recording (fast path). Cache decisions per callable type/identity.
 
-**Kinds.** `constructor`: `fn` is a class. `method`: `fn` is a bound method whose `__self__` is not a module and not a class. A bound method whose `__self__` is a class (a classmethod such as `DataFrame.from_dict`) is a `function` named `DataFrame.from_dict`. `student_function`: a student-defined plain function. Otherwise `function`.
+**Kinds.** `constructor`: `fn` is a class. `method`: `fn` is a bound method whose `__self__` is not a module and not a class. A bound method whose `__self__` is a class (a classmethod such as `DataFrame.from_dict`) is a `function` named `DataFrame.from_dict`. The `name` of a `method` event is `<owner class __qualname__>.<method __name__>` (`LinearRegression.predict`, not the defining class `LinearModel.predict`); owner types in `builtins` follow the container-methods toggle (`str`, `list`, `dict`, `set`, `tuple`, ...) or the builtins toggle. `student_function`: a student-defined plain function. Otherwise `function`.
 
-**Inputs.** Bind with a cached `inspect.signature(fn).bind(*args, **kwargs)`. On failure, label positionals `arg0`, `arg1`… and keywords by name, and still make the call. For a data method, the owner comes first as `self`. Each input takes its origin from the site. Inputs are resolved per section 5. Only arguments the student passed are listed.
+**Inputs.** Map the arguments to parameter names with a cached `inspect.signature(fn)` (walking the parameters, so no per-call `bind()`). When the signature cannot be read, label positionals `arg0`, `arg1`… and keywords by name, and still make the call. For a data method, the owner comes first as `self`. Each input takes its origin from the site. Inputs are resolved per section 5. Only arguments the student passed are listed.
 
 **Outputs.** Per SPEC "Tuple returns", using `site.unpack`. `returns_self` when `result is owner`.
 
 **Mutation.** After every recorded call, check the owner, every input, and every tracked estimator reachable from them through `get_params(deep=True)`. Record each changed one in `mutates`. A version change found when an object is read as an input with no event to blame gives a new version with no producer (drawn as a source node, section 8).
 
-**Expression events.** When an input has origin `expr` and its value has no token yet or is a scalar, record an event `kind: 'expr'` *before* the consuming event: inputs are the tokens currently held by `reads` (section 5), outputs the value's new token. Do the same for a `call` origin whose inner site produced no recorded event for that object (it was hidden or past a cap): it becomes an `expr` event with the inner site's text.
+**Expression events.** When an input has origin `expr` and its value has no token yet or is a scalar, record an event `kind: 'expr'` *before* the consuming event: inputs are the tokens currently held by `reads` (section 5), outputs the value's new token. Do the same for a `call` origin whose inner site produced no recorded event for that object (it was hidden): it becomes an `expr` event with the inner site's text, `site` the inner site, `merge_key` `s<inner>`, and it does not count against `max_events`. The same rule applies to the value of a `__bind__` (the site is the bind site, `merge_key` `s<site>`). Other expr events are recorded for an argument at position `k` / keyword `name` of a call at site `S` with `site: S` and `merge_key: "s<S>.a<k>"` / `"s<S>.k<name>"`; for the owner of a method on data (`df["price"].mean()`), `"s<S>.self"`, where the owner expression is the callee text minus the method name and its `reads` come from parsing that text. An expr event's `name` is its expression text. `inputs` of an expr event: one `{param: <name>, origin: 'name', value}` per name read. For an assignment that rebinds a name the expression reads (`w = w * 2`, `a += 1`), the read resolves to the name's *previous* binding. An augmented assignment that changes a tracked object in place gives an expr event with `mutates` and no outputs.
 
-**Store events.** `__store__` records `kind: 'store'`: inputs are the root's previous version (`param: 'target'`) and the RHS (`param: 'value'`, only when the RHS is a single value whose origin the bind site recorded). The output is a **forced** new version of the root, even if the fingerprint did not change.
+**Store events.** `__store__` records `kind: 'store'`: inputs are the root's previous version (`param: 'target'`) and the RHS. `__store__` receives only the root, not the RHS object, so the RHS input depends on its origin: `const` gives `{param: 'value', text}`, `name` the named value, `call` the recorded output of that call (omitted when the call was hidden), and `expr` one input per name the expression reads, `param: 'value[<name>]'`, `origin: 'expr'` (the value itself has no token). The output is a **forced** new version of the root, even if the fingerprint did not change.
 
-**Errors.** An exception raised by the callee is recorded on the innermost recorded event with `handled: false`, and re-raised unchanged. Enclosing open events get `propagated: true`. If the student's code later continues in the same scope (the exception was caught), the recorder sets `handled: true` on the next hook call.
+**Errors.** An exception raised by the callee is recorded on the innermost recorded event with `handled: false` (and the `mutates` the failed call still made), and re-raised unchanged. Enclosing open events get `propagated: true`. If the student's code later continues in the same scope (the exception was caught), the recorder sets `handled: true` on the next hook call, or at `close_open` for an error that was not the exception that ended the run. `close_open(None)` is a normal end, `close_open(KeyboardInterrupt)` marks calls still open `interrupted`.
 
 **Re-entry.** While the recorder summarizes, fingerprints or binds signatures it sets a flag, and every hook passes through.
 
 **Degrade.** Every recorder step runs inside `try/except Exception`. On an internal error, append a message to `diagnostics`, switch that hook to pass-through for the rest of the run, and continue the student's code. A recorder bug must never become a student-visible exception or change the program's behaviour.
 
-**Caps.** The first `per_site` executions of a merge key are recorded in full. After that, each execution is still recorded in full, but as `slot: true`, with a fresh `i`, replacing the previous slot of that key (the assembler drops the old one). Bindings from `bind` sites follow the same rule per site: past `per_site`, the recorder sends the binding with `slot_key = "b<site>.<name>"` (the fifth element of the batch `bindings` tuple, section 7). `max_events` counts full and slot records. Once it is reached, recording stops, the code keeps running, and the status at the end is `limit`. Hidden calls never count.
+**Caps.** The first `per_site` executions of a merge key are recorded in full. After that, each execution is still recorded in full, but as `slot: true`, with a fresh `i`, replacing the previous slot of that key (the assembler drops the old one). Bindings from `bind` sites follow the same rule per site: past `per_site`, the recorder sends the binding with `slot_key = "b<site>.<name>"` (the fifth element of the batch `bindings` tuple, section 7). `max_events` counts full and slot records. Once it is reached, recording stops, the code keeps running, and the status at the end is `limit` (`Recorder.final_status`). Hidden calls never count. Binding rows are not events but are capped too: more than `4 * max_events` of them also stops recording with `limit`, so a long loop cannot grow the log without bound.
 
-**Streaming.** At every hook entry, if 100 ms have passed since the last flush, flush. Flush on `close_open`. When `emit` is set, also call `on_enter(i, site)` / `on_exit(i)` callbacks if they are provided (the worker uses them to write the current call into a SharedArrayBuffer, section 7).
+**Streaming.** `emit` receives the `batch` message of section 7 without `runId` (the worker adds it): `{type: 'batch', events, open, values, bindings, output, diagnostics}`. At every hook entry, and again once a call is pushed on the open stack, if 100 ms have passed since the last flush, flush. Flush on `close_open`. When `emit` is set, also call `on_enter(i, site)` / `on_exit(i)` callbacks if they are provided (the worker uses them to write the current call into a SharedArrayBuffer, section 7).
 
 ## 5. Values (`values.py`)
 
@@ -557,6 +564,10 @@ Generated fixtures are reviewed like code. A PR that changes them must say why i
 16. **No hard-coded SVG spike.** M1's exit (the slide example renders from real code) is met by the real recorder → graph → renderer path. Measurements are their own bead.
 17. **Hosting** is Cloudflare Pages on a dedicated subdomain, with COOP/COEP and the CSP in `_headers` (section 11).
 18. **Binding slots**: the batch `bindings` tuple has an optional fifth element `slot_key` (`b<site>.<name>`) for bindings past the per-site cap. The assembler keeps only the newest per key in each scope, and the log's `Scope.bindings` stay 3-tuples (section 7).
+19. **Method event names** are `<owner class>.<method>`, so the box says `LinearRegression.predict` even though the method is defined on `LinearModel`.
+20. **Warning locations**: every call goes through a per-site trampoline compiled as `<student>` at the call's line (section 4), so warnings raised at the call's own level blame the student's line and the warning registry is the student's. Warnings raised deeper in a library keep the library's location: the runtime attributes them with `Recorder.current_line()`. Tracebacks contain the trampoline as a second `<student>` frame (`<module>`, same line) after each hook frame; `student_traceback` should merge it with the frame above.
+21. **Expression events from arguments, owners and hidden calls** carry synthetic merge keys (section 4), and a store's expression RHS is wired through the names it reads (the hook does not receive the RHS object).
+22. **Binding rows are capped** at `4 * max_events` (section 4).
 
 ## 11. Hosting and security headers
 

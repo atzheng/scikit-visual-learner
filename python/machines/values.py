@@ -198,6 +198,10 @@ class ValueTable:
             return "scalar"
         return "reference"
 
+    def seen(self, obj: Any) -> bool:
+        """Has this object been given a token yet?"""
+        return id(obj) in self._ids
+
     def is_machine(self, obj: Any) -> bool:
         if self.classify(obj) != "reference":
             return False
