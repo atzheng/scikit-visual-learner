@@ -8,13 +8,23 @@ import { backToMyCode, loadFromHash, useShare } from './shareState';
 export function useLoadShareLink(): void {
   useEffect(() => {
     void loadFromHash(location.hash);
-    const onHash = () => void loadFromHash(location.hash);
+    const onHash = () =>
+      void loadFromHash(location.hash, { confirmReplace: (m) => window.confirm(m) });
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 }
 
 type Notice = { kind: 'ok' | 'error'; text: string } | null;
+
+function ManualLink({ url }: { url: string }) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    ref.current?.focus();
+    ref.current?.select();
+  }, []);
+  return <input ref={ref} readOnly aria-label="Share link" value={url} />;
+}
 
 export function ShareButton() {
   const source = useStore((s) => s.source);
@@ -54,50 +64,51 @@ export function ShareButton() {
       <button type="button" onClick={() => void share()}>
         Share
       </button>
-      <div className="share-notice" role="status" aria-live="polite">
-        {notice && (
-          <div className={`share-pop ${notice.kind}`}>
-            <span>
-              <span aria-hidden="true">{notice.kind === 'ok' ? '✓' : '⚠'}</span> {notice.text}
-            </span>
-            {manual && (
-              <input
-                readOnly
-                aria-label="Share link"
-                value={manual}
-                onFocus={(e) => e.currentTarget.select()}
-              />
-            )}
-            {notice.kind === 'error' && (
-              <button type="button" onClick={dismiss}>
-                Dismiss
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      {notice && (
+        <div className={`share-pop ${notice.kind}`}>
+          <span role="status" aria-live="polite">
+            <span aria-hidden="true">{notice.kind === 'ok' ? '✓' : '⚠'}</span> {notice.text}
+          </span>
+          {manual && <ManualLink url={manual} />}
+          {notice.kind === 'error' && (
+            <button type="button" onClick={dismiss}>
+              Dismiss
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-/** Banner for code that arrived by link; goes away once the reader edits it. */
+const BANNER_TEXT = 'Code from a link — press Run to run it';
+
+/** Banner for code that arrived by link; goes away at the first edit or Run (origin 'edited'). */
 export function LinkBanner() {
   const origin = useStore((s) => s.origin);
-  const source = useStore((s) => s.source);
-  const linkSource = useShare((s) => s.linkSource);
   const loadError = useShare((s) => s.loadError);
   const dismissError = useShare((s) => s.dismissError);
+  const show = origin === 'link';
+  // The live region is mounted empty and filled a moment later, so screen readers announce it.
+  const [text, setText] = useState('');
+  useEffect(() => {
+    if (!show) return setText('');
+    const t = window.setTimeout(() => setText(BANNER_TEXT), 50);
+    return () => window.clearTimeout(t);
+  }, [show]);
   return (
     <>
-      {origin === 'link' && linkSource !== null && source === linkSource && (
-        <div className="banner" role="status">
-          <span aria-hidden="true">ⓘ</span>
-          <span className="banner-text">Code from a link — press Run to run it</span>
+      <div className={show ? 'banner' : 'banner-hidden'}>
+        <span aria-hidden="true">ⓘ</span>
+        <span className="banner-text" role="status">
+          {text}
+        </span>
+        {show && (
           <button type="button" onClick={backToMyCode}>
             Back to my code
           </button>
-        </div>
-      )}
+        )}
+      </div>
       {loadError && (
         <div className="banner error" role="alert">
           <span aria-hidden="true">⚠</span>

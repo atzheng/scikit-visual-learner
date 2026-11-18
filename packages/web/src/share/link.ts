@@ -9,6 +9,39 @@ export const MAX_LINK_BYTES = 8 * 1024;
 /** Cap on the inflated JSON, so a small hostile link cannot expand without bound. */
 export const MAX_INFLATED_BYTES = 1024 * 1024;
 export const LINK_VERSION = 1;
+export const MAX_FILES = 8;
+export const MAX_FILE_NAME = 128;
+/** Total characters across all file contents. */
+export const MAX_FILES_CHARS = 256 * 1024;
+
+function hasBadNameChar(name: string): boolean {
+  for (const ch of name) {
+    const c = ch.codePointAt(0) as number;
+    if (c < 0x20 || c === 0x7f || ch === '/' || ch === '\\') return true;
+  }
+  return false;
+}
+
+/** Returns a problem description, or null when `files` is acceptable. Names are plain basenames. */
+export function checkFiles(f: unknown): string | null {
+  if (typeof f !== 'object' || f === null || Array.isArray(f)) return 'files is not an object';
+  const entries = Object.entries(f);
+  if (entries.length > MAX_FILES) return `more than ${MAX_FILES} files`;
+  let total = 0;
+  for (const [name, text] of entries) {
+    if (typeof text !== 'string') return `file ${JSON.stringify(name)} is not text`;
+    if (
+      name.length === 0 ||
+      name.length > MAX_FILE_NAME ||
+      hasBadNameChar(name) ||
+      name.includes('..')
+    ) {
+      return `bad file name ${JSON.stringify(name.slice(0, 40))}`;
+    }
+    total += text.length;
+  }
+  return total > MAX_FILES_CHARS ? 'files are too large' : null;
+}
 
 export interface SharePayload {
   code: string;
@@ -21,7 +54,7 @@ export type EncodeResult =
   | {
       ok: false;
       error: string;
-      reason: 'too-big' | 'unsupported';
+      reason: 'too-big' | 'unsupported' | 'invalid';
       /** True when the code alone would fit, so the UI can offer to share without data. */
       withoutDataFits: boolean;
     };
@@ -95,6 +128,15 @@ async function pack(p: SharePayload): Promise<string> {
 
 /** Encodes a payload into the payload text for `#c=`. Refuses anything over MAX_LINK_BYTES. */
 export async function encodeShare(p: SharePayload): Promise<EncodeResult> {
+  const problem = p.files ? checkFiles(p.files) : null;
+  if (problem) {
+    return {
+      ok: false,
+      reason: 'invalid',
+      withoutDataFits: true,
+      error: `Cannot share the data files: ${problem}.`,
+    };
+  }
   try {
     const text = await pack(p);
     if (text.length <= MAX_LINK_BYTES) return { ok: true, fragment: text, bytes: text.length };
@@ -122,49 +164,48 @@ export async function encodeShare(p: SharePayload): Promise<EncodeResult> {
 /** Decodes the payload text after `c=`. Never throws. */
 export async function decodeShare(text: string): Promise<DecodeResult> {
   const bad = (error: string): DecodeResult => ({ ok: false, error });
-  if (text.length === 0) return bad('The link has no code in it.');
+  if (text.length === 0) return bad('The link payload has no code in it.');
   if (text.length > MAX_LINK_BYTES) {
-    return bad(`The link is over the ${MAX_LINK_BYTES / 1024} KB limit, so it was not opened.`);
+    return bad(
+      `The link payload is over the ${MAX_LINK_BYTES / 1024} KB limit, so it was not opened.`,
+    );
   }
   const raw = fromBase64Url(text);
   if (!raw)
-    return bad('The link is damaged (it is not valid base64url). It may have been cut off.');
+    return bad(
+      'The link payload is damaged (it is not valid base64url). It may have been cut off.',
+    );
   let json: Uint8Array | null;
   try {
     json = await inflate(raw, MAX_INFLATED_BYTES);
   } catch {
     return bad('This browser cannot open share links (compression is not available).');
   }
-  if (!json) return bad('The link is damaged or too large to open. It may have been cut off.');
+  if (!json)
+    return bad('The link payload is damaged or too large to open. It may have been cut off.');
   let data: unknown;
   try {
     data = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(json));
   } catch {
-    return bad('The link is damaged (its contents could not be read).');
+    return bad('The link payload is damaged (its contents could not be read).');
   }
   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
-    return bad('The link is damaged (unexpected contents).');
+    return bad('The link payload is damaged (unexpected contents).');
   }
   const d = data as Record<string, unknown>;
   if (d.v !== LINK_VERSION) {
     return bad(
       typeof d.v === 'number' && d.v > LINK_VERSION
         ? 'This link was made by a newer version of the tool. Reload the page or ask for a new link.'
-        : 'The link is damaged (unknown version).',
+        : 'The link payload is damaged (unknown version).',
     );
   }
-  if (typeof d.code !== 'string') return bad('The link is damaged (no code).');
+  if (typeof d.code !== 'string') return bad('The link payload is damaged (no code).');
   const payload: SharePayload = { code: d.code };
   if (d.files !== undefined) {
     const f = d.files;
-    if (
-      typeof f !== 'object' ||
-      f === null ||
-      Array.isArray(f) ||
-      !Object.values(f).every((x) => typeof x === 'string')
-    ) {
-      return bad('The link is damaged (bad data files).');
-    }
+    const problem = checkFiles(f);
+    if (problem) return bad(`The link payload is damaged (${problem}).`);
     payload.files = { ...(f as Record<string, string>) };
   }
   return { ok: true, payload };

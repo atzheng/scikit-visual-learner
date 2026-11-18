@@ -12,7 +12,7 @@ export interface AppState {
   runtime: { state: RuntimeState; progress: string; versions?: Record<string, string> };
   source: string;
   setSource(s: string): void;
-  origin: 'starter' | 'autosave' | 'link';
+  origin: 'starter' | 'autosave' | 'link' | 'edited';
   log: EventLog | null;
   model: GraphModel | null;
   running: boolean;

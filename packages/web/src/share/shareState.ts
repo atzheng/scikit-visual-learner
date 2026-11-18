@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { STARTER_EXAMPLE } from '../course';
 import { useStore } from '../store';
 import { decodeShare, fragmentPayload } from './link';
+import { hasUnsavedWork, nextOrigin } from './origin';
 
 interface ShareState {
-  /** Source as it arrived by link; the banner shows while the editor still holds exactly this. */
+  /** Source as it arrived by link; origin stays 'link' only while the editor holds exactly this. */
   linkSource: string | null;
   /** Message when the fragment could not be opened. */
   loadError: string | null;
@@ -17,18 +18,55 @@ export const useShare = create<ShareState>()((set) => ({
   dismissError: () => set({ loadError: null }),
 }));
 
+/** Source the editor held at the last load (page start, link, back to my code). */
+let baseline = useStore.getState().source;
+let loadSeq = 0;
+
+/** origin: 'link' -> 'edited' on the first edit or Run. */
+useStore.subscribe((s) => {
+  const next = nextOrigin(s.origin, {
+    source: s.source,
+    linkSource: useShare.getState().linkSource,
+    running: s.running,
+  });
+  if (next !== s.origin) useStore.setState({ origin: next });
+});
+
+function clearHash(): void {
+  history.replaceState(null, '', location.pathname + location.search);
+}
+
 /**
- * Reads `#c=` from the hash. Valid code goes into the editor with origin 'link' and is never run.
- * A bad link leaves the editor alone and sets `loadError`.
+ * Opens a `#c=` link: valid code goes into the editor with origin 'link' and is never run; a bad
+ * link leaves the editor alone and sets `loadError`. The hash is cleared afterwards so a reload
+ * does not discard edits. Hashes that are not share links are ignored. With `confirmReplace`,
+ * unsaved work or a run in progress is only replaced after the reader agrees. The last hash wins.
  */
-export async function loadFromHash(hash: string): Promise<void> {
+export async function loadFromHash(
+  hash: string,
+  opts: { confirmReplace?: (msg: string) => boolean } = {},
+): Promise<void> {
   const text = fragmentPayload(hash);
   if (text === null) return;
+  const seq = ++loadSeq;
   const r = await decodeShare(text);
+  if (seq !== loadSeq) return;
+  clearHash();
   if (!r.ok) {
     useShare.setState({ loadError: r.error });
     return;
   }
+  const s = useStore.getState();
+  if (
+    opts.confirmReplace &&
+    hasUnsavedWork({ origin: s.origin, running: s.running, source: s.source, baseline }) &&
+    !opts.confirmReplace(
+      'Open the code from this link? Your current code in the editor will be replaced.',
+    )
+  ) {
+    return;
+  }
+  baseline = r.payload.code;
   useShare.setState({ linkSource: r.payload.code, loadError: null });
   useStore.setState({ source: r.payload.code, origin: 'link' });
   // r.payload.files: svl-bwv.9 (upload plumbing) will write these into the runtime FS.
@@ -39,7 +77,11 @@ export async function loadFromHash(hash: string): Promise<void> {
  * until then the starter example is the reader's own code.
  */
 export function backToMyCode(): void {
+  loadSeq++;
+  baseline = STARTER_EXAMPLE;
   useShare.setState({ linkSource: null });
   useStore.setState({ source: STARTER_EXAMPLE, origin: 'starter' });
-  history.replaceState(null, '', location.pathname + location.search);
+  clearHash();
+  const ed = document.querySelector<HTMLElement>('#pane-editor .cm-content');
+  (ed ?? document.getElementById('pane-editor'))?.focus();
 }

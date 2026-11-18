@@ -91,6 +91,27 @@ describe('share links', () => {
   });
 });
 
+describe('files validation', () => {
+  it.each(['a/b.csv', '..', '../x.csv', 'a\\b.csv', 'a\u0000b.csv', '', 'x'.repeat(129)])(
+    'rejects name %j on decode and encode',
+    async (name) => {
+      const d = await decodeShare(await packJson({ v: 1, code: 'x', files: { [name]: 'a' } }));
+      expect(d.ok).toBe(false);
+      expect((await encodeShare({ code: 'x', files: { [name]: 'a' } })).ok).toBe(false);
+    },
+  );
+  it('rejects too many files and oversized totals', async () => {
+    const many = Object.fromEntries(Array.from({ length: 9 }, (_, i) => [`f${i}.csv`, 'a']));
+    expect((await decodeShare(await packJson({ v: 1, code: 'x', files: many }))).ok).toBe(false);
+    const big = { 'a.csv': 'a'.repeat(300 * 1024) };
+    expect((await decodeShare(await packJson({ v: 1, code: 'x', files: big }))).ok).toBe(false);
+  });
+  it('accepts plain names', async () => {
+    const p = { code: 'x', files: { 'my data.v2.csv': 'a\n1\n' } };
+    expect(await roundTrip(p)).toEqual(p);
+  });
+});
+
 describe('fragment helpers', () => {
   it('extracts and builds', () => {
     expect(fragmentPayload('#c=abc')).toBe('abc');
