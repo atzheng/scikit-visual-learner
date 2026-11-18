@@ -524,6 +524,7 @@ def test_fixture_programs_exist() -> None:
     assert len(FIXTURE_PROGRAMS) >= 26  # the parametrized test below must run, not skip
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("name", FIXTURE_PROGRAMS)
 def test_fixture_program_transparent(name: str) -> None:
     """Pass-through hooks: same stdout, exit status and final error line as plain Python."""
