@@ -467,17 +467,17 @@ Decisions made while building `graph.ts` (SPEC was silent):
 interface StepState {
   current: number | null;       // event i at this step (steps[step-1]); null at step 0
   visibleNodes: Set<string>;    // node with any execution i <= current (instances: createdAt <= current)
-  visibleEdges: Set<string>;    // edge with a use whose producer's ret <= current
+  visibleEdges: Set<string>;    // edge with a use whose consumer has started (use.i <= current) and whose producer has returned (producer ret <= current)
   activeExecution: Map<string, Execution>;   // per node: latest execution with i <= current
   activeToken: Map<string, Token>;           // per edge
   attrsBefore?: Record<string, Token>; attrsAfter?: Record<string, Token>;   // when current is a method on an instance
   output: OutputEntry[];        // entries with i <= current
-  badge: Map<string, { k: number; n: number }>;
+  badge: Map<string, { k: number; n: number }>;   // merged boxes only (n > 1): k = count of the active execution, n = count of the last one
 }
 function eventLabel(log: EventLog, i: number): string;   // "line 10: train_test_split(X, y, test_size=0.2)" for the event list
 ```
 
-Step `steps.length` (the end) shows everything. `step` 0 shows nothing.
+Step `steps.length` (the end) shows everything, including wires ready after the last drawn step. `step` 0 shows nothing except `output` entries with `i = -1`. Out-of-range steps are clamped. A source node is visible when any of its edges is. `activeToken` is per visible edge: the token of its latest use with `i <= current` and producer `ret <= current`. `activeExecution` has call, expr and store nodes only. `attrsBefore/After` come from the `mutates` entry on the owner (or the owner's own attrs for both when the method does not mutate it). `eventLabel` appends ` (error: T)`, ` (handled T)` or ` (stopped here)` for events with an error or `interrupted`, collapses whitespace and cuts the source text at 80 characters. `stateAt` caches an index per (model, log) object pair, so reuse the same objects while scrubbing.
 
 **Renderer** (`@machines/render`):
 
