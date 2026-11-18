@@ -1,4 +1,10 @@
-import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentLess,
+  indentMore,
+} from '@codemirror/commands';
 import { python } from '@codemirror/lang-python';
 import {
   HighlightStyle,
@@ -26,7 +32,7 @@ import {
 import { tags as t } from '@lezer/highlight';
 import { useEffect, useRef } from 'react';
 import { useStore } from '../store';
-import { siteAt, siteRange, type SpanSite } from './spans';
+import { siteAt, siteRange, sitesValid, type SpanSite } from './spans';
 
 /** The editor's imperative API (the "small controller"): the diagram/timeline sync drives it. */
 export interface EditorController {
@@ -39,8 +45,14 @@ export interface EditorController {
 }
 
 export interface EditorProps {
-  /** Call sites of the last run, used to map the cursor to a site. Positions refer to the source at Run time. */
+  /** Call sites of the last run, used to map the cursor to a site. Positions refer to `runSource`. */
   sites?: readonly SpanSite[];
+  /**
+   * The source text at Run time. Sites are valid only while the document equals it. After any edit
+   * `onSiteAtCursor` reports null and `highlightSite`/`revealSite` do nothing (a missing link is
+   * fine, a wrong one is not).
+   */
+  runSource?: string;
   /** Debounced report of the innermost call site under the cursor (null when none). */
   onSiteAtCursor?(site: SpanSite | null): void;
   /** Receives the controller once the view exists. */
@@ -58,7 +70,8 @@ const errorLineDeco = Decoration.line({ class: 'cm-error-line' });
 const siteHighlightField = StateField.define<DecorationSet>({
   create: () => Decoration.none,
   update(deco, tr) {
-    deco = deco.map(tr.changes);
+    // A highlight refers to the run's source: drop it on any edit rather than let it drift.
+    deco = tr.docChanged ? Decoration.none : deco;
     for (const e of tr.effects) {
       if (e.is(setSiteHighlight)) {
         const v = e.value;
@@ -142,7 +155,7 @@ const highlightStyle = HighlightStyle.define([
   },
 ]);
 
-export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {}) {
+export function Editor({ sites, runSource, onSiteAtCursor, controllerRef }: EditorProps = {}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const readOnlyRef = useRef(new Compartment());
@@ -151,8 +164,8 @@ export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {
   const running = useStore((s) => s.running);
 
   // Latest props for callbacks created once.
-  const latest = useRef({ sites, onSiteAtCursor });
-  latest.current = { sites, onSiteAtCursor };
+  const latest = useRef({ sites, runSource, onSiteAtCursor });
+  latest.current = { sites, runSource, onSiteAtCursor };
 
   useEffect(() => {
     const host = hostRef.current;
@@ -163,13 +176,21 @@ export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {
     const reportCursor = (view: EditorView) => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        const { sites: ss, onSiteAtCursor: cb } = devOverride ?? latest.current;
+        const { sites: ss, runSource: rs, onSiteAtCursor: cb } = devOverride ?? latest.current;
         if (!cb) return;
         const doc = view.state.doc.toString();
-        cb(ss ? siteAt(ss, view.state.selection.main.head, doc) : null);
+        cb(ss && sitesValid(rs, doc) ? siteAt(ss, view.state.selection.main.head, doc) : null);
       }, CURSOR_DEBOUNCE_MS);
     };
 
+    let escaped = false;
+    const tabOrLeave = (v: EditorView, indent: (v: EditorView) => boolean) => {
+      if (escaped || v.state.readOnly) {
+        escaped = false;
+        return false; // let the browser move focus
+      }
+      return indent(v);
+    };
     const runFromKeyboard = () => {
       const s = useStore.getState();
       if (!s.running) void s.run();
@@ -183,15 +204,6 @@ export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {
       },
       // Ctrl+Enter also runs on macOS, where Mod is Cmd.
       { key: 'Ctrl-Enter', preventDefault: true, run: runFromKeyboard },
-      {
-        key: 'Escape',
-        run: () => {
-          const s = useStore.getState();
-          if (!s.running) return false;
-          s.stop();
-          return true;
-        },
-      },
     ]);
 
     const extensions: Extension[] = [
@@ -205,12 +217,29 @@ export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {
       bracketMatching(),
       python(),
       syntaxHighlighting(highlightStyle),
-      keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+      // Esc then Tab leaves the editor (WCAG 2.1.2); Tab alone indents. Read-only: Tab always leaves.
+      EditorView.domEventHandlers({
+        keydown(e) {
+          if (e.key === 'Escape') escaped = true;
+          else if (e.key !== 'Tab') escaped = false;
+          return false;
+        },
+      }),
+      keymap.of([
+        { key: 'Tab', run: (v) => tabOrLeave(v, indentMore) },
+        { key: 'Shift-Tab', run: (v) => tabOrLeave(v, indentLess) },
+        ...defaultKeymap,
+        ...historyKeymap,
+      ]),
       theme,
       siteHighlightField,
       errorLineField,
       readOnlyRef.current.of(EditorState.readOnly.of(useStore.getState().running)),
-      EditorView.contentAttributes.of({ 'aria-label': 'Python code', spellcheck: 'false' }),
+      EditorView.contentAttributes.of({
+        'aria-label': 'Python code',
+        'aria-describedby': 'editor-tab-hint',
+        spellcheck: 'false',
+      }),
       EditorView.updateListener.of((u) => {
         if (u.docChanged) {
           const text = u.state.doc.toString();
@@ -229,6 +258,8 @@ export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {
     const controller: EditorController = {
       highlightSite(site) {
         const doc = view.state.doc.toString();
+        const valid = sitesValid((devOverride ?? latest.current).runSource, doc);
+        if (site && !valid) return;
         const range = site ? siteRange(doc, site) : null;
         view.dispatch({
           effects: [
@@ -243,7 +274,9 @@ export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {
         view.dispatch({ effects: setErrorLine.of(line) });
       },
       revealSite(site) {
-        const range = siteRange(view.state.doc.toString(), site);
+        const doc = view.state.doc.toString();
+        if (!sitesValid((devOverride ?? latest.current).runSource, doc)) return;
+        const range = siteRange(doc, site);
         if (!range) return;
         view.dispatch({ selection: { anchor: range.from }, scrollIntoView: true });
         view.focus();
@@ -264,7 +297,7 @@ export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {
       const dev: Dev = {
         ...controller,
         devSites(ss, cb) {
-          devOverride = { sites: ss, onSiteAtCursor: cb };
+          devOverride = { sites: ss, runSource: view.state.doc.toString(), onSiteAtCursor: cb };
         },
       };
       (window as unknown as { __machinesEditor?: Dev }).__machinesEditor = dev;
@@ -297,5 +330,13 @@ export function Editor({ sites, onSiteAtCursor, controllerRef }: EditorProps = {
     });
   }, [running]);
 
-  return <div className="editor-host" ref={hostRef} />;
+  return (
+    <>
+      <div className="editor-host" ref={hostRef} />
+      <span id="editor-tab-hint" className="visually-hidden">
+        Tab indents. To leave the editor with the keyboard, press Escape, then Tab. Control or
+        Command plus Enter runs the code.
+      </span>
+    </>
+  );
 }

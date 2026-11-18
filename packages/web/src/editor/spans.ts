@@ -1,14 +1,9 @@
 /** Pure span helpers: Site positions (CONTRACTS.md section 2) to CodeMirror offsets. */
 
-/** The position fields of a Site. Lines are 1-based, columns 0-based, in code points. */
-export interface SpanSite {
-  id?: number;
-  kind?: string;
-  line: number;
-  col: number;
-  end_line: number;
-  end_col: number;
-}
+import type { Site } from '@machines/log';
+
+/** The fields of a Site the editor needs. Lines are 1-based, columns 0-based, in code points. */
+export type SpanSite = Pick<Site, 'id' | 'kind' | 'line' | 'col' | 'end_line' | 'end_col'>;
 
 export interface OffsetRange {
   from: number;
@@ -65,7 +60,7 @@ export function siteAt<S extends SpanSite>(
   let best: S | null = null;
   let bestLen = Infinity;
   for (const site of sites) {
-    if (site.kind !== undefined && site.kind !== 'call') continue;
+    if (site.kind !== 'call') continue;
     const r = siteRange(source, site, starts);
     if (!r || offset < r.from || offset > r.to) continue;
     const len = r.to - r.from;
@@ -75,4 +70,12 @@ export function siteAt<S extends SpanSite>(
     }
   }
   return best;
+}
+
+/**
+ * Site positions refer to the source at Run time. They are valid only while the document is still
+ * exactly that source; after any edit they would point at the wrong code, so they are dropped.
+ */
+export function sitesValid(runSource: string | undefined, doc: string): boolean {
+  return runSource !== undefined && runSource === doc;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lineStarts, siteAt, siteRange, type SpanSite } from './spans';
+import { lineStarts, siteAt, siteRange, sitesValid, type SpanSite } from './spans';
 
 const site = (line: number, col: number, end_line: number, end_col: number, id = 0): SpanSite => ({
   id,
@@ -68,5 +68,14 @@ describe('siteAt', () => {
   it('returns null outside every site or for non-call sites', () => {
     expect(siteAt([inner], 2, src)).toBeNull();
     expect(siteAt([{ ...outer, kind: 'bind' }], 5, src)).toBeNull();
+    expect(siteAt([{ ...outer, kind: undefined } as unknown as SpanSite], 5, src)).toBeNull();
+  });
+});
+
+describe('sitesValid', () => {
+  it('is true only while the document equals the run source', () => {
+    expect(sitesValid('a = f()\n', 'a = f()\n')).toBe(true);
+    expect(sitesValid('a = f()\n', '\na = f()\n')).toBe(false);
+    expect(sitesValid(undefined, 'a')).toBe(false);
   });
 });
