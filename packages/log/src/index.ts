@@ -5,3 +5,17 @@ export type * from './messages';
 export { createAssembler } from './assemble';
 export type { Assembler } from './assemble';
 export { validateLog } from './validate';
+export { buildGraph, MAX_NODES } from './graph';
+export type {
+  GraphModel,
+  GNode,
+  NodeBase,
+  CallNode,
+  InstanceNode,
+  ExprNode,
+  StoreNode,
+  SourceNode,
+  Port,
+  Execution,
+  GEdge,
+} from './graph';
