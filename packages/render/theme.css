@@ -269,6 +269,12 @@
 .md-edge.md-hover .md-wire {
   stroke-width: 3px;
 }
+.md-diagram .md-leader {
+  stroke: var(--md-wire);
+  stroke-width: 1px;
+  stroke-dasharray: 2 2;
+  pointer-events: none;
+}
 .md-edge-label {
   cursor: pointer;
   outline: none;
