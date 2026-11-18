@@ -655,3 +655,69 @@ describe('limits, determinism, stability', () => {
     expect(ms).toBeLessThan(200);
   });
 });
+
+describe('methods split per owner instance', () => {
+  test('loop over two models at one site: one box in each instance, per-box counts', () => {
+    const b = new B();
+    const sa = b.site('a = Ridge()', 1);
+    const sb = b.site('b = Lasso()', 2);
+    const sf = b.site('m.fit(X, y)', 3);
+    b.val('v1.0', 'Ridge', { machine: true });
+    b.val('v2.0', 'Lasso', { machine: true });
+    b.val('v9.0', 'DF');
+    b.ev(sa, 'constructor', 'Ridge', { outputs: ['v1.0'] });
+    b.ev(sb, 'constructor', 'Lasso', { outputs: ['v2.0'] });
+    const fit = (name: string, owner: string, count: number): void => {
+      b.ev(sf, 'method', name, { owner, inputs: [wired('X', 'v9.0')], returns_self: true, count });
+    };
+    fit('Ridge.fit', 'v1.0', 1);
+    fit('Lasso.fit', 'v2.0', 2);
+    fit('Ridge.fit', 'v1.0', 3);
+    const m = build(b.log());
+    const [ia, ib] = insts(m);
+    const fits = calls(m).filter((c) => c.name.endsWith('.fit'));
+    expect(fits).toHaveLength(2);
+    expect(new Set(fits.map((f) => f.id)).size).toBe(2);
+    const ridge = fits.find((f) => f.name === 'Ridge.fit')!;
+    const lasso = fits.find((f) => f.name === 'Lasso.fit')!;
+    expect(ridge.parent).toBe(ia.id);
+    expect(lasso.parent).toBe(ib.id);
+    expect(ridge.executions.map((x) => [x.count, x.owner])).toEqual([
+      [1, 'v1.0'],
+      [2, 'v1.0'],
+    ]);
+    expect(lasso.executions.map((x) => x.count)).toEqual([1]);
+  });
+
+  test('dict of models: the owner is resolved by identity', () => {
+    const b = new B();
+    const s1 = b.site('models["rf"] = RF()', 1);
+    const s2 = b.site('models["lr"] = LR()', 2);
+    const s3 = b.site('models["rf"].fit(X)', 3);
+    b.val('v1.0', 'RF', { machine: true });
+    b.val('v2.0', 'LR', { machine: true });
+    b.ev(s1, 'constructor', 'RF', { outputs: ['v1.0'] });
+    b.ev(s2, 'constructor', 'LR', { outputs: ['v2.0'] });
+    b.ev(s3, 'method', 'RF.fit', { owner: 'v1.0', returns_self: true });
+    const m = build(b.log());
+    expect(byName(m, 'RF.fit').parent).toBe(insts(m).find((i) => i.className === 'RF')!.id);
+  });
+
+  test('in-place data method: mutate port is out:mut:self, matching in:self', () => {
+    const b = new B();
+    const s0 = b.site('X = load()', 1);
+    const s1 = b.site('X.fillna(0, inplace=True)', 2);
+    b.val('v1.0', 'DF');
+    b.val('v1.1', 'DF');
+    b.ev(s0, 'function', 'load', { outputs: ['v1.0'] });
+    b.ev(s1, 'method', 'DataFrame.fillna', {
+      owner: 'v1.0',
+      inputs: [konst('value', '0')],
+      mutates: [['v1.0', 'v1.1']],
+    });
+    const m = build(b.log());
+    const f = byName(m, 'DataFrame.fillna');
+    expect(f.inPorts.map((p) => p.id)).toContain('in:self');
+    expect(f.outPorts.map((p) => p.id)).toEqual(['out:mut:self']);
+  });
+});

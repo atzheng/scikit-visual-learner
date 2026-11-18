@@ -405,7 +405,7 @@ interface CallNode extends NodeBase {
   student: boolean;             // student_function: collapsible in M4
 }
 interface Execution { i: number; ret: number; inputs: Record<string /*port id*/, Token>; outputs: Record<string, Token>;
-                      count: number; error: EventError | null; interrupted: boolean }
+                      count: number; owner: Token | null; error: EventError | null; interrupted: boolean }
 interface InstanceNode extends NodeBase {
   kind: 'instance'; className: string; varName: string | null;   // "model: LinearRegression"
   createdAt: number;            // i of the creating event (constructor or a function returning it)
@@ -428,7 +428,7 @@ interface GEdge {
 ```
 
 Construction follows SPEC "Graph construction" with these decisions:
-- Method boxes are one per call site (merge key) inside their instance (decided).
+- Method boxes are one per (call site, owner instance) inside that instance (decided): `for m in models: m.fit(X, y)` gives one `fit` box in each model's instance, and `models["rf"].fit(...)` is drawn on the right instance. Node id is `n:<h>@<instance id>`; `count` and the x-n badge are per box. `Execution.owner` is the owner token (null for non-methods).
 - `make_pipeline(...)` is a function box whose output creates an instance node (`createdBy`). Step instances wire into it. There are no nested step boxes in M1–3 (decided).
 - A `method` event whose owner is data is a call node with a `self` in-port. A method event on a machine is a call node with `parent` set to the instance node, owner input not drawn as a port.
 - A machine passed as an argument is an edge from the instance border (`port: null`).
@@ -447,7 +447,9 @@ Decisions made while building `graph.ts` (SPEC was silent):
 - A loop's source tokens (a new token each iteration, no producer) share one source node per consumer node and param; `SourceNode.token` is the latest.
 - `steps` = every execution `i` of drawn nodes plus every instance version `i`, sorted and unique. Dropped expr events and events outside scope 0 are not steps.
 - Truncation keeps the first 300 nodes by `order` (sources sort just before their first consumer); a kept node whose parent was cut gets `parent: null`.
-- A merged node takes its name, module and `student` flag from its first non-interrupted event; a method box's `parent` is the instance of its first execution's owner.
+- A merged node takes its name, module and `student` flag from its own first non-interrupted event.
+- Self-edges occur: `x = g(x)` in a loop gives an edge from a box's out-port to its own in-port (uses per iteration).
+- Ids of lazy instances (no producing event) and of instances for outputs after the first use object numbers (`!v12`, `#k`), so they are less stable across edits than other ids.
 
 `timeline.ts`: `stateAt(model: GraphModel, log: EventLog, step: number): StepState`.
 

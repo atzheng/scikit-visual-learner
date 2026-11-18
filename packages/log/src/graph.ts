@@ -19,6 +19,7 @@ export interface Execution {
   inputs: Record<string, Token>;
   outputs: Record<string, Token>;
   count: number;
+  owner: Token | null;
   error: EventError | null;
   interrupted: boolean;
 }
@@ -157,6 +158,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   const events = log.events.filter((e) => e.scope === 0);
 
   const calls = new Map<string, CallInfo>();
+  const mkCounts = new Map<string, Map<string, number>>();
   const plains = new Map<string, PlainInfo>();
   const insts = new Map<string, InstInfo>(); // by instance key (merge key + output index)
   const instByObj = new Map<string, InstInfo>();
@@ -173,6 +175,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     inputs,
     outputs,
     count: e.count,
+    owner: e.owner,
     error: e.error,
     interrupted: e.interrupted === true,
   });
@@ -286,32 +289,41 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     }
 
     // call node
-    let info = calls.get(mk);
+    const ownerInst =
+      e.kind === 'method' && e.owner !== null && isMachine(e.owner)
+        ? instanceFor(e.owner, e).node
+        : null;
+    const callKey = ownerInst ? `${mk}@${ownerInst.id}` : mk;
+    let info = calls.get(callKey);
     if (!info) {
       const node: CallNode = {
-        id: `n:${baseFor(mk, e.site)}`,
+        id: `n:${baseFor(mk, e.site)}${ownerInst ? `@${ownerInst.id}` : ''}`,
         kind: 'call',
         mergeKey: mk,
         name: e.name,
         module: e.module,
-        parent: null,
+        parent: ownerInst ? ownerInst.id : null,
         order: orderOf(e.site),
         executions: [],
         inPorts: [],
         outPorts: [],
         student: e.kind === 'student_function',
       };
-      if (e.kind === 'method' && e.owner !== null && isMachine(e.owner)) {
-        node.parent = instanceFor(e.owner, e).node.id;
-      }
       info = { node, events: [] };
-      calls.set(mk, info);
+      calls.set(callKey, info);
       nodeOrder.push(node);
     } else if (info.events.every((x) => x.interrupted === true) && e.interrupted !== true) {
       info.node.name = e.name;
       info.node.module = e.module;
       info.node.student = e.kind === 'student_function';
     }
+    // The recorder counts per merge key; a box split by owner counts its own executions.
+    const perNode = mkCounts.get(mk) ?? new Map<string, number>();
+    mkCounts.set(mk, perNode);
+    let others = 0;
+    for (const [id, n] of perNode) if (id !== info.node.id) others += n;
+    perNode.set(info.node.id, (perNode.get(info.node.id) ?? 0) + 1);
+    const nodeCount = ownerInst ? Math.max(1, e.count - others) : e.count;
     const ins: Record<string, Token> = {};
     for (const x of drawnInputs(e)) if (x.value !== undefined) ins[`in:${x.param}`] = x.value;
     const outs: Record<string, Token> = {};
@@ -336,12 +348,12 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     });
     e.mutates.forEach(([before, after], k) => {
       if (isMachine(before)) return;
-      const input = e.inputs.find((x) => x.value === before);
+      const input = drawnInputs(e).find((x) => x.value === before);
       const port = `out:mut:${input ? input.param : k}`;
       outs[port] = after;
       producers.set(after, { node: info!.node.id, port });
     });
-    info.node.executions.push(makeExecution(e, ins, outs));
+    info.node.executions.push({ ...makeExecution(e, ins, outs), count: nodeCount });
     info.events.push(e);
     processMutates(e);
   }
@@ -523,7 +535,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
       });
       e.mutates.forEach(([before, after], k) => {
         if (isMachine(before)) return;
-        const input = e.inputs.find((x) => x.value === before);
+        const input = drawnInputs(e).find((x) => x.value === before);
         const param = input ? input.param : `${k}`;
         const id = `out:mut:${param}`;
         outPorts.set(id, {
