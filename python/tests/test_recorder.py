@@ -528,6 +528,66 @@ except KeyError:
     assert ev2["name"] == "DataFrame.drop" and ev2["error"]["handled"] is True
 
 
+_BOOM = """
+def f():
+    raise ValueError("boom")
+
+def g():
+    return np.array([1])
+"""
+
+
+def _flags(src: str) -> tuple[Result, Result, dict[str, Any]]:
+    r = record(_BOOM + src)
+    p = plain(_BOOM + src)
+    assert r.stdout == p.stdout and type(r.err) is type(p.err)
+    assert str(r.err) == str(p.err)
+    (f,) = r.by_name("f")
+    return r, p, f["error"]
+
+
+def test_call_in_finally_does_not_mark_propagating_error_handled() -> None:
+    r, _, err = _flags("try:\n    f()\nfinally:\n    g()\n    print('fin')\n")
+    assert isinstance(r.err, ValueError)
+    assert err["handled"] is False
+    assert r.one("g")["error"] is None
+
+
+def test_call_in_finally_inside_outer_except_is_handled() -> None:
+    r, _, err = _flags(
+        "try:\n    try:\n        f()\n    finally:\n        g()\n"
+        "except ValueError:\n    print('caught')\nx = g()\n"
+    )
+    assert r.err is None and err["handled"] is True
+
+
+def test_outer_except_with_no_later_call_is_handled_at_the_end() -> None:
+    r, _, err = _flags(
+        "try:\n    try:\n        f()\n    finally:\n        g()\nexcept ValueError:\n    pass\n"
+    )
+    assert r.err is None and err["handled"] is True
+
+
+def test_call_in_except_block_and_later_calls_is_handled() -> None:
+    r, _, err = _flags("try:\n    f()\nexcept ValueError:\n    g()\ng()\n")
+    assert r.err is None and err["handled"] is True
+    r, _, err = _flags("try:\n    f()\nexcept ValueError:\n    pass\ng()\n")
+    assert err["handled"] is True
+
+
+def test_nested_finally_with_reraise_stays_unhandled() -> None:
+    src = (
+        "try:\n    try:\n        f()\n    finally:\n        g()\n"
+        "finally:\n    try:\n        g()\n    finally:\n        g()\n"
+    )
+    r, _, err = _flags(src)
+    assert isinstance(r.err, ValueError) and err["handled"] is False
+    r, _, err = _flags(
+        "try:\n    try:\n        f()\n    finally:\n        g()\nexcept ValueError:\n    raise\n"
+    )
+    assert isinstance(r.err, ValueError) and err["handled"] is False
+
+
 def test_nested_error_marks_outer_propagated() -> None:
     # a student function calls a library call whose failure escapes through two hooks
     r = record(

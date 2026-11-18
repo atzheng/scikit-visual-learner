@@ -433,9 +433,17 @@ class Recorder:
     def _tick(self) -> None:
         """Common hook entry: continuing code means an earlier exception was caught."""
         if self._unhandled:
-            for ev, _ in self._unhandled:
-                ev["error"]["handled"] = True
-            self._unhandled.clear()
+            # An exception still being handled (an except block, or a finally block while it
+            # propagates) is undecided: a call there does not show it was caught. It is settled
+            # by a later hook outside the block, or by close_open().
+            live = sys.exc_info()[1]
+            keep = []
+            for ev, ev_exc in self._unhandled:
+                if ev_exc is live:
+                    keep.append((ev, ev_exc))
+                else:
+                    ev["error"]["handled"] = True
+            self._unhandled[:] = keep
         if time.monotonic() - self._last_flush >= _FLUSH_SECONDS:
             self.flush()
 
