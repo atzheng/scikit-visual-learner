@@ -15,3 +15,18 @@ export {
   M as LAYOUT_METRICS,
 } from './layout';
 export type { Laid, LaidNode, LaidPort, LayoutOptions, Measure } from './layout';
+export { mount } from './mount';
+export type { DiagramController, MountOptions } from './mount';
+export { createLegend, LEGEND_ITEMS } from './legend';
+export {
+  attrRowsFor,
+  badgeText,
+  buildSvg,
+  applyState,
+  changedAttrs,
+  instanceRowModels,
+  labelAnchor,
+  roundedPath,
+  statusOf,
+  summaryLabel,
+} from './svg';
