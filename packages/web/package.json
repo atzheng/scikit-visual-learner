@@ -17,7 +17,8 @@
     "@machines/render": "workspace:*",
     "pyodide": "314.0.8",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
