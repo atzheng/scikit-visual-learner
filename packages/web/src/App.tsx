@@ -9,6 +9,7 @@ import {
 import { DiagramPane } from './diagram/DiagramPane';
 import { Editor } from './editor/Editor';
 import { OutputPane } from './output/OutputPane';
+import { LinkBanner, ShareButton, useLoadShareLink } from './share/ShareUI';
 import { useStore } from './store';
 import { Timeline } from './timeline/Timeline';
 
@@ -76,6 +77,7 @@ function Toolbar() {
           Run
         </button>
       )}
+      <ShareButton />
       <div className="menu">
         <button
           type="button"
@@ -143,13 +145,17 @@ export function App() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
+  useLoadShareLink();
   const focusEditor = useCallback(() => document.getElementById('pane-editor')?.focus(), []);
   return (
     <div className="app">
       <a className="skip-link" href="#pane-editor" onClick={focusEditor}>
         Skip to code editor
       </a>
-      <Toolbar />
+      <div className="top">
+        <Toolbar />
+        <LinkBanner />
+      </div>
       <main
         className="panes"
         ref={mainRef}

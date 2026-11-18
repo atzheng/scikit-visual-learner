@@ -389,7 +389,7 @@ The wall clock (`config.wall_ms`) is enforced by the client and goes through the
 interface AppState {
   runtime: { state: RuntimeClient['state']; progress: string; versions?: Record<string, string> };
   source: string; setSource(s: string): void;
-  origin: 'starter' | 'autosave' | 'link';       // link code is never auto-run and never autosaved until edited
+  origin: 'starter' | 'autosave' | 'link' | 'edited'; // see section 10.14: link code is never auto-run and never autosaved until edited or run
   log: EventLog | null; model: GraphModel | null;
   running: boolean; elapsedMs: number;
   step: number; setStep(n: number): void;        // 0..steps.length (section 8)
@@ -487,10 +487,15 @@ Step `steps.length` (the end) shows everything, including wires ready after the 
 **Renderer** (`@machines/render`):
 
 ```ts
-function layout(model: GraphModel, opts?: { expanded?: Set<string> }): Promise<Laid>;   // elkjs worker
+function layout(model: GraphModel, opts?: { expanded?: Set<string>; measure?: (text: string, font: string) => number;
+  attrRows?: Record<string, string[]> /* instance id -> attribute row texts to reserve; default one row per ctor param */;
+  elk?: ELK /* createElk({ workerUrl }): elkjs worker build; default: elk.bundled.js, lazily imported, in-thread (Node, tests) */ }): Promise<Laid>;   // expanded ignored until M4
 interface Laid { width: number; height: number;
-  nodes: Record<string, { x: number; y: number; w: number; h: number; ports: Record<string, { x: number; y: number }> }>;
-  edges: Record<string, { points: [number, number][] }> }
+  nodes: Record<string, { x: number; y: number; w: number; h: number;
+    ports: Record<string, { x: number; y: number; w: number /* label width, centred on x */ }>;
+    headerH?: number; attrsH?: number /* instances: name pill and attribute list heights, at the top of the box */ }>;
+  edges: Record<string, { points: [number, number][] }>;
+  dropped: number /* edges left out for naming a missing node or port */ }   // all coordinates absolute (root origin)
 function mount(el: HTMLElement, opts: { onSelectNode(id: string): void; onHoverEdge(id: string | null, at: DOMPoint): void;
   onClickEdge(id: string): void }): DiagramController;
 interface DiagramController {
@@ -572,6 +577,10 @@ Generated fixtures are reviewed like code. A PR that changes them must say why i
 12. **`__name__ == "__main__"`** in the student namespace.
 13. **Recursion limit** doubled during runs to absorb the hook frame.
 14. **Share links never overwrite autosave**: code from a link is held separately until the reader edits or runs it.
+    - **Format** (`packages/web/src/share/link.ts`). Fragment `#c=<payload>`. The payload text is base64url (no padding) of raw deflate (`CompressionStream('deflate-raw')`) of UTF-8 JSON `{ v: 1, code: string, files?: Record<string, string> }`. `v` is the version; a decoder refuses other versions. `files` maps a plain basename (no `/`, `\`, `..` or control characters, at most 128 chars) to CSV text; at most 8 files and 256 K characters in total.
+    - **Limits.** The payload text (after `c=`) may be at most 8 KB (8192 characters); longer is refused on encode and decode. Inflated output is capped at 1 MB. Encode and decode return `{ok:false, error}` and never throw.
+    - **Loading.** The page reads `#c=` at start and on `hashchange`, then clears the hash with `history.replaceState`. Other hashes are ignored. A new link replaces unsaved work or a run in progress only after the reader confirms. The last hash wins.
+    - **`origin`** is one of `starter` (built-in example), `autosave` (restored from storage), `link` (code from a link, untouched and not run) and `edited` (link code the reader has since changed or run). `link` becomes `edited` on the first change to the source or the first Run; `link` and `edited` never go back to `link` except by loading another link. Autosave writes only when `origin !== 'link'`, and never writes link code that is still `link`. "Back to my code" restores the autosave (starter if none) with origin `autosave` or `starter`.
 15. **Classmethods** (`__self__` is a class) are functions, not methods.
 16. **No hard-coded SVG spike.** M1's exit (the slide example renders from real code) is met by the real recorder → graph → renderer path. Measurements are their own bead.
 17. **Hosting** is Cloudflare Pages on a dedicated subdomain, with COOP/COEP and the CSP in `_headers` (section 11).
