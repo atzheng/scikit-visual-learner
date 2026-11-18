@@ -634,3 +634,11 @@ def test_address_stripping_only_in_angle_reprs(vt: ValueTable) -> None:
 def test_numpy_scalar_type_is_class_name(vt: ValueTable) -> None:
     vt.summarize("s0", np.float64(2.5))
     assert vt.values["s0"] == {"type": "float64", "repr": "2.5"}
+
+
+def test_seen_reports_whether_an_object_has_a_token(vt: ValueTable) -> None:
+    a = [1, 2]
+    assert not vt.seen(a)
+    vt.token(a)
+    assert vt.seen(a)
+    assert not vt.seen([1, 2])
