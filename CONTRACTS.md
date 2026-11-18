@@ -326,13 +326,13 @@ def reset_between_runs() -> None       # close matplotlib figures, pd.reset_opti
 ```
 
 - Compile with filename `<student>` and register the *original* source in `linecache`.
-- Run in a fresh dict namespace with `__name__ = "__main__"` and `__builtins__` set.
-- Redirect `sys.stdout` and `sys.stderr` to writers that append `OutputEntry` tagged with `recorder.current_event`. Merge consecutive writes with the same tag and stream.
+- Run in the `__dict__` of a fresh module named `__main__`, which is also `sys.modules["__main__"]` during the run (so student classes, dataclasses and `inspect` find their module), with `__builtins__` set. Everything the run changes (streams, `input`, recursion limit, `__main__`, warning filters and hook, `MPLBACKEND`) is restored before `done`. The run does not catch `SystemExit` as an error: `exit()` ends the program with status `ok`. `KeyboardInterrupt` gives status `stopped` and `error: null`.
+- Redirect `sys.stdout` and `sys.stderr` to writers that append `OutputEntry` tagged with `recorder.current_event`. Merge consecutive writes with the same tag and stream; the pending entry is committed when the tag or stream changes, when a recorded call starts, and at the end of the run (so the log does not depend on timing). Warning and figure entries are never merged.
 - Warnings: override `warnings.showwarning` to emit `stream: 'warning'` entries formatted as `"<line>: <Category>: <message>"`. The line is the student line of the innermost open recorded call (or the warning's own line if it is `<student>`). Do not change warning filters.
 - `builtins.input` raises `RuntimeError("input() is not supported here")` during a run.
 - Recursion: raise `sys.setrecursionlimit` to twice its value during a run (each wrapped call adds one frame). Verify the Pyodide stack survives it, and lower it if not.
 - Wall clock: the worker enforces `wall_ms` (section 7). `runtime.py` itself doesn't time out.
-- `tracebacks.py`: `student_traceback(exc) -> list[TracebackFrame]`. Drop frames from `machines/*`. Keep `<student>` frames with their linecache text. Fold runs of other frames into `{kind:'library', count, modules}`.
+- `tracebacks.py`: `student_traceback(exc) -> list[TracebackFrame]`. Drop frames from `machines/*`. Keep `<student>` frames with their linecache text. Fold runs of other frames into `{kind:'library', count, modules}` (`modules`: top-level module names, in order, deduplicated). Each recorded call adds a second `<student>` frame at the same line; identical student frames with a dropped recorder frame between them are merged (real recursion is kept). `RunError.line` is the deepest student frame. A `SyntaxError` has one student frame with the offending line's text.
 - `mpl.py`: if `matplotlib` is imported by the run, force the `Agg` backend before the import completes, and patch `plt.show` to emit each open figure as a `figure` output entry (PNG, base64, 100 dpi) and close it.
 
 ## 7. Worker protocol and app state
