@@ -406,6 +406,12 @@ describe('legend', () => {
       'stopped',
       'changed',
       'badge',
+      'constructor',
+      'uncalled',
+      'more-methods',
+      'unused-port',
+      'edge-inactive',
+      'data-row',
     ];
     for (const w of wanted) expect(covered, w).toContain(w);
     expect(new Set(LEGEND_ITEMS.map((i) => i.id)).size).toBe(LEGEND_ITEMS.length);

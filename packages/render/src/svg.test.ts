@@ -175,8 +175,8 @@ describe('data box rows', () => {
         columns: ['beds', 'baths', 'sqft', 'year_built'],
       }),
     ).toEqual([
-      { name: 'shape', detail: '(120, 4)', param: false },
-      { name: 'columns', detail: 'beds, baths, sqft, …', param: false },
+      { name: 'shape', detail: '(120, 4)', param: false, data: true },
+      { name: 'columns', detail: 'beds, baths, sqft, …', param: false, data: true },
     ]);
     const wide = dataRowModels({
       type: 'DF',

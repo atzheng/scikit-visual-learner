@@ -7,6 +7,7 @@ import {
   edgeLabelsFor,
   layout,
   mount,
+  moreMethodsFor,
   type DiagramController,
   type Laid,
 } from '@machines/render';
@@ -165,11 +166,12 @@ export function DiagramPane({
     const r = new Relayouter<Input, Laid>({
       intervalMs: RELAYOUT_INTERVAL_MS,
       signature: ({ model: m, log: l }) =>
-        layoutSignature(m, attrRowsFor(m, l), edgeLabelsFor(m, l)),
+        layoutSignature(m, attrRowsFor(m, l), edgeLabelsFor(m, l), moreMethodsFor(m, l)),
       run: ({ model: m, log: l, tier }) =>
         layout(m, {
           elk,
           attrRows: attrRowsFor(m, l),
+          moreMethods: moreMethodsFor(m, l),
           edgeLabels: edgeLabelsFor(m, l),
           minTier: tier,
         }),

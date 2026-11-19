@@ -141,6 +141,58 @@ export const LEGEND_ITEMS: LegendItem[] = [
     ],
   },
   {
+    id: 'ctor',
+    covers: ['constructor'],
+    label: 'Constructor: creates the machine below it; its wire runs into the machine',
+    cls: 'md-node md-call md-ctor',
+    draw: (mk) => [
+      box(mk, { y: 2, height: 10 }),
+      mk('path', { d: 'M22 12V20', 'marker-end': 'url(#md-arrow-legend-0)' }, 'md-wire'),
+    ],
+  },
+  {
+    id: 'uncalled',
+    covers: ['uncalled'],
+    label: 'Dashed, pale box: a method the program has not called yet (solid once it is called)',
+    cls: 'md-node md-call md-uncalled',
+    draw: (mk) => [box(mk)],
+  },
+  {
+    id: 'more-methods',
+    covers: ['more-methods'],
+    label: '▸ more methods (N): click or press Enter to list the other methods of the machine',
+    cls: 'md-more',
+    draw: (mk) => [
+      mk('rect', { x: 3, y: 4, width: 38, height: 16, rx: 5 }, 'md-more-bg'),
+      mk('text', { x: 7, y: 16 }, 'md-more-text', '▸ more'),
+    ],
+  },
+  {
+    id: 'unused-port',
+    covers: ['unused-port'],
+    label: 'Faint port: an input or output this call did not use',
+    cls: 'md-node md-call',
+    draw: (mk) => [
+      box(mk),
+      mk('circle', { cx: 12, cy: 4, r: 3 }, 'md-port'),
+      mk('circle', { cx: 32, cy: 4, r: 3, opacity: 0.4 }, 'md-port'),
+    ],
+  },
+  {
+    id: 'faint-wire',
+    covers: ['edge-inactive'],
+    label: 'Faint wire: used by an earlier call of the same box, not by the current one',
+    cls: 'md-edge md-inactive',
+    draw: (mk) => [wire(mk, false)],
+  },
+  {
+    id: 'data-row',
+    covers: ['data-row'],
+    label: 'Data box row: shape, dtype or columns of a table, array or series',
+    cls: 'md-attr md-data',
+    draw: (mk) => [mk('text', { x: 3, y: 16 }, 'md-aname', 'shape')],
+  },
+  {
     id: 'badge',
     covers: ['badge'],
     label: '×3 or 2 of 3: a box that ran several times, as in a loop',

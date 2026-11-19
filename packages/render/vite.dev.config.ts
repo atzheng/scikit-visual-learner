@@ -3,5 +3,5 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: 'dev',
-  server: { port: 5186 },
+  server: { port: 5186, fs: { allow: ['../../..'] } },
 });
