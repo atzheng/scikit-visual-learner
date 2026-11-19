@@ -343,16 +343,23 @@ export interface CardMove {
 /**
  * Pure FLIP plan: from each card's rectangle before a step change and after it (null = not visible), which
  * cards move and from where. One function serves both directions: stepping back swaps before and after, so a
- * card that went shelf -> stage now goes stage -> shelf. Cards that disappear are not animated.
+ * card that went shelf -> stage now goes stage -> shelf. Cards that disappear are not animated. `rel` holds
+ * the rectangles relative to the shelf (null for a card not in it): a card whose place in the shelf did not
+ * change is not animated, so a resizing stage does not slide the whole shelf.
  */
 export function planMoves(
   before: ReadonlyMap<string, Rect | null>,
   after: ReadonlyMap<string, Rect | null>,
+  rel?: { before: ReadonlyMap<string, Rect | null>; after: ReadonlyMap<string, Rect | null> },
 ): CardMove[] {
   const out: CardMove[] = [];
   for (const [key, a] of after) {
     if (!a) continue;
     const b = before.get(key);
+    // a shelf card that kept its place within the shelf stays put, even if the shelf itself shifted
+    const rb = rel?.before.get(key);
+    const ra = rel?.after.get(key);
+    if (b && rb && ra && Math.abs(rb.x - ra.x) < 1 && Math.abs(rb.y - ra.y) < 1) continue;
     if (!b) out.push({ key, kind: 'enter', dx: 0, dy: 0 });
     else if (Math.abs(b.x - a.x) >= 1 || Math.abs(b.y - a.y) >= 1)
       out.push({ key, kind: 'move', dx: b.x - a.x, dy: b.y - a.y });
@@ -601,6 +608,7 @@ export async function mountTwoPane(
   // FLIP: running animations are cancelled when the next step starts. The DOM already holds the final state
   // (an animation only offsets it), so cancelling "finishes it instantly".
   let running: Animation[] = [];
+  let wireKeys = new Set<string>(); // the wires drawn by the last step
   const finishAnimations = (): void => {
     for (const a of running) a.cancel();
     running = [];
@@ -611,16 +619,21 @@ export async function mountTwoPane(
     ...[...cards].map(([k, c]) => [k, c.wrap] as [string, HTMLElement]),
     ...chipEls,
   ];
-  const measureCards = (): Map<string, Rect | null> => {
-    const m = new Map<string, Rect | null>();
+  const measureCards = (): { abs: Map<string, Rect | null>; rel: Map<string, Rect | null> } => {
+    const abs = new Map<string, Rect | null>();
+    const rel = new Map<string, Rect | null>();
+    const sh = shelf.getBoundingClientRect();
     for (const [k, w] of allCards()) {
-      if (!w.isConnected || w.closest('[hidden]')) m.set(k, null);
+      rel.set(k, null);
+      if (!w.isConnected || w.closest('[hidden]')) abs.set(k, null);
       else {
         const r = w.getBoundingClientRect();
-        m.set(k, { x: r.left, y: r.top, w: r.width, h: r.height });
+        abs.set(k, { x: r.left, y: r.top, w: r.width, h: r.height });
+        if (shelf.contains(w))
+          rel.set(k, { x: r.left - sh.left, y: r.top - sh.top, w: r.width, h: r.height });
       }
     }
-    return m;
+    return { abs, rel };
   };
   const play = (target: Element, frames: Keyframe[]): void => {
     if (typeof target.animate !== 'function') return;
@@ -632,6 +645,7 @@ export async function mountTwoPane(
     finishAnimations();
     const flip = sopts.animate === true && !reducedMotion();
     const before = flip ? measureCards() : null;
+    const prevWires = wireKeys;
     const total = model.steps.length;
     current = Number.isNaN(step) ? 0 : Math.max(0, Math.min(total, Math.trunc(step)));
     const st = stateAt(model, log, current);
@@ -752,7 +766,8 @@ export async function mountTwoPane(
     rove();
     if (before) {
       const byKey = new Map(allCards());
-      for (const mv of planMoves(before, measureCards())) {
+      const after = measureCards();
+      for (const mv of planMoves(before.abs, after.abs, { before: before.rel, after: after.rel })) {
         const w = byKey.get(mv.key);
         if (!w) continue;
         if (mv.kind === 'move')
@@ -763,7 +778,10 @@ export async function mountTwoPane(
             { opacity: 1, transform: 'none' },
           ]);
       }
-      if (plan) play(wiresSvg, [{ opacity: 0 }, { opacity: 1 }]);
+      // only wires that were not there before fade in; the others stay as they are
+      for (const e of wiresSvg.querySelectorAll('[data-wire]'))
+        if (!prevWires.has((e as SVGElement).dataset.wire!))
+          play(e, [{ opacity: 0 }, { opacity: 1 }]);
     }
     // a card that was re-parented loses focus: it keeps it, wherever it went
     if (
@@ -897,6 +915,7 @@ export async function mountTwoPane(
 
   function drawWires(): void {
     wiresSvg.replaceChildren();
+    wireKeys = new Set();
     if (!plan) return;
     wiresSvg.setAttribute('width', String(plan.width));
     wiresSvg.setAttribute('height', String(plan.height));
@@ -920,6 +939,9 @@ export async function mountTwoPane(
     for (const w of plan.wires) {
       const g = sv(doc, 'g', {}, w.edge === null ? 'md-edge md-owner-line' : 'md-edge');
       if (w.edge !== null) g.dataset.edge = w.edge;
+      const wk = `${w.from}>${w.to}`;
+      g.dataset.wire = wk;
+      wireKeys.add(wk);
       g.append(
         sv(
           doc,
@@ -942,6 +964,7 @@ export async function mountTwoPane(
         if (w.label.type) t.append(sv(doc, 'tspan', {}, 'md-wtype', w.label.type));
         if (w.label.name)
           t.append(sv(doc, 'tspan', { dx: w.label.type ? 4 : 0 }, 'md-wname', w.label.name));
+        t.dataset.wire = wk;
         wiresSvg.append(t);
       }
     }
@@ -979,6 +1002,20 @@ export async function mountTwoPane(
       );
   }
 
+  const layoutRect = (e: HTMLElement, base: HTMLElement): Rect => {
+    const origin = (n: HTMLElement | null): { x: number; y: number } => {
+      let x = 0;
+      let y = 0;
+      for (let c: HTMLElement | null = n; c; c = c.offsetParent as HTMLElement | null) {
+        x += c.offsetLeft;
+        y += c.offsetTop;
+      }
+      return { x, y };
+    };
+    const a = origin(e);
+    const b = origin(base);
+    return { x: a.x - b.x, y: a.y - b.y, w: e.offsetWidth, h: e.offsetHeight };
+  };
   const relTo = (r: DOMRect, base: DOMRect): Rect => ({
     x: r.left - base.left,
     y: r.top - base.top,
@@ -1016,10 +1053,12 @@ export async function mountTwoPane(
         let shelfRect: Rect | null = null;
         if (entry && !entry.el.hidden) {
           const ref = entry.el.firstElementChild;
-          shelfRect = relTo(
-            (entry.ph.hidden ? (ref ?? entry.el) : entry.ph).getBoundingClientRect(),
-            base,
-          );
+          const target = entry.ph.hidden ? (ref ?? entry.el) : entry.ph;
+          // a card mid-animation is transformed: measure its layout box, not where it is drawn
+          shelfRect =
+            running.length > 0 && target instanceof HTMLElement
+              ? layoutRect(target, host)
+              : relTo(target.getBoundingClientRect(), base);
         }
         let stageRect: Rect | null = null;
         const r = st ? st.item.rect : isBox ? plan!.box : null;

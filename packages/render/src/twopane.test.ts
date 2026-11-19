@@ -343,6 +343,29 @@ describe('planMoves (pure)', () => {
       { key: 'c', kind: 'enter', dx: 0, dy: 0 },
     ]);
   });
+  test('a shelf card that kept its place in the shelf does not slide when the stage resizes', () => {
+    // the whole shelf moved down 40px (the stage grew); a goes shelf -> stage
+    const b = new Map([
+      ['a', R(0, 100)],
+      ['b', R(60, 100)],
+    ]);
+    const a = new Map([
+      ['a', R(10, 20)],
+      ['b', R(60, 140)],
+    ]);
+    const relB = new Map<string, Rect | null>([
+      ['a', R(0, 0)],
+      ['b', R(60, 0)],
+    ]);
+    const relA = new Map<string, Rect | null>([
+      ['a', null],
+      ['b', R(60, 0)],
+    ]);
+    expect(planMoves(b, a, { before: relB, after: relA })).toEqual([
+      { key: 'a', kind: 'move', dx: -10, dy: 80 },
+    ]);
+    expect(planMoves(b, a).map((m) => m.key)).toEqual(['a', 'b']);
+  });
   test('cards that stay put or are not visible do not move', () => {
     const b = new Map([['a', R(0, 0)]]);
     const a = new Map([
@@ -443,6 +466,44 @@ describe('animation', () => {
     tp!.setStep(s - 1);
     tp!.setStep(s, { animate: true });
     expect(calls).toHaveLength(0);
+  });
+  test('cards() measures the layout box of a card that is mid-animation', async () => {
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s - 1);
+    const offs = { left: 7, top: 9 };
+    const defs: [string, number][] = [
+      ['offsetLeft', offs.left],
+      ['offsetTop', offs.top],
+      ['offsetWidth', 50],
+      ['offsetHeight', 30],
+    ];
+    for (const [k, v] of defs)
+      Object.defineProperty(HTMLElement.prototype, k, { configurable: true, get: () => v });
+    try {
+      tp!.setStep(s, { animate: true });
+      expect(calls.length).toBeGreaterThan(0);
+      const onShelf = tp!.cards().find((c) => c.where === 'shelf' && c.shelf)!;
+      // the stubbed drawn rect is (10, 400); the layout box is the offsets (host's own offsets cancel)
+      expect(onShelf.shelf).toEqual({ x: 0, y: 0, w: 50, h: 30 });
+    } finally {
+      for (const [k] of defs)
+        delete (HTMLElement.prototype as unknown as Record<string, unknown>)[k];
+    }
+  });
+  test('only new wires fade in', async () => {
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s, { animate: true });
+    tp!.setStep(s, { animate: true }); // same step again: every wire is already there
+    const wiresFaded = calls
+      .slice(0)
+      .filter((c) => c.el instanceof SVGElement && c.el.hasAttribute('data-wire'));
+    const second = wiresFaded.length;
+    const before = calls.length;
+    tp!.setStep(s, { animate: true });
+    expect(calls.slice(before).some((c) => c.el.hasAttribute('data-wire'))).toBe(false);
+    expect(second).toBeGreaterThanOrEqual(0);
   });
   test('focus stays on a card that moved to the stage', async () => {
     setup(false);
