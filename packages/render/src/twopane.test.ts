@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { buildGraph, shelfAt, stageAt } from '@machines/log';
 import type { EventLog, GraphModel, StageParticipant } from '@machines/log';
-import { cardKey, mountTwoPane, planMoves, planStage, valueLine } from './twopane';
+import { cardKey, FLY_Z, MOVE_MS, mountTwoPane, planMoves, planStage, valueLine } from './twopane';
 import type { Rect, TwoPaneController } from './twopane';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'logs');
@@ -480,6 +480,28 @@ describe('animation', () => {
     const fwd = moved.find((m) => m.el === same.el)!;
     expect(Math.sign(tx(same))).toBe(-Math.sign(tx(fwd)));
   });
+  test('MOVE_MS is 325, a flying card is lifted above everything and restored afterwards', async () => {
+    expect(MOVE_MS).toBe(325);
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s - 1);
+    tp!.setStep(s, { animate: true });
+    const moved = calls.filter((c) => c.el.matches('.md-card') && isMove(c));
+    expect(moved.length).toBeGreaterThan(0);
+    for (const m of moved) {
+      const w = m.el as HTMLElement;
+      expect(w.style.zIndex).toBe(String(FLY_Z));
+      expect(w.style.position).toBe('fixed');
+    }
+    tp!.setStep(s - 1, { animate: true }); // finishes: styles restored, then new flights start
+    tp!.setStep(s - 1); // snap: nothing in flight
+    for (const w of host.querySelectorAll<HTMLElement>('.md-card, .md-chipcard')) {
+      expect(w.style.zIndex).toBe('');
+      expect(w.style.position === '' || w.style.position === 'absolute').toBe(true);
+    }
+    expect(host.querySelector('.md-fly-ph')).toBeNull();
+  });
+
   test('snap: no animation by default, with animate:false, or under prefers-reduced-motion', async () => {
     setup(false);
     const s = await usesShelf();

@@ -329,7 +329,9 @@ export interface SetStepOptions {
 }
 
 /** Animation length in ms. */
-export const MOVE_MS = 250;
+export const MOVE_MS = 325;
+/** z-index of a card in flight: above the stage, the shelf, other cards and the wires. */
+export const FLY_Z = 1000;
 
 export interface CardMove {
   key: string;
@@ -608,10 +610,12 @@ export async function mountTwoPane(
   // FLIP: running animations are cancelled when the next step starts. The DOM already holds the final state
   // (an animation only offsets it), so cancelling "finishes it instantly".
   let running: Animation[] = [];
+  const restores: (() => void)[] = [];
   let wireKeys = new Set<string>(); // the wires drawn by the last step
   const finishAnimations = (): void => {
     for (const a of running) a.cancel();
     running = [];
+    for (const r of restores.splice(0)) r();
   };
   const reducedMotion = (): boolean =>
     doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
@@ -635,9 +639,46 @@ export async function mountTwoPane(
     }
     return { abs, rel };
   };
-  const play = (target: Element, frames: Keyframe[]): void => {
+  const play = (target: Element, frames: Keyframe[], lifted?: Rect | null): void => {
     if (typeof target.animate !== 'function') return;
-    running.push(target.animate(frames, { duration: MOVE_MS, easing: 'ease-out' }));
+    const anim = target.animate(frames, { duration: MOVE_MS, easing: 'ease-out' });
+    running.push(anim);
+    if (lifted && target instanceof HTMLElement) {
+      const restore = lift(target, lifted);
+      anim.onfinish = restore;
+      restores.push(restore);
+    }
+  };
+  // While a card flies it is drawn above everything: `position: fixed` at its final place (the stage clips
+  // its overflow, so a card flying out of or into it would be cut) with a top z-index. A placeholder of the
+  // same size keeps its shelf slot from collapsing. The restore puts the inline styles back exactly.
+  const lift = (w: HTMLElement, at: Rect): (() => void) => {
+    const keep = ['position', 'left', 'top', 'zIndex'].map(
+      (k) => [k, w.style.getPropertyValue(k === 'zIndex' ? 'z-index' : k)] as const,
+    );
+    let ph: HTMLElement | null = null;
+    if (w.parentElement?.classList.contains('md-slot')) {
+      ph = el(doc, 'div', 'md-fly-ph');
+      ph.setAttribute('aria-hidden', 'true');
+      ph.style.width = w.style.width;
+      ph.style.height = w.style.height;
+      w.before(ph);
+    }
+    w.style.position = 'fixed';
+    w.style.left = `${at.x}px`;
+    w.style.top = `${at.y}px`;
+    w.style.zIndex = String(FLY_Z);
+    let done = false;
+    return () => {
+      if (done) return;
+      done = true;
+      ph?.remove();
+      for (const [k, v] of keep) {
+        const prop = k === 'zIndex' ? 'z-index' : k;
+        if (v) w.style.setProperty(prop, v);
+        else w.style.removeProperty(prop);
+      }
+    };
   };
 
   function setStep(step: number, sopts: SetStepOptions = {}): void {
@@ -780,12 +821,20 @@ export async function mountTwoPane(
         const w = byKey.get(mv.key);
         if (!w) continue;
         if (mv.kind === 'move')
-          play(w, [{ transform: `translate(${mv.dx}px, ${mv.dy}px)` }, { transform: 'none' }]);
+          play(
+            w,
+            [{ transform: `translate(${mv.dx}px, ${mv.dy}px)` }, { transform: 'none' }],
+            after.abs.get(mv.key),
+          );
         else
-          play(w, [
-            { opacity: 0, transform: 'translateY(8px)' },
-            { opacity: 1, transform: 'none' },
-          ]);
+          play(
+            w,
+            [
+              { opacity: 0, transform: 'translateY(8px)' },
+              { opacity: 1, transform: 'none' },
+            ],
+            after.abs.get(mv.key),
+          );
       }
       // only wires that were not there before fade in; the others stay as they are
       for (const e of wiresSvg.querySelectorAll('[data-wire]'))
