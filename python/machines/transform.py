@@ -226,8 +226,8 @@ def _import_sites(tree: ast.Module, src: _Source) -> list[tuple[ast.stmt, dict[s
     rewritten: `visit_Import` adds a hook statement after each one. Each bound name says
     whether it is `sole`: bound exactly once in the entire module (no other import, assignment,
     parameter, `def`, `class`, `except ... as`, `del`, comprehension target ...) and the
-    module has no `from m import *`. Only then can the graph draw a callee wire from the name to a
-    call that uses it, because nothing can have rebound the name between the import and the call.
+    module has no `from m import *`. Only then does the graph write the module in a call box,
+    because nothing can have rebound the name between the import and the call.
     """
     counts: dict[str, int] = {}
 
