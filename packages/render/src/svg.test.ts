@@ -152,16 +152,16 @@ describe('instance rows', () => {
       log.values,
     );
     expect(after.map((r) => `${r.name} ${r.detail}`)).toEqual([
-      'coef_ ndarray',
-      'intercept_ float',
-      'n_features_in_ int',
+      'coef_ : ndarray',
+      'intercept_ : float',
+      'n_features_in_ : int',
     ]);
   });
   test('attrRowsFor reserves the union over versions', () => {
     expect(attrRowsFor(model, log)[inst.id]).toEqual([
-      'coef_ ndarray',
-      'intercept_ float',
-      'n_features_in_ int',
+      'coef_ : ndarray',
+      'intercept_ : float',
+      'n_features_in_ : int',
     ]);
   });
 });

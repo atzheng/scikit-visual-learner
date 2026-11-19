@@ -3,7 +3,7 @@
 exports[`snapshots > linreg, error 1`] = `
 "<svg width="1043" height="596" viewBox="0 0 1043 596" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
-<marker id="md-arrow-16" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+<marker id="md-arrow-17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
 </path>
 </marker>
@@ -26,55 +26,55 @@ exports[`snapshots > linreg, error 1`] = `
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:i:88c6wt.0!v1.>n:88c6wt.0.in:arrays[0]" class="md-edge">
-<path d="M138.8 88L138.8 144" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M138.8 88L138.8 144" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M138.8 88L138.8 144" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:88c6wt.0!v2.>n:88c6wt.0.in:arrays[1]" class="md-edge">
-<path d="M320.3 88L320.3 93Q320.3 98 315.3 98L265.8 98Q257.8 98 257.8 106L257.8 144" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M320.3 88L320.3 93Q320.3 98 315.3 98L265.8 98Q257.8 98 257.8 106L257.8 144" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M320.3 88L320.3 93Q320.3 98 315.3 98L265.8 98Q257.8 98 257.8 106L257.8 144" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:88c6wt.0.>n:m1gsyoeo@i:czvr3a.0.in:X" class="md-edge">
-<path d="M115 360L115 474Q115 482 123 482L835 482Q843 482 851 482L901.67 482Q909.67 482 909.67 490L909.67 512" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M115 360L115 474Q115 482 123 482L835 482Q843 482 851 482L901.67 482Q909.67 482 909.67 490L909.67 512" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M115 360L115 474Q115 482 123 482L835 482Q843 482 851 482L901.67 482Q909.67 482 909.67 490L909.67 512" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:88c6wt.0#2.>n:m1gsyoeo@i:czvr3a.0.in:y" class="md-edge">
-<path d="M544.5 351L544.5 464Q544.5 472 552.5 472L835 472Q843 472 851 472L956.33 472Q964.33 472 964.33 480L964.33 512" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M544.5 351L544.5 464Q544.5 472 552.5 472L835 472Q843 472 851 472L956.33 472Q964.33 472 964.33 480L964.33 512" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M544.5 351L544.5 464Q544.5 472 552.5 472L835 472Q843 472 851 472L956.33 472Q964.33 472 964.33 480L964.33 512" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:0>i:88c6wt.0." class="md-edge">
-<path d="M115 228L115 284" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M115 228L115 284" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M115 228L115 284" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:1>i:88c6wt.0#1." class="md-edge">
-<path d="M210.2 228L210.2 250Q210.2 258 218.2 258L341 258Q349 258 349 266L349 284" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M210.2 228L210.2 250Q210.2 258 218.2 258L341 258Q349 258 349 266L349 284" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M210.2 228L210.2 250Q210.2 258 218.2 258L341 258Q349 258 349 266L349 284" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:2>i:88c6wt.0#2." class="md-edge">
-<path d="M305.4 228L305.4 240Q305.4 248 313.4 248L536.5 248Q544.5 248 544.5 256L544.5 293" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M305.4 228L305.4 240Q305.4 248 313.4 248L536.5 248Q544.5 248 544.5 256L544.5 293" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M305.4 228L305.4 240Q305.4 248 313.4 248L536.5 248Q544.5 248 544.5 256L544.5 293" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:3>i:88c6wt.0#3." class="md-edge">
-<path d="M400.6 228L400.6 233Q400.6 238 405.6 238L690 238Q698 238 698 246L698 284" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M400.6 228L400.6 233Q400.6 238 405.6 238L690 238Q698 238 698 246L698 284" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M400.6 228L400.6 233Q400.6 238 405.6 238L690 238Q698 238 698 246L698 284" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:czvr3a.0.out:0>i:czvr3a.0." class="md-edge">
-<path d="M855 360L855 416" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M855 360L855 416" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
 <path d="M855 360L855 416" class="md-wire-hit">
 </path>
@@ -91,7 +91,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="16" y="325" class="md-bullet md-hidden">●</text>
 <text x="24" y="325">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(404, 5)</tspan>
+<tspan dx="6" class="md-aval">(404, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
@@ -100,7 +100,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="16" y="343" class="md-bullet md-hidden">●</text>
 <text x="24" y="343">
 <tspan class="md-aname">columns</tspan>
-<tspan dx="6" class="md-atype">c0, c1, c2, c3, c4</tspan>
+<tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
 <text x="115" y="375" class="md-msg md-halo md-hidden">
@@ -118,7 +118,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="39.8" y="53" class="md-bullet md-hidden">●</text>
 <text x="47.8" y="53">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(506, 5)</tspan>
+<tspan dx="6" class="md-aval">(506, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
@@ -127,7 +127,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="39.8" y="71" class="md-bullet md-hidden">●</text>
 <text x="47.8" y="71">
 <tspan class="md-aname">columns</tspan>
-<tspan dx="6" class="md-atype">c0, c1, c2, c3, c4</tspan>
+<tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
 <text x="138.8" y="103" class="md-msg md-halo md-hidden">
@@ -145,7 +145,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="273.8" y="71" class="md-bullet md-hidden">●</text>
 <text x="281.8" y="71">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(506)</tspan>
+<tspan dx="6" class="md-aval">(506)</tspan>
 </text>
 </g>
 <text x="320.3" y="103" class="md-msg md-halo md-hidden">
@@ -163,7 +163,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="250" y="325" class="md-bullet md-hidden">●</text>
 <text x="258" y="325">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(102, 5)</tspan>
+<tspan dx="6" class="md-aval">(102, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
@@ -172,7 +172,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="250" y="343" class="md-bullet md-hidden">●</text>
 <text x="258" y="343">
 <tspan class="md-aname">columns</tspan>
-<tspan dx="6" class="md-atype">c0, c1, c2, c3, c4</tspan>
+<tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
 <text x="349" y="375" class="md-msg md-halo md-hidden">
@@ -190,7 +190,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="484" y="334" class="md-bullet md-hidden">●</text>
 <text x="492" y="334">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(404)</tspan>
+<tspan dx="6" class="md-aval">(404)</tspan>
 </text>
 </g>
 <text x="544.5" y="366" class="md-msg md-halo md-hidden">
@@ -208,7 +208,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="641" y="325" class="md-bullet md-hidden">●</text>
 <text x="649" y="325">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(102)</tspan>
+<tspan dx="6" class="md-aval">(102)</tspan>
 </text>
 </g>
 <text x="698" y="357" class="md-msg md-halo md-hidden">
@@ -236,7 +236,7 @@ exports[`snapshots > linreg, error 1`] = `
 <text x="257.8" y="169" class="md-pname">arrays[1]</text>
 </g>
 <g data-port="in:test_size" class="md-port-g">
-<text x="376.8" y="162" class="md-ptype">test_size = 0.2</text>
+<text x="376.8" y="162" class="md-pconst">test_size = 0.2</text>
 </g>
 <g data-port="out:0" class="md-port-g">
 <circle cx="115" cy="228" r="3" class="md-port">
@@ -442,7 +442,7 @@ exports[`snapshots > linreg, error 1`] = `
 exports[`snapshots > loop, step 2 1`] = `
 "<svg width="589" height="342" viewBox="0 0 589 342" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
-<marker id="md-arrow-17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+<marker id="md-arrow-18" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
 </path>
 </marker>
@@ -457,19 +457,19 @@ exports[`snapshots > loop, step 2 1`] = `
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:i:12u9exh.0!v1.>n:mp8npak@i:vwx6qg.0.in:X" class="md-edge">
-<path d="M87 88L87 220Q87 228 95 228L353 228Q361 228 369 228L429 228Q437 228 437 236L437 258" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M87 88L87 220Q87 228 95 228L353 228Q361 228 369 228L429 228Q437 228 437 236L437 258" marker-end="url(#md-arrow-18)" class="md-wire">
 </path>
 <path d="M87 88L87 220Q87 228 95 228L353 228Q361 228 369 228L429 228Q437 228 437 236L437 258" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:12u9exh.0!v2.>n:mp8npak@i:vwx6qg.0.in:y" class="md-edge">
-<path d="M240.5 88L240.5 210Q240.5 218 248.5 218L353 218Q361 218 369 218L493 218Q501 218 501 226L501 258" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M240.5 88L240.5 210Q240.5 218 248.5 218L353 218Q361 218 369 218L493 218Q501 218 501 226L501 258" marker-end="url(#md-arrow-18)" class="md-wire">
 </path>
 <path d="M240.5 88L240.5 210Q240.5 218 248.5 218L353 218Q361 218 369 218L493 218Q501 218 501 226L501 258" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:vwx6qg.0.out:0>i:vwx6qg.0." class="md-edge">
-<path d="M373 88L373 144" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M373 88L373 144" marker-end="url(#md-arrow-18)" class="md-wire">
 </path>
 <path d="M373 88L373 144" class="md-wire-hit">
 </path>
@@ -486,7 +486,7 @@ exports[`snapshots > loop, step 2 1`] = `
 <text x="365" y="185" class="md-bullet">●</text>
 <text x="373" y="185">
 <tspan class="md-aname">n_iter_</tspan>
-<tspan dx="6" class="md-atype">int</tspan>
+<tspan dx="6" class="md-atype">: int</tspan>
 </text>
 </g>
 <text x="469" y="345" class="md-msg md-halo md-hidden">
@@ -527,7 +527,7 @@ exports[`snapshots > loop, step 2 1`] = `
 <text x="16" y="53" class="md-bullet md-hidden">●</text>
 <text x="24" y="53">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(100, 3)</tspan>
+<tspan dx="6" class="md-aval">(100, 3)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
@@ -536,7 +536,7 @@ exports[`snapshots > loop, step 2 1`] = `
 <text x="16" y="71" class="md-bullet md-hidden">●</text>
 <text x="24" y="71">
 <tspan class="md-aname">columns</tspan>
-<tspan dx="6" class="md-atype">c0, c1, c2</tspan>
+<tspan dx="6" class="md-aval">c0, c1, c2</tspan>
 </text>
 </g>
 <text x="87" y="103" class="md-msg md-halo md-hidden">
@@ -554,7 +554,7 @@ exports[`snapshots > loop, step 2 1`] = `
 <text x="194" y="71" class="md-bullet md-hidden">●</text>
 <text x="202" y="71">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(100)</tspan>
+<tspan dx="6" class="md-aval">(100)</tspan>
 </text>
 </g>
 <text x="240.5" y="103" class="md-msg md-halo md-hidden">
@@ -632,7 +632,7 @@ exports[`snapshots > loop, step 2 1`] = `
 exports[`snapshots > split, end 1`] = `
 "<svg width="1025" height="760" viewBox="0 0 1025 760" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
-<marker id="md-arrow-15" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
+<marker id="md-arrow-16" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
 </path>
 </marker>
@@ -655,55 +655,55 @@ exports[`snapshots > split, end 1`] = `
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:i:vx1anp.0.>n:sn2g45.0.in:arrays[0]" class="md-edge">
-<path d="M477 476L477 532" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M477 476L477 532" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M477 476L477 532" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:12opl3.0.>n:sn2g45.0.in:arrays[1]" class="md-edge">
-<path d="M658.5 467L658.5 478Q658.5 486 650.5 486L611 486Q603 486 603 494L603 532" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M658.5 467L658.5 478Q658.5 486 650.5 486L611 486Q603 486 603 494L603 532" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M658.5 467L658.5 478Q658.5 486 650.5 486L611 486Q603 486 603 494L603 532" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:im9bq3.0.out:0>i:im9bq3.0." class="md-edge">
-<path d="M194 96L194 152" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M194 96L194 152" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M194 96L194 152" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:m1d0m7dh@i:im9bq3.0.out:0>i:vx1anp.0." class="md-edge">
-<path d="M327 312L327 324Q327 332 335 332L469 332Q477 332 477 340L477 400" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M327 312L327 324Q327 332 335 332L469 332Q477 332 477 340L477 400" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M327 312L327 324Q327 332 335 332L469 332Q477 332 477 340L477 400" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:x:12opl3.0.>i:12opl3.0." class="md-edge">
-<path d="M658.5 344L658.5 409" marker-end="url(#md-arrow-15)" class="md-wire md-dashed">
+<path d="M658.5 344L658.5 409" marker-end="url(#md-arrow-16)" class="md-wire md-dashed">
 </path>
 <path d="M658.5 344L658.5 409" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:sn2g45.0.out:0>i:sn2g45.0." class="md-edge">
-<path d="M477 616L477 621Q477 626 472 626L377 626Q369 626 369 634L369 672" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M477 616L477 621Q477 626 472 626L377 626Q369 626 369 634L369 672" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M477 616L477 621Q477 626 472 626L377 626Q369 626 369 634L369 672" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:sn2g45.0.out:1>i:sn2g45.0#1." class="md-edge">
-<path d="M603 616L603 672" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M603 616L603 672" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M603 616L603 672" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:sn2g45.0.out:2>i:sn2g45.0#2." class="md-edge">
-<path d="M729 616L729 621Q729 626 734 626L790.5 626Q798.5 626 798.5 634L798.5 672" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M729 616L729 621Q729 626 734 626L790.5 626Q798.5 626 798.5 634L798.5 672" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M729 616L729 621Q729 626 734 626L790.5 626Q798.5 626 798.5 634L798.5 672" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:sn2g45.0.out:3>i:sn2g45.0#3." class="md-edge">
-<path d="M855 616L855 621Q855 626 860 626L944 626Q952 626 952 634L952 672" marker-end="url(#md-arrow-15)" class="md-wire">
+<path d="M855 616L855 621Q855 626 860 626L944 626Q952 626 952 634L952 672" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
 <path d="M855 616L855 621Q855 626 860 626L944 626Q952 626 952 634L952 672" class="md-wire-hit">
 </path>
@@ -720,7 +720,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="186" y="193" class="md-bullet md-hidden">●</text>
 <text x="194" y="193">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(506, 6)</tspan>
+<tspan dx="6" class="md-aval">(506, 6)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
@@ -729,7 +729,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="186" y="211" class="md-bullet md-hidden">●</text>
 <text x="194" y="211">
 <tspan class="md-aname">columns</tspan>
-<tspan dx="6" class="md-atype">c0, c1, c2, c3, c4, c5</tspan>
+<tspan dx="6" class="md-aval">c0, c1, c2, c3, c4, c5</tspan>
 </text>
 </g>
 <text x="327" y="359" class="md-msg md-halo md-hidden">
@@ -743,7 +743,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="194" y="58" class="md-name">read_csv</text>
 <text x="194" y="69" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:filepath" class="md-port-g">
-<text x="194" y="30" class="md-ptype">filepath = "housing.csv"</text>
+<text x="194" y="30" class="md-pconst">filepath = "housing.csv"</text>
 </g>
 <g data-port="out:0" class="md-port-g">
 <circle cx="194" cy="96" r="3" class="md-port">
@@ -773,7 +773,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="378" y="441" class="md-bullet md-hidden">●</text>
 <text x="386" y="441">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(506, 5)</tspan>
+<tspan dx="6" class="md-aval">(506, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
@@ -782,7 +782,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="378" y="459" class="md-bullet md-hidden">●</text>
 <text x="386" y="459">
 <tspan class="md-aname">columns</tspan>
-<tspan dx="6" class="md-atype">c0, c1, c2, c3, c4</tspan>
+<tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
 <text x="477" y="491" class="md-msg md-halo md-hidden">
@@ -796,7 +796,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="327" y="274" class="md-name">DataFrame.drop</text>
 <text x="327" y="285" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:columns" class="md-port-g">
-<text x="327" y="246" class="md-ptype">columns = "price"</text>
+<text x="327" y="246" class="md-pconst">columns = "price"</text>
 </g>
 <g data-port="out:0" class="md-port-g">
 <circle cx="327" cy="312" r="3" class="md-port">
@@ -826,7 +826,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="612" y="450" class="md-bullet md-hidden">●</text>
 <text x="620" y="450">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(506)</tspan>
+<tspan dx="6" class="md-aval">(506)</tspan>
 </text>
 </g>
 <text x="658.5" y="482" class="md-msg md-halo md-hidden">
@@ -859,7 +859,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="270" y="713" class="md-bullet md-hidden">●</text>
 <text x="278" y="713">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(404, 5)</tspan>
+<tspan dx="6" class="md-aval">(404, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
@@ -868,7 +868,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="270" y="731" class="md-bullet md-hidden">●</text>
 <text x="278" y="731">
 <tspan class="md-aname">columns</tspan>
-<tspan dx="6" class="md-atype">c0, c1, c2, c3, c4</tspan>
+<tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
 <text x="369" y="763" class="md-msg md-halo md-hidden">
@@ -886,7 +886,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="504" y="713" class="md-bullet md-hidden">●</text>
 <text x="512" y="713">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(102, 5)</tspan>
+<tspan dx="6" class="md-aval">(102, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
@@ -895,7 +895,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="504" y="731" class="md-bullet md-hidden">●</text>
 <text x="512" y="731">
 <tspan class="md-aname">columns</tspan>
-<tspan dx="6" class="md-atype">c0, c1, c2, c3, c4</tspan>
+<tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
 <text x="603" y="763" class="md-msg md-halo md-hidden">
@@ -913,7 +913,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="738" y="713" class="md-bullet md-hidden">●</text>
 <text x="746" y="713">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(404)</tspan>
+<tspan dx="6" class="md-aval">(404)</tspan>
 </text>
 </g>
 <text x="798.5" y="745" class="md-msg md-halo md-hidden">
@@ -931,7 +931,7 @@ exports[`snapshots > split, end 1`] = `
 <text x="895" y="713" class="md-bullet md-hidden">●</text>
 <text x="903" y="713">
 <tspan class="md-aname">shape</tspan>
-<tspan dx="6" class="md-atype">(102)</tspan>
+<tspan dx="6" class="md-aval">(102)</tspan>
 </text>
 </g>
 <text x="952" y="745" class="md-msg md-halo md-hidden">
@@ -959,10 +959,10 @@ exports[`snapshots > split, end 1`] = `
 <text x="603" y="557" class="md-pname">arrays[1]</text>
 </g>
 <g data-port="in:test_size" class="md-port-g">
-<text x="729" y="550" class="md-ptype">test_size = 0.2</text>
+<text x="729" y="550" class="md-pconst">test_size = 0.2</text>
 </g>
 <g data-port="in:random_state" class="md-port-g">
-<text x="855" y="550" class="md-ptype">random_state = 0</text>
+<text x="855" y="550" class="md-pconst">random_state = 0</text>
 </g>
 <g data-port="out:0" class="md-port-g">
 <circle cx="477" cy="616" r="3" class="md-port">

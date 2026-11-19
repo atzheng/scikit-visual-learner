@@ -103,7 +103,15 @@ export const LEGEND_ITEMS: LegendItem[] = [
     label: 'Constant input: the literal value written above the box, no wire',
     level: 'more',
     cls: 'md-node md-call',
-    draw: (mk) => [box(mk, { y: 8, height: 14 }), mk('text', { x: 22, y: 7 }, 'md-ptype', '0.5')],
+    draw: (mk) => [box(mk, { y: 8, height: 14 }), mk('text', { x: 22, y: 7 }, 'md-pconst', '0.5')],
+  },
+  {
+    id: 'type',
+    covers: ['type'],
+    label: 'Type: written after a colon, in blue, as in a Python annotation',
+    level: 'more',
+    cls: 'md-node md-call',
+    draw: (mk) => [mk('text', { x: 22, y: 16 }, 'md-ptype', ': int')],
   },
   {
     id: 'current',
