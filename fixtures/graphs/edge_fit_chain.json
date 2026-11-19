@@ -179,6 +179,39 @@
       "student": false
     },
     {
+      "id": "n:10epbgg.0",
+      "kind": "call",
+      "mergeKey": "s7",
+      "name": "LinearRegression",
+      "module": "sklearn.linear_model._base",
+      "parent": null,
+      "order": 1100008,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v5.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "LinearRegression",
+          "nameLabel": "model"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:10epbgg.0",
       "kind": "instance",
       "parent": null,
@@ -186,7 +219,7 @@
       "className": "LinearRegression",
       "varName": "model",
       "createdAt": 5,
-      "createdBy": null,
+      "createdBy": "n:10epbgg.0",
       "params": [],
       "versions": [
         {
@@ -200,7 +233,7 @@
       ]
     },
     {
-      "id": "n:luinfn.0@i:10epbgg.0",
+      "id": "n:m1gsyoeo@i:10epbgg.0",
       "kind": "call",
       "mergeKey": "s9",
       "name": "LinearRegression.fit",
@@ -240,7 +273,7 @@
       "student": false
     },
     {
-      "id": "n:1jmj0rx.0@i:10epbgg.0",
+      "id": "n:mg7a9ba@i:10epbgg.0",
       "kind": "call",
       "mergeKey": "s10",
       "name": "LinearRegression.predict",
@@ -371,13 +404,13 @@
       "nameLabel": "X"
     },
     {
-      "id": "e:x:f2rqav.0.>n:luinfn.0@i:10epbgg.0.in:X",
+      "id": "e:x:f2rqav.0.>n:m1gsyoeo@i:10epbgg.0.in:X",
       "from": {
         "node": "x:f2rqav.0",
         "port": null
       },
       "to": {
-        "node": "n:luinfn.0@i:10epbgg.0",
+        "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -390,13 +423,13 @@
       "nameLabel": "X"
     },
     {
-      "id": "e:x:xaeoav.0.>n:luinfn.0@i:10epbgg.0.in:y",
+      "id": "e:x:xaeoav.0.>n:m1gsyoeo@i:10epbgg.0.in:y",
       "from": {
         "node": "x:xaeoav.0",
         "port": null
       },
       "to": {
-        "node": "n:luinfn.0@i:10epbgg.0",
+        "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:y"
       },
       "dashed": true,
@@ -409,13 +442,13 @@
       "nameLabel": "y"
     },
     {
-      "id": "e:n:we6yd7.0.out:0>n:1jmj0rx.0@i:10epbgg.0.in:X",
+      "id": "e:n:we6yd7.0.out:0>n:mg7a9ba@i:10epbgg.0.in:X",
       "from": {
         "node": "n:we6yd7.0",
         "port": "out:0"
       },
       "to": {
-        "node": "n:1jmj0rx.0@i:10epbgg.0",
+        "node": "n:mg7a9ba@i:10epbgg.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -428,9 +461,9 @@
       "nameLabel": "Z"
     },
     {
-      "id": "e:n:1jmj0rx.0@i:10epbgg.0.out:0>n:7oml7o.0.in:self",
+      "id": "e:n:mg7a9ba@i:10epbgg.0.out:0>n:7oml7o.0.in:self",
       "from": {
-        "node": "n:1jmj0rx.0@i:10epbgg.0",
+        "node": "n:mg7a9ba@i:10epbgg.0",
         "port": "out:0"
       },
       "to": {
@@ -483,6 +516,25 @@
         }
       ],
       "nameLabel": "df"
+    },
+    {
+      "id": "e:n:10epbgg.0.out:0>i:10epbgg.0.",
+      "from": {
+        "node": "n:10epbgg.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:10epbgg.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

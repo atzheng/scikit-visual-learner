@@ -214,6 +214,54 @@
       "student": false
     },
     {
+      "id": "n:1yhezhd.0",
+      "kind": "call",
+      "mergeKey": "s8",
+      "name": "OneHotEncoder",
+      "module": "sklearn.preprocessing._encoders",
+      "parent": null,
+      "order": 1100006,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v8.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:sparse_output",
+          "param": "sparse_output",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "sparse_output = False"
+        },
+        {
+          "id": "in:handle_unknown",
+          "param": "handle_unknown",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "handle_unknown = \"ignore\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "OneHotEncoder",
+          "nameLabel": "enc"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:1yhezhd.0",
       "kind": "instance",
       "parent": null,
@@ -221,7 +269,7 @@
       "className": "OneHotEncoder",
       "varName": "enc",
       "createdAt": 5,
-      "createdBy": null,
+      "createdBy": "n:1yhezhd.0",
       "params": [
         {
           "name": "sparse_output",
@@ -267,7 +315,7 @@
       ]
     },
     {
-      "id": "n:1ac84x7.0@i:1yhezhd.0",
+      "id": "n:m1wzfutv@i:1yhezhd.0",
       "kind": "call",
       "mergeKey": "s10",
       "name": "OneHotEncoder.fit",
@@ -323,7 +371,7 @@
       ]
     },
     {
-      "id": "n:1mp1rp0.0@i:1yhezhd.0",
+      "id": "n:m1yvdu8o@i:1yhezhd.0",
       "kind": "call",
       "mergeKey": "s11",
       "name": "OneHotEncoder.transform",
@@ -344,6 +392,20 @@
           "owner": "v8.1",
           "error": null,
           "interrupted": false
+        },
+        {
+          "i": 11,
+          "ret": 11,
+          "inputs": {
+            "in:X": "v14.0"
+          },
+          "outputs": {
+            "out:0": "v15.0"
+          },
+          "count": 2,
+          "owner": "v8.1",
+          "error": null,
+          "interrupted": false
         }
       ],
       "inPorts": [
@@ -359,7 +421,7 @@
           "id": "out:0",
           "param": "0",
           "typeLabel": "array",
-          "nameLabel": "hood_train"
+          "nameLabel": "hood_test"
         }
       ],
       "student": false
@@ -388,43 +450,34 @@
       ]
     },
     {
-      "id": "n:xc2iuq.0@i:1yhezhd.0",
+      "id": "n:10epbgg.0",
       "kind": "call",
-      "mergeKey": "s13",
-      "name": "OneHotEncoder.transform",
-      "module": "sklearn.preprocessing._encoders",
-      "parent": "i:1yhezhd.0",
-      "order": 1400012,
+      "mergeKey": "s15",
+      "name": "LinearRegression",
+      "module": "sklearn.linear_model._base",
+      "parent": null,
+      "order": 1500008,
       "executions": [
         {
-          "i": 11,
-          "ret": 11,
-          "inputs": {
-            "in:X": "v14.0"
-          },
+          "i": 12,
+          "ret": 12,
+          "inputs": {},
           "outputs": {
-            "out:0": "v15.0"
+            "out:0": "v16.0"
           },
           "count": 1,
-          "owner": "v8.1",
+          "owner": null,
           "error": null,
           "interrupted": false
         }
       ],
-      "inPorts": [
-        {
-          "id": "in:X",
-          "param": "X",
-          "typeLabel": "DF",
-          "nameLabel": null
-        }
-      ],
+      "inPorts": [],
       "outPorts": [
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "array",
-          "nameLabel": "hood_test"
+          "typeLabel": "LinearRegression",
+          "nameLabel": "model"
         }
       ],
       "student": false
@@ -437,7 +490,7 @@
       "className": "LinearRegression",
       "varName": "model",
       "createdAt": 12,
-      "createdBy": null,
+      "createdBy": "n:10epbgg.0",
       "params": [],
       "versions": [
         {
@@ -451,7 +504,7 @@
       ]
     },
     {
-      "id": "n:jktced.0@i:10epbgg.0",
+      "id": "n:m1gsyoeo@i:10epbgg.0",
       "kind": "call",
       "mergeKey": "s17",
       "name": "LinearRegression.fit",
@@ -491,7 +544,7 @@
       "student": false
     },
     {
-      "id": "n:1m8oo9a.0@i:10epbgg.0",
+      "id": "n:mnnwzah@i:10epbgg.0",
       "kind": "call",
       "mergeKey": "s18",
       "name": "LinearRegression.score",
@@ -540,7 +593,7 @@
       "student": false
     },
     {
-      "id": "n:qsq8or.0@i:10epbgg.0",
+      "id": "n:mg7a9ba@i:10epbgg.0",
       "kind": "call",
       "mergeKey": "s20",
       "name": "LinearRegression.predict",
@@ -641,13 +694,13 @@
       "nameLabel": "y"
     },
     {
-      "id": "e:x:1ac84x7.0~2ruef4.>n:1ac84x7.0@i:1yhezhd.0.in:X",
+      "id": "e:x:1ac84x7.0~2ruef4.>n:m1wzfutv@i:1yhezhd.0.in:X",
       "from": {
         "node": "x:1ac84x7.0~2ruef4",
         "port": null
       },
       "to": {
-        "node": "n:1ac84x7.0@i:1yhezhd.0",
+        "node": "n:m1wzfutv@i:1yhezhd.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -660,13 +713,13 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:1mp1rp0.0~2ruef4.>n:1mp1rp0.0@i:1yhezhd.0.in:X",
+      "id": "e:x:1mp1rp0.0~2ruef4.>n:m1yvdu8o@i:1yhezhd.0.in:X",
       "from": {
         "node": "x:1mp1rp0.0~2ruef4",
         "port": null
       },
       "to": {
-        "node": "n:1mp1rp0.0@i:1yhezhd.0",
+        "node": "n:m1yvdu8o@i:1yhezhd.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -679,13 +732,13 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:xc2iuq.0~2ruef4.>n:xc2iuq.0@i:1yhezhd.0.in:X",
+      "id": "e:x:xc2iuq.0~2ruef4.>n:m1yvdu8o@i:1yhezhd.0.in:X",
       "from": {
         "node": "x:xc2iuq.0~2ruef4",
         "port": null
       },
       "to": {
-        "node": "n:xc2iuq.0@i:1yhezhd.0",
+        "node": "n:m1yvdu8o@i:1yhezhd.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -698,13 +751,13 @@
       "nameLabel": null
     },
     {
-      "id": "e:n:1mp1rp0.0@i:1yhezhd.0.out:0>n:jktced.0@i:10epbgg.0.in:X",
+      "id": "e:n:m1yvdu8o@i:1yhezhd.0.out:0>n:m1gsyoeo@i:10epbgg.0.in:X",
       "from": {
-        "node": "n:1mp1rp0.0@i:1yhezhd.0",
+        "node": "n:m1yvdu8o@i:1yhezhd.0",
         "port": "out:0"
       },
       "to": {
-        "node": "n:jktced.0@i:10epbgg.0",
+        "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -717,13 +770,13 @@
       "nameLabel": "hood_train"
     },
     {
-      "id": "e:n:15uvz5m.0.out:2>n:jktced.0@i:10epbgg.0.in:y",
+      "id": "e:n:15uvz5m.0.out:2>n:m1gsyoeo@i:10epbgg.0.in:y",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:2"
       },
       "to": {
-        "node": "n:jktced.0@i:10epbgg.0",
+        "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:y"
       },
       "dashed": false,
@@ -736,13 +789,13 @@
       "nameLabel": "y_train"
     },
     {
-      "id": "e:n:xc2iuq.0@i:1yhezhd.0.out:0>n:1m8oo9a.0@i:10epbgg.0.in:X",
+      "id": "e:n:m1yvdu8o@i:1yhezhd.0.out:0>n:mnnwzah@i:10epbgg.0.in:X",
       "from": {
-        "node": "n:xc2iuq.0@i:1yhezhd.0",
+        "node": "n:m1yvdu8o@i:1yhezhd.0",
         "port": "out:0"
       },
       "to": {
-        "node": "n:1m8oo9a.0@i:10epbgg.0",
+        "node": "n:mnnwzah@i:10epbgg.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -755,13 +808,13 @@
       "nameLabel": "hood_test"
     },
     {
-      "id": "e:n:15uvz5m.0.out:3>n:1m8oo9a.0@i:10epbgg.0.in:y",
+      "id": "e:n:15uvz5m.0.out:3>n:mnnwzah@i:10epbgg.0.in:y",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:3"
       },
       "to": {
-        "node": "n:1m8oo9a.0@i:10epbgg.0",
+        "node": "n:mnnwzah@i:10epbgg.0",
         "port": "in:y"
       },
       "dashed": false,
@@ -774,13 +827,13 @@
       "nameLabel": "y_test"
     },
     {
-      "id": "e:n:xc2iuq.0@i:1yhezhd.0.out:0>n:qsq8or.0@i:10epbgg.0.in:X",
+      "id": "e:n:m1yvdu8o@i:1yhezhd.0.out:0>n:mg7a9ba@i:10epbgg.0.in:X",
       "from": {
-        "node": "n:xc2iuq.0@i:1yhezhd.0",
+        "node": "n:m1yvdu8o@i:1yhezhd.0",
         "port": "out:0"
       },
       "to": {
-        "node": "n:qsq8or.0@i:10epbgg.0",
+        "node": "n:mg7a9ba@i:10epbgg.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -886,6 +939,44 @@
         }
       ],
       "nameLabel": "X_test"
+    },
+    {
+      "id": "e:n:1yhezhd.0.out:0>i:1yhezhd.0.",
+      "from": {
+        "node": "n:1yhezhd.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1yhezhd.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v8.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:10epbgg.0.out:0>i:10epbgg.0.",
+      "from": {
+        "node": "n:10epbgg.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:10epbgg.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 12,
+          "token": "v16.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

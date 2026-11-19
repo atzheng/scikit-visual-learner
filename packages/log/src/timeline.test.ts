@@ -187,8 +187,17 @@ describe('stateAt basics', () => {
     expect(stateAt(m, log, 2).visibleNodes.has(i.id)).toBe(false);
     const s3 = stateAt(m, log, 3);
     expect(s3.visibleNodes.has(i.id)).toBe(true);
-    expect(s3.visibleNodes.has(call(m, 'LinearRegression.fit').id)).toBe(false);
-    expect(stateAt(m, log, 4).visibleNodes.has(call(m, 'LinearRegression.fit').id)).toBe(true);
+    // method slots exist from the constructor step, uncalled until their first execution
+    const fitId = call(m, 'LinearRegression.fit').id;
+    expect(s3.visibleNodes.has(fitId)).toBe(true);
+    expect(s3.uncalled.has(fitId)).toBe(true);
+    expect(s3.activeExecution.has(fitId)).toBe(false);
+    expect(s3.visibleNodes.has(call(m, 'LinearRegression').id)).toBe(true);
+    const s4 = stateAt(m, log, 4);
+    expect(s4.uncalled.has(fitId)).toBe(false);
+    expect(s4.activeExecution.get(fitId)?.i).toBe(3);
+    expect(stateAt(m, log, 2).uncalled.size).toBe(0);
+    expect(stateAt(m, log, m.steps.length).uncalled.size).toBe(0);
   });
 
   test('attrsBefore/attrsAfter differ exactly in the fitted attrs', () => {
@@ -442,7 +451,7 @@ describe('review additions', () => {
     const i = inst(m);
     expect(stateAt(m, log, 2).activeVersion.has(i.id)).toBe(false);
     expect(stateAt(m, log, 3).activeVersion.get(i.id)).toBe('v4.0');
-    expect(stateAt(m, log, 3).currentNode).toBe(i.id); // constructor step
+    expect(stateAt(m, log, 3).currentNode).toBe(call(m, 'LinearRegression').id); // constructor step
     const fit = stateAt(m, log, 4);
     expect(fit.activeVersion.get(i.id)).toBe('v4.1');
     expect(fit.currentNode).toBe(call(m, 'LinearRegression.fit').id);
