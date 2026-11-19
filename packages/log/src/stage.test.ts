@@ -176,10 +176,10 @@ describe('review fixes (svl-61q.1)', () => {
   });
 
   test('shelfAt on edge_loop: one Ridge box filling up; later passes are not new boxes', () => {
+    const { g, all } = stages('edge_loop');
     const ridge = g.nodes.find(
       (x): x is InstanceNode => x.kind === 'instance' && x.className === 'Ridge',
     )!;
-    const ridge = g.nodes.find((x) => x.kind === 'instance' && x.className === 'Ridge')!;
     const ctors = all.filter((s) =>
       s.participants.some((p) => p.node === ridge.id && p.role === 'created'),
     );
