@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 import { buildGraph, keyOf } from './graph';
 import type { InstanceNode } from './graph';
-import { shelfAt, shelfOrder, stageAt } from './stage';
+import { lineStageAt, shelfAt, shelfOrder, stageAt } from './stage';
 import type { EventLog } from './types';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'logs');
@@ -242,5 +242,101 @@ describe('edge_student_fn: def and class steps and their callees (svl-jl3)', () 
     expect(lines[4]).toMatch(/ Pipeline \[callee:class Pipeline created:pipe@out:0\]/);
     expect(lines[5]).toMatch(/ Pipeline\.run \[owner:pipe /);
     expect(lines.some((l) => l.includes('callee:') && l.includes('run'))).toBe(false);
+  });
+});
+
+describe('lineStageAt: line groups (svl-qol)', () => {
+  for (const n of names) {
+    test(`${n}: groups are runs of steps on overlapping lines; calls keep their own stages`, () => {
+      const log = readLog(n);
+      const g = buildGraph(log);
+      const byI = new Map(log.events.map((e) => [e.i, e]));
+      expect(lineStageAt(g, log, 0)).toBeNull();
+      let prevFirst = 0;
+      for (let s = 1; s <= g.steps.length; s++) {
+        const ls = lineStageAt(g, log, s);
+        const st = stageAt(g, log, s);
+        expect(ls === null).toBe(st === null);
+        if (!ls || !st) continue;
+        // the last call is the step itself; earlier calls are earlier steps of the same group, in order
+        expect(ls.current).toBe(ls.calls[ls.calls.length - 1]!.stage);
+        expect(ls.calls[ls.calls.length - 1]!.current).toBe(true);
+        expect(ls.calls.filter((c) => c.current)).toHaveLength(1);
+        expect(ls.calls.map((c) => c.step)).toEqual(
+          ls.calls.map((_, k) => ls.first + k).slice(0, ls.calls.length),
+        );
+        expect(ls.first).toBeLessThanOrEqual(s);
+        expect(ls.first).toBeGreaterThanOrEqual(prevFirst);
+        prevFirst = ls.first;
+        // every call of a group lies in lines that overlap the current one's, and no box runs twice
+        const lines = ls.calls.map((c) => {
+          const site = log.sites[byI.get(g.steps[c.step - 1]!)!.site]!;
+          return [site.line, site.end_line] as const;
+        });
+        const lo = Math.min(...lines.map((l) => l[0]));
+        const hi = Math.max(...lines.map((l) => l[1]));
+        for (const [a, b] of lines) expect(a <= hi && b >= lo).toBe(true);
+        if (ls.calls.length > 1) {
+          // a box runs once in a group; a method box (shared by its call sites) may run at another site
+          const plain = ls.calls.filter((c) => {
+            const n = g.nodes.find((x) => x.id === c.stage.node);
+            return !(n?.kind === 'call' && n.parent !== null);
+          });
+          expect(new Set(plain.map((c) => c.stage.node)).size).toBe(plain.length);
+          for (const c of ls.calls) expect(['call', 'expr', 'store']).toContain(c.stage.kind);
+        }
+        // each object once, and only objects some call's own stage lists
+        expect(new Set(ls.objects.map((o) => o.key)).size).toBe(ls.objects.length);
+        const uses = ls.objects.reduce((a, o) => a + o.uses.length, 0);
+        expect(uses).toBe(ls.calls.reduce((a, c) => a + c.stage.participants.length, 0));
+        // a group is the same from any of its steps
+        const again = lineStageAt(g, log, ls.first);
+        expect(again!.calls).toHaveLength(1);
+        expect(again!.first).toBe(ls.first);
+      }
+    });
+  }
+
+  test('golden_linreg: read_csv and dropna share a line, and the chip is one object', () => {
+    const log = readLog('golden_linreg');
+    const g = buildGraph(log);
+    const name = (s: number): string => {
+      const n = g.nodes.find((x) => x.id === stageAt(g, log, s)?.node);
+      return n && n.kind === 'call' ? n.name : '';
+    };
+    const read = [...g.steps.keys()].map((k) => k + 1).find((s) => name(s) === 'read_csv')!;
+    const drop = [...g.steps.keys()].map((k) => k + 1).find((s) => name(s) === 'DataFrame.dropna')!;
+    expect(drop).toBe(read + 1);
+    const a = lineStageAt(g, log, read)!;
+    expect(a.calls).toHaveLength(1);
+    const b = lineStageAt(g, log, drop)!;
+    expect(b.first).toBe(read);
+    expect(b.calls.map((c) => c.current)).toEqual([false, true]);
+    const chip = b.objects.find((o) => o.kind === 'chip')!;
+    expect(chip.uses.map((u) => [u.call, u.role])).toEqual([
+      [0, 'output'],
+      [1, 'input'],
+    ]);
+    // the next line starts a new group
+    const next = lineStageAt(g, log, drop + 1)!;
+    expect(next.first).toBe(drop + 1);
+    expect(next.calls).toHaveLength(1);
+  });
+
+  test('loops: a second pass over the same line is a new group', () => {
+    let seen = 0;
+    for (const n of names) {
+      const log = readLog(n);
+      const g = buildGraph(log);
+      for (let s = 2; s <= g.steps.length; s++) {
+        const a = stageAt(g, log, s - 1);
+        const b = stageAt(g, log, s);
+        if (a && b && a.node === b.node) {
+          seen++;
+          expect(lineStageAt(g, log, s)!.first).toBe(s);
+        }
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
   });
 });

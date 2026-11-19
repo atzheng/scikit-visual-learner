@@ -2,13 +2,14 @@
 // creation order, no wires) and a STAGE (the current line: its call box, the objects it uses and the wires
 // between them). Framework-free. The layout of the stage is a pure function (`planStage`); `mountTwoPane`
 // builds the DOM. Each object card is one stable element that moves between its shelf slot and the stage.
-import { shelfAt, shelfOrder, stageAt, stateAt } from '@machines/log';
+import { lineStageAt, shelfAt, shelfOrder, stageAt, stateAt } from '@machines/log';
 import type {
   CallNode,
   EventLog,
   GEdge,
   GNode,
   GraphModel,
+  LineStageModel,
   ShelfEntry,
   StageModel,
   StageParticipant,
@@ -50,6 +51,8 @@ export interface PlanItem {
   participant: StageParticipant;
   /** The box of the card (without the padding around it). */
   rect: Rect;
+  /** Line groups (svl-qol): the index of the call whose participant this card shows. */
+  call?: number;
 }
 export interface PlanWire {
   /** The graph edge; null for the owner line. */
@@ -73,12 +76,18 @@ export interface StagePlan {
   items: PlanItem[];
   wires: PlanWire[];
   /** Inline scalars and literals, one text line each, beside the call box (nested: under the owner). */
-  values: { x: number; y: number; w: number; lines: string[] } | null;
+  values: { x: number; y: number; w: number; lines: string[]; call?: number } | null;
   /**
    * svl-a9e: true when the call is a method drawn inside its owner's card; `box` is then the method's box
    * inside that card (canvas coordinates) and there is no separate call box.
    */
   nested?: true;
+  /** Nested layouts: the method boxes, one per call, in call order. */
+  boxes?: Rect[];
+  /** Line groups (svl-qol, `planLine`): every call drawn, in call order; `box` is the current one's. */
+  calls?: PlanCall[];
+  /** Line groups: the inline values of every call's layout (`values` is the last). */
+  valuesAll?: NonNullable<StagePlan['values']>[];
 }
 
 /** Where the current method's box sits inside its owner's card (svl-a9e): relative to the owner's box. */
@@ -141,7 +150,7 @@ export function planStage(
 ): StagePlan {
   if (nested && !box) {
     const own = stage.participants.find((p) => p.kind === 'instance' && p.role === 'owner');
-    if (own) return planNested(stage, size, own, nested, mergedOf, log);
+    if (own) return planNested([{ stage, nested, tag: 'box' }], size, own, mergedOf, log);
   }
   const items: PlanItem[] = [];
   const wires: PlanWire[] = [];
@@ -365,64 +374,101 @@ export function planStage(
   };
 }
 
+/** A method call drawn in its owner's card (svl-a9e): its step, the method box's place, and the tag its wires use. */
+interface NestedCall {
+  stage: StageModel;
+  nested: NestedBox;
+  tag: string;
+}
+
 /**
- * The stage of a method call (svl-a9e): the owner's card stands in the middle with the method's box inside
- * it, as in the full diagram. The objects the call uses stand in a column to its left, each wired to a lane
- * on the method box's left edge; the objects it makes stand in a column to the right, wired from lanes on
- * its right edge. The wires are horizontal where they cross the owner's card, so they never run over the
- * other method boxes, and the inline values sit under the card. There is no call box and no owner line.
+ * The stage of one or more method calls on one owner (svl-a9e, svl-qol): the owner's card stands in the
+ * middle with the method boxes inside it, as in the full diagram. The objects the calls use stand in a column
+ * to its left, each wired to a lane on its call's method box's left edge; the objects they make stand in a
+ * column to the right, wired from lanes on the right edge. The wires are horizontal where they cross the
+ * owner's card, so they never run over the other method boxes, and the inline values sit under the card.
+ * There is no call box and no owner line. An object two calls use is one card with a wire per call.
  */
 function planNested(
-  stage: StageModel,
+  calls: NestedCall[],
   size: (p: StageParticipant) => Size,
   owner: StageParticipant,
-  nested: NestedBox,
   mergedOf: (p: StageParticipant) => boolean,
   log?: EventLog,
 ): StagePlan {
   const items: PlanItem[] = [];
   const wires: PlanWire[] = [];
   const sz = new Map<StageParticipant, Size>();
-  for (const p of stage.participants) sz.set(p, size(p));
-  const ins = stage.participants.filter((p) => p.role === 'input');
-  const outs = stage.participants.filter((p) => p.role === 'output' || p.role === 'created');
-  const so = sz.get(owner)!;
-  const colH = (ps: StageParticipant[]): number =>
-    ps.reduce((a, p) => a + sz.get(p)!.h, 0) + Math.max(0, ps.length - 1) * STAGE.colGap;
-  const leftW = Math.max(0, ...ins.map((p) => sz.get(p)!.w));
-  const ownerX = ins.length ? leftW + STAGE.sideGap : 0;
-  const rightX = ownerX + so.w + STAGE.sideGap;
-  const m: Rect = {
-    x: ownerX + nested.rect.x,
-    y: nested.rect.y,
-    w: nested.rect.w,
-    h: nested.rect.h,
-  };
-  const ym = m.y + m.h / 2;
+  for (const c of calls) for (const p of c.stage.participants) sz.set(p, size(p));
   const key = (p: StageParticipant): string => cardKey(p, mergedOf(p));
+  interface Entry {
+    call: number;
+    p: StageParticipant;
+    k: number;
+    n: number;
+  }
+  const entriesOf = (pick: (p: StageParticipant) => boolean): Entry[] =>
+    calls.flatMap((c, call) => {
+      const ps = c.stage.participants.filter(pick);
+      return ps.map((p, k) => ({ call, p, k, n: ps.length }));
+    });
+  const ins = entriesOf((p) => p.role === 'input');
+  const outs = entriesOf((p) => p.role === 'output' || p.role === 'created');
+  const cards = (es: Entry[]): Entry[] => {
+    const seen = new Set<string>();
+    return es.filter((e) => !seen.has(key(e.p)) && seen.add(key(e.p)));
+  };
+  const so = sz.get(owner)!;
+  const colH = (es: Entry[]): number =>
+    es.reduce((a, e) => a + sz.get(e.p)!.h, 0) + Math.max(0, es.length - 1) * STAGE.colGap;
+  const inCards = cards(ins);
+  const outCards = cards(outs);
+  const leftW = Math.max(0, ...inCards.map((e) => sz.get(e.p)!.w));
+  const ownerX = inCards.length ? leftW + STAGE.sideGap : 0;
+  const rightX = ownerX + so.w + STAGE.sideGap;
+  const ms: Rect[] = calls.map((c) => ({
+    x: ownerX + c.nested.rect.x,
+    y: c.nested.rect.y,
+    w: c.nested.rect.w,
+    h: c.nested.rect.h,
+  }));
+  const ym = (Math.min(...ms.map((m) => m.y)) + Math.max(...ms.map((m) => m.y + m.h))) / 2;
   const typeOf = (p: StageParticipant): string =>
     p.kind !== 'chip' && p.token ? wireTypeLabel(p.token, log?.values) : '';
-  // lanes on the method box's edge, spread over its height
-  const lane = (k: number, n: number): number =>
-    n === 1 ? ym : m.y + 4 + (k * (m.h - 8)) / (n - 1);
+  // lanes on a method box's edge, spread over its height
+  const lane = (m: Rect, k: number, n: number): number =>
+    n === 1 ? m.y + m.h / 2 : m.y + 4 + (k * (m.h - 8)) / (n - 1);
 
   items.push({
     key: key(owner),
     participant: owner,
     rect: { x: ownerX, y: 0, w: so.w, h: so.h },
+    call: 0,
   });
-  let y = ym - colH(ins) / 2;
-  ins.forEach((p, k) => {
-    const s = sz.get(p)!;
-    items.push({ key: key(p), participant: p, rect: { x: leftW - s.w, y, w: s.w, h: s.h } });
-    const cy = y + s.h / 2;
-    y += s.h + STAGE.colGap;
-    const xv = leftW + (STAGE.sideGap * (k + 1)) / (ins.length + 1);
-    const ly = lane(k, ins.length);
+  const place = (cs: Entry[], x: (w: number) => number): Map<string, Rect> => {
+    const at = new Map<string, Rect>();
+    let y = ym - colH(cs) / 2;
+    for (const e of cs) {
+      const s = sz.get(e.p)!;
+      const r = { x: x(s.w), y, w: s.w, h: s.h };
+      at.set(key(e.p), r);
+      items.push({ key: key(e.p), participant: e.p, rect: r, call: e.call });
+      y += s.h + STAGE.colGap;
+    }
+    return at;
+  };
+  const inAt = place(inCards, (w) => leftW - w);
+  const outAt = place(outCards, () => rightX);
+  ins.forEach((e, n) => {
+    const r = inAt.get(key(e.p))!;
+    const m = ms[e.call]!;
+    const cy = r.y + r.h / 2;
+    const xv = leftW + (STAGE.sideGap * (n + 1)) / (ins.length + 1);
+    const ly = lane(m, e.k, e.n);
     wires.push({
-      edge: p.edge,
-      from: key(p),
-      to: 'box',
+      edge: e.p.edge,
+      from: key(e.p),
+      to: calls[e.call]!.tag,
       points:
         cy === ly
           ? [
@@ -439,25 +485,23 @@ function planNested(
       label: {
         x: leftW + 5,
         y: cy - 5,
-        type: typeText(typeOf(p)),
-        name: p.kind === 'chip' ? '' : (p.param ?? ''),
+        type: typeText(typeOf(e.p)),
+        name: e.p.kind === 'chip' ? '' : (e.p.param ?? ''),
         anchor: 'start',
       },
     });
   });
-  y = ym - colH(outs) / 2;
-  outs.forEach((p, k) => {
-    const s = sz.get(p)!;
-    items.push({ key: key(p), participant: p, rect: { x: rightX, y, w: s.w, h: s.h } });
-    const cy = y + s.h / 2;
-    y += s.h + STAGE.colGap;
-    const xv = ownerX + so.w + (STAGE.sideGap * (k + 1)) / (outs.length + 1);
-    const ly = lane(k, outs.length);
+  outs.forEach((e, n) => {
+    const r = outAt.get(key(e.p))!;
+    const m = ms[e.call]!;
+    const cy = r.y + r.h / 2;
+    const xv = ownerX + so.w + (STAGE.sideGap * (n + 1)) / (outs.length + 1);
+    const ly = lane(m, e.k, e.n);
     const mr = m.x + m.w;
     wires.push({
-      edge: p.edge,
-      from: 'box',
-      to: key(p),
+      edge: e.p.edge,
+      from: calls[e.call]!.tag,
+      to: key(e.p),
       points:
         cy === ly
           ? [
@@ -474,16 +518,17 @@ function planNested(
       label: {
         x: rightX - 5,
         y: cy - 5,
-        type: typeText(typeOf(p)),
-        name: p.kind === 'chip' ? '' : (p.param ?? ''),
+        type: typeText(typeOf(e.p)),
+        name: e.p.kind === 'chip' ? '' : (e.p.param ?? ''),
         anchor: 'end',
       },
     });
   });
 
   let vals: StagePlan['values'] = null;
-  if (stage.values.length) {
-    const lines = stage.values.map(valueLine);
+  const valueRows = calls.flatMap((c) => c.stage.values);
+  if (valueRows.length) {
+    const lines = valueRows.map(valueLine);
     const w =
       Math.ceil(Math.min(VALUE_MAX_CHARS, Math.max(...lines.map((l) => l.length))) * 7.2) + 16;
     vals = { x: ownerX, y: so.h + 8, w, lines };
@@ -519,15 +564,292 @@ function planNested(
     vals.x += dx;
     vals.y += dy;
   }
+  const boxes = ms.map((m) => ({ x: m.x + dx, y: m.y + dy, w: m.w, h: m.h }));
   return {
     width: Math.ceil(maxX + dx + STAGE.margin),
     height: Math.ceil(maxY + dy + STAGE.margin),
-    box: { x: m.x + dx, y: m.y + dy, w: m.w, h: m.h },
+    box: boxes[boxes.length - 1]!,
+    boxes,
     items,
     wires,
     values: vals,
     nested: true,
   };
+}
+
+/** One call of a line group on the stage (svl-qol). */
+export interface PlanCall {
+  /** Index into the group's calls. */
+  call: number;
+  node: string;
+  /** The call's box: its own card, or for a method the box inside its owner's card. */
+  rect: Rect;
+  nested: boolean;
+  current: boolean;
+}
+
+/** Vertical space between the layouts of two calls that do not share a card (px); wires jog across it. */
+const BAND_GAP = 64;
+
+/**
+ * The stage of a line group (svl-qol): every call of the line that has run so far. Each call is laid out as
+ * `planStage` lays out a single call (a call box with its objects above and below, or a method inside its
+ * owner's card; consecutive methods of one owner share that card) and the layouts are stacked top to bottom in
+ * call order. An object that two calls use is drawn once, where it first appears (an owner that hosts method
+ * boxes: in its own layout, wired from the call that made it); every other use is wired to that one card by a
+ * wire that drops through the gap between the layouts, so one call's output reaches the next call's port. A
+ * wire exists only for an edge a call's own stage reported. Null when the line cannot be drawn this way (an
+ * owner that an earlier call already uses as an input cannot also host a method later): the caller then
+ * draws the current call alone.
+ */
+export function planLine(
+  line: LineStageModel,
+  size: (p: StageParticipant) => Size,
+  boxOf: (stage: StageModel) => BoxSize | null,
+  nestedOf: (stage: StageModel) => NestedBox | null,
+  mergedOf: (p: StageParticipant) => boolean,
+  log?: EventLog,
+): StagePlan | null {
+  interface Band {
+    nested: boolean;
+    calls: number[];
+    plan: StagePlan;
+    top: number;
+  }
+  const bands: Band[] = [];
+  const ownerOf = (st: StageModel): StageParticipant | undefined =>
+    st.participants.find((p) => p.kind === 'instance' && p.role === 'owner');
+  // 1. group the calls into bands. A method is drawn inside its owner's card only where that card is
+  // drawn for it: when the owner is not yet on the stage, or only as the product of an earlier call, or the
+  // previous band is the same owner's. An owner that an earlier call already uses as an input keeps its card
+  // there, and the method gets a call box of its own with the owner wired to it.
+  const used = new Set<string>(); // objects an earlier call used other than as its product
+  const cardOf = (p: StageParticipant): string => cardKey(p, mergedOf(p));
+  const groups: { nested: boolean; calls: number[] }[] = [];
+  line.calls.forEach((c, k) => {
+    const n = nestedOf(c.stage);
+    const own = n ? ownerOf(c.stage) : undefined;
+    const last = groups[groups.length - 1];
+    const lastOwner = last?.nested ? ownerOf(line.calls[last.calls[0]!]!.stage) : undefined;
+    if (n && own && last?.nested && lastOwner && cardOf(lastOwner) === cardOf(own))
+      last.calls.push(k);
+    else
+      groups.push({
+        nested: n !== null && own !== undefined && !used.has(cardOf(own)),
+        calls: [k],
+      });
+    for (const p of c.stage.participants)
+      if (p.role !== 'output' && p.role !== 'created') used.add(cardOf(p));
+  });
+  // 2. lay each band out
+  for (const g of groups) {
+    const stages = g.calls.map((k) => line.calls[k]!.stage);
+    let plan: StagePlan;
+    if (g.nested) {
+      plan = planNested(
+        stages.map((stage, j) => ({
+          stage,
+          nested: nestedOf(stage)!,
+          tag: `box#${g.calls[j]}`,
+        })),
+        size,
+        ownerOf(stages[0]!)!,
+        mergedOf,
+        log,
+      );
+      for (const it of plan.items) it.call = g.calls[it.call ?? 0];
+    } else {
+      const stage = stages[0]!;
+      plan = planStage(stage, size, boxOf(stage), mergedOf, log);
+      const tag = `box#${g.calls[0]}`;
+      for (const w of plan.wires) {
+        if (w.from === 'box') w.from = tag;
+        if (w.to === 'box') w.to = tag;
+      }
+      for (const it of plan.items) it.call = g.calls[0];
+    }
+    bands.push({ nested: g.nested, calls: g.calls, plan, top: 0 });
+  }
+  // 3. stack them
+  const M = STAGE.margin;
+  let top = 0;
+  for (const b of bands) {
+    b.top = top;
+    top += b.plan.height - 2 * M + BAND_GAP;
+    const p = b.plan;
+    const dy = b.top;
+    for (const it of p.items) it.rect.y += dy;
+    for (const w of p.wires) {
+      w.points = w.points.map(([a, c]) => [a, c + dy] as [number, number]);
+      if (w.label) w.label.y += dy;
+    }
+    if (p.values) p.values.y += dy;
+    if (p.box) p.box = { ...p.box, y: p.box.y + dy };
+    if (p.boxes) p.boxes = p.boxes.map((r) => ({ ...r, y: r.y + dy }));
+  }
+  const gapMid = (band: number): number => bands[band]!.top + M - BAND_GAP / 2;
+  // 4. one card per object
+  const occ = new Map<string, { band: number; item: PlanItem }[]>();
+  bands.forEach((b, bi) => {
+    for (const it of b.plan.items) {
+      const l = occ.get(it.key);
+      if (l) l.push({ band: bi, item: it });
+      else occ.set(it.key, [{ band: bi, item: it }]);
+    }
+  });
+  const jogs = new Map<number, number>();
+  const nextJog = (y: number, band: number): number => {
+    const n = jogs.get(band) ?? 0;
+    jogs.set(band, n + 1);
+    return y - 12 + n * 8;
+  };
+  // A wire to a card that is drawn elsewhere runs through a gutter beside the stack, never over a card:
+  // out of the home card's side, along a lane to the gap above (or below) the layout, and in.
+  interface Job {
+    kind: 'in' | 'out';
+    wire: PlanWire;
+    home: PlanItem;
+    gap: number; // y of the horizontal run in the gap
+    side: 'L' | 'R';
+    ey: number;
+  }
+  const jobs: Job[] = [];
+  for (const list of occ.values()) {
+    if (list.length < 2) continue;
+    const hosts = list.filter(
+      (o) =>
+        bands[o.band]!.nested &&
+        o.item.participant.role === 'owner' &&
+        o.item.participant.kind === 'instance',
+    );
+    if (new Set(hosts.map((h) => h.band)).size > 1) return null;
+    const home = hosts[0] ?? list[0]!;
+    for (const o of list) {
+      if (o === home) continue;
+      const p = o.item.participant;
+      if (o.band < home.band && p.role !== 'output' && p.role !== 'created') return null;
+      const band = bands[o.band]!.plan;
+      band.items.splice(band.items.indexOf(o.item), 1);
+      const below = home.band > o.band;
+      const gap = below ? gapMid(o.band + 1) : nextJog(gapMid(o.band), o.band);
+      band.wires = band.wires.filter((w) => {
+        // a wire the later call has to an object drawn above (or the earlier call from one drawn below) is not drawn
+        if (below ? w.from === o.item.key : w.to === o.item.key) return false;
+        if (below ? w.to === o.item.key : w.from === o.item.key)
+          jobs.push({
+            kind: below ? 'out' : 'in',
+            wire: w,
+            home: home.item,
+            gap,
+            side: 'L',
+            ey: 0,
+          });
+        return true;
+      });
+    }
+  }
+  // the cards and boxes a wire must not cross
+  const obstacles = (): Rect[] => [
+    ...bands.flatMap((b) => b.plan.items.map((i) => i.rect)),
+    ...bands.flatMap((b) => (b.nested ? [] : b.plan.box ? [b.plan.box] : [])),
+  ];
+  const obs = obstacles();
+  const clear = (side: 'L' | 'R', y: number, home: Rect): boolean =>
+    !obs.some(
+      (r) =>
+        r !== home &&
+        r.y - 4 < y &&
+        y < r.y + r.h + 4 &&
+        (side === 'L' ? r.x < home.x : r.x + r.w > home.x + home.w),
+    );
+  for (const j of jobs) {
+    const hr = j.home.rect;
+    const tries: ['L' | 'R', number][] = [];
+    for (const y of [hr.y + hr.h / 2, hr.y + 10, hr.y + hr.h - 10]) tries.push(['L', y], ['R', y]);
+    const pick = tries.find(([sd, y]) => clear(sd, y, hr)) ?? tries[0]!;
+    j.side = pick[0];
+    j.ey = pick[1];
+  }
+  const laneStep = 8;
+  const nL = jobs.filter((j) => j.side === 'L').length;
+  const nR = jobs.length - nL;
+  const gl = nL ? 12 + laneStep * nL : 0;
+  const right = Math.max(...bands.map((b) => b.plan.width));
+  // make room for the gutters: everything moves right by the left one
+  if (gl)
+    for (const b of bands) {
+      const p = b.plan;
+      for (const it of p.items) it.rect.x += gl;
+      for (const w of p.wires) {
+        w.points = w.points.map(([a, c]) => [a + gl, c] as [number, number]);
+        if (w.label) w.label.x += gl;
+      }
+      if (p.values) p.values.x += gl;
+      if (p.box) p.box = { ...p.box, x: p.box.x + gl };
+      if (p.boxes) p.boxes = p.boxes.map((r) => ({ ...r, x: r.x + gl }));
+    }
+  let iL = 0;
+  let iR = 0;
+  for (const j of jobs) {
+    const hr = j.home.rect;
+    const lx = j.side === 'L' ? 6 + laneStep * iL++ : right + gl + 10 + laneStep * iR++;
+    const hx = j.side === 'L' ? hr.x : hr.x + hr.w;
+    const w = j.wire;
+    if (j.kind === 'in') {
+      // drop beside the slot's first segment, in the empty space the moved card left
+      const p0 = w.points[0]!;
+      const p1 = w.points[1] ?? p0;
+      const dx = p0[1] === p1[1] && p0[0] !== p1[0] ? (p0[0] + p1[0]) / 2 : p0[0];
+      w.points = [
+        [hx, j.ey],
+        [lx, j.ey],
+        [lx, j.gap],
+        [dx, j.gap],
+        [dx, p0[1]],
+        ...w.points.slice(1),
+      ];
+    } else {
+      const pl = w.points[w.points.length - 1]!;
+      w.points = [...w.points, [pl[0], j.gap], [lx, j.gap], [lx, j.ey], [hx, j.ey]];
+    }
+    if (w.from !== j.home.key && j.kind === 'in') w.from = j.home.key;
+    if (j.kind === 'out') w.to = j.home.key;
+  }
+  const gr = nR ? 12 + laneStep * nR : 0;
+  const extraW = gl + gr;
+  // 5. the result
+  const items = bands.flatMap((b) => b.plan.items);
+  const wires = bands.flatMap((b) => b.plan.wires);
+  const planCalls: PlanCall[] = [];
+  const last = line.calls.length - 1;
+  for (const b of bands)
+    b.calls.forEach((k, j) => {
+      const rect = b.nested ? b.plan.boxes?.[j] : b.plan.box;
+      if (rect)
+        planCalls.push({
+          call: k,
+          node: line.calls[k]!.stage.node,
+          rect,
+          nested: b.nested,
+          current: k === last,
+        });
+    });
+  const valuesAll = bands.flatMap((b) =>
+    b.plan.values ? [{ ...b.plan.values, call: b.calls[0] }] : [],
+  );
+  const cur = planCalls.find((c) => c.current) ?? null;
+  const p: StagePlan = {
+    width: Math.max(...bands.map((b) => b.plan.width)) + extraW,
+    height: top - BAND_GAP + 2 * M,
+    box: cur ? cur.rect : null,
+    items,
+    wires,
+    values: valuesAll[valuesAll.length - 1] ?? null,
+    valuesAll,
+    calls: planCalls,
+  };
+  if (cur?.nested) p.nested = true;
+  return p;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -757,8 +1079,6 @@ export async function mountTwoPane(
     'md-diagram md-stage-wires',
   );
   const valuesEl = el(doc, 'div', 'md-stage-values');
-  valuesEl.setAttribute('role', 'list');
-  valuesEl.setAttribute('aria-label', 'Values');
   canvas.append(wiresSvg, valuesEl);
   stageSec.append(stageNotes, stageEmpty, canvas);
   const shelfSec = el(doc, 'section', 'md-shelf-sec');
@@ -867,7 +1187,9 @@ export async function mountTwoPane(
   const markerId = `md-arrow-tp-${uid++}`;
   let current = 0;
   let plan: StagePlan | null = null;
-  let curBox: Card | null = null;
+  // the call boxes drawn as cards of their own (not the methods inside an owner's card), by card, with their rect
+  let boxCards = new Map<Card, Rect>();
+  let lineNow: LineStageModel | null = null;
   let onStage = new Map<string, { card: Card | null; item: PlanItem }>();
   let destroyed = false;
 
@@ -1005,6 +1327,8 @@ export async function mountTwoPane(
     current = Number.isNaN(step) ? 0 : Math.max(0, Math.min(total, Math.trunc(step)));
     const st = stateAt(model, log, current);
     const stage = stageAt(model, log, current);
+    const line = lineStageAt(model, log, current);
+    lineNow = line;
     const onShelf = new Map(shelfAt(model, current).map((s) => [s.node, s]));
     const active = doc.activeElement;
     const hadFocus = active !== null && root.contains(active);
@@ -1013,26 +1337,44 @@ export async function mountTwoPane(
     plan = null;
     onStage = new Map();
     if (stage) {
-      const boxNode = stage.kind === 'call' || stage.kind === 'expr' || stage.kind === 'store';
       const merged = (p: StageParticipant): boolean =>
         p.kind !== 'chip' && (entryOf.get(p.node)?.objects ?? 0) > 1;
-      const inner = nestedFor(stage);
-      plan = planStage(
-        stage,
-        (p) => (p.kind === 'chip' ? chipSize(p) : visualSize(p.node)),
-        !inner && boxNode && laid.nodes[stage.node] ? boxSize(stage.node) : null,
-        merged,
-        log,
-        inner,
-      );
+      const sizeOf = (p: StageParticipant): Size =>
+        p.kind === 'chip' ? chipSize(p) : visualSize(p.node);
+      const boxOf = (sg: StageModel): BoxSize | null =>
+        (sg.kind === 'call' || sg.kind === 'expr' || sg.kind === 'store') && laid.nodes[sg.node]
+          ? boxSize(sg.node)
+          : null;
+      // svl-qol: every call of the line that has run stays; a line of one call is laid out as before
+      if (line && line.calls.length > 1)
+        plan = planLine(line, sizeOf, boxOf, (sg) => nestedFor(sg), merged, log);
+      if (!plan) {
+        const inner = nestedFor(stage);
+        plan = planStage(stage, sizeOf, inner ? null : boxOf(stage), merged, log, inner);
+      }
       for (const it of plan.items)
         onStage.set(it.key, { card: stageCardOf(it.participant), item: it });
     }
     // a method drawn inside its owner's card has no card of its own
-    const boxCard =
-      plan?.box && !plan.nested && stage ? makeCard(stage.node, stage.node, null) : null;
-    canvas.classList.toggle('md-nested', plan?.nested === true);
-    curBox = boxCard;
+    boxCards = new Map();
+    if (plan && stage) {
+      if (plan.calls) {
+        for (const pc of plan.calls)
+          if (!pc.nested) boxCards.set(makeCard(pc.node, pc.node, null), pc.rect);
+      } else if (plan.box && !plan.nested)
+        boxCards.set(makeCard(stage.node, stage.node, null), plan.box);
+    }
+    canvas.classList.toggle(
+      'md-nested',
+      plan?.nested === true || plan?.calls?.some((c) => c.nested) === true,
+    );
+    /** The call that made a nested method box show (for its accessible name): the group's, else the step's. */
+    const callOf = new Map<string, { stage: StageModel; current: boolean }>();
+    if (line && plan?.calls)
+      for (const pc of plan.calls)
+        if (pc.nested)
+          callOf.set(pc.node, { stage: line.calls[pc.call]!.stage, current: pc.current });
+    if (stage && plan?.nested && !plan.calls) callOf.set(stage.node, { stage, current: true });
 
     // 2. put every element where it belongs
     for (const slot of slots.values()) {
@@ -1070,10 +1412,10 @@ export async function mountTwoPane(
       wrap.classList.add('md-on-stage');
       place(wrap, s.item.rect, s.card !== null);
     }
-    if (boxCard) canvas.append(boxCard.wrap);
-    if (boxCard && plan?.box) {
-      boxCard.wrap.classList.add('md-on-stage');
-      place(boxCard.wrap, plan.box, true);
+    for (const [bc, rect] of boxCards) {
+      canvas.append(bc.wrap);
+      bc.wrap.classList.add('md-on-stage');
+      place(bc.wrap, rect, true);
     }
 
     // 3. wires, values, notes
@@ -1087,20 +1429,30 @@ export async function mountTwoPane(
     const stageIds = new Set<string>();
     if (stage) {
       for (const s of onStage.values()) if (s.card) stageIds.add(s.card.node);
-      if (boxCard) stageIds.add(stage.node);
+      for (const bc of boxCards.keys()) stageIds.add(bc.node);
     }
     const owns = new Set<string>();
     for (const p of stage?.participants ?? [])
       if (p.changed && p.kind === 'instance') owns.add(p.node);
     for (const c of cards.values()) {
       const stageCard = [...onStage.values()].find((s) => s.card === c);
-      const isBox = c === boxCard && !stageCard;
+      const isBox = boxCards.has(c) && !stageCard;
       const visible = new Set<string>();
       let objectBadge = new Map<string, { k: number; n: number }>();
       const versionOf = new Map<string, Token>();
       if (stageCard) {
         visible.add(c.node);
-        const p = stageCard.item.participant;
+        // the version after the line's latest call that used the object
+        let p = stageCard.item.participant;
+        for (const lc of line?.calls ?? [])
+          for (const q of lc.stage.participants)
+            if (
+              q.kind === 'instance' &&
+              q.node === p.node &&
+              q.object === p.object &&
+              (q.after ?? q.token)
+            )
+              p = q;
         const tok = p.after ?? p.token;
         if (tok) versionOf.set(c.node, tok);
         if (p.objectOf) objectBadge = new Map([[c.node, p.objectOf]]);
@@ -1114,29 +1466,38 @@ export async function mountTwoPane(
           if (st.visibleNodes.has(k.id)) visible.add(k.id);
       const state: StepState = { ...st, visibleNodes: visible, objectBadge };
       c.ctl?.setState(state, log, { owns, versionOf });
+      // a method drawn as a call box of its own (the fallback of a line, or a method whose owner is not on the
+      // stage) is the current call there: its box inside the owner's card is shown as called, not current
+      for (const bc of boxCards.keys()) {
+        if (bc === c) continue;
+        for (const g of c.wrap.querySelectorAll(`.md-node[data-node="${bc.node}"]`)) {
+          g.classList.remove('md-current');
+          g.removeAttribute('aria-current');
+          for (const e of g.querySelectorAll('.md-current')) e.classList.remove('md-current');
+          const l = g.getAttribute('aria-label');
+          if (l) g.setAttribute('aria-label', l.replace(/, current step$/, ''));
+        }
+      }
       c.wrap.hidden = visible.size === 0;
       // unique accessible names: what the card is and what it does on this line (the wires are not read out)
       const g = focusOf(c.wrap);
       if (g && !c.wrap.hidden) {
-        const suffix = stageCard
-          ? roleSuffix(stageCard.item.participant, stage)
-          : isBox
-            ? 'current line'
-            : 'on the shelf';
+        const suffix = stageCard ? suffixOf(stageCard.item) : isBox ? boxSuffix(c) : 'on the shelf';
         const base = g.getAttribute('aria-label') ?? '';
         g.setAttribute('aria-label', `${base}, ${suffix}`);
         // a method box names the instance it belongs to (two cards can both have a `fit`)
         for (const m of innerMethods(c.wrap)) {
           let label = m.getAttribute('aria-label') ?? '';
-          if (plan?.nested && stageCard && m.getAttribute('data-node') === stage?.node) {
-            // the method of this line: what it was given, as the call box used to say
+          const call = stageCard ? callOf.get(m.getAttribute('data-node') ?? '') : undefined;
+          if (call) {
+            // a method of this line: what it was given, as the call box used to say
             const given = [
-              ...stage.participants.filter((q) => q.role === 'input').map((q) => q.param),
-              ...stage.values.filter((v) => v.role === 'input').map((v) => v.param),
+              ...call.stage.participants.filter((q) => q.role === 'input').map((q) => q.param),
+              ...call.stage.values.filter((v) => v.role === 'input').map((v) => v.param),
             ].filter((x): x is string => !!x);
             label =
               label.replace(/, current step$/, '') +
-              ', current call' +
+              (call.current ? ', current call' : ', earlier call on this line') +
               (given.length ? `, inputs ${given.join(', ')}` : '');
           }
           m.setAttribute('aria-label', `${label}, in ${base}`);
@@ -1151,7 +1512,7 @@ export async function mountTwoPane(
       if (it && !chip.hidden)
         chip.setAttribute(
           'aria-label',
-          `${chip.getAttribute('aria-label') ?? ''}, ${roleSuffix(it.item.participant, stage)}`,
+          `${chip.getAttribute('aria-label') ?? ''}, ${suffixOf(it.item)}`,
         );
     }
     rove();
@@ -1247,6 +1608,24 @@ export async function mountTwoPane(
     return true;
   };
 
+  /** The stage of the call whose participant a card shows (the current step's, for a single call). */
+  function stageOf(it: PlanItem): StageModel | null {
+    const c = it.call !== undefined ? lineNow?.calls[it.call] : undefined;
+    return c ? c.stage : stageAt(model, log, current);
+  }
+  /** A call box's role: the line's current call, or an earlier call of the same line. */
+  function boxSuffix(c: Card): string {
+    const n = lineNow?.calls.length ?? 1;
+    if (n < 2) return 'current line';
+    const k = lineNow!.calls.findIndex((lc) => lc.stage.node === c.node);
+    return k === n - 1 ? 'current call' : `earlier call ${k + 1} of ${n} on this line`;
+  }
+  /** A card's role on the stage; in a line of several calls also which call it belongs to (names must differ). */
+  function suffixOf(it: PlanItem): string {
+    const n = lineNow?.calls.length ?? 1;
+    const base = roleSuffix(it.participant, stageOf(it));
+    return n > 1 && it.call !== undefined ? `${base}, call ${it.call + 1} of ${n}` : base;
+  }
   function roleSuffix(p: StageParticipant, stage: StageModel | null): string {
     const n = stage ? byId.get(stage.node) : undefined;
     const what =
@@ -1294,7 +1673,7 @@ export async function mountTwoPane(
       };
       by((p) => p.role === 'input');
       by((p) => p.role === 'owner' || p.role === 'callee');
-      if (curBox) add(curBox.wrap);
+      for (const bc of boxCards.keys()) add(bc.wrap);
       by((p) => p.role === 'output' || p.role === 'created');
     }
     return out;
@@ -1433,16 +1812,27 @@ export async function mountTwoPane(
 
   function drawValues(stage: StageModel | null): void {
     valuesEl.replaceChildren();
-    valuesEl.hidden = !(plan?.values && stage);
-    if (!plan?.values) return;
-    valuesEl.style.left = `${plan.values.x}px`;
-    valuesEl.style.top = `${plan.values.y}px`;
-    valuesEl.style.width = `${plan.values.w}px`;
-    for (const l of plan.values.lines) {
-      const row = el(doc, 'div', 'md-stage-value', l);
-      row.title = l;
-      row.setAttribute('role', 'listitem');
-      valuesEl.append(row);
+    const blocks = plan?.valuesAll ?? (plan?.values ? [plan.values] : []);
+    valuesEl.hidden = !(blocks.length > 0 && stage);
+    for (const b of blocks) {
+      const blk = el(doc, 'div', 'md-stage-values-block');
+      blk.setAttribute('role', 'list');
+      blk.setAttribute(
+        'aria-label',
+        b.call !== undefined && lineNow
+          ? `Values, call ${b.call + 1} of ${lineNow.calls.length}`
+          : 'Values',
+      );
+      blk.style.left = `${b.x}px`;
+      blk.style.top = `${b.y}px`;
+      blk.style.width = `${b.w}px`;
+      for (const l of b.lines) {
+        const row = el(doc, 'div', 'md-stage-value', l);
+        row.title = l;
+        row.setAttribute('role', 'listitem');
+        blk.append(row);
+      }
+      valuesEl.append(blk);
     }
   }
 
@@ -1505,7 +1895,8 @@ export async function mountTwoPane(
       for (const c of cards.values()) {
         const entry = slots.get(c.node);
         const st = onStage.get(c.key);
-        const isBox = c === curBox && !st && plan?.box != null;
+        const boxRect = boxCards.get(c);
+        const isBox = boxRect !== undefined && !st;
         const where: CardInfo['where'] =
           c.wrap.closest('[hidden]') || !c.wrap.isConnected
             ? 'hidden'
@@ -1523,7 +1914,7 @@ export async function mountTwoPane(
               : relTo(target.getBoundingClientRect(), base);
         }
         let stageRect: Rect | null = null;
-        const r = st ? st.item.rect : isBox ? plan!.box : null;
+        const r = st ? st.item.rect : isBox ? boxRect : null;
         if (r && where === 'stage')
           stageRect = {
             x: canvasAt.left - base.left + r.x - CARD_PAD.l,
