@@ -663,6 +663,9 @@ function nodeLabel(n: GNode, module?: string): string {
     case 'call':
       // a constructor is an ordinary function call (svl-1x4)
       if (n.parent) return `method ${n.name}`;
+      // a method on a folded temporary (`read_csv(..).dropna()`) has no owner box, so no parent;
+      // its executions still record an owner, which marks it as a method
+      if (n.executions.some((x) => x.owner !== null)) return `method ${n.name}`;
       return module === undefined ? `function ${n.name}` : `function ${n.name} from ${module}`;
     case 'instance':
       return `object ${instanceTitle(n)}`;
