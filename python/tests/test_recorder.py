@@ -351,7 +351,7 @@ s = str(t)
     )
     assert r.err is None
     # `str(t)` is a hidden call (an expression event); nothing from inside __repr__ appears
-    assert [(e["name"], e["kind"]) for e in r.events] == [
+    assert [(e["name"], e["kind"]) for e in r.events if e["kind"] != "import"] == [
         ("DataFrame", "constructor"),
         ("T", "constructor"),
         ("str(t)", "expr"),
@@ -450,7 +450,7 @@ for k in range(5):
     n = len([k])
 x = np.array([1])
 """,
-        max_events=3,
+        max_events=7,  # the four prelude imports count, the hidden `len` calls do not
     )
     assert r.rec.limit_hit is False
     assert [e["name"] for e in r.events][-1] == "array"
@@ -1040,7 +1040,7 @@ def test_open_stack_and_callbacks_and_time_flush(monkeypatch: pytest.MonkeyPatch
     finally:
         rec.close_open(None)
         rec.uninstall()
-    assert [e for e, _ in entered] == [0, 1] and exited == [0, 1]
+    assert [e for e, _ in entered] == [1, 2] and exited == [1, 2]  # event 0 is the import step
     assert len(msgs) >= 3  # flush at (almost) every hook entry with this clock, plus the close
     assert any(m["open"] for m in msgs)  # a started call shows in the open stack
     assert msgs[-1]["open"] == []
@@ -1048,7 +1048,7 @@ def test_open_stack_and_callbacks_and_time_flush(monkeypatch: pytest.MonkeyPatch
     assert msgs[0]["type"] == "batch"
     assert set(msgs[0]) == {"type", "events", "open", "values", "bindings", "output", "diagnostics"}
     a = assemble(msgs, ins.sites)
-    assert [e["name"] for e in a["events"]] == ["array", "sum"]
+    assert [e["name"] for e in a["events"]] == ["import numpy as np", "array", "sum"]
 
 
 def test_output_entries_flow_through_batches() -> None:

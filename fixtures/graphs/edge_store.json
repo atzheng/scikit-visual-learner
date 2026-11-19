@@ -4,10 +4,22 @@
       "id": "m:6w14qy.0.lg6rbl",
       "kind": "import",
       "parent": null,
-      "order": 299999.75,
+      "order": 300000,
       "name": "pd",
       "source": "pandas",
-      "site": 9
+      "site": 9,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "n:wcu5tk.0",
@@ -19,8 +31,8 @@
       "order": 500005,
       "executions": [
         {
-          "i": 0,
-          "ret": 0,
+          "i": 1,
+          "ret": 1,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0"
@@ -48,7 +60,8 @@
           "nameLabel": "df"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "pandas"
     },
     {
       "id": "i:wcu5tk.0",
@@ -57,22 +70,22 @@
       "order": 500005,
       "className": "DF",
       "varName": "df",
-      "createdAt": 0,
+      "createdAt": 1,
       "createdBy": "n:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 0,
+          "i": 1,
           "token": "v0.0",
           "kind": "new"
         },
         {
-          "i": 1,
+          "i": 2,
           "token": "v0.1",
           "kind": "store"
         },
         {
-          "i": 4,
+          "i": 5,
           "token": "v0.2",
           "kind": "store"
         }
@@ -86,8 +99,8 @@
       "text": "df[\"price_per_sqft\"] = df[\"price\"] / df[\"sqft\"]",
       "executions": [
         {
-          "i": 1,
-          "ret": 1,
+          "i": 2,
+          "ret": 2,
           "inputs": {
             "in:target": "v0.0",
             "in:value[df]": "v0.0"
@@ -110,8 +123,8 @@
       "text": "df[\"sqft\"]",
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 3,
+          "ret": 3,
           "inputs": {
             "in:df": "v0.1"
           },
@@ -135,8 +148,8 @@
       "order": 700007,
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 4,
+          "ret": 4,
           "inputs": {
             "in:self": "v1.0"
           },
@@ -174,12 +187,12 @@
       "order": 700007,
       "className": "Series",
       "varName": "mask",
-      "createdAt": 3,
+      "createdAt": 4,
       "createdBy": "n:m1km1vrn@i:1daqhqx.0~u7kfkb",
       "params": [],
       "versions": [
         {
-          "i": 3,
+          "i": 4,
           "token": "v2.0",
           "kind": "new"
         }
@@ -193,8 +206,8 @@
       "text": "df.loc[mask, \"price_per_sqft\"] = 0",
       "executions": [
         {
-          "i": 4,
-          "ret": 4,
+          "i": 5,
+          "ret": 5,
           "inputs": {
             "in:target": "v0.1",
             "in:index[mask]": "v2.0"
@@ -217,8 +230,8 @@
       "text": "df[\"price_per_sqft\"]",
       "executions": [
         {
-          "i": 5,
-          "ret": 5,
+          "i": 6,
+          "ret": 6,
           "inputs": {
             "in:df": "v0.2"
           },
@@ -242,8 +255,8 @@
       "order": 900006,
       "executions": [
         {
-          "i": 6,
-          "ret": 6,
+          "i": 7,
+          "ret": 7,
           "inputs": {
             "in:self": "v3.0"
           },
@@ -291,8 +304,8 @@
       "order": 900006,
       "executions": [
         {
-          "i": 7,
-          "ret": 7,
+          "i": 8,
+          "ret": 8,
           "inputs": {
             "in:self": "v4.0"
           },
@@ -330,12 +343,12 @@
       "order": 900006,
       "className": "Series",
       "varName": null,
-      "createdAt": 7,
+      "createdAt": 8,
       "createdBy": "n:m1y9r6d0@i:81hs4t.0",
       "params": [],
       "versions": [
         {
-          "i": 7,
+          "i": 8,
           "token": "v5.0",
           "kind": "new"
         }
@@ -343,26 +356,6 @@
     }
   ],
   "edges": [
-    {
-      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
-      "from": {
-        "node": "m:6w14qy.0.lg6rbl",
-        "port": null
-      },
-      "to": {
-        "node": "n:wcu5tk.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
     {
       "id": "f:i:1daqhqx.0~u7kfkb",
       "from": {
@@ -376,7 +369,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 3,
+          "i": 4,
           "token": "v1.0"
         }
       ],
@@ -403,7 +396,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 6,
+          "i": 7,
           "token": "v3.0"
         }
       ],
@@ -430,7 +423,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 7,
+          "i": 8,
           "token": "v4.0"
         }
       ],
@@ -457,11 +450,11 @@
       "dashed": false,
       "uses": [
         {
-          "i": 1,
+          "i": 2,
           "token": "v0.0"
         },
         {
-          "i": 1,
+          "i": 2,
           "token": "v0.0"
         }
       ],
@@ -480,7 +473,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 3,
           "token": "v0.1"
         }
       ],
@@ -499,7 +492,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 5,
           "token": "v0.1"
         }
       ],
@@ -518,7 +511,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 5,
           "token": "v2.0"
         }
       ],
@@ -537,7 +530,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 5,
+          "i": 6,
           "token": "v0.2"
         }
       ],
@@ -556,7 +549,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 0,
+          "i": 1,
           "token": "v0.0"
         }
       ],
@@ -575,7 +568,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 3,
+          "i": 4,
           "token": "v2.0"
         }
       ],
@@ -594,7 +587,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 7,
+          "i": 8,
           "token": "v5.0"
         }
       ],
@@ -609,7 +602,8 @@
     4,
     5,
     6,
-    7
+    7,
+    8
   ],
   "folded": 3
 }

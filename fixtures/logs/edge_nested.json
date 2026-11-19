@@ -6,6 +6,23 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s11",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 11
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +39,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 1,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -30,7 +47,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 2,
       "inputs": [
         {
           "origin": "name",
@@ -47,7 +64,7 @@
         "v1.0"
       ],
       "owner": "v0.0",
-      "ret": 1,
+      "ret": 2,
       "returns_self": false,
       "scope": 0,
       "site": 2
@@ -55,7 +72,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 3,
       "inputs": [
         {
           "origin": "expr",
@@ -77,7 +94,7 @@
         "v2.0"
       ],
       "owner": "v1.0",
-      "ret": 2,
+      "ret": 3,
       "returns_self": false,
       "scope": 0,
       "site": 3
@@ -85,7 +102,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 4,
       "inputs": [
         {
           "origin": "call",
@@ -102,7 +119,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 4
@@ -110,7 +127,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 5,
       "inputs": [
         {
           "origin": "name",
@@ -127,7 +144,7 @@
         "v4.0"
       ],
       "owner": "v0.0",
-      "ret": 4,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -135,7 +152,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 5,
+      "i": 6,
       "inputs": [
         {
           "origin": "expr",
@@ -157,7 +174,7 @@
         "v5.0"
       ],
       "owner": "v4.0",
-      "ret": 5,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 7
@@ -165,7 +182,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 6,
+      "i": 7,
       "inputs": [
         {
           "origin": "name",
@@ -182,7 +199,7 @@
         "s0"
       ],
       "owner": null,
-      "ret": 6,
+      "ret": 7,
       "returns_self": false,
       "scope": 0,
       "site": 8
@@ -190,7 +207,7 @@
   ],
   "output": [
     {
-      "i": 6,
+      "i": 7,
       "stream": "stdout",
       "text": "(8, 5) 10\n"
     }
@@ -199,17 +216,17 @@
     {
       "bindings": [
         [
-          0,
+          1,
           "df",
           "v0.0"
         ],
         [
-          3,
+          4,
           "summary",
           "v3.0"
         ],
         [
-          6,
+          7,
           "n",
           "s0"
         ]

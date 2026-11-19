@@ -34,8 +34,12 @@ def _ret(site: int, value: Any, /) -> Any:
     return value
 
 
+def _imp(site: int, /) -> None:
+    return None
+
+
 PASSTHROUGH_HOOKS: dict[str, Callable[..., Any]] = dict(
-    zip(HOOK_NAMES, (_rec, _bind, _store, _scope, _ret), strict=True)
+    zip(HOOK_NAMES, (_rec, _bind, _store, _scope, _ret, _imp), strict=True)
 )
 
 

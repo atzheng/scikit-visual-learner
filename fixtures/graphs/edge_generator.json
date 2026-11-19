@@ -1,13 +1,46 @@
 {
   "nodes": [
     {
+      "id": "m:13u55ad.0.1auz1hj",
+      "kind": "import",
+      "parent": null,
+      "order": 300000,
+      "name": "asyncio",
+      "source": null,
+      "site": 10,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
       "id": "m:6w14qy.0.lg6rbl",
       "kind": "import",
       "parent": null,
-      "order": 499999.75,
+      "order": 500000,
       "name": "pd",
       "source": "pandas",
-      "site": 11
+      "site": 11,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "n:wcu5tk.0",
@@ -19,8 +52,8 @@
       "order": 1800005,
       "executions": [
         {
-          "i": 0,
-          "ret": 0,
+          "i": 2,
+          "ret": 2,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0"
@@ -48,7 +81,8 @@
           "nameLabel": "df"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "pandas"
     },
     {
       "id": "i:wcu5tk.0",
@@ -57,12 +91,12 @@
       "order": 1800005,
       "className": "DF",
       "varName": "df",
-      "createdAt": 0,
+      "createdAt": 2,
       "createdBy": "n:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 0,
+          "i": 2,
           "token": "v0.0",
           "kind": "new"
         }
@@ -76,8 +110,8 @@
       "text": "[len(c) for c in chunks(df, 200)]",
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 4,
+          "ret": 4,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -98,12 +132,12 @@
       "order": 1900000,
       "className": "list[3]",
       "varName": "sizes",
-      "createdAt": 2,
+      "createdAt": 4,
       "createdBy": "x:1y73kgs.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v2.0",
           "kind": "new"
         }
@@ -119,8 +153,8 @@
       "order": 1900025,
       "executions": [
         {
-          "i": 1,
-          "ret": 1,
+          "i": 3,
+          "ret": 3,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -165,12 +199,12 @@
       "order": 1900025,
       "className": "generator",
       "varName": null,
-      "createdAt": 1,
+      "createdAt": 3,
       "createdBy": "n:145mmls.0",
       "params": [],
       "versions": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v1.0",
           "kind": "new"
         }
@@ -186,8 +220,8 @@
       "order": 2000020,
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 5,
+          "ret": 5,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -225,12 +259,12 @@
       "order": 2000020,
       "className": "coroutine",
       "varName": null,
-      "createdAt": 3,
+      "createdAt": 5,
       "createdBy": "n:1n2ygm4.0",
       "params": [],
       "versions": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v3.0",
           "kind": "new"
         }
@@ -238,26 +272,6 @@
     }
   ],
   "edges": [
-    {
-      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
-      "from": {
-        "node": "m:6w14qy.0.lg6rbl",
-        "port": null
-      },
-      "to": {
-        "node": "n:wcu5tk.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
     {
       "id": "e:i:wcu5tk.0.>n:145mmls.0.in:df",
       "from": {
@@ -271,7 +285,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v0.0"
         }
       ],
@@ -290,7 +304,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v0.0"
         }
       ],
@@ -309,7 +323,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v0.0"
         }
       ],
@@ -328,7 +342,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 0,
+          "i": 2,
           "token": "v0.0"
         }
       ],
@@ -347,7 +361,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v1.0"
         }
       ],
@@ -366,7 +380,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v2.0"
         }
       ],
@@ -385,7 +399,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v3.0"
         }
       ],
@@ -396,6 +410,8 @@
     0,
     1,
     2,
-    3
+    3,
+    4,
+    5
   ]
 }

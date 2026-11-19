@@ -6,6 +6,57 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s12",
+      "module": null,
+      "mutates": [],
+      "name": "import warnings",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 12
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s13",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 13
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s14",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.linear_model import LogisticRegression",
+      "outputs": [],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 14
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +73,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 3,
       "returns_self": false,
       "scope": 0,
       "site": 1
@@ -30,7 +81,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 4,
       "inputs": [
         {
           "origin": "expr",
@@ -47,7 +98,7 @@
         "v1.0"
       ],
       "owner": "v0.0",
-      "ret": 1,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 2
@@ -55,7 +106,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 5,
       "inputs": [
         {
           "origin": "name",
@@ -72,7 +123,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 5
@@ -80,7 +131,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 6,
       "inputs": [
         {
           "origin": "name",
@@ -97,7 +148,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -105,7 +156,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 7,
       "inputs": [
         {
           "origin": "expr",
@@ -122,7 +173,7 @@
         "s0"
       ],
       "owner": "v3.0",
-      "ret": 4,
+      "ret": 7,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -130,7 +181,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 5,
+      "i": 8,
       "inputs": [
         {
           "origin": "name",
@@ -152,7 +203,7 @@
         "v4.0"
       ],
       "owner": null,
-      "ret": 5,
+      "ret": 8,
       "returns_self": false,
       "scope": 0,
       "site": 7
@@ -160,7 +211,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 6,
+      "i": 9,
       "inputs": [
         {
           "origin": "const",
@@ -177,7 +228,7 @@
         "v5.0"
       ],
       "owner": null,
-      "ret": 6,
+      "ret": 9,
       "returns_self": false,
       "scope": 0,
       "site": 8
@@ -185,7 +236,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 7,
+      "i": 10,
       "inputs": [
         {
           "origin": "name",
@@ -210,7 +261,7 @@
       "name": "LogisticRegression.fit",
       "outputs": [],
       "owner": "v5.0",
-      "ret": 7,
+      "ret": 10,
       "returns_self": true,
       "scope": 0,
       "site": 10
@@ -218,17 +269,17 @@
   ],
   "output": [
     {
-      "i": 1,
+      "i": 4,
       "stream": "warning",
       "text": "11: FutureWarning: legacy API"
     },
     {
-      "i": 7,
+      "i": 10,
       "stream": "warning",
       "text": "15: ConvergenceWarning: lbfgs failed to converge after 2 iteration(s) (status=1):\nSTOP: TOTAL NO. OF ITERATIONS REACHED LIMIT\n\nIncrease the number of iterations to improve the convergence (max_iter=2).\nYou might also want to scale the data as shown in:\n    https://scikit-learn.org/stable/modules/preprocessing.html\nPlease also refer to the documentation for alternative solver options:\n    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression"
     },
     {
-      "i": 7,
+      "i": 10,
       "stream": "stdout",
       "text": "done\n"
     }
@@ -237,22 +288,22 @@
     {
       "bindings": [
         [
-          1,
+          4,
           "df",
           "v1.0"
         ],
         [
-          2,
+          5,
           "X",
           "v2.0"
         ],
         [
-          5,
+          8,
           "y",
           "v4.0"
         ],
         [
-          6,
+          9,
           "clf",
           "v5.0"
         ]

@@ -8,7 +8,15 @@ import { describe, expect, it } from 'vitest';
 import { createAssembler } from './assemble';
 import { buildGraph, keyOf } from './graph';
 import { stateAt, stepOfEvent } from './timeline';
-import type { CallNode, Execution, GEdge, GNode, GraphModel, InstanceNode } from './graph';
+import type {
+  CallNode,
+  Execution,
+  GEdge,
+  GNode,
+  GraphModel,
+  ImportNode,
+  InstanceNode,
+} from './graph';
 import type { FromWorker } from './messages';
 import type { EventLog, Token } from './types';
 import { validateLog } from './validate';
@@ -42,7 +50,6 @@ function checkChip(log: EventLog, g: GraphModel, ed: GEdge): void {
   const key = keyOf(c.token);
   expect(ed.uses, ed.id).toHaveLength(1);
   expect(ed.uses[0]!.token, ed.id).toBe(c.token);
-  expect(ed.callee, ed.id).toBeUndefined();
   expect(
     g.nodes.some((x) => x.kind === 'instance' && x.versions.some((v) => keyOf(v.token) === key)),
     `${ed.id}: a chip's object has no box`,
@@ -100,7 +107,6 @@ describe('fixtures', () => {
         const execsOf = (x: GNode | undefined): Execution[] =>
           x && (x.kind === 'call' || x.kind === 'expr' || x.kind === 'store') ? x.executions : [];
         for (const ed of g.edges) {
-          if (ed.callee) continue; // callee wires carry no value: checked below
           const from = byId.get(ed.from.node);
           const to = byId.get(ed.to.node);
           expect(from, ed.id).toBeDefined();
@@ -156,31 +162,42 @@ describe('fixtures', () => {
         ).toBe(true);
     });
 
-    it('callee wires: the import binds the call root name, and nothing rebound it', () => {
+    it('import blocks: one per bound name of an import step, no wires, and a call names only a real import', () => {
       const log = readLog(n);
       const g = buildGraph(log);
       const byId = new Map(g.nodes.map((x) => [x.id, x]));
-      const evOf = new Map(log.events.map((e) => [e.i, e]));
       for (const ed of g.edges) {
-        const imp = byId.get(ed.from.node);
-        // an import node has callee wires only, and no value wire touches it
-        if (imp?.kind === 'import') expect(ed.callee, ed.id).toBe(true);
+        expect(byId.get(ed.from.node)?.kind, ed.id).not.toBe('import');
         expect(byId.get(ed.to.node)?.kind, ed.id).not.toBe('import');
-        if (!ed.callee) continue;
-        expect(imp?.kind, ed.id).toBe('import');
-        if (imp?.kind !== 'import') continue;
-        const site = log.sites[imp.site]!;
-        const b = site.imports?.find((x) => x.name === imp.name);
-        expect(site.kind).toBe('import');
-        expect(b?.sole, `${imp.name} is bound once in the whole module`).toBe(true);
-        expect(ed.uses.length).toBeGreaterThan(0);
-        for (const u of ed.uses) {
-          const call = log.sites[evOf.get(u.i)!.site]!;
-          expect(call.func_text?.split('.')[0], ed.id).toBe(imp.name);
-          expect([call.line, call.col], 'the call follows the import').toSatisfy(
-            ([l, c]: number[]) => l! > site.end_line || (l === site.end_line && c! >= site.end_col),
-          );
-        }
+      }
+      const imports = g.nodes.filter((x): x is ImportNode => x.kind === 'import');
+      const ran = new Map<number, number[]>(); // import site -> steps
+      for (const e of log.events)
+        if (e.kind === 'import') ran.set(e.site, [...(ran.get(e.site) ?? []), e.i]);
+      for (const imp of imports) {
+        expect(
+          imp.executions.map((x) => x.i),
+          imp.id,
+        ).toEqual(ran.get(imp.site));
+        expect(
+          log.sites[imp.site]!.imports?.some((b) => b.name === imp.name),
+          imp.id,
+        ).toBe(true);
+      }
+      // every bound name of every executed import statement has a block
+      for (const [site] of ran)
+        for (const b of log.sites[site]!.imports ?? [])
+          expect(imports.some((x) => x.site === site && x.name === b.name)).toBe(true);
+      // a call's `(module)` comes from a sole import of its root name that ran before it
+      const evOf = new Map(log.events.map((e) => [e.i, e]));
+      for (const c of g.nodes.filter((x): x is CallNode => x.kind === 'call')) {
+        if (c.importedFrom === undefined) continue;
+        const e = evOf.get(c.executions[0]!.i)!;
+        const root = log.sites[e.site]!.func_text!.split('.')[0];
+        const imp = imports.find((x) => x.name === root);
+        expect(imp, `${c.id} (${c.importedFrom})`).toBeDefined();
+        expect(log.sites[imp!.site]!.imports?.find((b) => b.name === root)?.sole).toBe(true);
+        expect(Math.min(...imp!.executions.map((x) => x.i))).toBeLessThan(c.executions[0]!.i);
       }
     });
 
@@ -373,6 +390,33 @@ describe('golden_linreg', () => {
     expect(inst.className).toBe('LinearRegression');
     expect(inst.varName).toBe('model');
     for (const c of [fit, predict, score]) expect(c.parent).toBe(inst.id);
+  });
+
+  it('the three imports are the first three steps, each placing its object, before any call (svl-i6s)', () => {
+    const log = readLog('golden_linreg');
+    const imports = g.nodes.filter((x): x is ImportNode => x.kind === 'import');
+    expect(imports.map((x) => [x.name, x.source])).toEqual([
+      ['pd', 'pandas'],
+      ['LinearRegression', 'sklearn.linear_model'],
+      ['train_test_split', 'sklearn.model_selection'],
+    ]);
+    expect(g.steps.slice(0, 3)).toEqual(imports.map((x) => x.executions[0]!.i));
+    const firstCall = Math.min(...[split, fit].map((c) => c.executions[0]!.i));
+    expect(g.steps[2]!).toBeLessThan(firstCall);
+    imports.forEach((imp, k) => {
+      const st = stateAt(g, log, k + 1);
+      expect(st.currentNode).toBe(imp.id);
+      expect(st.current).toBe(imp.executions[0]!.i);
+      // the block appears at its own step, not before, and the later ones are not there yet
+      expect(st.visibleNodes.has(imp.id)).toBe(true);
+      expect(imports.slice(k + 1).some((x) => st.visibleNodes.has(x.id))).toBe(false);
+      expect(stateAt(g, log, k).visibleNodes.has(imp.id)).toBe(false);
+      const site = log.sites[log.events.find((e) => e.i === st.current)!.site]!;
+      expect(site.text).toMatch(/^(import|from) /);
+    });
+    expect(
+      g.edges.some((e) => imports.some((x) => e.from.node === x.id || e.to.node === x.id)),
+    ).toBe(false);
   });
 
   it('the LinearRegression() box creates the instance; the method slots are uncalled from that step', () => {

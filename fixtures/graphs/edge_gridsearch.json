@@ -4,28 +4,64 @@
       "id": "m:6w14qy.0.lg6rbl",
       "kind": "import",
       "parent": null,
-      "order": 399999.75,
+      "order": 400000,
       "name": "pd",
       "source": "pandas",
-      "site": 13
+      "site": 13,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "m:onprdx.0.1rcg1zk",
       "kind": "import",
       "parent": null,
-      "order": 499999.75,
+      "order": 500000,
       "name": "Ridge",
       "source": "sklearn.linear_model",
-      "site": 14
+      "site": 14,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "m:v971fw.0.1g14w5w",
       "kind": "import",
       "parent": null,
-      "order": 599999.75,
+      "order": 600000,
       "name": "GridSearchCV",
       "source": "sklearn.model_selection",
-      "site": 15
+      "site": 15,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "n:wcu5tk.0",
@@ -37,8 +73,8 @@
       "order": 800005,
       "executions": [
         {
-          "i": 0,
-          "ret": 0,
+          "i": 3,
+          "ret": 3,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0"
@@ -66,7 +102,8 @@
           "nameLabel": null
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "pandas"
     },
     {
       "id": "n:m1pltk3k@i:wcu5tk.0",
@@ -78,8 +115,8 @@
       "order": 800005,
       "executions": [
         {
-          "i": 1,
-          "ret": 1,
+          "i": 4,
+          "ret": 4,
           "inputs": {
             "in:self": "v0.0"
           },
@@ -117,12 +154,12 @@
       "order": 800005,
       "className": "DF",
       "varName": "df",
-      "createdAt": 1,
+      "createdAt": 4,
       "createdBy": "n:m1pltk3k@i:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 1,
+          "i": 4,
           "token": "v1.0",
           "kind": "new"
         }
@@ -136,8 +173,8 @@
       "text": "df[[\"beds\", \"baths\", \"sqft\"]]",
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 5,
+          "ret": 5,
           "inputs": {
             "in:df": "v1.0"
           },
@@ -158,12 +195,12 @@
       "order": 900000,
       "className": "DF",
       "varName": "X",
-      "createdAt": 2,
+      "createdAt": 5,
       "createdBy": "x:f2rqav.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 5,
           "token": "v2.0",
           "kind": "new"
         }
@@ -177,8 +214,8 @@
       "text": "df[\"price\"]",
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 6,
+          "ret": 6,
           "inputs": {
             "in:df": "v1.0"
           },
@@ -199,12 +236,12 @@
       "order": 1000000,
       "className": "Series",
       "varName": "y",
-      "createdAt": 3,
+      "createdAt": 6,
       "createdBy": "x:xaeoav.0",
       "params": [],
       "versions": [
         {
-          "i": 3,
+          "i": 6,
           "token": "v3.0",
           "kind": "new"
         }
@@ -220,8 +257,8 @@
       "order": 1100007,
       "executions": [
         {
-          "i": 4,
-          "ret": 4,
+          "i": 7,
+          "ret": 7,
           "inputs": {},
           "outputs": {
             "out:0": "v4.0"
@@ -241,7 +278,8 @@
           "nameLabel": "base"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "sklearn.linear_model"
     },
     {
       "id": "i:8h82rt.0",
@@ -250,12 +288,12 @@
       "order": 1100007,
       "className": "Ridge",
       "varName": "base",
-      "createdAt": 4,
+      "createdAt": 7,
       "createdBy": "n:8h82rt.0",
       "params": [],
       "versions": [
         {
-          "i": 4,
+          "i": 7,
           "token": "v4.0",
           "kind": "new"
         }
@@ -271,8 +309,8 @@
       "order": 1200009,
       "executions": [
         {
-          "i": 5,
-          "ret": 5,
+          "i": 8,
+          "ret": 8,
           "inputs": {
             "in:estimator": "v4.0"
           },
@@ -322,7 +360,8 @@
           "nameLabel": "search"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "sklearn.model_selection"
     },
     {
       "id": "i:6qo9to.0",
@@ -331,7 +370,7 @@
       "order": 1200009,
       "className": "GridSearchCV",
       "varName": "search",
-      "createdAt": 5,
+      "createdAt": 8,
       "createdBy": "n:6qo9to.0",
       "params": [
         {
@@ -353,12 +392,12 @@
       ],
       "versions": [
         {
-          "i": 5,
+          "i": 8,
           "token": "v6.0",
           "kind": "new"
         },
         {
-          "i": 6,
+          "i": 9,
           "token": "v6.1",
           "kind": "mutate"
         }
@@ -374,8 +413,8 @@
       "order": 1300000,
       "executions": [
         {
-          "i": 6,
-          "ret": 6,
+          "i": 9,
+          "ret": 9,
           "inputs": {
             "in:X": "v2.0",
             "in:y": "v3.0"
@@ -407,66 +446,6 @@
   ],
   "edges": [
     {
-      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
-      "from": {
-        "node": "m:6w14qy.0.lg6rbl",
-        "port": null
-      },
-      "to": {
-        "node": "n:wcu5tk.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
-      "id": "e:m:onprdx.0.1rcg1zk.>n:8h82rt.0.",
-      "from": {
-        "node": "m:onprdx.0.1rcg1zk",
-        "port": null
-      },
-      "to": {
-        "node": "n:8h82rt.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 4,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
-      "id": "e:m:v971fw.0.1g14w5w.>n:6qo9to.0.",
-      "from": {
-        "node": "m:v971fw.0.1g14w5w",
-        "port": null
-      },
-      "to": {
-        "node": "n:6qo9to.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 5,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
       "id": "f:i:wcu5tk.0",
       "from": {
         "node": "n:wcu5tk.0",
@@ -479,7 +458,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 1,
+          "i": 4,
           "token": "v0.0"
         }
       ],
@@ -507,7 +486,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 5,
+          "i": 8,
           "token": "v4.0"
         }
       ],
@@ -526,7 +505,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 6,
+          "i": 9,
           "token": "v2.0"
         }
       ],
@@ -545,7 +524,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 6,
+          "i": 9,
           "token": "v3.0"
         }
       ],
@@ -564,7 +543,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 5,
           "token": "v1.0"
         }
       ],
@@ -583,7 +562,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 3,
+          "i": 6,
           "token": "v1.0"
         }
       ],
@@ -602,7 +581,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 1,
+          "i": 4,
           "token": "v1.0"
         }
       ],
@@ -621,7 +600,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 5,
           "token": "v2.0"
         }
       ],
@@ -640,7 +619,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 3,
+          "i": 6,
           "token": "v3.0"
         }
       ],
@@ -659,7 +638,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 7,
           "token": "v4.0"
         }
       ],
@@ -678,7 +657,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 5,
+          "i": 8,
           "token": "v6.0"
         }
       ],
@@ -692,7 +671,10 @@
     3,
     4,
     5,
-    6
+    6,
+    7,
+    8,
+    9
   ],
   "folded": 1
 }

@@ -126,6 +126,7 @@
   stroke-width: 1.5px;
 }
 .md-call .md-box,
+.md-import .md-box,
 .md-store .md-box {
   fill: var(--md-fn-fill);
   stroke: var(--md-fn-stroke);

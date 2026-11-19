@@ -6,6 +6,40 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s10",
+      "module": null,
+      "mutates": [],
+      "name": "import asyncio",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 10
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s11",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 11
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +56,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 2,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -30,7 +64,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 3,
       "inputs": [
         {
           "origin": "name",
@@ -52,7 +86,7 @@
         "v1.0"
       ],
       "owner": null,
-      "ret": 1,
+      "ret": 3,
       "returns_self": false,
       "scope": 0,
       "site": 3
@@ -60,7 +94,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 4,
       "inputs": [
         {
           "origin": "name",
@@ -77,7 +111,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 4
@@ -85,7 +119,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 5,
       "inputs": [
         {
           "origin": "name",
@@ -102,7 +136,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 5
@@ -110,7 +144,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 6,
       "inputs": [
         {
           "origin": "name",
@@ -127,7 +161,7 @@
         "s0"
       ],
       "owner": null,
-      "ret": 4,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -135,7 +169,7 @@
   ],
   "output": [
     {
-      "i": 4,
+      "i": 6,
       "stream": "stdout",
       "text": "[200, 200, 100] 89204.02\n"
     }
@@ -144,17 +178,17 @@
     {
       "bindings": [
         [
-          0,
+          2,
           "df",
           "v0.0"
         ],
         [
-          2,
+          4,
           "sizes",
           "v2.0"
         ],
         [
-          4,
+          6,
           "total",
           "s0"
         ]
