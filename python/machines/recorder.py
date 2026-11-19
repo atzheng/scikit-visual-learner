@@ -92,7 +92,7 @@ def _import_hook(site: int, begin: bool = False, /) -> None:
     r = _active
     if r is not None:
         if begin:
-            r._import_begin()
+            r._import_begin(site)
         else:
             r._import(site, sys._getframe(1))
 
@@ -1281,14 +1281,25 @@ class Recorder:
 
     # -- imports ------------------------------------------------------------------------------
 
-    def _import_begin(self) -> None:
+    def _import_begin(self, site: int) -> None:
         """Before an import statement: remember where its output starts (svl-wqe).
 
         Text printed while the import runs is tagged with the previous event, since the import's
         own event does not exist yet. Text pending in the runtime is committed first, so the
         import's output starts a new entry; `_import` retags what was added after this mark. A
         failed import never reaches `_import`, so its output keeps the previous tag.
+        Does nothing where `_import` would record no event (past `per_site` or `max_events`, or
+        recording is off), so it does not split merged output.
         """
+        self._import_mark = None
+        if (
+            self.vt.in_reentry
+            or self.limit_hit
+            or "import" in self._off
+            or self._n_rec >= self.config.max_events
+            or self._counts.get(f"s{site}", 0) >= self.config.per_site
+        ):
+            return
         if self.commit_output is not None:
             self.commit_output()
         self._import_mark = (len(self._output), self.current_event)

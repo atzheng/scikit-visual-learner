@@ -336,3 +336,17 @@ def test_import_this_output() -> None:
     log = record("print('x')\nimport this\n")
     sys.modules.pop("this", None)
     assert [(o["i"], o["text"][:3]) for o in log["output"]] == [(-1, "x\n"), (0, "The")]
+
+
+def test_import_past_per_site_does_not_split_merged_output() -> None:
+    from test_recorder import plain
+
+    from machines import record
+
+    src = "for i in range(25):\n    import os\n    print(i)\n"
+    log = record(src)
+    p = plain(src, prelude=False)
+    # runs 0..19 each have a step; the later runs' prints merge into run 19's entry
+    assert [o["i"] for o in log["output"]] == list(range(20))
+    assert log["output"][-1]["text"] == "19\n20\n21\n22\n23\n24\n"
+    assert "".join(o["text"] for o in log["output"]) == p.stdout
