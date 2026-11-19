@@ -1,0 +1,15 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported LinearRegression from sklearn.linear_model.
+3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
+4 (event 3): Computed df[["beds", "baths", "sqft"]], a DataFrame (500 × 3), named X.
+5 (event 4): Computed df["price"], a Series of float64 (500), named y.
+6 (event 5): Called LinearRegression() from sklearn.linear_model. It created a new LinearRegression object, model.
+7 (event 6): Called model.fit(X, y). It raised ValueError: Input X contains NaN. LinearRegression does not accept missing values encoded a…. The program caught it and carried on.
+8 (event 7): Called df.dropna(). It created a new DataFrame (471 × 7), df.
+9 (event 8): Computed df[["beds", "baths", "sqft"]], a DataFrame (471 × 3).
+10 (event 9): Computed df["price"], a Series of float64 (471).
+11 (event 10): Called model.fit(df[["beds", "baths", "sqft"]], df["price"]). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, rank_, singular_. It returned model itself.
+12 (event 11): Computed df[["beds", "baths", "sqft"]], a DataFrame (471 × 3).
+13 (event 12): Computed df["price"], a Series of float64 (471).
+14 (event 13): Called model.score(df[["beds", "baths", "sqft"]], df["price"]). It returned a float (0.3703319032141523).

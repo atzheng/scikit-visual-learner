@@ -1,0 +1,93 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported Ridge from sklearn.linear_model.
+3 (event 2): Imported train_test_split from sklearn.model_selection.
+4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7).
+5 (event 4): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame (471 × 7), df.
+6 (event 5): Computed df[["beds", "baths", "sqft", "year_built"]], a DataFrame (471 × 4), named X.
+7 (event 6): Computed df["price"], a Series of float64 (471), named y.
+8 (event 7): Called train_test_split(X, y, test_size=0.2, random_state=0) from sklearn.model_selection. It returned 4 objects: X_train (DataFrame, 376 × 4), X_test (DataFrame, 95 × 4), y_train (Series of float64, 376), y_test (Series of float64, 95).
+9 (event 8): Computed 0.1 * (i + 1), a float (0.1).
+10 (event 9): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+11 (event 10): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+12 (event 11): Called model.score(X_test, y_test). It returned a float (0.4162984157813727).
+13 (event 12): Computed 0.1 * (i + 1), a float (0.2).
+14 (event 13): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+15 (event 14): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+16 (event 15): Called model.score(X_test, y_test). It returned a float (0.4163072743703702).
+17 (event 16): Computed 0.1 * (i + 1), a float (0.30000000000000004).
+18 (event 17): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+19 (event 18): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+20 (event 19): Called model.score(X_test, y_test). It returned a float (0.41631600878600916).
+21 (event 20): Computed 0.1 * (i + 1), a float (0.4).
+22 (event 21): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+23 (event 22): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+24 (event 23): Called model.score(X_test, y_test). It returned a float (0.41632462059652964).
+25 (event 24): Computed 0.1 * (i + 1), a float (0.5).
+26 (event 25): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+27 (event 26): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+28 (event 27): Called model.score(X_test, y_test). It returned a float (0.41633311134477435).
+29 (event 28): Computed 0.1 * (i + 1), a float (0.6000000000000001).
+30 (event 29): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+31 (event 30): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+32 (event 31): Called model.score(X_test, y_test). It returned a float (0.4163414825486863).
+33 (event 32): Computed 0.1 * (i + 1), a float (0.7000000000000001).
+34 (event 33): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+35 (event 34): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+36 (event 35): Called model.score(X_test, y_test). It returned a float (0.4163497357017937).
+37 (event 36): Computed 0.1 * (i + 1), a float (0.8).
+38 (event 37): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+39 (event 38): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+40 (event 39): Called model.score(X_test, y_test). It returned a float (0.41635787227368826).
+41 (event 40): Computed 0.1 * (i + 1), a float (0.9).
+42 (event 41): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+43 (event 42): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+44 (event 43): Called model.score(X_test, y_test). It returned a float (0.41636589371048516).
+45 (event 44): Computed 0.1 * (i + 1), a float (1.0).
+46 (event 45): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+47 (event 46): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+48 (event 47): Called model.score(X_test, y_test). It returned a float (0.4163738014352796).
+49 (event 48): Computed 0.1 * (i + 1), a float (1.1).
+50 (event 49): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+51 (event 50): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+52 (event 51): Called model.score(X_test, y_test). It returned a float (0.4163815968485899).
+53 (event 52): Computed 0.1 * (i + 1), a float (1.2000000000000002).
+54 (event 53): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+55 (event 54): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+56 (event 55): Called model.score(X_test, y_test). It returned a float (0.4163892813287906).
+57 (event 56): Computed 0.1 * (i + 1), a float (1.3).
+58 (event 57): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+59 (event 58): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+60 (event 59): Called model.score(X_test, y_test). It returned a float (0.4163968562325362).
+61 (event 60): Computed 0.1 * (i + 1), a float (1.4000000000000001).
+62 (event 61): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+63 (event 62): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+64 (event 63): Called model.score(X_test, y_test). It returned a float (0.4164043228951775).
+65 (event 64): Computed 0.1 * (i + 1), a float (1.5).
+66 (event 65): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+67 (event 66): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+68 (event 67): Called model.score(X_test, y_test). It returned a float (0.41641168263116446).
+69 (event 68): Computed 0.1 * (i + 1), a float (1.6).
+70 (event 69): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+71 (event 70): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+72 (event 71): Called model.score(X_test, y_test). It returned a float (0.4164189367344431).
+73 (event 72): Computed 0.1 * (i + 1), a float (1.7000000000000002).
+74 (event 73): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+75 (event 74): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+76 (event 75): Called model.score(X_test, y_test). It returned a float (0.4164260864788457).
+77 (event 76): Computed 0.1 * (i + 1), a float (1.8).
+78 (event 77): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+79 (event 78): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+80 (event 79): Called model.score(X_test, y_test). It returned a float (0.41643313311846464).
+81 (event 80): Computed 0.1 * (i + 1), a float (1.9000000000000001).
+82 (event 81): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+83 (event 82): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+84 (event 83): Called model.score(X_test, y_test). It returned a float (0.41644007788802806).
+85 (event 84): Computed 0.1 * (i + 1), a float (2.0).
+86 (event 85): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+87 (event 86): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+88 (event 87): Called model.score(X_test, y_test). It returned a float (0.4164469220032615).
+89 (event 124): Computed 0.1 * (i + 1), a float (3.0).
+90 (event 125): Called Ridge(alpha=0.1 * (i + 1)) from sklearn.linear_model. It created a new Ridge object, model.
+91 (event 126): Called model.fit(X_train, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, n_iter_, solver_. It returned model itself.
+92 (event 127): Called model.score(X_test, y_test). It returned a float (0.4165100817270013).
