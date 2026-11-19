@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`snapshots > linreg, error 1`] = `
-"<svg width="581" height="427" viewBox="0 0 581 427" role="group" aria-label="Diagram of the program" class="md-diagram">
+"<svg width="897" height="427" viewBox="0 0 897 427" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
 <marker id="md-arrow-16" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
@@ -9,7 +9,7 @@ exports[`snapshots > linreg, error 1`] = `
 </marker>
 </defs>
 <g class="md-layer-bg">
-<rect x="313.6" y="230" width="255" height="185" rx="10" data-node="i:czvr3a.0" class="md-inst-box">
+<rect x="630" y="230" width="255" height="185" rx="10" data-node="i:czvr3a.0" class="md-inst-box">
 </rect>
 </g>
 <g class="md-layer-edges">
@@ -25,16 +25,22 @@ exports[`snapshots > linreg, error 1`] = `
 <path d="M250 34L250 90" class="md-wire-hit">
 </path>
 </g>
-<g data-edge="e:n:88c6wt.0.out:0>n:12gqu2d.0@i:czvr3a.0.in:X" class="md-edge">
-<path d="M107.2 174L107.2 288Q107.2 296 115.2 296L305.6 296Q313.6 296 321.6 296L394.6 296Q402.6 296 402.6 304L402.6 326" marker-end="url(#md-arrow-16)" class="md-wire">
+<g data-edge="e:n:88c6wt.0.out:0>n:m1gsyoeo@i:czvr3a.0.in:X" class="md-edge">
+<path d="M107.2 174L107.2 288Q107.2 296 115.2 296L622 296Q630 296 638 296L711 296Q719 296 719 304L719 326" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
-<path d="M107.2 174L107.2 288Q107.2 296 115.2 296L305.6 296Q313.6 296 321.6 296L394.6 296Q402.6 296 402.6 304L402.6 326" class="md-wire-hit">
+<path d="M107.2 174L107.2 288Q107.2 296 115.2 296L622 296Q630 296 638 296L711 296Q719 296 719 304L719 326" class="md-wire-hit">
 </path>
 </g>
-<g data-edge="e:n:88c6wt.0.out:2>n:12gqu2d.0@i:czvr3a.0.in:y" class="md-edge">
-<path d="M297.6 174L297.6 278Q297.6 286 305.6 286L305.6 286Q313.6 286 321.6 286L471.6 286Q479.6 286 479.6 294L479.6 326" marker-end="url(#md-arrow-16)" class="md-wire">
+<g data-edge="e:n:88c6wt.0.out:2>n:m1gsyoeo@i:czvr3a.0.in:y" class="md-edge">
+<path d="M297.6 174L297.6 278Q297.6 286 305.6 286L622 286Q630 286 638 286L788 286Q796 286 796 294L796 326" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
-<path d="M297.6 174L297.6 278Q297.6 286 305.6 286L305.6 286Q313.6 286 321.6 286L471.6 286Q479.6 286 479.6 294L479.6 326" class="md-wire-hit">
+<path d="M297.6 174L297.6 278Q297.6 286 305.6 286L622 286Q630 286 638 286L788 286Q796 286 796 294L796 326" class="md-wire-hit">
+</path>
+</g>
+<g data-edge="e:n:czvr3a.0.out:0>i:czvr3a.0." class="md-edge">
+<path d="M642 174L642 230" marker-end="url(#md-arrow-16)" class="md-wire">
+</path>
+<path d="M642 174L642 230" class="md-wire-hit">
 </path>
 </g>
 </g>
@@ -94,34 +100,53 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-node="i:czvr3a.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="machine model: LinearRegression">
-<rect x="319.6" y="234" width="243" height="22" rx="11" class="md-pill">
+<rect x="636" y="234" width="243" height="22" rx="11" class="md-pill">
 </rect>
-<text x="441.1" y="249" text-anchor="middle" class="md-pill-text">model: LinearRegression</text>
-<text x="441.1" y="430" class="md-msg md-halo md-hidden">
+<text x="757.5" y="249" text-anchor="middle" class="md-pill-text">model: LinearRegression</text>
+<text x="757.5" y="430" class="md-msg md-halo md-hidden">
 </text>
-<rect x="310.6" y="227" width="261" height="191" rx="11" class="md-focus-ring">
+<rect x="627" y="227" width="261" height="191" rx="11" class="md-focus-ring">
 </rect>
 </g>
-<g data-node="n:12gqu2d.0@i:czvr3a.0" data-kind="call" class="md-node md-call md-current md-error" tabindex="0" role="button" aria-label="method LinearRegression.fit, ValueError: Input X contains NaN., current step" aria-current="step">
-<rect x="325.6" y="326" width="231" height="60" rx="9" class="md-box">
+<g data-node="n:czvr3a.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="function LinearRegression">
+<rect x="516" y="114" width="252" height="60" rx="9" class="md-box">
 </rect>
-<text x="441.1" y="372" class="md-name">LinearRegression.fit</text>
-<circle cx="402.6" cy="326" r="3" class="md-port">
+<text x="642" y="136" class="md-name">LinearRegression</text>
+<circle cx="642" cy="174" r="3" class="md-port">
 </circle>
-<text x="402.6" y="339" class="md-ptype">DataFrame</text>
-<text x="402.6" y="351" class="md-pname">X</text>
-<circle cx="479.6" cy="326" r="3" class="md-port">
-</circle>
-<text x="479.6" y="339" class="md-ptype">Series</text>
-<text x="479.6" y="351" class="md-pname">y</text>
+<text x="642" y="157" class="md-ptype">LinearRegression</text>
+<text x="642" y="169" class="md-pname">model</text>
 <g class="md-badge md-hidden">
-<rect x="526.6" y="307" width="30" height="16" rx="8" class="md-badge-bg">
+<rect x="738" y="95" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="541.6" y="319" class="md-badge-text">
+<text x="753" y="107" class="md-badge-text">
 </text>
 </g>
-<text x="441.1" y="401" class="md-msg md-halo">⚠ ValueError: Input X contains NaN.</text>
-<rect x="322.6" y="323" width="237" height="66" rx="11" class="md-focus-ring">
+<text x="642" y="189" class="md-msg md-halo md-hidden">
+</text>
+<rect x="513" y="111" width="258" height="66" rx="11" class="md-focus-ring">
+</rect>
+</g>
+<g data-node="n:m1gsyoeo@i:czvr3a.0" data-kind="call" class="md-node md-call md-current md-error" tabindex="0" role="button" aria-label="method LinearRegression.fit, ValueError: Input X contains NaN., current step" aria-current="step">
+<rect x="642" y="326" width="231" height="60" rx="9" class="md-box">
+</rect>
+<text x="757.5" y="372" class="md-name">LinearRegression.fit</text>
+<circle cx="719" cy="326" r="3" class="md-port">
+</circle>
+<text x="719" y="339" class="md-ptype">DataFrame</text>
+<text x="719" y="351" class="md-pname">X</text>
+<circle cx="796" cy="326" r="3" class="md-port">
+</circle>
+<text x="796" y="339" class="md-ptype">Series</text>
+<text x="796" y="351" class="md-pname">y</text>
+<g class="md-badge md-hidden">
+<rect x="843" y="307" width="30" height="16" rx="8" class="md-badge-bg">
+</rect>
+<text x="858" y="319" class="md-badge-text">
+</text>
+</g>
+<text x="757.5" y="401" class="md-msg md-halo">⚠ ValueError: Input X contains NaN.</text>
+<rect x="639" y="323" width="237" height="66" rx="11" class="md-focus-ring">
 </rect>
 </g>
 </g>
@@ -146,20 +171,29 @@ exports[`snapshots > linreg, error 1`] = `
 <rect x="278" y="54" width="87.19999999999999" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
-<g data-edge="e:n:88c6wt.0.out:0>n:12gqu2d.0@i:czvr3a.0.in:X" tabindex="0" role="button" class="md-edge-label" aria-label="wire: DataFrame (404, 5), named X_train">
-<text x="119.9" y="311" text-anchor="start" class="md-halo">
+<g data-edge="e:n:88c6wt.0.out:0>n:m1gsyoeo@i:czvr3a.0.in:X" tabindex="0" role="button" class="md-edge-label" aria-label="wire: DataFrame (404, 5), named X_train">
+<text x="278.09999999999997" y="311" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">DataFrame (404, 5)</tspan>
 <tspan dx="4" dy="3" class="md-wname">X_train</tspan>
 </text>
-<rect x="116.9" y="299" width="168.8" height="18" rx="4" class="md-focus-ring">
+<rect x="275.09999999999997" y="299" width="168.8" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
-<g data-edge="e:n:88c6wt.0.out:2>n:12gqu2d.0@i:czvr3a.0.in:y" tabindex="0" role="button" class="md-edge-label" aria-label="wire: Series (404), named y_train">
-<text x="304.6" y="205.8" text-anchor="start" class="md-halo">
+<g data-edge="e:n:88c6wt.0.out:2>n:m1gsyoeo@i:czvr3a.0.in:y" tabindex="0" role="button" class="md-edge-label" aria-label="wire: Series (404), named y_train">
+<text x="373.3" y="279" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">Series (404)</tspan>
 <tspan dx="4" dy="3" class="md-wname">y_train</tspan>
 </text>
-<rect x="301.6" y="193.8" width="129.2" height="18" rx="4" class="md-focus-ring">
+<rect x="370.3" y="267" width="129.2" height="18" rx="4" class="md-focus-ring">
+</rect>
+</g>
+<g data-edge="e:n:czvr3a.0.out:0>i:czvr3a.0." tabindex="0" role="button" class="md-edge-label" aria-label="wire: LinearRegression">
+<text x="649" y="206" text-anchor="start" class="md-halo">
+<tspan class="md-wtype">LinearRegression</tspan>
+<tspan dx="0" dy="3" class="md-wname">
+</tspan>
+</text>
+<rect x="646" y="194" width="113.6" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
 </g>
@@ -167,7 +201,7 @@ exports[`snapshots > linreg, error 1`] = `
 `;
 
 exports[`snapshots > loop, step 2 1`] = `
-"<svg width="358" height="288" viewBox="0 0 358 288" role="group" aria-label="Diagram of the program" class="md-diagram">
+"<svg width="467" height="326" viewBox="0 0 467 326" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
 <marker id="md-arrow-17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
@@ -175,96 +209,130 @@ exports[`snapshots > loop, step 2 1`] = `
 </marker>
 </defs>
 <g class="md-layer-bg">
-<rect x="90.5" y="90" width="255" height="186" rx="10" data-node="i:vwx6qg.0" class="md-inst-box">
+<rect x="200" y="128" width="255" height="186" rx="10" data-node="i:vwx6qg.0" class="md-inst-box">
 </rect>
 </g>
 <g class="md-layer-edges">
-<g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:X.>n:12u9exh.0@i:vwx6qg.0.in:X" class="md-edge">
-<path d="M23.5 34L23.5 166Q23.5 174 31.5 174L82.5 174Q90.5 174 98.5 174L171.5 174Q179.5 174 179.5 182L179.5 204" marker-end="url(#md-arrow-17)" class="md-wire">
+<g data-edge="e:src:n:mp8npak@i:vwx6qg.0:X.>n:mp8npak@i:vwx6qg.0.in:X" class="md-edge">
+<path d="M23.5 72L23.5 204Q23.5 212 31.5 212L192 212Q200 212 208 212L281 212Q289 212 289 220L289 242" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M23.5 34L23.5 166Q23.5 174 31.5 174L82.5 174Q90.5 174 98.5 174L171.5 174Q179.5 174 179.5 182L179.5 204" class="md-wire-hit">
+<path d="M23.5 72L23.5 204Q23.5 212 31.5 212L192 212Q200 212 208 212L281 212Q289 212 289 220L289 242" class="md-wire-hit">
 </path>
 </g>
-<g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:y.>n:12u9exh.0@i:vwx6qg.0.in:y" class="md-edge">
-<path d="M74.5 34L74.5 156Q74.5 164 82.5 164L82.5 164Q90.5 164 98.5 164L248.5 164Q256.5 164 256.5 172L256.5 204" marker-end="url(#md-arrow-17)" class="md-wire">
+<g data-edge="e:src:n:mp8npak@i:vwx6qg.0:y.>n:mp8npak@i:vwx6qg.0.in:y" class="md-edge">
+<path d="M74.5 72L74.5 194Q74.5 202 82.5 202L192 202Q200 202 208 202L358 202Q366 202 366 210L366 242" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M74.5 34L74.5 156Q74.5 164 82.5 164L82.5 164Q90.5 164 98.5 164L248.5 164Q256.5 164 256.5 172L256.5 204" class="md-wire-hit">
+<path d="M74.5 72L74.5 194Q74.5 202 82.5 202L192 202Q200 202 208 202L358 202Q366 202 366 210L366 242" class="md-wire-hit">
+</path>
+</g>
+<g data-edge="e:n:vwx6qg.0.out:0>i:vwx6qg.0." class="md-edge">
+<path d="M212 72L212 128" marker-end="url(#md-arrow-17)" class="md-wire">
+</path>
+<path d="M212 72L212 128" class="md-wire-hit">
 </path>
 </g>
 </g>
 <g class="md-layer-nodes">
 <g data-node="i:vwx6qg.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="machine model: SGDRegressor, changed: n_iter_">
-<rect x="96.5" y="94" width="243" height="22" rx="11" class="md-pill">
+<rect x="206" y="132" width="243" height="22" rx="11" class="md-pill">
 </rect>
-<text x="218" y="109" text-anchor="middle" class="md-pill-text">model: SGDRegressor</text>
+<text x="327.5" y="147" text-anchor="middle" class="md-pill-text">model: SGDRegressor</text>
 <g class="md-attr md-changed md-flash">
-<rect x="93.5" y="118" width="249" height="18" rx="4" class="md-flash-bg">
+<rect x="203" y="156" width="249" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="94.5" y="131" class="md-bullet">●</text>
-<text x="102.5" y="131">
+<text x="204" y="169" class="md-bullet">●</text>
+<text x="212" y="169">
 <tspan class="md-aname">n_iter_</tspan>
 <tspan dx="6" class="md-atype">int</tspan>
 </text>
 </g>
-<text x="218" y="291" class="md-msg md-halo md-hidden">
+<text x="327.5" y="329" class="md-msg md-halo md-hidden">
 </text>
-<rect x="87.5" y="87" width="261" height="192" rx="11" class="md-focus-ring">
+<rect x="197" y="125" width="261" height="192" rx="11" class="md-focus-ring">
 </rect>
 </g>
-<g data-node="src:n:12u9exh.0@i:vwx6qg.0:X" data-kind="source" class="md-node md-source" aria-label="value X">
-<rect x="12" y="12" width="23" height="22" class="md-hit">
+<g data-node="n:vwx6qg.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="function SGDRegressor">
+<rect x="114" y="12" width="196" height="60" rx="9" class="md-box">
 </rect>
-<text x="23.5" y="27" class="md-source-text">X</text>
-<rect x="9" y="9" width="29" height="28" rx="11" class="md-focus-ring">
-</rect>
-</g>
-<g data-node="src:n:12u9exh.0@i:vwx6qg.0:y" data-kind="source" class="md-node md-source" aria-label="value y">
-<rect x="63" y="12" width="23" height="22" class="md-hit">
-</rect>
-<text x="74.5" y="27" class="md-source-text">y</text>
-<rect x="60" y="9" width="29" height="28" rx="11" class="md-focus-ring">
-</rect>
-</g>
-<g data-node="n:12u9exh.0@i:vwx6qg.0" data-kind="call" class="md-node md-call md-current" tabindex="0" role="button" aria-label="method SGDRegressor.partial_fit, run 1 of 3, current step" aria-current="step">
-<rect x="102.5" y="204" width="231" height="60" rx="9" class="md-box">
-</rect>
-<text x="218" y="250" class="md-name">SGDRegressor.partial_fit</text>
-<circle cx="179.5" cy="204" r="3" class="md-port">
+<text x="212" y="34" class="md-name">SGDRegressor</text>
+<circle cx="212" cy="72" r="3" class="md-port">
 </circle>
-<text x="179.5" y="217" class="md-ptype">DataFrame</text>
-<text x="179.5" y="229" class="md-pname">X</text>
-<circle cx="256.5" cy="204" r="3" class="md-port">
+<text x="212" y="55" class="md-ptype">SGDRegressor</text>
+<text x="212" y="67" class="md-pname">model</text>
+<g class="md-badge md-hidden">
+<rect x="280" y="-7" width="30" height="16" rx="8" class="md-badge-bg">
+</rect>
+<text x="295" y="5" class="md-badge-text">
+</text>
+</g>
+<text x="212" y="87" class="md-msg md-halo md-hidden">
+</text>
+<rect x="111" y="9" width="202" height="66" rx="11" class="md-focus-ring">
+</rect>
+</g>
+<g data-node="src:n:mp8npak@i:vwx6qg.0:X" data-kind="source" class="md-node md-source" aria-label="value X">
+<rect x="12" y="50" width="23" height="22" class="md-hit">
+</rect>
+<text x="23.5" y="65" class="md-source-text">X</text>
+<rect x="9" y="47" width="29" height="28" rx="11" class="md-focus-ring">
+</rect>
+</g>
+<g data-node="src:n:mp8npak@i:vwx6qg.0:y" data-kind="source" class="md-node md-source" aria-label="value y">
+<rect x="63" y="50" width="23" height="22" class="md-hit">
+</rect>
+<text x="74.5" y="65" class="md-source-text">y</text>
+<rect x="60" y="47" width="29" height="28" rx="11" class="md-focus-ring">
+</rect>
+</g>
+<g data-node="n:mp8npak@i:vwx6qg.0" data-kind="call" class="md-node md-call md-current" tabindex="0" role="button" aria-label="method SGDRegressor.partial_fit, run 1 of 3, current step" aria-current="step">
+<rect x="212" y="242" width="231" height="60" rx="9" class="md-box">
+</rect>
+<text x="327.5" y="288" class="md-name">SGDRegressor.partial_fit</text>
+<circle cx="289" cy="242" r="3" class="md-port">
 </circle>
-<text x="256.5" y="217" class="md-ptype">Series</text>
-<text x="256.5" y="229" class="md-pname">y</text>
+<text x="289" y="255" class="md-ptype">DataFrame</text>
+<text x="289" y="267" class="md-pname">X</text>
+<circle cx="366" cy="242" r="3" class="md-port">
+</circle>
+<text x="366" y="255" class="md-ptype">Series</text>
+<text x="366" y="267" class="md-pname">y</text>
 <g class="md-badge">
-<rect x="280.7" y="185" width="52.8" height="16" rx="8" class="md-badge-bg">
+<rect x="390.2" y="223" width="52.8" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="307.1" y="197" class="md-badge-text">1 of 3</text>
+<text x="416.6" y="235" class="md-badge-text">1 of 3</text>
 </g>
-<text x="218" y="279" class="md-msg md-halo md-hidden">
+<text x="327.5" y="317" class="md-msg md-halo md-hidden">
 </text>
-<rect x="99.5" y="201" width="237" height="66" rx="11" class="md-focus-ring">
+<rect x="209" y="239" width="237" height="66" rx="11" class="md-focus-ring">
 </rect>
 </g>
 </g>
 <g class="md-layer-labels">
-<g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:X.>n:12u9exh.0@i:vwx6qg.0.in:X" tabindex="0" role="button" class="md-edge-label" aria-label="wire: DataFrame (100, 3)">
-<text x="30.5" y="71.4" text-anchor="start" class="md-halo">
+<g data-edge="e:src:n:mp8npak@i:vwx6qg.0:X.>n:mp8npak@i:vwx6qg.0.in:X" tabindex="0" role="button" class="md-edge-label" aria-label="wire: DataFrame (100, 3)">
+<text x="47.75" y="227" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">DataFrame (100, 3)</tspan>
 <tspan dx="0" dy="3" class="md-wname">
 </tspan>
 </text>
-<rect x="27.5" y="59.400000000000006" width="126.8" height="18" rx="4" class="md-focus-ring">
+<rect x="44.75" y="215" width="126.8" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
-<g data-edge="e:src:n:12u9exh.0@i:vwx6qg.0:y.>n:12u9exh.0@i:vwx6qg.0.in:y" tabindex="0" role="button" class="md-edge-label" aria-label="wire: Series (100)">
-<text x="109.5" y="157" text-anchor="start" class="md-halo">
+<g data-edge="e:src:n:mp8npak@i:vwx6qg.0:y.>n:mp8npak@i:vwx6qg.0.in:y" tabindex="0" role="button" class="md-edge-label" aria-label="wire: Series (100)">
+<text x="219" y="195" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">Series (100)</tspan>
 <tspan dx="0" dy="3" class="md-wname">
 </tspan>
 </text>
-<rect x="106.5" y="145" width="87.19999999999999" height="18" rx="4" class="md-focus-ring">
+<rect x="216" y="183" width="87.19999999999999" height="18" rx="4" class="md-focus-ring">
+</rect>
+</g>
+<g data-edge="e:n:vwx6qg.0.out:0>i:vwx6qg.0." tabindex="0" role="button" class="md-edge-label" aria-label="wire: SGDRegressor">
+<text x="219" y="104" text-anchor="start" class="md-halo">
+<tspan class="md-wtype">SGDRegressor</tspan>
+<tspan dx="0" dy="3" class="md-wname">
+</tspan>
+</text>
+<rect x="216" y="92" width="87.19999999999999" height="18" rx="4" class="md-focus-ring">
 </rect>
 </g>
 </g>

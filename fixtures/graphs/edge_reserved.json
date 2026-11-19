@@ -171,6 +171,39 @@
       "student": true
     },
     {
+      "id": "n:1l7vfis.0",
+      "kind": "call",
+      "mergeKey": "s4",
+      "name": "Child",
+      "module": "__main__",
+      "parent": null,
+      "order": 3400006,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Child",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:1l7vfis.0",
       "kind": "instance",
       "parent": null,
@@ -178,7 +211,7 @@
       "className": "Child",
       "varName": null,
       "createdAt": 3,
-      "createdBy": null,
+      "createdBy": "n:1l7vfis.0",
       "params": [],
       "versions": [
         {
@@ -188,7 +221,7 @@
       ]
     },
     {
-      "id": "n:1fa2iif.0@i:1l7vfis.0",
+      "id": "n:mb9trr5@i:1l7vfis.0",
       "kind": "call",
       "mergeKey": "s5",
       "name": "Child.label",
@@ -513,9 +546,9 @@
       "nameLabel": null
     },
     {
-      "id": "e:n:1fa2iif.0@i:1l7vfis.0.out:0>n:av7age.0.in:args[0]",
+      "id": "e:n:mb9trr5@i:1l7vfis.0.out:0>n:av7age.0.in:args[0]",
       "from": {
-        "node": "n:1fa2iif.0@i:1l7vfis.0",
+        "node": "n:mb9trr5@i:1l7vfis.0",
         "port": "out:0"
       },
       "to": {
@@ -701,6 +734,25 @@
         }
       ],
       "nameLabel": "df"
+    },
+    {
+      "id": "e:n:1l7vfis.0.out:0>i:1l7vfis.0.",
+      "from": {
+        "node": "n:1l7vfis.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1l7vfis.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

@@ -93,7 +93,7 @@ interface PlainInfo {
 interface InstInfo {
   node: InstanceNode;
   objs: string[]; // object keys ("v12") mapped to this instance, in order
-  ctorEvents: Event[];
+  ctorEvents: Event[]; // constructor events that created this instance (for `params`)
   createdByPort: string | null;
 }
 
@@ -112,7 +112,10 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   void _opts; // expansion of student functions is M4
   const { values, sites } = log;
   const typeOf = (t: Token): string => values[t]?.type ?? '';
-  const isMachine = (t: Token | null): boolean => t !== null && values[t]?.machine === true;
+  // THE predicate for "this value is drawn as an instance box": it creates the box (via the creating call's
+  // output wire), owns method slots keyed by (box, method name), and is wired by its border. Today only
+  // machines; svl-skw widens it to any reference value (timeline.ts `ownerAttrs` follows it).
+  const isObject = (t: Token | null): boolean => t !== null && values[t]?.machine === true;
 
   // ---- stable ids: hash of the site's text plus the occurrence number among equal texts
   const siteIdBase: string[] = [];
@@ -158,7 +161,8 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   const events = log.events.filter((e) => e.scope === 0);
 
   const calls = new Map<string, CallInfo>();
-  const mkCounts = new Map<string, Map<string, number>>();
+  const mkCounts = new Map<string, Map<string, number>>(); // merge key -> method box id -> recorded executions
+  const siteCounts = new Map<string, Map<string, number>>(); // method box id -> merge key -> latest count
   const plains = new Map<string, PlainInfo>();
   const insts = new Map<string, InstInfo>(); // by instance key (merge key + output index)
   const instByObj = new Map<string, InstInfo>();
@@ -273,35 +277,17 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
       continue;
     }
 
-    // constructor of a machine: becomes an instance node with params
-    if (
-      e.kind === 'constructor' &&
-      e.error === null &&
-      e.outputs.length >= 1 &&
-      isMachine(e.outputs[0] ?? null)
-    ) {
-      const token = e.outputs[0] as Token;
-      const key = `${mk}#0`;
-      let info = insts.get(key);
-      if (!info) info = newInstance(key, e, token, null, null);
-      info.node.createdAt = Math.min(info.node.createdAt, e.i);
-      info.node.className = typeOf(token);
-      info.ctorEvents.push(e);
-      registerObj(info, token, e.i);
-      processMutates(e);
-      continue;
-    }
-
     // call node
     const ownerInst =
-      e.kind === 'method' && e.owner !== null && isMachine(e.owner)
+      e.kind === 'method' && e.owner !== null && isObject(e.owner)
         ? instanceFor(e.owner, e).node
         : null;
-    const callKey = ownerInst ? `${mk}@${ownerInst.id}` : mk;
+    // one method box per (instance, method name), not per call site
+    const callKey = ownerInst ? `m:${e.name}@${ownerInst.id}` : mk;
     let info = calls.get(callKey);
     if (!info) {
       const node: CallNode = {
-        id: `n:${baseFor(mk, e.site)}${ownerInst ? `@${ownerInst.id}` : ''}`,
+        id: ownerInst ? `n:m${hash(e.name)}@${ownerInst.id}` : `n:${baseFor(mk, e.site)}`,
         kind: 'call',
         mergeKey: mk,
         name: e.name,
@@ -321,38 +307,50 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
       info.node.module = e.module;
       info.node.student = e.kind === 'student_function';
     }
-    // The recorder counts per merge key; a box split by owner counts its own executions.
-    const perNode = mkCounts.get(mk) ?? new Map<string, number>();
-    mkCounts.set(mk, perNode);
-    let others = 0;
-    for (const [id, n] of perNode) if (id !== info.node.id) others += n;
-    perNode.set(info.node.id, (perNode.get(info.node.id) ?? 0) + 1);
-    const nodeCount = ownerInst ? Math.max(1, e.count - others) : e.count;
+    if (ownerInst) info.node.order = Math.min(info.node.order, orderOf(e.site));
+    // The recorder counts per call site, over every owner. A method box counts its own executions per
+    // site (this event's count less other boxes' recorded executions there) and adds the sites up.
+    let nodeCount = e.count;
+    if (ownerInst) {
+      const perNode = mkCounts.get(mk) ?? new Map<string, number>();
+      mkCounts.set(mk, perNode);
+      let others = 0;
+      for (const [id, n] of perNode) if (id !== info.node.id) others += n;
+      perNode.set(info.node.id, (perNode.get(info.node.id) ?? 0) + 1);
+      const sc = siteCounts.get(info.node.id) ?? new Map<string, number>();
+      siteCounts.set(info.node.id, sc);
+      sc.set(mk, Math.max(1, e.count - others));
+      nodeCount = 0;
+      for (const n of sc.values()) nodeCount += n;
+    }
     const ins: Record<string, Token> = {};
     for (const x of drawnInputs(e)) if (x.value !== undefined) ins[`in:${x.param}`] = x.value;
     const outs: Record<string, Token> = {};
     e.outputs.forEach((t, k) => {
       const port = `out:${k}`;
       outs[port] = t;
-      if (isMachine(t)) {
-        if (!instByObj.has(keyOf(t))) {
-          const ii = newInstance(
-            `${mk}#${k}`,
+      if (isObject(t)) {
+        const ik = `${mk}#${k}`;
+        let ii = insts.get(ik);
+        if (!ii)
+          ii = newInstance(
+            ik,
             e,
             t,
             info!.node.id,
             port,
             k > 0 ? `${baseFor(mk, e.site)}#${k}` : undefined,
           );
-          registerObj(ii, t, e.i);
-        }
+        else ii.node.createdAt = Math.min(ii.node.createdAt, e.i);
+        if (e.kind === 'constructor' && k === 0) ii.ctorEvents.push(e);
+        if (!instByObj.has(keyOf(t))) registerObj(ii, t, e.i);
       } else if (!producers.has(t)) {
         producers.set(t, { node: info!.node.id, port });
         producerAt.set(t, e.i);
       }
     });
     e.mutates.forEach(([before, after], k) => {
-      if (isMachine(before)) return;
+      if (isObject(before)) return;
       const input = drawnInputs(e).find((x) => x.value === before);
       const port = `out:mut:${input ? input.param : k}`;
       outs[port] = after;
@@ -368,7 +366,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   function drawnInputs(e: Event): Input[] {
     let ins = e.inputs;
     if (e.kind === 'method' && e.owner !== null) {
-      if (isMachine(e.owner)) ins = ins.filter((x) => !(x.param === 'self' && x.value === e.owner));
+      if (isObject(e.owner)) ins = ins.filter((x) => !(x.param === 'self' && x.value === e.owner));
       else if (!ins.some((x) => x.param === 'self'))
         ins = [{ param: 'self', origin: 'name', value: e.owner }, ...ins];
     }
@@ -377,7 +375,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
 
   function processMutates(e: Event): void {
     for (const [before, after] of e.mutates) {
-      if (!isMachine(before)) continue;
+      if (!isObject(before)) continue;
       const inst = instanceFor(before, e);
       const last = inst.node.versions[inst.node.versions.length - 1];
       if (!last || last.token !== after || last.i !== e.i)
@@ -386,6 +384,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   }
 
   // ---- pass 2: edges and sources
+  const retOf = new Map<number, number>(events.map((e) => [e.i, e.ret]));
   const edges = new Map<string, GEdge>();
   const sources = new Map<string, SourceNode>(); // by consumer+param
   const sourceOfToken = new Map<Token, SourceNode>();
@@ -413,7 +412,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     consumer: string,
     param: string,
   ): { ref: Ref; source: boolean } => {
-    if (isMachine(token))
+    if (isObject(token))
       return { ref: { node: instanceFor(token, e).node.id, port: null }, source: false };
     const p = producers.get(token);
     // a producer only counts for consumers that ran after it: an earlier use is a source
@@ -450,7 +449,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
           ref,
           { node: info.node.id, port: `in:${x.param}` },
           { i: e.i, token: x.value },
-          source || isMachine(x.value) ? null : nameOf(x.value),
+          source || isObject(x.value) ? null : nameOf(x.value),
           false,
         );
       }
@@ -465,7 +464,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
           ref,
           { node: info.node.id, port: null },
           { i: e.i, token: x.value },
-          source || isMachine(x.value) ? null : nameOf(x.value),
+          source || isObject(x.value) ? null : nameOf(x.value),
           info.node.kind === 'expr',
         );
       }
@@ -489,26 +488,14 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
         }
       }
     }
-    for (const e of info.ctorEvents) {
-      for (const x of e.inputs) {
-        if (x.value === undefined || x.value.startsWith('s')) continue;
-        const { ref, source } = resolve(x.value, e, node.id, x.param);
-        addEdge(
-          ref,
-          { node: node.id, port: null },
-          { i: e.i, token: x.value },
-          source || isMachine(x.value) ? null : nameOf(x.value),
-          false,
-        );
-      }
-    }
     if (node.createdBy !== null && info.createdByPort !== null) {
       const tok = node.versions[0]?.token;
       if (tok !== undefined)
         addEdge(
           { node: node.createdBy, port: info.createdByPort },
           { node: node.id, port: null },
-          { i: node.createdAt, token: tok },
+          // the wire to the instance exists once its creator has returned
+          { i: retOf.get(node.createdAt) ?? node.createdAt, token: tok },
           null,
           false,
         );
@@ -541,7 +528,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
         outPorts.set(id, { id, param: `${k}`, typeLabel: typeOf(t), nameLabel: nameOf(t) });
       });
       e.mutates.forEach(([before, after], k) => {
-        if (isMachine(before)) return;
+        if (isObject(before)) return;
         const input = drawnInputs(e).find((x) => x.value === before);
         const param = input ? input.param : `${k}`;
         const id = `out:mut:${param}`;

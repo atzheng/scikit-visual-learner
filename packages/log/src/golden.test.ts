@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { createAssembler } from './assemble';
 import { buildGraph, keyOf } from './graph';
+import { stateAt, stepOfEvent } from './timeline';
 import type { CallNode, Execution, GEdge, GNode, GraphModel, InstanceNode } from './graph';
 import type { FromWorker } from './messages';
 import type { EventLog } from './types';
@@ -80,7 +81,8 @@ describe('fixtures', () => {
             const ok = execsOf(from).some(
               (x) =>
                 (port === null ? Object.values(x.outputs) : [x.outputs[port]]).includes(u.token) &&
-                x.ret < u.i,
+                // an instance has no execution: its creating wire is used at the creator's return
+                (to?.kind === 'instance' ? x.ret <= u.i : x.ret < u.i),
             );
             expect(ok, `${ed.id} produced ${u.token} before @${u.i}`).toBe(true);
           } else if (from?.kind === 'instance') {
@@ -164,16 +166,20 @@ describe('golden_onehot', () => {
   const g = graphOf('golden_onehot');
   const inst = only(instances(g));
   const split = only(calls(g, 'train_test_split'));
+  const ctor = only(calls(g, 'OneHotEncoder'));
   const fit = only(calls(g, 'OneHotEncoder.fit'));
-  const [t1, t2] = calls(g, 'OneHotEncoder.transform') as [CallNode, CallNode];
+  const t = only(calls(g, 'OneHotEncoder.transform'));
 
-  it('has one OneHotEncoder instance with fit and two transform boxes inside it', () => {
+  it('a constructor box creates the instance; fit and one transform box (x2) sit inside it', () => {
     expect(inst.className).toBe('OneHotEncoder');
     expect(inst.varName).toBe('enc');
     expect(inst.params).toEqual([{ name: 'handle_unknown', text: '"ignore"' }]);
-    expect(calls(g, 'OneHotEncoder.transform')).toHaveLength(2);
-    expect(t1.id).not.toBe(t2.id);
-    for (const c of [fit, t1, t2]) expect(c.parent).toBe(inst.id);
+    expect(ctor.parent).toBeNull();
+    expect(ctor.inPorts.map((p) => p.constText)).toEqual(['handle_unknown = "ignore"']);
+    expect(inst.createdBy).toBe(ctor.id);
+    expect(edgesInto(g, inst).map((e) => [e.from.node, e.from.port])).toEqual([[ctor.id, 'out:0']]);
+    expect(t.executions.map((x) => x.count)).toEqual([1, 2]);
+    for (const c of [fit, t]) expect(c.parent).toBe(inst.id);
   });
 
   it('fit mutates the encoder and has no output wire', () => {
@@ -182,14 +188,22 @@ describe('golden_onehot', () => {
     expect(inst.versions.map((v) => v.i)).toContain(fit.executions[0]?.i);
   });
 
-  it('wires train and test to the right boxes; outputs are sparse', () => {
-    const e1 = only(edgesInto(g, t1, 'in:X'));
-    const e2 = only(edgesInto(g, t2, 'in:X'));
-    expect([e1.nameLabel, e1.from]).toEqual(['X_train', { node: split.id, port: 'out:0' }]);
-    expect([e2.nameLabel, e2.from]).toEqual(['X_test', { node: split.id, port: 'out:1' }]);
+  it('the shared transform box switches its wires per execution; outputs are sparse', () => {
+    const [e1, e2] = edgesInto(g, t, 'in:X') as [GEdge, GEdge];
+    expect(edgesInto(g, t, 'in:X')).toHaveLength(2);
+    expect([e1.nameLabel, e1.from, e1.uses.map((u) => u.i)]).toEqual([
+      'X_train',
+      { node: split.id, port: 'out:0' },
+      [t.executions[0]?.i],
+    ]);
+    expect([e2.nameLabel, e2.from, e2.uses.map((u) => u.i)]).toEqual([
+      'X_test',
+      { node: split.id, port: 'out:1' },
+      [t.executions[1]?.i],
+    ]);
     expect(only(edgesInto(g, fit, 'in:X')).nameLabel).toBe('X_train');
-    expect(t1.outPorts.map((p) => [p.typeLabel, p.nameLabel])).toEqual([['sparse', 'train_enc']]);
-    expect(t2.outPorts.map((p) => [p.typeLabel, p.nameLabel])).toEqual([['sparse', 'test_enc']]);
+    expect(t.outPorts.map((p) => [p.typeLabel, p.nameLabel])).toEqual([['sparse', 'test_enc']]); // the out-port carries the latest name;
+    // the wire's per-use token tells which execution it was);
   });
 });
 
@@ -205,6 +219,23 @@ describe('golden_linreg', () => {
     expect(inst.className).toBe('LinearRegression');
     expect(inst.varName).toBe('model');
     for (const c of [fit, predict, score]) expect(c.parent).toBe(inst.id);
+  });
+
+  it('the LinearRegression() box creates the instance; the method slots are uncalled from that step', () => {
+    const ctor = only(calls(g, 'LinearRegression'));
+    expect(inst.createdBy).toBe(ctor.id);
+    expect(edgesInto(g, inst).map((e) => [e.from.node, e.from.port])).toEqual([[ctor.id, 'out:0']]);
+    const log = readLog('golden_linreg');
+    const atCtor = stateAt(g, log, stepOfEvent(g, ctor.executions[0]!.i)!);
+    expect(atCtor.currentNode).toBe(ctor.id);
+    for (const c of [fit, predict, score]) {
+      expect(atCtor.visibleNodes.has(c.id), c.name).toBe(true);
+      expect(atCtor.uncalled.has(c.id), c.name).toBe(true);
+    }
+    const atFit = stateAt(g, log, stepOfEvent(g, fit.executions[0]!.i)!);
+    expect(atFit.uncalled.has(fit.id)).toBe(false);
+    expect(atFit.uncalled.has(predict.id)).toBe(true);
+    expect(stateAt(g, log, g.steps.length).uncalled.size).toBe(0);
   });
 
   it('fit mutates the model, has no output wire, and gets X_train and y_train only', () => {
@@ -274,15 +305,18 @@ describe('edge cases on real logs', () => {
     const ridge = only(instances(g, 'Ridge'));
     const search = only(instances(g, 'GridSearchCV'));
     expect(ridge.versions).toHaveLength(1);
-    expect(g.edges.some((e) => e.from.node === ridge.id && e.to.node === search.id)).toBe(true);
+    const ctor = only(calls(g, 'GridSearchCV'));
+    expect(g.edges.some((e) => e.from.node === ridge.id && e.to.node === ctor.id)).toBe(true);
+    expect(g.edges.some((e) => e.from.node === ctor.id && e.to.node === search.id)).toBe(true);
   });
 
   it('errors ride on the execution, handled or not', () => {
     const bad = only(calls(graphOf('edge_error'), 'LinearRegression.fit'));
     expect(bad.executions[0]?.error).toMatchObject({ type: 'ValueError', handled: false });
-    const fits = calls(graphOf('edge_handled'), 'LinearRegression.fit');
-    expect(fits).toHaveLength(2);
-    expect(fits.map((c) => c.executions[0]?.error?.handled ?? null)).toEqual([true, null]);
+    // two call sites of one method share one box; each execution keeps its own error
+    const fit = only(calls(graphOf('edge_handled'), 'LinearRegression.fit'));
+    expect(fit.executions.map((x) => x.error?.handled ?? null)).toEqual([true, null]);
+    expect(fit.executions.map((x) => x.count)).toEqual([1, 2]);
   });
 
   it('a student function is a student box and a student class instance is an instance node', () => {

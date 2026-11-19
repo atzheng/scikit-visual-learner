@@ -130,6 +130,39 @@
       ]
     },
     {
+      "id": "n:8h82rt.0",
+      "kind": "call",
+      "mergeKey": "s5",
+      "name": "Ridge",
+      "module": "sklearn.linear_model._ridge",
+      "parent": null,
+      "order": 1100007,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v4.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Ridge",
+          "nameLabel": "base"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:8h82rt.0",
       "kind": "instance",
       "parent": null,
@@ -137,7 +170,7 @@
       "className": "Ridge",
       "varName": "base",
       "createdAt": 4,
-      "createdBy": null,
+      "createdBy": "n:8h82rt.0",
       "params": [],
       "versions": [
         {
@@ -147,6 +180,69 @@
       ]
     },
     {
+      "id": "n:6qo9to.0",
+      "kind": "call",
+      "mergeKey": "s7",
+      "name": "GridSearchCV",
+      "module": "sklearn.model_selection._search",
+      "parent": null,
+      "order": 1200009,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {
+            "in:estimator": "v4.0"
+          },
+          "outputs": {
+            "out:0": "v6.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:estimator",
+          "param": "estimator",
+          "typeLabel": "Ridge",
+          "nameLabel": null
+        },
+        {
+          "id": "in:param_grid",
+          "param": "param_grid",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "param_grid = {\"alpha\": [0.1, 1.0, 10.0]}"
+        },
+        {
+          "id": "in:n_jobs",
+          "param": "n_jobs",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "n_jobs = 2"
+        },
+        {
+          "id": "in:cv",
+          "param": "cv",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "cv = 3"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "GridSearchCV",
+          "nameLabel": "search"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:6qo9to.0",
       "kind": "instance",
       "parent": null,
@@ -154,7 +250,7 @@
       "className": "GridSearchCV",
       "varName": "search",
       "createdAt": 5,
-      "createdBy": null,
+      "createdBy": "n:6qo9to.0",
       "params": [
         {
           "name": "estimator",
@@ -185,7 +281,7 @@
       ]
     },
     {
-      "id": "n:17a2n6c.0@i:6qo9to.0",
+      "id": "n:m1bgpot1@i:6qo9to.0",
       "kind": "call",
       "mergeKey": "s9",
       "name": "GridSearchCV.fit",
@@ -246,13 +342,32 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:f2rqav.0.>n:17a2n6c.0@i:6qo9to.0.in:X",
+      "id": "e:i:8h82rt.0.>n:6qo9to.0.in:estimator",
+      "from": {
+        "node": "i:8h82rt.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:6qo9to.0",
+        "port": "in:estimator"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:f2rqav.0.>n:m1bgpot1@i:6qo9to.0.in:X",
       "from": {
         "node": "x:f2rqav.0",
         "port": null
       },
       "to": {
-        "node": "n:17a2n6c.0@i:6qo9to.0",
+        "node": "n:m1bgpot1@i:6qo9to.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -265,13 +380,13 @@
       "nameLabel": "X"
     },
     {
-      "id": "e:x:xaeoav.0.>n:17a2n6c.0@i:6qo9to.0.in:y",
+      "id": "e:x:xaeoav.0.>n:m1bgpot1@i:6qo9to.0.in:y",
       "from": {
         "node": "x:xaeoav.0",
         "port": null
       },
       "to": {
-        "node": "n:17a2n6c.0@i:6qo9to.0",
+        "node": "n:m1bgpot1@i:6qo9to.0",
         "port": "in:y"
       },
       "dashed": true,
@@ -322,10 +437,29 @@
       "nameLabel": "df"
     },
     {
-      "id": "e:i:8h82rt.0.>i:6qo9to.0.",
+      "id": "e:n:8h82rt.0.out:0>i:8h82rt.0.",
       "from": {
+        "node": "n:8h82rt.0",
+        "port": "out:0"
+      },
+      "to": {
         "node": "i:8h82rt.0",
         "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:6qo9to.0.out:0>i:6qo9to.0.",
+      "from": {
+        "node": "n:6qo9to.0",
+        "port": "out:0"
       },
       "to": {
         "node": "i:6qo9to.0",
@@ -335,7 +469,7 @@
       "uses": [
         {
           "i": 5,
-          "token": "v4.0"
+          "token": "v6.0"
         }
       ],
       "nameLabel": null

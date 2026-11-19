@@ -280,6 +280,39 @@
       ]
     },
     {
+      "id": "n:10epbgg.0",
+      "kind": "call",
+      "mergeKey": "s10",
+      "name": "LinearRegression",
+      "module": "sklearn.linear_model._base",
+      "parent": null,
+      "order": 1300008,
+      "executions": [
+        {
+          "i": 7,
+          "ret": 7,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v10.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "LinearRegression",
+          "nameLabel": "model"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:10epbgg.0",
       "kind": "instance",
       "parent": null,
@@ -287,7 +320,7 @@
       "className": "LinearRegression",
       "varName": "model",
       "createdAt": 7,
-      "createdBy": null,
+      "createdBy": "n:10epbgg.0",
       "params": [],
       "versions": [
         {
@@ -301,7 +334,7 @@
       ]
     },
     {
-      "id": "n:12vbknt.0@i:10epbgg.0",
+      "id": "n:m1gsyoeo@i:10epbgg.0",
       "kind": "call",
       "mergeKey": "s12",
       "name": "LinearRegression.fit",
@@ -491,13 +524,13 @@
       "nameLabel": "X_train"
     },
     {
-      "id": "e:x:cu6mlb.0.>n:12vbknt.0@i:10epbgg.0.in:X",
+      "id": "e:x:cu6mlb.0.>n:m1gsyoeo@i:10epbgg.0.in:X",
       "from": {
         "node": "x:cu6mlb.0",
         "port": null
       },
       "to": {
-        "node": "n:12vbknt.0@i:10epbgg.0",
+        "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -510,13 +543,13 @@
       "nameLabel": "centred"
     },
     {
-      "id": "e:n:12eqf14.0.out:2>n:12vbknt.0@i:10epbgg.0.in:y",
+      "id": "e:n:12eqf14.0.out:2>n:m1gsyoeo@i:10epbgg.0.in:y",
       "from": {
         "node": "n:12eqf14.0",
         "port": "out:2"
       },
       "to": {
-        "node": "n:12vbknt.0@i:10epbgg.0",
+        "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:y"
       },
       "dashed": false,
@@ -638,6 +671,25 @@
         {
           "i": 9,
           "token": "v10.1"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:10epbgg.0.out:0>i:10epbgg.0.",
+      "from": {
+        "node": "n:10epbgg.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:10epbgg.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v10.0"
         }
       ],
       "nameLabel": null

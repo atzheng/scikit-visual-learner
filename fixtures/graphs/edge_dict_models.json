@@ -130,6 +130,39 @@
       ]
     },
     {
+      "id": "n:8h82rt.0",
+      "kind": "call",
+      "mergeKey": "s5",
+      "name": "Ridge",
+      "module": "sklearn.linear_model._ridge",
+      "parent": null,
+      "order": 1200013,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v4.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Ridge",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:8h82rt.0",
       "kind": "instance",
       "parent": null,
@@ -137,7 +170,7 @@
       "className": "Ridge",
       "varName": null,
       "createdAt": 4,
-      "createdBy": null,
+      "createdBy": "n:8h82rt.0",
       "params": [],
       "versions": [
         {
@@ -147,6 +180,54 @@
       ]
     },
     {
+      "id": "n:8npe94.0",
+      "kind": "call",
+      "mergeKey": "s6",
+      "name": "RandomForestRegressor",
+      "module": "sklearn.ensemble._forest",
+      "parent": null,
+      "order": 1300010,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v5.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:n_estimators",
+          "param": "n_estimators",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "n_estimators = 10"
+        },
+        {
+          "id": "in:random_state",
+          "param": "random_state",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "random_state = 0"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "RandomForestRegressor",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:8npe94.0",
       "kind": "instance",
       "parent": null,
@@ -154,7 +235,7 @@
       "className": "RandomForestRegressor",
       "varName": null,
       "createdAt": 5,
-      "createdBy": null,
+      "createdBy": "n:8npe94.0",
       "params": [
         {
           "name": "n_estimators",
@@ -177,7 +258,7 @@
       ]
     },
     {
-      "id": "n:5e7ake.0@i:8npe94.0",
+      "id": "n:m1eglwfo@i:8npe94.0",
       "kind": "call",
       "mergeKey": "s8",
       "name": "RandomForestRegressor.fit",
@@ -217,7 +298,7 @@
       "student": false
     },
     {
-      "id": "n:1p3ne1f.0@i:8npe94.0",
+      "id": "n:mj5snst@i:8npe94.0",
       "kind": "call",
       "mergeKey": "s9",
       "name": "RandomForestRegressor.score",
@@ -287,13 +368,13 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:f2rqav.0.>n:5e7ake.0@i:8npe94.0.in:X",
+      "id": "e:x:f2rqav.0.>n:m1eglwfo@i:8npe94.0.in:X",
       "from": {
         "node": "x:f2rqav.0",
         "port": null
       },
       "to": {
-        "node": "n:5e7ake.0@i:8npe94.0",
+        "node": "n:m1eglwfo@i:8npe94.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -306,13 +387,13 @@
       "nameLabel": "X"
     },
     {
-      "id": "e:x:xaeoav.0.>n:5e7ake.0@i:8npe94.0.in:y",
+      "id": "e:x:xaeoav.0.>n:m1eglwfo@i:8npe94.0.in:y",
       "from": {
         "node": "x:xaeoav.0",
         "port": null
       },
       "to": {
-        "node": "n:5e7ake.0@i:8npe94.0",
+        "node": "n:m1eglwfo@i:8npe94.0",
         "port": "in:y"
       },
       "dashed": true,
@@ -325,13 +406,13 @@
       "nameLabel": "y"
     },
     {
-      "id": "e:x:f2rqav.0.>n:1p3ne1f.0@i:8npe94.0.in:X",
+      "id": "e:x:f2rqav.0.>n:mj5snst@i:8npe94.0.in:X",
       "from": {
         "node": "x:f2rqav.0",
         "port": null
       },
       "to": {
-        "node": "n:1p3ne1f.0@i:8npe94.0",
+        "node": "n:mj5snst@i:8npe94.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -344,13 +425,13 @@
       "nameLabel": "X"
     },
     {
-      "id": "e:x:xaeoav.0.>n:1p3ne1f.0@i:8npe94.0.in:y",
+      "id": "e:x:xaeoav.0.>n:mj5snst@i:8npe94.0.in:y",
       "from": {
         "node": "x:xaeoav.0",
         "port": null
       },
       "to": {
-        "node": "n:1p3ne1f.0@i:8npe94.0",
+        "node": "n:mj5snst@i:8npe94.0",
         "port": "in:y"
       },
       "dashed": true,
@@ -399,6 +480,44 @@
         }
       ],
       "nameLabel": "df"
+    },
+    {
+      "id": "e:n:8h82rt.0.out:0>i:8h82rt.0.",
+      "from": {
+        "node": "n:8h82rt.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:8h82rt.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:8npe94.0.out:0>i:8npe94.0.",
+      "from": {
+        "node": "n:8npe94.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:8npe94.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

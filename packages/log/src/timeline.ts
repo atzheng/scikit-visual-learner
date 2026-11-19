@@ -20,6 +20,17 @@ export interface StepState {
   badge: Map<string, { k: number; n: number }>;
   /** Per visible instance: its latest version token at or before the current step. */
   activeVersion: Map<string, Token>;
+  /**
+   * Visible call nodes with no execution yet: the method slots of an instance, shown from the
+   * instance's creation until the method's first call. A node in `uncalled` has no `activeExecution`.
+   */
+  uncalled: Set<string>;
+  /**
+   * Visible edges that the active execution of their consumer used (a shared method box switches its
+   * wires per execution; `visibleEdges` is cumulative). Edges into an instance (its creator) are active
+   * whenever visible.
+   */
+  activeEdges: Set<string>;
   /** Node whose execution (or, for instances, creation/mutation) is the current event; null if none. */
   currentNode: string | null;
 }
@@ -34,6 +45,7 @@ interface EdgeIndex {
   id: string;
   minAt: number;
   uses: UseInfo[]; // sorted by i
+  to: string; // consumer node id
 }
 interface ExecNode {
   id: string;
@@ -76,6 +88,10 @@ function buildIndex(model: GraphModel, log: EventLog): Index {
     if (n.kind === 'instance') first.set(n.id, n.createdAt);
     else if (n.kind !== 'source') {
       if (n.executions.length > 0) first.set(n.id, n.executions[0]!.i);
+      // A method slot exists from its instance's creation, before its first call.
+      const par = n.parent !== null ? nodeById.get(n.parent) : undefined;
+      if (n.kind === 'call' && par?.kind === 'instance')
+        first.set(n.id, Math.min(par.createdAt, n.executions[0]?.i ?? Infinity));
       const last = n.executions[n.executions.length - 1];
       execNodes.push({ id: n.id, executions: n.executions, n: last ? last.count : 0 });
       const m = new Map<Token, [number, number][]>();
@@ -116,7 +132,7 @@ function buildIndex(model: GraphModel, log: EventLog): Index {
       .sort((a, b) => a.i - b.i);
     let minAt = Infinity;
     for (const u of uses) if (u.at < minAt) minAt = u.at;
-    const idx = edges.push({ id: e.id, minAt, uses }) - 1;
+    const idx = edges.push({ id: e.id, minAt, uses, to: e.to.node }) - 1;
     const from = nodeById.get(e.from.node);
     if (from && from.kind === 'source') {
       const l = sourceEdges.get(from.id);
@@ -238,6 +254,15 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
       }
     }
   }
+  const uncalled = new Set<string>();
+  for (const en of ix.execNodes)
+    if (visibleNodes.has(en.id) && !activeExecution.has(en.id)) uncalled.add(en.id);
+  const activeEdges = new Set<string>();
+  for (const e of ix.edges) {
+    if (!visibleEdges.has(e.id)) continue;
+    const ex = activeExecution.get(e.to);
+    if (!ex || e.uses.some((u) => u.i === ex.i && u.at <= cur)) activeEdges.add(e.id);
+  }
   const activeVersion = new Map<string, Token>();
   for (const n of ix.instances) {
     if (!visibleNodes.has(n.id)) continue;
@@ -258,6 +283,8 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
     // Entries with i = -1 (before any event) are always visible; with nothing drawn, show all.
     output: atEnd ? log.output.slice() : log.output.filter((o) => o.i <= cur),
     badge,
+    uncalled,
+    activeEdges,
     activeVersion,
     currentNode: current === null ? null : (ix.nodeAt.get(current) ?? null),
   };

@@ -214,6 +214,639 @@
       "student": false
     },
     {
+      "id": "src:x:3xg8nf.0~1a1rtkm:i",
+      "kind": "source",
+      "parent": null,
+      "order": 1400011.5,
+      "label": "i",
+      "token": "s667"
+    },
+    {
+      "id": "x:3xg8nf.0~1a1rtkm",
+      "kind": "expr",
+      "parent": null,
+      "order": 1400012,
+      "text": "0.1 * (i + 1)",
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {
+            "in:i": "s0"
+          },
+          "outputs": {
+            "out:0": "s1"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 9,
+          "ret": 9,
+          "inputs": {
+            "in:i": "s23"
+          },
+          "outputs": {
+            "out:0": "s24"
+          },
+          "count": 2,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 13,
+          "ret": 13,
+          "inputs": {
+            "in:i": "s46"
+          },
+          "outputs": {
+            "out:0": "s47"
+          },
+          "count": 3,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 17,
+          "ret": 17,
+          "inputs": {
+            "in:i": "s69"
+          },
+          "outputs": {
+            "out:0": "s70"
+          },
+          "count": 4,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 21,
+          "ret": 21,
+          "inputs": {
+            "in:i": "s92"
+          },
+          "outputs": {
+            "out:0": "s93"
+          },
+          "count": 5,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 25,
+          "ret": 25,
+          "inputs": {
+            "in:i": "s115"
+          },
+          "outputs": {
+            "out:0": "s116"
+          },
+          "count": 6,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 29,
+          "ret": 29,
+          "inputs": {
+            "in:i": "s138"
+          },
+          "outputs": {
+            "out:0": "s139"
+          },
+          "count": 7,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 33,
+          "ret": 33,
+          "inputs": {
+            "in:i": "s161"
+          },
+          "outputs": {
+            "out:0": "s162"
+          },
+          "count": 8,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 37,
+          "ret": 37,
+          "inputs": {
+            "in:i": "s184"
+          },
+          "outputs": {
+            "out:0": "s185"
+          },
+          "count": 9,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 41,
+          "ret": 41,
+          "inputs": {
+            "in:i": "s207"
+          },
+          "outputs": {
+            "out:0": "s208"
+          },
+          "count": 10,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 45,
+          "ret": 45,
+          "inputs": {
+            "in:i": "s230"
+          },
+          "outputs": {
+            "out:0": "s231"
+          },
+          "count": 11,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 49,
+          "ret": 49,
+          "inputs": {
+            "in:i": "s253"
+          },
+          "outputs": {
+            "out:0": "s254"
+          },
+          "count": 12,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 53,
+          "ret": 53,
+          "inputs": {
+            "in:i": "s276"
+          },
+          "outputs": {
+            "out:0": "s277"
+          },
+          "count": 13,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 57,
+          "ret": 57,
+          "inputs": {
+            "in:i": "s299"
+          },
+          "outputs": {
+            "out:0": "s300"
+          },
+          "count": 14,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 61,
+          "ret": 61,
+          "inputs": {
+            "in:i": "s322"
+          },
+          "outputs": {
+            "out:0": "s323"
+          },
+          "count": 15,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 65,
+          "ret": 65,
+          "inputs": {
+            "in:i": "s345"
+          },
+          "outputs": {
+            "out:0": "s346"
+          },
+          "count": 16,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 69,
+          "ret": 69,
+          "inputs": {
+            "in:i": "s368"
+          },
+          "outputs": {
+            "out:0": "s369"
+          },
+          "count": 17,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 73,
+          "ret": 73,
+          "inputs": {
+            "in:i": "s391"
+          },
+          "outputs": {
+            "out:0": "s392"
+          },
+          "count": 18,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 77,
+          "ret": 77,
+          "inputs": {
+            "in:i": "s414"
+          },
+          "outputs": {
+            "out:0": "s415"
+          },
+          "count": 19,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 81,
+          "ret": 81,
+          "inputs": {
+            "in:i": "s437"
+          },
+          "outputs": {
+            "out:0": "s438"
+          },
+          "count": 20,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 121,
+          "ret": 121,
+          "inputs": {
+            "in:i": "s667"
+          },
+          "outputs": {
+            "out:0": "s668"
+          },
+          "count": 30,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:3xg8nf.0",
+      "kind": "call",
+      "mergeKey": "s9",
+      "name": "Ridge",
+      "module": "sklearn.linear_model._ridge",
+      "parent": null,
+      "order": 1400012,
+      "executions": [
+        {
+          "i": 6,
+          "ret": 6,
+          "inputs": {
+            "in:alpha": "s1"
+          },
+          "outputs": {
+            "out:0": "v9.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 10,
+          "ret": 10,
+          "inputs": {
+            "in:alpha": "s24"
+          },
+          "outputs": {
+            "out:0": "v12.0"
+          },
+          "count": 2,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 14,
+          "ret": 14,
+          "inputs": {
+            "in:alpha": "s47"
+          },
+          "outputs": {
+            "out:0": "v14.0"
+          },
+          "count": 3,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 18,
+          "ret": 18,
+          "inputs": {
+            "in:alpha": "s70"
+          },
+          "outputs": {
+            "out:0": "v16.0"
+          },
+          "count": 4,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 22,
+          "ret": 22,
+          "inputs": {
+            "in:alpha": "s93"
+          },
+          "outputs": {
+            "out:0": "v18.0"
+          },
+          "count": 5,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 26,
+          "ret": 26,
+          "inputs": {
+            "in:alpha": "s116"
+          },
+          "outputs": {
+            "out:0": "v20.0"
+          },
+          "count": 6,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 30,
+          "ret": 30,
+          "inputs": {
+            "in:alpha": "s139"
+          },
+          "outputs": {
+            "out:0": "v22.0"
+          },
+          "count": 7,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 34,
+          "ret": 34,
+          "inputs": {
+            "in:alpha": "s162"
+          },
+          "outputs": {
+            "out:0": "v24.0"
+          },
+          "count": 8,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 38,
+          "ret": 38,
+          "inputs": {
+            "in:alpha": "s185"
+          },
+          "outputs": {
+            "out:0": "v26.0"
+          },
+          "count": 9,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 42,
+          "ret": 42,
+          "inputs": {
+            "in:alpha": "s208"
+          },
+          "outputs": {
+            "out:0": "v28.0"
+          },
+          "count": 10,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 46,
+          "ret": 46,
+          "inputs": {
+            "in:alpha": "s231"
+          },
+          "outputs": {
+            "out:0": "v30.0"
+          },
+          "count": 11,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 50,
+          "ret": 50,
+          "inputs": {
+            "in:alpha": "s254"
+          },
+          "outputs": {
+            "out:0": "v32.0"
+          },
+          "count": 12,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 54,
+          "ret": 54,
+          "inputs": {
+            "in:alpha": "s277"
+          },
+          "outputs": {
+            "out:0": "v34.0"
+          },
+          "count": 13,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 58,
+          "ret": 58,
+          "inputs": {
+            "in:alpha": "s300"
+          },
+          "outputs": {
+            "out:0": "v36.0"
+          },
+          "count": 14,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 62,
+          "ret": 62,
+          "inputs": {
+            "in:alpha": "s323"
+          },
+          "outputs": {
+            "out:0": "v38.0"
+          },
+          "count": 15,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 66,
+          "ret": 66,
+          "inputs": {
+            "in:alpha": "s346"
+          },
+          "outputs": {
+            "out:0": "v40.0"
+          },
+          "count": 16,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 70,
+          "ret": 70,
+          "inputs": {
+            "in:alpha": "s369"
+          },
+          "outputs": {
+            "out:0": "v42.0"
+          },
+          "count": 17,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 74,
+          "ret": 74,
+          "inputs": {
+            "in:alpha": "s392"
+          },
+          "outputs": {
+            "out:0": "v44.0"
+          },
+          "count": 18,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 78,
+          "ret": 78,
+          "inputs": {
+            "in:alpha": "s415"
+          },
+          "outputs": {
+            "out:0": "v46.0"
+          },
+          "count": 19,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 82,
+          "ret": 82,
+          "inputs": {
+            "in:alpha": "s438"
+          },
+          "outputs": {
+            "out:0": "v48.0"
+          },
+          "count": 20,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 122,
+          "ret": 122,
+          "inputs": {
+            "in:alpha": "s668"
+          },
+          "outputs": {
+            "out:0": "v68.0"
+          },
+          "count": 30,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:alpha",
+          "param": "alpha",
+          "typeLabel": "float",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Ridge",
+          "nameLabel": "model"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:3xg8nf.0",
       "kind": "instance",
       "parent": null,
@@ -221,7 +854,7 @@
       "className": "Ridge",
       "varName": "model",
       "createdAt": 6,
-      "createdBy": null,
+      "createdBy": "n:3xg8nf.0",
       "params": [
         {
           "name": "alpha",
@@ -400,7 +1033,7 @@
       ]
     },
     {
-      "id": "n:12gqu2d.0@i:3xg8nf.0",
+      "id": "n:mgalb3d@i:3xg8nf.0",
       "kind": "call",
       "mergeKey": "s11",
       "name": "Ridge.fit",
@@ -700,7 +1333,7 @@
       "student": false
     },
     {
-      "id": "n:unncig.0@i:3xg8nf.0",
+      "id": "n:m1qiylls@i:3xg8nf.0",
       "kind": "call",
       "mergeKey": "s12",
       "name": "Ridge.score",
@@ -1108,13 +1741,112 @@
       "nameLabel": "y"
     },
     {
-      "id": "e:n:15uvz5m.0.out:0>n:12gqu2d.0@i:3xg8nf.0.in:X",
+      "id": "e:x:3xg8nf.0~1a1rtkm.>n:3xg8nf.0.in:alpha",
+      "from": {
+        "node": "x:3xg8nf.0~1a1rtkm",
+        "port": null
+      },
+      "to": {
+        "node": "n:3xg8nf.0",
+        "port": "in:alpha"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 6,
+          "token": "s1"
+        },
+        {
+          "i": 10,
+          "token": "s24"
+        },
+        {
+          "i": 14,
+          "token": "s47"
+        },
+        {
+          "i": 18,
+          "token": "s70"
+        },
+        {
+          "i": 22,
+          "token": "s93"
+        },
+        {
+          "i": 26,
+          "token": "s116"
+        },
+        {
+          "i": 30,
+          "token": "s139"
+        },
+        {
+          "i": 34,
+          "token": "s162"
+        },
+        {
+          "i": 38,
+          "token": "s185"
+        },
+        {
+          "i": 42,
+          "token": "s208"
+        },
+        {
+          "i": 46,
+          "token": "s231"
+        },
+        {
+          "i": 50,
+          "token": "s254"
+        },
+        {
+          "i": 54,
+          "token": "s277"
+        },
+        {
+          "i": 58,
+          "token": "s300"
+        },
+        {
+          "i": 62,
+          "token": "s323"
+        },
+        {
+          "i": 66,
+          "token": "s346"
+        },
+        {
+          "i": 70,
+          "token": "s369"
+        },
+        {
+          "i": 74,
+          "token": "s392"
+        },
+        {
+          "i": 78,
+          "token": "s415"
+        },
+        {
+          "i": 82,
+          "token": "s438"
+        },
+        {
+          "i": 122,
+          "token": "s668"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:0>n:mgalb3d@i:3xg8nf.0.in:X",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:0"
       },
       "to": {
-        "node": "n:12gqu2d.0@i:3xg8nf.0",
+        "node": "n:mgalb3d@i:3xg8nf.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -1207,13 +1939,13 @@
       "nameLabel": "X_train"
     },
     {
-      "id": "e:n:15uvz5m.0.out:2>n:12gqu2d.0@i:3xg8nf.0.in:y",
+      "id": "e:n:15uvz5m.0.out:2>n:mgalb3d@i:3xg8nf.0.in:y",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:2"
       },
       "to": {
-        "node": "n:12gqu2d.0@i:3xg8nf.0",
+        "node": "n:mgalb3d@i:3xg8nf.0",
         "port": "in:y"
       },
       "dashed": false,
@@ -1306,13 +2038,13 @@
       "nameLabel": "y_train"
     },
     {
-      "id": "e:n:15uvz5m.0.out:1>n:unncig.0@i:3xg8nf.0.in:X",
+      "id": "e:n:15uvz5m.0.out:1>n:m1qiylls@i:3xg8nf.0.in:X",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:1"
       },
       "to": {
-        "node": "n:unncig.0@i:3xg8nf.0",
+        "node": "n:m1qiylls@i:3xg8nf.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -1405,13 +2137,13 @@
       "nameLabel": "X_test"
     },
     {
-      "id": "e:n:15uvz5m.0.out:3>n:unncig.0@i:3xg8nf.0.in:y",
+      "id": "e:n:15uvz5m.0.out:3>n:m1qiylls@i:3xg8nf.0.in:y",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:3"
       },
       "to": {
-        "node": "n:unncig.0@i:3xg8nf.0",
+        "node": "n:m1qiylls@i:3xg8nf.0",
         "port": "in:y"
       },
       "dashed": false,
@@ -1540,6 +2272,124 @@
         }
       ],
       "nameLabel": "df"
+    },
+    {
+      "id": "e:src:x:3xg8nf.0~1a1rtkm:i.>x:3xg8nf.0~1a1rtkm.",
+      "from": {
+        "node": "src:x:3xg8nf.0~1a1rtkm:i",
+        "port": null
+      },
+      "to": {
+        "node": "x:3xg8nf.0~1a1rtkm",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 5,
+          "token": "s0"
+        },
+        {
+          "i": 9,
+          "token": "s23"
+        },
+        {
+          "i": 13,
+          "token": "s46"
+        },
+        {
+          "i": 17,
+          "token": "s69"
+        },
+        {
+          "i": 21,
+          "token": "s92"
+        },
+        {
+          "i": 25,
+          "token": "s115"
+        },
+        {
+          "i": 29,
+          "token": "s138"
+        },
+        {
+          "i": 33,
+          "token": "s161"
+        },
+        {
+          "i": 37,
+          "token": "s184"
+        },
+        {
+          "i": 41,
+          "token": "s207"
+        },
+        {
+          "i": 45,
+          "token": "s230"
+        },
+        {
+          "i": 49,
+          "token": "s253"
+        },
+        {
+          "i": 53,
+          "token": "s276"
+        },
+        {
+          "i": 57,
+          "token": "s299"
+        },
+        {
+          "i": 61,
+          "token": "s322"
+        },
+        {
+          "i": 65,
+          "token": "s345"
+        },
+        {
+          "i": 69,
+          "token": "s368"
+        },
+        {
+          "i": 73,
+          "token": "s391"
+        },
+        {
+          "i": 77,
+          "token": "s414"
+        },
+        {
+          "i": 81,
+          "token": "s437"
+        },
+        {
+          "i": 121,
+          "token": "s667"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:3xg8nf.0.out:0>i:3xg8nf.0.",
+      "from": {
+        "node": "n:3xg8nf.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:3xg8nf.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v9.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [
@@ -1548,66 +2398,87 @@
     2,
     3,
     4,
+    5,
     6,
     7,
     8,
+    9,
     10,
     11,
     12,
+    13,
     14,
     15,
     16,
+    17,
     18,
     19,
     20,
+    21,
     22,
     23,
     24,
+    25,
     26,
     27,
     28,
+    29,
     30,
     31,
     32,
+    33,
     34,
     35,
     36,
+    37,
     38,
     39,
     40,
+    41,
     42,
     43,
     44,
+    45,
     46,
     47,
     48,
+    49,
     50,
     51,
     52,
+    53,
     54,
     55,
     56,
+    57,
     58,
     59,
     60,
+    61,
     62,
     63,
     64,
+    65,
     66,
     67,
     68,
+    69,
     70,
     71,
     72,
+    73,
     74,
     75,
     76,
+    77,
     78,
     79,
     80,
+    81,
     82,
     83,
     84,
+    121,
     122,
     123,
     124
