@@ -195,6 +195,47 @@
       "student": false
     },
     {
+      "id": "n:jnknup.0",
+      "kind": "call",
+      "mergeKey": "s8",
+      "name": "LogisticRegression",
+      "module": "sklearn.linear_model._logistic",
+      "parent": null,
+      "order": 1400006,
+      "executions": [
+        {
+          "i": 6,
+          "ret": 6,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v5.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:max_iter",
+          "param": "max_iter",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "max_iter = 2"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "LogisticRegression",
+          "nameLabel": "clf"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:jnknup.0",
       "kind": "instance",
       "parent": null,
@@ -202,7 +243,7 @@
       "className": "LogisticRegression",
       "varName": "clf",
       "createdAt": 6,
-      "createdBy": null,
+      "createdBy": "n:jnknup.0",
       "params": [
         {
           "name": "max_iter",
@@ -221,7 +262,7 @@
       ]
     },
     {
-      "id": "n:1myaurl.0@i:jnknup.0",
+      "id": "n:mpjmnwr@i:jnknup.0",
       "kind": "call",
       "mergeKey": "s10",
       "name": "LogisticRegression.fit",
@@ -301,13 +342,13 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:amvtlp.0.>n:1myaurl.0@i:jnknup.0.in:X",
+      "id": "e:x:amvtlp.0.>n:mpjmnwr@i:jnknup.0.in:X",
       "from": {
         "node": "x:amvtlp.0",
         "port": null
       },
       "to": {
-        "node": "n:1myaurl.0@i:jnknup.0",
+        "node": "n:mpjmnwr@i:jnknup.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -320,13 +361,13 @@
       "nameLabel": "X"
     },
     {
-      "id": "e:x:baf3pv.0.>n:1myaurl.0@i:jnknup.0.in:y",
+      "id": "e:x:baf3pv.0.>n:mpjmnwr@i:jnknup.0.in:y",
       "from": {
         "node": "x:baf3pv.0",
         "port": null
       },
       "to": {
-        "node": "n:1myaurl.0@i:jnknup.0",
+        "node": "n:mpjmnwr@i:jnknup.0",
         "port": "in:y"
       },
       "dashed": true,
@@ -394,6 +435,25 @@
         }
       ],
       "nameLabel": "df"
+    },
+    {
+      "id": "e:n:jnknup.0.out:0>i:jnknup.0.",
+      "from": {
+        "node": "n:jnknup.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:jnknup.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

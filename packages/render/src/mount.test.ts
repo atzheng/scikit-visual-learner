@@ -118,7 +118,8 @@ describe('setState', () => {
     c.setState(stateAt(model, log, 3), log);
     c.setGraph(model, laid);
     expect(nodeEl('LinearRegression.fit').classList.contains('md-hidden')).toBe(false);
-    expect(nodeEl('LinearRegression.predict').classList.contains('md-hidden')).toBe(true);
+    // method slots show from the instance's creation (drawn as plain boxes until svl-0qe styles them)
+    expect(nodeEl('LinearRegression.predict').classList.contains('md-hidden')).toBe(false);
   });
 
   test('error, handled and stopped markers', async () => {

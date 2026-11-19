@@ -522,8 +522,8 @@ interface InstanceNode extends NodeBase {
   className: string;
   varName: string | null; // "model: LinearRegression"
   createdAt: number; // i of the creating event (constructor or a function returning it)
-  createdBy: string | null; // node id when created by a function (make_pipeline) rather than a constructor
-  params: { name: string; text: string }[]; // constructor const/label args
+  createdBy: string | null; // id of the call node that created it (the constructor box, or make_pipeline); null only for a lazy instance
+  params: { name: string; text: string }[]; // constructor const/label args (also ports of the constructor box)
   versions: { i: number; token: Token }[]; // the instance's versions with the event that made each
 }
 interface ExprNode extends NodeBase {
@@ -564,7 +564,9 @@ interface GEdge {
 
 Construction follows SPEC "Graph construction" with these decisions:
 
-- Method boxes are one per (call site, owner instance) inside that instance (decided): `for m in models: m.fit(X, y)` gives one `fit` box in each model's instance, and `models["rf"].fit(...)` is drawn on the right instance. Node id is `n:<h>@<instance id>`; `count` and the x-n badge are per box. `Execution.owner` is the owner token (null for non-methods).
+- Method boxes are one per (owner instance, method name) inside that instance (decided, svl-2gm): two `enc.transform` calls, at the same or different sites, share one `transform` box with `count` 1, 2 and a x2 badge; `for m in models: m.fit(X, y)` gives one `fit` box in each model's instance, and `models["rf"].fit(...)` is drawn on the right instance. Node id is `n:m<h(method name)>@<instance id>`. `count` is per box (the sum over its sites of the site's count minus other boxes' executions at that site). Each execution's wires come from that execution only: a port can have several edges (one per distinct producer), each with its own `uses`; use `StepState.activeEdges` to show only the running execution's wires. `Execution.owner` is the owner token (null for non-methods). A box's `order` is the smallest site order of its calls, and its out-port `nameLabel` is that of the latest execution.
+- A constructor of a machine is an ordinary call node (name e.g. `LinearRegression`, `parent: null`, args on in-ports as for any call) with an `out:0` port, and an edge from that port to the instance border (`createdBy`). The instance's `params` still lists the constructor's const/label args (the attribute list shows them). Constructor args that are references are wired into the constructor box, not the instance. A constructor in a loop gives one box and one instance. The creating edge's single `use` has `i` = the creator's `ret` (the instance has no execution of its own).
+- Method slots: the method boxes of an instance exist in the model from the instance's `createdAt` (`stateAt` shows them from then, in `uncalled`) until the method's first execution. Only methods the run calls on that instance are boxes; an expandable list of other methods is a separate feature.
 - `make_pipeline(...)` is a function box whose output creates an instance node (`createdBy`). Step instances wire into it. There are no nested step boxes in M1–3 (decided).
 - A `method` event whose owner is data is a call node with a `self` in-port. A method event on a machine is a call node with `parent` set to the instance node, owner input not drawn as a port.
 - A machine passed as an argument is an edge from the instance border (`port: null`).
@@ -578,7 +580,7 @@ Decisions made while building `graph.ts` (SPEC was silent):
 - Edges are keyed by endpoints (one edge per from/to pair); `uses` has one entry per consumer execution. Ports exist only on call nodes. Edges into and out of expr, store, source and instance nodes use `port: null`; `to.port` is nullable for that reason (contract change). An edge is `dashed` when either end is an expr node.
 - A machine is a value with `values[t].machine`. Its tokens map to an instance by object number (`v12.*`), so any version resolves to the same instance. Instances merge by creating merge key (and output index). A machine with no producing event gets a lazy instance (`createdAt` = first event that mentions it).
 - A function that returns a machine has an out-port for it, and an edge from that port to the instance border (`createdBy`), so layout can place the instance below the function box. A failed machine constructor is a plain call node with the error.
-- Constructor args: const and label args are `params` text; scalar args use `Input.text`, else the value's `repr`; reference args show their type and are wired to the instance border.
+- Constructor args: const and label args are `params` text; scalar args use `Input.text`, else the value's `repr`; reference args show their type in `params` and are wired to the constructor box's in-ports.
 - Port text: wired in-port has `typeLabel` = value type and `param` is the gray name (`nameLabel` is null on in-ports). Const and label inputs have `typeLabel: ''` and `constText` = the full string `param = text`. Out-port `param` is the output index as text, `nameLabel` is the bound name. A `mutates` on data adds an `out:mut:<param>` port (`changedInPlace`); `mutates` on any machine only adds an instance version `{ i: event.i, token: after }` (including nested machines such as a scaler inside a pipeline).
 - Name labels: names come from scope 0 bindings, matched by object (`v12`) for reference values and by token for scalars. The label is the first name bound to the value; if the last binding of that name is a different value, it gets `′`. Edges from source nodes and instances have `nameLabel: null` (the node says it). The label of an edge is that of its latest use.
 - **Producer order.** An edge from a producer to a consumer is drawn only when the producing event's `i` is lower than the consumer event's `i`. A use that ran before the token's producer is treated as having no producer for that use: a source node, as for any token with none. This is a general guard against a late-recorded producer being wired to earlier uses.
@@ -594,7 +596,9 @@ Decisions made while building `graph.ts` (SPEC was silent):
 ```ts
 interface StepState {
   current: number | null; // event i at this step (steps[step-1]); null at step 0
-  visibleNodes: Set<string>; // node with any execution i <= current (instances: createdAt <= current)
+  visibleNodes: Set<string>; // node with any execution i <= current (instances: createdAt <= current); a method box of an instance is visible from the instance's createdAt, even before its first execution
+  uncalled: Set<string>; // visible call nodes with no execution yet (method slots not called so far); they have no activeExecution
+  activeEdges: Set<string>; // visible edges used by the consumer's active execution (a shared method box switches wires per execution); edges into instances: active when visible
   visibleEdges: Set<string>; // edge with a use whose consumer has started (use.i <= current) and whose producer has returned (producer ret <= current)
   activeExecution: Map<string, Execution>; // per node: latest execution with i <= current
   activeToken: Map<string, Token>; // per edge

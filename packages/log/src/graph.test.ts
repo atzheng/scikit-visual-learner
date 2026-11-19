@@ -223,7 +223,7 @@ describe('instances and methods', () => {
       className: 'StandardScaler',
       varName: 'scaler',
       createdAt: 2,
-      createdBy: null,
+      createdBy: calls(m).find((c) => c.name === 'StandardScaler')!.id,
       params: [{ name: 'with_std', text: 'True' }],
     });
     expect(inst.versions).toEqual([
@@ -231,12 +231,9 @@ describe('instances and methods', () => {
       { i: 3, token: 'v3.1' },
     ]);
     const methods = calls(m).filter((c) => c.parent === inst.id);
-    expect(methods.map((c) => c.name)).toEqual([
-      'StandardScaler.fit',
-      'StandardScaler.transform',
-      'StandardScaler.transform',
-    ]);
-    expect(new Set(methods.map((c) => c.id)).size).toBe(3);
+    expect(methods.map((c) => c.name)).toEqual(['StandardScaler.fit', 'StandardScaler.transform']);
+    expect(methods[1]!.executions.map((x) => x.count)).toEqual([1, 2]);
+    expect(new Set(methods.map((c) => c.id)).size).toBe(2);
     for (const c of methods) expect(c.inPorts.map((p) => p.param)).toEqual(['X']);
     const fit = methods[0]!;
     expect(fit.outPorts).toEqual([]); // returns_self, machine mutates: no out-port
@@ -245,7 +242,13 @@ describe('instances and methods', () => {
       calls(m)
         .filter((c) => c.parent === null)
         .map((c) => c.name),
-    ).toEqual(['DataFrame', 'DataFrame']);
+    ).toEqual(['DataFrame', 'DataFrame', 'StandardScaler']);
+    // the constructor is a call box whose output wire creates the instance; its args are ports
+    const ctor = calls(m).find((c) => c.name === 'StandardScaler')!;
+    expect(ctor.inPorts.map((p) => p.constText)).toEqual(['with_std = True']);
+    expect(edgeInto(m, inst.id, null).map((e) => [e.from.node, e.from.port])).toEqual([
+      [ctor.id, 'out:0'],
+    ]);
   });
 
   test('machine passed as argument is an edge from the instance border', () => {
@@ -262,7 +265,7 @@ describe('instances and methods', () => {
     });
     const m = build(b.log());
     const inst = insts(m)[0];
-    const cvs = calls(m)[0];
+    const cvs = byName(m, 'cross_val_score');
     expect(edgeInto(m, cvs.id, 'in:estimator')[0]!.from).toEqual({ node: inst.id, port: null });
     expect(cvs.inPorts[0]!.typeLabel).toBe('Ridge');
   });
@@ -281,7 +284,7 @@ describe('instances and methods', () => {
     });
     b.bind('pipe', 'v2.0');
     const m = build(b.log());
-    const fn = calls(m)[0];
+    const fn = byName(m, 'make_pipeline');
     const [scaler, pipe] = insts(m);
     expect(fn.name).toBe('make_pipeline');
     expect(pipe).toMatchObject({
@@ -399,7 +402,9 @@ describe('expr, store and source nodes', () => {
   test('expr nodes reaching nothing are dropped, with their edges', () => {
     const m = build(exprLog(false));
     expect(m.nodes.some((n) => n.kind === 'expr')).toBe(false);
-    expect(m.edges).toEqual([]);
+    expect(m.edges.every((e) => !e.from.node.startsWith('x:') && !e.to.node.startsWith('x:'))).toBe(
+      true,
+    );
     expect(m.steps).toEqual([0, 3]); // load and the Ridge constructor
   });
 

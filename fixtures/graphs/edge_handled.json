@@ -88,6 +88,39 @@
       ]
     },
     {
+      "id": "n:10epbgg.0",
+      "kind": "call",
+      "mergeKey": "s4",
+      "name": "LinearRegression",
+      "module": "sklearn.linear_model._base",
+      "parent": null,
+      "order": 900008,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v3.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "LinearRegression",
+          "nameLabel": "model"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:10epbgg.0",
       "kind": "instance",
       "parent": null,
@@ -95,7 +128,7 @@
       "className": "LinearRegression",
       "varName": "model",
       "createdAt": 3,
-      "createdBy": null,
+      "createdBy": "n:10epbgg.0",
       "params": [],
       "versions": [
         {
@@ -113,7 +146,7 @@
       ]
     },
     {
-      "id": "n:luinfn.0@i:10epbgg.0",
+      "id": "n:m1gsyoeo@i:10epbgg.0",
       "kind": "call",
       "mergeKey": "s6",
       "name": "LinearRegression.fit",
@@ -136,6 +169,19 @@
             "message": "Input X contains NaN.\nLinearRegression does not accept missing values encoded as NaN natively. For supervised learning, you might want to consider sklearn.ensemble.HistGradientBoostingClassifier and Regressor which accept missing values encoded as NaNs natively. Alternatively, it is possible to preprocess the data, for instance by using an imputer transformer in a pipeline or drop samples with missing values. See https://scikit-learn.org/stable/modules/impute.html You can find a list of all est…",
             "type": "ValueError"
           },
+          "interrupted": false
+        },
+        {
+          "i": 8,
+          "ret": 8,
+          "inputs": {
+            "in:X": "v6.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {},
+          "count": 2,
+          "owner": "v3.1",
+          "error": null,
           "interrupted": false
         }
       ],
@@ -245,46 +291,6 @@
       ]
     },
     {
-      "id": "n:1jl2bar.0@i:10epbgg.0",
-      "kind": "call",
-      "mergeKey": "s10",
-      "name": "LinearRegression.fit",
-      "module": "sklearn.linear_model._base",
-      "parent": "i:10epbgg.0",
-      "order": 1500004,
-      "executions": [
-        {
-          "i": 8,
-          "ret": 8,
-          "inputs": {
-            "in:X": "v6.0",
-            "in:y": "v7.0"
-          },
-          "outputs": {},
-          "count": 1,
-          "owner": "v3.1",
-          "error": null,
-          "interrupted": false
-        }
-      ],
-      "inPorts": [
-        {
-          "id": "in:X",
-          "param": "X",
-          "typeLabel": "DF",
-          "nameLabel": null
-        },
-        {
-          "id": "in:y",
-          "param": "y",
-          "typeLabel": "Series",
-          "nameLabel": null
-        }
-      ],
-      "outPorts": [],
-      "student": false
-    },
-    {
       "id": "x:j5a9i.0~2ruef4",
       "kind": "expr",
       "parent": null,
@@ -331,7 +337,7 @@
       ]
     },
     {
-      "id": "n:j5a9i.0@i:10epbgg.0",
+      "id": "n:mnnwzah@i:10epbgg.0",
       "kind": "call",
       "mergeKey": "s11",
       "name": "LinearRegression.score",
@@ -382,13 +388,13 @@
   ],
   "edges": [
     {
-      "id": "e:x:f2rqav.0.>n:luinfn.0@i:10epbgg.0.in:X",
+      "id": "e:x:f2rqav.0.>n:m1gsyoeo@i:10epbgg.0.in:X",
       "from": {
         "node": "x:f2rqav.0",
         "port": null
       },
       "to": {
-        "node": "n:luinfn.0@i:10epbgg.0",
+        "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -401,13 +407,13 @@
       "nameLabel": "X"
     },
     {
-      "id": "e:x:xaeoav.0.>n:luinfn.0@i:10epbgg.0.in:y",
+      "id": "e:x:xaeoav.0.>n:m1gsyoeo@i:10epbgg.0.in:y",
       "from": {
         "node": "x:xaeoav.0",
         "port": null
       },
       "to": {
-        "node": "n:luinfn.0@i:10epbgg.0",
+        "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:y"
       },
       "dashed": true,
@@ -418,6 +424,44 @@
         }
       ],
       "nameLabel": "y"
+    },
+    {
+      "id": "e:x:1jl2bar.0~2ruef4.>n:m1gsyoeo@i:10epbgg.0.in:X",
+      "from": {
+        "node": "x:1jl2bar.0~2ruef4",
+        "port": null
+      },
+      "to": {
+        "node": "n:m1gsyoeo@i:10epbgg.0",
+        "port": "in:X"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 8,
+          "token": "v6.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:1jl2bar.0~31u043.>n:m1gsyoeo@i:10epbgg.0.in:y",
+      "from": {
+        "node": "x:1jl2bar.0~31u043",
+        "port": null
+      },
+      "to": {
+        "node": "n:m1gsyoeo@i:10epbgg.0",
+        "port": "in:y"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 8,
+          "token": "v7.0"
+        }
+      ],
+      "nameLabel": null
     },
     {
       "id": "e:n:wcu5tk.0.out:0>n:1rjye1a.0.in:self",
@@ -439,51 +483,13 @@
       "nameLabel": "df′"
     },
     {
-      "id": "e:x:1jl2bar.0~2ruef4.>n:1jl2bar.0@i:10epbgg.0.in:X",
-      "from": {
-        "node": "x:1jl2bar.0~2ruef4",
-        "port": null
-      },
-      "to": {
-        "node": "n:1jl2bar.0@i:10epbgg.0",
-        "port": "in:X"
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 8,
-          "token": "v6.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:1jl2bar.0~31u043.>n:1jl2bar.0@i:10epbgg.0.in:y",
-      "from": {
-        "node": "x:1jl2bar.0~31u043",
-        "port": null
-      },
-      "to": {
-        "node": "n:1jl2bar.0@i:10epbgg.0",
-        "port": "in:y"
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 8,
-          "token": "v7.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:j5a9i.0~2ruef4.>n:j5a9i.0@i:10epbgg.0.in:X",
+      "id": "e:x:j5a9i.0~2ruef4.>n:mnnwzah@i:10epbgg.0.in:X",
       "from": {
         "node": "x:j5a9i.0~2ruef4",
         "port": null
       },
       "to": {
-        "node": "n:j5a9i.0@i:10epbgg.0",
+        "node": "n:mnnwzah@i:10epbgg.0",
         "port": "in:X"
       },
       "dashed": true,
@@ -496,13 +502,13 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:j5a9i.0~31u043.>n:j5a9i.0@i:10epbgg.0.in:y",
+      "id": "e:x:j5a9i.0~31u043.>n:mnnwzah@i:10epbgg.0.in:y",
       "from": {
         "node": "x:j5a9i.0~31u043",
         "port": null
       },
       "to": {
-        "node": "n:j5a9i.0@i:10epbgg.0",
+        "node": "n:mnnwzah@i:10epbgg.0",
         "port": "in:y"
       },
       "dashed": true,
@@ -627,6 +633,25 @@
         }
       ],
       "nameLabel": "df"
+    },
+    {
+      "id": "e:n:10epbgg.0.out:0>i:10epbgg.0.",
+      "from": {
+        "node": "n:10epbgg.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:10epbgg.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

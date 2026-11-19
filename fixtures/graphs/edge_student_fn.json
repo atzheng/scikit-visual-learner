@@ -49,6 +49,39 @@
       "student": true
     },
     {
+      "id": "n:1t51mtq.0",
+      "kind": "call",
+      "mergeKey": "s2",
+      "name": "Pipeline",
+      "module": "__main__",
+      "parent": null,
+      "order": 2500011,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Pipeline",
+          "nameLabel": "pipe"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:1t51mtq.0",
       "kind": "instance",
       "parent": null,
@@ -56,7 +89,7 @@
       "className": "Pipeline",
       "varName": "pipe",
       "createdAt": 1,
-      "createdBy": null,
+      "createdBy": "n:1t51mtq.0",
       "params": [],
       "versions": [
         {
@@ -66,7 +99,7 @@
       ]
     },
     {
-      "id": "n:unof4y.0@i:1t51mtq.0",
+      "id": "n:mk2rxhs@i:1t51mtq.0",
       "kind": "call",
       "mergeKey": "s4",
       "name": "Pipeline.run",
@@ -117,13 +150,13 @@
   ],
   "edges": [
     {
-      "id": "e:n:hft6en.0.out:0>n:unof4y.0@i:1t51mtq.0.in:X",
+      "id": "e:n:hft6en.0.out:0>n:mk2rxhs@i:1t51mtq.0.in:X",
       "from": {
         "node": "n:hft6en.0",
         "port": "out:0"
       },
       "to": {
-        "node": "n:unof4y.0@i:1t51mtq.0",
+        "node": "n:mk2rxhs@i:1t51mtq.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -136,13 +169,13 @@
       "nameLabel": "X"
     },
     {
-      "id": "e:n:hft6en.0.out:1>n:unof4y.0@i:1t51mtq.0.in:y",
+      "id": "e:n:hft6en.0.out:1>n:mk2rxhs@i:1t51mtq.0.in:y",
       "from": {
         "node": "n:hft6en.0",
         "port": "out:1"
       },
       "to": {
-        "node": "n:unof4y.0@i:1t51mtq.0",
+        "node": "n:mk2rxhs@i:1t51mtq.0",
         "port": "in:y"
       },
       "dashed": false,
@@ -153,6 +186,25 @@
         }
       ],
       "nameLabel": "y"
+    },
+    {
+      "id": "e:n:1t51mtq.0.out:0>i:1t51mtq.0.",
+      "from": {
+        "node": "n:1t51mtq.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1t51mtq.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

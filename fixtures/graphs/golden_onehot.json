@@ -172,6 +172,47 @@
       "student": false
     },
     {
+      "id": "n:1ntullb.0",
+      "kind": "call",
+      "mergeKey": "s6",
+      "name": "OneHotEncoder",
+      "module": "sklearn.preprocessing._encoders",
+      "parent": null,
+      "order": 1200006,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v7.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:handle_unknown",
+          "param": "handle_unknown",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "handle_unknown = \"ignore\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "OneHotEncoder",
+          "nameLabel": "enc"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:1ntullb.0",
       "kind": "instance",
       "parent": null,
@@ -179,7 +220,7 @@
       "className": "OneHotEncoder",
       "varName": "enc",
       "createdAt": 4,
-      "createdBy": null,
+      "createdBy": "n:1ntullb.0",
       "params": [
         {
           "name": "handle_unknown",
@@ -198,7 +239,7 @@
       ]
     },
     {
-      "id": "n:1rt7lr8.0@i:1ntullb.0",
+      "id": "n:m1wzfutv@i:1ntullb.0",
       "kind": "call",
       "mergeKey": "s8",
       "name": "OneHotEncoder.fit",
@@ -231,7 +272,7 @@
       "student": false
     },
     {
-      "id": "n:dp47c5.0@i:1ntullb.0",
+      "id": "n:m1yvdu8o@i:1ntullb.0",
       "kind": "call",
       "mergeKey": "s9",
       "name": "OneHotEncoder.transform",
@@ -252,35 +293,7 @@
           "owner": "v7.1",
           "error": null,
           "interrupted": false
-        }
-      ],
-      "inPorts": [
-        {
-          "id": "in:X",
-          "param": "X",
-          "typeLabel": "DF",
-          "nameLabel": null
-        }
-      ],
-      "outPorts": [
-        {
-          "id": "out:0",
-          "param": "0",
-          "typeLabel": "sparse",
-          "nameLabel": "train_enc"
-        }
-      ],
-      "student": false
-    },
-    {
-      "id": "n:63m8yj.0@i:1ntullb.0",
-      "kind": "call",
-      "mergeKey": "s11",
-      "name": "OneHotEncoder.transform",
-      "module": "sklearn.preprocessing._encoders",
-      "parent": "i:1ntullb.0",
-      "order": 1500011,
-      "executions": [
+        },
         {
           "i": 7,
           "ret": 7,
@@ -290,7 +303,7 @@
           "outputs": {
             "out:0": "v11.0"
           },
-          "count": 1,
+          "count": 2,
           "owner": "v7.1",
           "error": null,
           "interrupted": false
@@ -355,13 +368,13 @@
       "nameLabel": "y"
     },
     {
-      "id": "e:n:15uvz5m.0.out:0>n:1rt7lr8.0@i:1ntullb.0.in:X",
+      "id": "e:n:15uvz5m.0.out:0>n:m1wzfutv@i:1ntullb.0.in:X",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:0"
       },
       "to": {
-        "node": "n:1rt7lr8.0@i:1ntullb.0",
+        "node": "n:m1wzfutv@i:1ntullb.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -374,13 +387,13 @@
       "nameLabel": "X_train"
     },
     {
-      "id": "e:n:15uvz5m.0.out:0>n:dp47c5.0@i:1ntullb.0.in:X",
+      "id": "e:n:15uvz5m.0.out:0>n:m1yvdu8o@i:1ntullb.0.in:X",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:0"
       },
       "to": {
-        "node": "n:dp47c5.0@i:1ntullb.0",
+        "node": "n:m1yvdu8o@i:1ntullb.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -393,13 +406,13 @@
       "nameLabel": "X_train"
     },
     {
-      "id": "e:n:15uvz5m.0.out:1>n:63m8yj.0@i:1ntullb.0.in:X",
+      "id": "e:n:15uvz5m.0.out:1>n:m1yvdu8o@i:1ntullb.0.in:X",
       "from": {
         "node": "n:15uvz5m.0",
         "port": "out:1"
       },
       "to": {
-        "node": "n:63m8yj.0@i:1ntullb.0",
+        "node": "n:m1yvdu8o@i:1ntullb.0",
         "port": "in:X"
       },
       "dashed": false,
@@ -448,6 +461,25 @@
         }
       ],
       "nameLabel": "df"
+    },
+    {
+      "id": "e:n:1ntullb.0.out:0>i:1ntullb.0.",
+      "from": {
+        "node": "n:1ntullb.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1ntullb.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v7.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

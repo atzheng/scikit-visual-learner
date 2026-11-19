@@ -42,6 +42,48 @@
       "student": false
     },
     {
+      "id": "n:g9r6uw.0",
+      "kind": "call",
+      "mergeKey": "s2",
+      "name": "Table",
+      "module": "__main__",
+      "parent": null,
+      "order": 2000004,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {
+            "in:df": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:df",
+          "param": "df",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Table",
+          "nameLabel": "t"
+        }
+      ],
+      "student": false
+    },
+    {
       "id": "i:g9r6uw.0",
       "kind": "instance",
       "parent": null,
@@ -49,7 +91,7 @@
       "className": "Table",
       "varName": "t",
       "createdAt": 1,
-      "createdBy": null,
+      "createdBy": "n:g9r6uw.0",
       "params": [
         {
           "name": "df",
@@ -66,9 +108,28 @@
   ],
   "edges": [
     {
-      "id": "e:n:wcu5tk.0.out:0>i:g9r6uw.0.",
+      "id": "e:n:wcu5tk.0.out:0>n:g9r6uw.0.in:df",
       "from": {
         "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:g9r6uw.0",
+        "port": "in:df"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:g9r6uw.0.out:0>i:g9r6uw.0.",
+      "from": {
+        "node": "n:g9r6uw.0",
         "port": "out:0"
       },
       "to": {
@@ -79,10 +140,10 @@
       "uses": [
         {
           "i": 1,
-          "token": "v0.0"
+          "token": "v1.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
     }
   ],
   "steps": [

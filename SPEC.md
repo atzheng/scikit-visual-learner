@@ -260,10 +260,10 @@ A value is a **machine with memory** if it is an instance of `sklearn.base.BaseE
 
 | Graph element | Built from |
 | --- | --- |
-| Function machine (orange box) | a `function` or `student_function` event; a `constructor` event that returns data (`pd.DataFrame(...)`); a `method` event whose owner is data (`df.dropna()`), with the owner as its first input port, labelled `self` |
-| Instance machine (blue box) | the first event in which a machine value appears: usually its constructor, but also a function that returns one (`make_pipeline`, `clone`) |
-| Method machine (orange box inside the blue one) | a `method` event whose owner is that instance. One box per call site: `scaler.transform(X_train)` and `scaler.transform(X_test)` are two `transform` boxes in the same instance. |
-| Input port (top edge) | one per entry in `inputs`, labelled `type` with `param` in gray beneath. `const` inputs are written on the port as `param = text`. Constructor arguments appear in the instance's parameter list. |
+| Function machine (orange box) | a `function` or `student_function` event; a `constructor` event (`LinearRegression()` is an orange box whose args are on input ports and whose output wire creates the instance box); a `constructor` event that returns data (`pd.DataFrame(...)`); a `method` event whose owner is data (`df.dropna()`), with the owner as its first input port, labelled `self` |
+| Instance machine (blue box) | created by the output wire of the call that first returns it: a constructor box, or a function that returns one (`make_pipeline`, `clone`). A machine that no recorded event produced appears at its first use. |
+| Method machine (orange box inside the blue one) | a `method` event whose owner is that instance. One box per method name and instance: `scaler.transform(X_train)` and `scaler.transform(X_test)` share one `transform` box with a ×2 badge, and its wires switch to each call's values as the timeline steps. The boxes for the methods this run calls on the instance exist from the moment the instance is created, in a "not called yet" state, and become active at their first call. |
+| Input port (top edge) | one per entry in `inputs`, labelled `type` with `param` in gray beneath. `const` inputs are written on the port as `param = text`. Constructor arguments are ports of the constructor box (and also listed in the instance's parameter list). |
 | Output port (bottom edge) | one per entry in `outputs`, labelled `type` with the bound name in gray beneath. An entry in `mutates` for data also gets an output port, marked "changed in place". |
 | Wire | from the event that produced a value version to each event that consumed it. A machine passed as an argument (`cross_val_score(model, X, y)`) is a wire from the instance box's border. |
 | Expression node (no box) | an `expr` event, with dashed wires from the values it reads |
@@ -273,7 +273,7 @@ Only events in the scope being viewed are drawn. The top-level view shows module
 
 **Loops and repeated calls**
 
-Events with the same merge key share one box with a ×n badge. The static graph wires the box to the values of its latest execution. On the timeline every recorded execution is a step: stepping onto the third iteration highlights the same box, sets the badge to 3 of n, and switches the box's wires and previews to that iteration's values. Instances merge by the site that created them, in the same way.
+Events with the same merge key share one box with a ×n badge. The static graph wires the box to the values of its latest execution. On the timeline every recorded execution is a step: stepping onto the third iteration highlights the same box, sets the badge to 3 of n, and switches the box's wires and previews to that iteration's values. Instances merge by the site that created them, in the same way. A method box merges every call of that method on its instance, whatever the call site.
 
 **Timeline**
 
@@ -381,7 +381,7 @@ Each milestone ends with something students could use.
 
 **Open questions**
 
-- [ ] Method boxes are one per call site, so an instance used twice shows two `transform` boxes. The slides may show one box per method. Which reads better to students?
+- [x] Method boxes: one per method name and instance (owner decision, 2026-11-18). An instance used twice shows one `transform` box with ×2; the box exists from instantiation, uncalled until its first call.
 - [ ] Are dashed expression nodes enough for column selection (`X["price"]`) and attribute reads (`model.coef_`), or should those two draw as small machines?
 - [ ] Should pipelines (`make_pipeline(...)`) draw as one instance box containing its steps, using sklearn's own structure, rather than as a function with machine inputs?
 - [ ] How much of a DataFrame preview is useful on hover before it clutters?
