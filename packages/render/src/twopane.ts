@@ -76,7 +76,7 @@ export interface StagePlan {
   items: PlanItem[];
   wires: PlanWire[];
   /** Inline scalars and literals, one text line each, beside the call box (nested: under the owner). */
-  values: { x: number; y: number; w: number; lines: string[] } | null;
+  values: { x: number; y: number; w: number; lines: string[]; call?: number } | null;
   /**
    * svl-a9e: true when the call is a method drawn inside its owner's card; `box` is then the method's box
    * inside that card (canvas coordinates) and there is no separate call box.
@@ -619,22 +619,27 @@ export function planLine(
   const bands: Band[] = [];
   const ownerOf = (st: StageModel): StageParticipant | undefined =>
     st.participants.find((p) => p.kind === 'instance' && p.role === 'owner');
-  // 1. group the calls into bands
+  // 1. group the calls into bands. A method is drawn inside its owner's card only where that card is
+  // drawn for it: when the owner is not yet on the stage, or only as the product of an earlier call, or the
+  // previous band is the same owner's. An owner that an earlier call already uses as an input keeps its card
+  // there, and the method gets a call box of its own with the owner wired to it.
+  const used = new Set<string>(); // objects an earlier call used other than as its product
+  const cardOf = (p: StageParticipant): string => cardKey(p, mergedOf(p));
   const groups: { nested: boolean; calls: number[] }[] = [];
   line.calls.forEach((c, k) => {
     const n = nestedOf(c.stage);
     const own = n ? ownerOf(c.stage) : undefined;
     const last = groups[groups.length - 1];
     const lastOwner = last?.nested ? ownerOf(line.calls[last.calls[0]!]!.stage) : undefined;
-    if (
-      n &&
-      own &&
-      last?.nested &&
-      lastOwner &&
-      cardKey(lastOwner, mergedOf(lastOwner)) === cardKey(own, mergedOf(own))
-    )
+    if (n && own && last?.nested && lastOwner && cardOf(lastOwner) === cardOf(own))
       last.calls.push(k);
-    else groups.push({ nested: n !== null && own !== undefined, calls: [k] });
+    else
+      groups.push({
+        nested: n !== null && own !== undefined && !used.has(cardOf(own)),
+        calls: [k],
+      });
+    for (const p of c.stage.participants)
+      if (p.role !== 'output' && p.role !== 'created') used.add(cardOf(p));
   });
   // 2. lay each band out
   for (const g of groups) {
@@ -698,6 +703,17 @@ export function planLine(
     jogs.set(band, n + 1);
     return y - 12 + n * 8;
   };
+  // A wire to a card that is drawn elsewhere runs through a gutter beside the stack, never over a card:
+  // out of the home card's side, along a lane to the gap above (or below) the layout, and in.
+  interface Job {
+    kind: 'in' | 'out';
+    wire: PlanWire;
+    home: PlanItem;
+    gap: number; // y of the horizontal run in the gap
+    side: 'L' | 'R';
+    ey: number;
+  }
+  const jobs: Job[] = [];
   for (const list of occ.values()) {
     if (list.length < 2) continue;
     const hosts = list.filter(
@@ -714,30 +730,93 @@ export function planLine(
       if (o.band < home.band && p.role !== 'output' && p.role !== 'created') return null;
       const band = bands[o.band]!.plan;
       band.items.splice(band.items.indexOf(o.item), 1);
-      const hr = home.item.rect;
-      const hx = hr.x + hr.w / 2;
-      if (home.band < o.band) {
-        const gy = nextJog(gapMid(o.band), o.band);
-        band.wires = band.wires.flatMap((w) => {
-          if (w.to === o.item.key) return []; // a later call's output into an object drawn above: not drawn
-          if (w.from !== o.item.key) return [w];
-          const p0 = w.points[0]!;
-          const pts: [number, number][] = [[hx, hr.y + hr.h], [hx, gy], [p0[0], gy], ...w.points];
-          return [{ ...w, from: home.item.key, points: pts }];
-        });
-      } else {
-        const yb = gapMid(o.band + 1);
-        band.wires = band.wires.flatMap((w) => {
-          if (w.from === o.item.key) return [];
-          if (w.to !== o.item.key) return [w];
-          const pts: [number, number][] = [...w.points];
-          const pl = pts[pts.length - 1]!;
-          pts.push([pl[0], yb], [hx, yb], [hx, hr.y]);
-          return [{ ...w, to: home.item.key, points: pts }];
-        });
-      }
+      const below = home.band > o.band;
+      const gap = below ? gapMid(o.band + 1) : nextJog(gapMid(o.band), o.band);
+      band.wires = band.wires.filter((w) => {
+        // a wire the later call has to an object drawn above (or the earlier call from one drawn below) is not drawn
+        if (below ? w.from === o.item.key : w.to === o.item.key) return false;
+        if (below ? w.to === o.item.key : w.from === o.item.key)
+          jobs.push({
+            kind: below ? 'out' : 'in',
+            wire: w,
+            home: home.item,
+            gap,
+            side: 'L',
+            ey: 0,
+          });
+        return true;
+      });
     }
   }
+  // the cards and boxes a wire must not cross
+  const obstacles = (): Rect[] => [
+    ...bands.flatMap((b) => b.plan.items.map((i) => i.rect)),
+    ...bands.flatMap((b) => (b.nested ? [] : b.plan.box ? [b.plan.box] : [])),
+  ];
+  const obs = obstacles();
+  const clear = (side: 'L' | 'R', y: number, home: Rect): boolean =>
+    !obs.some(
+      (r) =>
+        r !== home &&
+        r.y - 4 < y &&
+        y < r.y + r.h + 4 &&
+        (side === 'L' ? r.x < home.x : r.x + r.w > home.x + home.w),
+    );
+  for (const j of jobs) {
+    const hr = j.home.rect;
+    const tries: ['L' | 'R', number][] = [];
+    for (const y of [hr.y + hr.h / 2, hr.y + 10, hr.y + hr.h - 10]) tries.push(['L', y], ['R', y]);
+    const pick = tries.find(([sd, y]) => clear(sd, y, hr)) ?? tries[0]!;
+    j.side = pick[0];
+    j.ey = pick[1];
+  }
+  const laneStep = 8;
+  const nL = jobs.filter((j) => j.side === 'L').length;
+  const nR = jobs.length - nL;
+  const gl = nL ? 12 + laneStep * nL : 0;
+  const right = Math.max(...bands.map((b) => b.plan.width));
+  // make room for the gutters: everything moves right by the left one
+  if (gl)
+    for (const b of bands) {
+      const p = b.plan;
+      for (const it of p.items) it.rect.x += gl;
+      for (const w of p.wires) {
+        w.points = w.points.map(([a, c]) => [a + gl, c] as [number, number]);
+        if (w.label) w.label.x += gl;
+      }
+      if (p.values) p.values.x += gl;
+      if (p.box) p.box = { ...p.box, x: p.box.x + gl };
+      if (p.boxes) p.boxes = p.boxes.map((r) => ({ ...r, x: r.x + gl }));
+    }
+  let iL = 0;
+  let iR = 0;
+  for (const j of jobs) {
+    const hr = j.home.rect;
+    const lx = j.side === 'L' ? 6 + laneStep * iL++ : right + gl + 10 + laneStep * iR++;
+    const hx = j.side === 'L' ? hr.x : hr.x + hr.w;
+    const w = j.wire;
+    if (j.kind === 'in') {
+      // drop beside the slot's first segment, in the empty space the moved card left
+      const p0 = w.points[0]!;
+      const p1 = w.points[1] ?? p0;
+      const dx = p0[1] === p1[1] && p0[0] !== p1[0] ? (p0[0] + p1[0]) / 2 : p0[0];
+      w.points = [
+        [hx, j.ey],
+        [lx, j.ey],
+        [lx, j.gap],
+        [dx, j.gap],
+        [dx, p0[1]],
+        ...w.points.slice(1),
+      ];
+    } else {
+      const pl = w.points[w.points.length - 1]!;
+      w.points = [...w.points, [pl[0], j.gap], [lx, j.gap], [lx, j.ey], [hx, j.ey]];
+    }
+    if (w.from !== j.home.key && j.kind === 'in') w.from = j.home.key;
+    if (j.kind === 'out') w.to = j.home.key;
+  }
+  const gr = nR ? 12 + laneStep * nR : 0;
+  const extraW = gl + gr;
   // 5. the result
   const items = bands.flatMap((b) => b.plan.items);
   const wires = bands.flatMap((b) => b.plan.wires);
@@ -755,10 +834,12 @@ export function planLine(
           current: k === last,
         });
     });
-  const valuesAll = bands.flatMap((b) => (b.plan.values ? [b.plan.values] : []));
+  const valuesAll = bands.flatMap((b) =>
+    b.plan.values ? [{ ...b.plan.values, call: b.calls[0] }] : [],
+  );
   const cur = planCalls.find((c) => c.current) ?? null;
   const p: StagePlan = {
-    width: Math.max(...bands.map((b) => b.plan.width)),
+    width: Math.max(...bands.map((b) => b.plan.width)) + extraW,
     height: top - BAND_GAP + 2 * M,
     box: cur ? cur.rect : null,
     items,
@@ -1724,7 +1805,12 @@ export async function mountTwoPane(
     for (const b of blocks) {
       const blk = el(doc, 'div', 'md-stage-values-block');
       blk.setAttribute('role', 'list');
-      blk.setAttribute('aria-label', 'Values');
+      blk.setAttribute(
+        'aria-label',
+        b.call !== undefined && lineNow
+          ? `Values, call ${b.call + 1} of ${lineNow.calls.length}`
+          : 'Values',
+      );
       blk.style.left = `${b.x}px`;
       blk.style.top = `${b.y}px`;
       blk.style.width = `${b.w}px`;

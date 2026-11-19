@@ -499,7 +499,9 @@ function groupIndex(model: GraphModel, log: EventLog): GroupIndex {
   const byI = new Map(log.events.map((e) => [e.i, e]));
   const stages: (StageModel | null)[] = [];
   const start: number[] = [];
+  const byId = new Map(model.nodes.map((n) => [n.id, n]));
   let nodes = new Set<string>();
+  let sited = new Set<string>(); // `node@site` of the calls that ran in the group
   let lo = 0;
   let hi = 0;
   model.steps.forEach((i, k) => {
@@ -509,7 +511,12 @@ function groupIndex(model: GraphModel, log: EventLog): GroupIndex {
     const ev = byI.get(i);
     const site = ev ? log.sites[ev.site] : undefined;
     // the same statement's line span, and a box that has not run in this group yet: a second pass of a
-    // loop over the same line comes back to a box the group already holds
+    // loop over the same line comes back to a box the group already holds. A method box is shared by every
+    // call of that method on the owner (the graph merges `m.predict(X)` at two sites into one box), so for a
+    // method the site decides: the same method at another site joins, the same site again starts a group.
+    const sk = st && site ? `${st.node}@${site.id}` : '';
+    const nd = st ? byId.get(st.node) : undefined;
+    const method = nd?.kind === 'call' && nd.parent !== null;
     const join =
       boxed(st) &&
       site !== undefined &&
@@ -517,15 +524,17 @@ function groupIndex(model: GraphModel, log: EventLog): GroupIndex {
       boxed(stages[k - 1]!) &&
       site.line <= hi &&
       site.end_line >= lo &&
-      !nodes.has(st.node);
+      (method ? !sited.has(sk) : !nodes.has(st.node));
     if (join && site) {
       lo = Math.min(lo, site.line);
       hi = Math.max(hi, site.end_line);
       nodes.add(st.node);
+      sited.add(sk);
       start.push(start[k - 1]!);
     } else {
       start.push(s);
       nodes = new Set(st ? [st.node] : []);
+      sited = new Set(sk ? [sk] : []);
       lo = site ? site.line : 0;
       hi = site ? site.end_line : -1;
     }
@@ -544,7 +553,7 @@ const objectKey = (p: StageParticipant): string =>
 
 /**
  * The stage of a line group at `step` (svl-qol): consecutive steps whose events lie in the same source lines
- * (spans that overlap) form a group, and the group's calls up to the current one all stay on the stage. A site
+ * (spans that overlap; statements joined by `;` on one line are one group) form a group, and the group's calls up to the current one all stay on the stage. A site
  * that already ran in the group starts a new group (the next pass of a loop over one line). Steps that draw
  * no box (an import, a `def`, an instance-only step) are groups of their own. The calls are in step order;
  * a later call of the same line that has not run yet is not listed. Each object appears once in `objects`

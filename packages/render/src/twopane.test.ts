@@ -745,6 +745,121 @@ describe('a line keeps every call on the stage (svl-qol)', () => {
     expect(plan.items.filter((i) => i.participant.role === 'owner')).toHaveLength(1);
   });
 
+  test('no wire of a multi-call line crosses a card or box it does not start or end at', async () => {
+    let checked = 0;
+    for (const name of names) {
+      const { model, log } = await open(name);
+      for (let s = 1; s <= model.steps.length; s++) {
+        tp!.setStep(s);
+        const plan = tp!.plan;
+        if (!plan?.calls) continue;
+        const callRect = new Map(plan.calls.map((c) => [`box#${c.call}`, c.rect]));
+        const inside = (a: Rect, b: Rect): boolean =>
+          a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
+        const rects: { id: string; r: Rect; nested: Rect | null }[] = [
+          ...plan.items.map((i) => ({ id: i.key, r: i.rect, nested: null })),
+          ...plan.calls
+            .filter((c) => !c.nested)
+            .map((c) => ({ id: `box#${c.call}`, r: c.rect, nested: null })),
+        ];
+        for (const w of plan.wires) {
+          checked++;
+          const ends = new Set([w.from, w.to]);
+          // a wire into a method box nested in an owner's card may cross that card
+          const hosts = [...ends]
+            .map((e) => callRect.get(e))
+            .filter((r): r is Rect => r !== undefined);
+          for (const { id, r } of rects) {
+            if (ends.has(id) || hosts.some((h) => inside(h, r))) continue;
+            for (let k = 1; k < w.points.length; k++) {
+              const [ax, ay] = w.points[k - 1]!;
+              const [bx, by] = w.points[k]!;
+              const hit =
+                Math.max(ax, bx) > r.x + 1 &&
+                Math.min(ax, bx) < r.x + r.w - 1 &&
+                Math.max(ay, by) > r.y + 1 &&
+                Math.min(ay, by) < r.y + r.h - 1;
+              if (hit) throw new Error(`${name} step ${s}: wire ${w.from}>${w.to} crosses ${id}`);
+            }
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(20);
+  }, 120000);
+
+  test('an owner that an earlier call used as an input keeps every call on the stage', async () => {
+    const { model, log } = await open('edge_reserved');
+    let seen = 0;
+    for (let s = 1; s <= model.steps.length; s++) {
+      const line = lineStageAt(model, log, s)!;
+      if (line.calls.length < 2) continue;
+      tp!.setStep(s);
+      const plan = tp!.plan!;
+      // every call of the group has a box on the stage (a call box or a method box in its owner's card)
+      expect(plan.calls?.map((c) => c.node)).toEqual(line.calls.map((c) => c.stage.node));
+      for (const c of plan.calls!) {
+        const g = host.querySelector(
+          `.md-stage-canvas .md-node[data-node="${c.node}"]:not(.md-hidden)`,
+        );
+        expect(g).not.toBeNull();
+      }
+      if (line.calls.some((c, k) => k > 0 && c.stage.participants.some((p) => p.role === 'owner')))
+        seen++;
+    }
+    expect(seen).toBeGreaterThan(0);
+  });
+
+  test('edge_line_calls: m.predict twice on one line is one group; no call disappears', async () => {
+    const { model, log } = await open('edge_line_calls');
+    const nameOf = (id: string): string => {
+      const n = model.nodes.find((x) => x.id === id);
+      return n && n.kind === 'call' ? n.name : (n?.kind ?? '');
+    };
+    const lineOf = (s: number): number | null => stageAt(model, log, s)?.line ?? null;
+    let predicts = 0;
+    for (let s = 1; s <= model.steps.length; s++) {
+      const ln = lineStageAt(model, log, s)!;
+      tp!.setStep(s);
+      // every call of the group so far has its box on the stage
+      expect(tp!.plan?.calls ?? ln.calls.slice(0, 1).map(() => null)).not.toBeNull();
+      if (ln.calls.length > 1)
+        expect(tp!.plan!.calls!.map((c) => c.node)).toEqual(ln.calls.map((c) => c.stage.node));
+      for (const c of ln.calls) {
+        const g = host.querySelector(
+          `.md-stage-canvas .md-node[data-node="${c.stage.node}"]:not(.md-hidden)`,
+        );
+        expect(g).not.toBeNull();
+      }
+      if (lineOf(s) === 11 && nameOf(stageAt(model, log, s)!.node) === 'LinearRegression.predict')
+        predicts = Math.max(
+          predicts,
+          ln.calls.filter((c) => nameOf(c.stage.node).endsWith('predict')).length,
+        );
+    }
+    expect(predicts).toBe(2); // both predicts, the second step's group holds the first
+    // the group at the last call of line 11 holds predict, sum, predict, mean in step order
+    const last9 = [...model.steps.keys()]
+      .map((k) => k + 1)
+      .filter((s) => lineOf(s) === 11)
+      .pop()!;
+    expect(lineStageAt(model, log, last9)!.calls.map((c) => nameOf(c.stage.node))).toEqual([
+      'LinearRegression.predict',
+      'ndarray.sum',
+      'LinearRegression.predict',
+      'ndarray.mean',
+    ]);
+  });
+
+  test('edge_line_calls: statements joined by ; are one group', async () => {
+    const { model, log } = await open('edge_line_calls');
+    const last = [...model.steps.keys()]
+      .map((k) => k + 1)
+      .filter((s) => stageAt(model, log, s)?.line === 14)
+      .pop()!;
+    expect(lineStageAt(model, log, last)!.calls.length).toBeGreaterThan(1);
+  });
+
   test('a loop starts a new group on each pass', async () => {
     const { model, log } = await open('edge_loop');
     for (let s = 2; s <= model.steps.length; s++) {
