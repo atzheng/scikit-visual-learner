@@ -140,7 +140,10 @@ export function planStage(
   const level = (k: number, n: number, y0: number, y1: number): number =>
     y0 + ((y1 - y0) * (k + 1)) / (n + 1);
   const portX = (p: StageParticipant, k: number, n: number): number =>
-    boxX + (p.port !== null && box.ports[p.port] !== undefined ? box.ports[p.port]! : (box.w * (k + 1)) / (n + 1));
+    boxX +
+    (p.port !== null && box.ports[p.port] !== undefined
+      ? box.ports[p.port]!
+      : (box.w * (k + 1)) / (n + 1));
   const typeOf = (p: StageParticipant): string => {
     // an object is a card that shows its own type; only scalars get a type on the wire
     return p.kind !== 'chip' && p.token ? wireTypeLabel(p.token, log?.values) : '';
@@ -151,7 +154,9 @@ export function planStage(
   const ownerTop = ownerS ? boxY + box.h / 2 - ownerS.h / 2 : 0;
   const ownerBottom = ownerS ? ownerTop + ownerS.h : 0;
   const clearOwner = (x0: number, rowBottom: number, rowTop: number): number =>
-    ownerS && ownerTop < rowBottom && ownerBottom > rowTop ? Math.max(x0, ownerS.w + STAGE.colGap) : x0;
+    ownerS && ownerTop < rowBottom && ownerBottom > rowTop
+      ? Math.max(x0, ownerS.w + STAGE.colGap)
+      : x0;
   let x = clearOwner(cx - rowWidth(S(ins)) / 2, inH + 0, 0);
   ins.forEach((p, k) => {
     const s = sz.get(p)!;
@@ -165,9 +170,26 @@ export function planStage(
       edge: p.edge,
       from: it.key,
       to: 'box',
-      points: sx === px ? [[sx, sy], [px, boxY]] : [[sx, sy], [sx, my], [px, my], [px, boxY]],
+      points:
+        sx === px
+          ? [
+              [sx, sy],
+              [px, boxY],
+            ]
+          : [
+              [sx, sy],
+              [sx, my],
+              [px, my],
+              [px, boxY],
+            ],
       arrow: true,
-      label: { x: sx + 5, y: sy + 14, type: typeText(typeOf(p)), name: p.kind === 'chip' ? '' : (p.param ?? ''), anchor: 'start' },
+      label: {
+        x: sx + 5,
+        y: sy + 14,
+        type: typeText(typeOf(p)),
+        name: p.kind === 'chip' ? '' : (p.param ?? ''),
+        anchor: 'start',
+      },
     });
   });
   const outTop = boxY + box.h + STAGE.rowGap;
@@ -184,10 +206,24 @@ export function planStage(
       to: it.key,
       points:
         ex === px
-          ? [[px, boxY + box.h], [ex, outTop]]
-          : [[px, boxY + box.h], [px, my], [ex, my], [ex, outTop]],
+          ? [
+              [px, boxY + box.h],
+              [ex, outTop],
+            ]
+          : [
+              [px, boxY + box.h],
+              [px, my],
+              [ex, my],
+              [ex, outTop],
+            ],
       arrow: true,
-      label: { x: ex + 5, y: outTop - 8, type: typeText(typeOf(p)), name: p.kind === 'chip' ? '' : (p.param ?? ''), anchor: 'start' },
+      label: {
+        x: ex + 5,
+        y: outTop - 8,
+        type: typeText(typeOf(p)),
+        name: p.kind === 'chip' ? '' : (p.param ?? ''),
+        anchor: 'start',
+      },
     });
   });
   if (owner) {
@@ -198,7 +234,10 @@ export function planStage(
       edge: null,
       from: it.key,
       to: 'box',
-      points: [[s.w, cy], [boxX, cy]],
+      points: [
+        [s.w, cy],
+        [boxX, cy],
+      ],
       arrow: false,
       label: { x: s.w + STAGE.sideGap / 2, y: cy - 6, type: '', name: 'owner', anchor: 'middle' },
     });
@@ -459,7 +498,10 @@ export async function mountTwoPane(
     ph.style.margin = `${CARD_PAD.t}px ${CARD_PAD.r}px ${CARD_PAD.b}px ${CARD_PAD.l}px`;
     const label = byId.get(e.node) ? slotLabel(byId.get(e.node)!) : e.node;
     ph.setAttribute('aria-label', `${label}, on the stage`);
-    ph.append(el(doc, 'span', 'md-slot-ph-name', label), el(doc, 'span', 'md-slot-ph-text', 'on the stage'));
+    ph.append(
+      el(doc, 'span', 'md-slot-ph-name', label),
+      el(doc, 'span', 'md-slot-ph-text', 'on the stage'),
+    );
     const cap = el(doc, 'div', 'md-slot-cap');
     cap.hidden = true;
     slotEl.append(card.wrap, ph, cap);
@@ -478,7 +520,8 @@ export async function mountTwoPane(
     if (p.kind === 'chip') return null;
     const e = entryOf.get(p.node);
     if (!e) return null;
-    if (e.objects > 1 && p.object !== null) return makeCard(`${p.node}#${p.object}`, p.node, p.object);
+    if (e.objects > 1 && p.object !== null)
+      return makeCard(`${p.node}#${p.object}`, p.node, p.object);
     return makeCard(p.node, p.node, null);
   };
   const chipEl = (key: string, p: StageParticipant): HTMLElement => {
@@ -497,7 +540,9 @@ export async function mountTwoPane(
     return c;
   };
   const chipSize = (p: StageParticipant): Size => {
-    const label = p.chip ? `${p.chip.type}${p.chip.shape ? ` (${p.chip.shape.join(', ')})` : ''}` : '';
+    const label = p.chip
+      ? `${p.chip.type}${p.chip.shape ? ` (${p.chip.shape.join(', ')})` : ''}`
+      : '';
     return { w: Math.ceil(`temporary: ${label}`.length * 7.2) + 20, h: 26 };
   };
 
@@ -525,7 +570,8 @@ export async function mountTwoPane(
         merged,
         log,
       );
-      for (const it of plan.items) onStage.set(it.key, { card: stageCardOf(it.participant), item: it });
+      for (const it of plan.items)
+        onStage.set(it.key, { card: stageCardOf(it.participant), item: it });
     }
     const boxCard = plan?.box && stage ? makeCard(stage.node, stage.node, null) : null;
 
@@ -540,12 +586,15 @@ export async function mountTwoPane(
       if (!here) slot.el.prepend(slot.card.wrap);
       else if (slot.card.wrap.parentElement === slot.el) slot.card.wrap.remove();
       const n = byId.get(e.node);
-      const inUse = [...onStage.values()].some((s) => s.card?.node === e.node && s.card.object !== null);
+      const inUse = [...onStage.values()].some(
+        (s) => s.card?.node === e.node && s.card.object !== null,
+      );
       if (shown && n?.kind === 'instance' && e.objects > 1) {
         slot.cap.hidden = false;
         slot.cap.textContent =
-          (shown.filled >= e.objects ? `${e.objects} objects` : `${shown.filled} of ${e.objects} objects`) +
-          (inUse ? ' (one is on the stage)' : '');
+          (shown.filled >= e.objects
+            ? `${e.objects} objects`
+            : `${shown.filled} of ${e.objects} objects`) + (inUse ? ' (one is on the stage)' : '');
       } else slot.cap.hidden = true;
     }
     for (const c of cards.values()) c.wrap.classList.remove('md-on-stage');
@@ -576,7 +625,8 @@ export async function mountTwoPane(
       if (boxCard) stageIds.add(stage.node);
     }
     const owns = new Set<string>();
-    for (const p of stage?.participants ?? []) if (p.changed && p.kind === 'instance') owns.add(p.node);
+    for (const p of stage?.participants ?? [])
+      if (p.changed && p.kind === 'instance') owns.add(p.node);
     for (const c of cards.values()) {
       const stageCard = [...onStage.values()].find((s) => s.card === c);
       const isBox = c === boxCard && !stageCard;
@@ -590,7 +640,8 @@ export async function mountTwoPane(
         if (tok) versionOf.set(c.node, tok);
         if (p.objectOf) objectBadge = new Map([[c.node, p.objectOf]]);
       } else if (isBox) visible.add(c.node);
-      else if (c.object === null && onShelf.has(c.node) && !onStage.has(c.node)) visible.add(c.node);
+      else if (c.object === null && onShelf.has(c.node) && !onStage.has(c.node))
+        visible.add(c.node);
       const state: StepState = { ...st, visibleNodes: visible, objectBadge };
       c.ctl?.setState(state, log, { owns, versionOf });
       c.wrap.hidden = visible.size === 0;
@@ -635,14 +686,24 @@ export async function mountTwoPane(
       const g = sv(doc, 'g', {}, w.edge === null ? 'md-edge md-owner-line' : 'md-edge');
       if (w.edge !== null) g.dataset.edge = w.edge;
       g.append(
-        sv(doc, 'path', {
-          d: roundedPath(w.points),
-          ...(w.arrow ? { 'marker-end': `url(#${markerId})` } : {}),
-        }, 'md-wire'),
+        sv(
+          doc,
+          'path',
+          {
+            d: roundedPath(w.points),
+            ...(w.arrow ? { 'marker-end': `url(#${markerId})` } : {}),
+          },
+          'md-wire',
+        ),
       );
       wiresSvg.append(g);
       if (w.label && (w.label.type || w.label.name)) {
-        const t = sv(doc, 'text', { x: w.label.x, y: w.label.y, 'text-anchor': w.label.anchor }, 'md-halo');
+        const t = sv(
+          doc,
+          'text',
+          { x: w.label.x, y: w.label.y, 'text-anchor': w.label.anchor },
+          'md-halo',
+        );
         if (w.label.type) t.append(sv(doc, 'tspan', {}, 'md-wtype', w.label.type));
         if (w.label.name)
           t.append(sv(doc, 'tspan', { dx: w.label.type ? 4 : 0 }, 'md-wname', w.label.name));
@@ -668,12 +729,18 @@ export async function mountTwoPane(
   function notes(stage: StageModel | null): void {
     stageNotes.replaceChildren();
     if (!stage) return;
-    if (stage.line !== null) stageNotes.append(el(doc, 'span', 'md-stage-line', `Line ${stage.line}`));
+    if (stage.line !== null)
+      stageNotes.append(el(doc, 'span', 'md-stage-line', `Line ${stage.line}`));
     if (stage.failed && stage.participants.some((p) => p.changed))
       stageNotes.append(el(doc, 'span', 'md-stage-note', '⚠ changed before it failed'));
     if (stage.dropped > 0)
       stageNotes.append(
-        el(doc, 'span', 'md-stage-note', `${stage.dropped} ${stage.dropped === 1 ? 'object' : 'objects'} not shown`),
+        el(
+          doc,
+          'span',
+          'md-stage-note',
+          `${stage.dropped} ${stage.dropped === 1 ? 'object' : 'objects'} not shown`,
+        ),
       );
   }
 
@@ -705,11 +772,15 @@ export async function mountTwoPane(
         const entry = slots.get(c.node);
         const st = onStage.get(c.key);
         const isStageBox = plan?.box !== null && !st && c.wrap.parentElement === canvas;
-        const where: CardInfo['where'] = st || isStageBox ? 'stage' : c.wrap.hidden || !c.wrap.isConnected ? 'hidden' : 'shelf';
+        const where: CardInfo['where'] =
+          st || isStageBox ? 'stage' : c.wrap.hidden || !c.wrap.isConnected ? 'hidden' : 'shelf';
         let shelfRect: Rect | null = null;
         if (entry && !entry.el.hidden) {
           const ref = entry.el.firstElementChild;
-          shelfRect = relTo((entry.ph.hidden ? (ref ?? entry.el) : entry.ph).getBoundingClientRect(), base);
+          shelfRect = relTo(
+            (entry.ph.hidden ? (ref ?? entry.el) : entry.ph).getBoundingClientRect(),
+            base,
+          );
         }
         let stageRect: Rect | null = null;
         if (st)
@@ -719,7 +790,14 @@ export async function mountTwoPane(
             w: st.item.rect.w + CARD_PAD.l + CARD_PAD.r,
             h: st.item.rect.h + CARD_PAD.t + CARD_PAD.b,
           };
-        out.push({ key: c.key, node: c.node, object: c.object, where, shelf: shelfRect, stage: stageRect });
+        out.push({
+          key: c.key,
+          node: c.node,
+          object: c.object,
+          where,
+          shelf: shelfRect,
+          stage: stageRect,
+        });
       }
       return out;
     },
