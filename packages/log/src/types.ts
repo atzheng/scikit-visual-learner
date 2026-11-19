@@ -20,7 +20,7 @@ export type Origin =
   | { origin: 'const'; text: string }
   | { origin: 'name'; name: string }
   | { origin: 'call'; site: number }
-  | { origin: 'expr'; text: string; reads: string[] }
+  | { origin: 'expr'; text: string; reads: string[]; calls?: number[] }
   | { origin: 'unknown' };
 
 export interface Site {
@@ -40,6 +40,8 @@ export interface Site {
   value?: Origin;
   where?: 'local' | 'global' | 'nonlocal';
   root?: string;
+  /** `store` sites: the non-constant index operands of the target (svl-8r4). */
+  index?: Origin[];
   /** `import` sites: the names one module-level import statement binds. */
   imports?: ImportBinding[];
 }

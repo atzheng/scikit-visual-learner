@@ -220,7 +220,10 @@
         {
           "i": 6,
           "ret": 6,
-          "inputs": {},
+          "inputs": {
+            "in:Ridge": "v4.0",
+            "in:RandomForestRegressor": "v5.0"
+          },
           "outputs": {
             "out:0": "v6.0"
           },
@@ -669,6 +672,44 @@
         {
           "i": 3,
           "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:i:8h82rt.0.>x:14txfsj.0.",
+      "from": {
+        "node": "i:8h82rt.0",
+        "port": null
+      },
+      "to": {
+        "node": "x:14txfsj.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:i:8npe94.0.>x:14txfsj.0.",
+      "from": {
+        "node": "i:8npe94.0",
+        "port": null
+      },
+      "to": {
+        "node": "x:14txfsj.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v5.0"
         }
       ],
       "nameLabel": null

@@ -576,3 +576,21 @@ def test_class_body_assigned_name_is_not_a_name_origin() -> None:
     assert a["args"] == [{"origin": "expr", "text": "x", "reads": []}]
     assert b["args"][0]["reads"] == ["w"]
     assert c["args"] == [{"origin": "name", "name": "x"}]
+
+
+def test_store_index_operands_and_expr_calls() -> None:
+    (st,) = kind('df.loc[mask, "c"] = 0', "store")
+    assert st["index"] == [{"origin": "name", "name": "mask"}]
+    (st,) = kind("a[i], i = 1, 2", "store")
+    assert "index" not in st  # `i` is rebound by the statement
+    (st,) = kind("a[(j := 1)] = 2", "store")
+    assert "index" not in st
+    (st,) = kind("d[f(x)] = 0", "store")
+    assert st["index"] == [{"origin": "call", "site": 0}]
+    (b,) = kind("m = [('s', S()), (t, g(h(1)))]", "bind")
+    assert b["value"]["calls"] == [0, 2]
+    # conditional, short-circuit and lambda calls are never listed
+    (b,) = kind("m = [a if c else f(1), c and g(1), lambda: h(1)]", "bind")
+    assert "calls" not in b["value"]
+    (b,) = kind("m = [x > f(1), g(2) or h(3)]", "bind")
+    assert b["value"]["calls"] == [0, 1]

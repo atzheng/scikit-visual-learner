@@ -196,7 +196,8 @@
           "i": 4,
           "ret": 4,
           "inputs": {
-            "in:target": "v0.1"
+            "in:target": "v0.1",
+            "in:index[mask]": "v2.0"
           },
           "outputs": {
             "out:0": "v0.2"
@@ -500,6 +501,25 @@
         {
           "i": 4,
           "token": "v0.1"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:i:1daqhqx.0.>t:19um76j.0.",
+      "from": {
+        "node": "i:1daqhqx.0",
+        "port": null
+      },
+      "to": {
+        "node": "t:19um76j.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v2.0"
         }
       ],
       "nameLabel": null
