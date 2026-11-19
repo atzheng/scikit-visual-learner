@@ -10,9 +10,16 @@ export function progressText(p: ProgressMessage): string {
       return `Loading numpy, pandas, scikit-learn${n}…`;
     case 'recorder':
       return 'Installing the recorder…';
+    case 'matplotlib': // posted during a run: 0/1 while the wheels load, 1/1 when they are in
+      return p.done < p.total ? 'Loading matplotlib…' : 'Running…';
     case 'datasets':
       return `Loading datasets${n}…`;
   }
+}
+
+/** True for Pyodide's "Loading a, b, c" message when matplotlib is among the packages (direct or indirect import). */
+export function loadsMatplotlib(message: string): boolean {
+  return /^Loading\b.*\bmatplotlib\b/.test(message);
 }
 
 export function versionsText(v: Record<string, string>): string {

@@ -383,7 +383,7 @@ type ToWorker =
 type FromWorker =
   | {
       type: 'progress';
-      phase: 'pyodide' | 'packages' | 'recorder' | 'datasets';
+      phase: 'pyodide' | 'packages' | 'recorder' | 'datasets' | 'matplotlib';
       done: number;
       total: number;
     }
@@ -460,7 +460,7 @@ class RuntimeClient {
 
 The wall clock (`config.wall_ms`) is enforced by the client and goes through the same path as `stop()`, but finishes with `timeout`. It starts when `started` arrives (the worker may first be loading imports such as matplotlib); until then a 15 s grace plus `wall_ms` bounds the wait. A `done(stopped)` that follows a stop request is relabelled `stopped` or `timeout` by the client; any other `done` status is kept. A worker `error` event mid-run finishes the run with status `error` and a `WorkerError` `RunError`, then respawns; during load it calls `onError` and does not loop (`restart()` retries).
 
-**Worker** (`runtime/worker.ts`) on start: load the self-hosted Pyodide from `/pyodide/` with progress messages. Load numpy, pandas, scipy and scikit-learn. Write `python/machines/*.py` (bundled with `import.meta.glob('…/python/machines/**/*.py', { query: '?raw', eager: true })`) to `/home/pyodide/machines/`. Write the datasets from `course.ts`. Install the hooks. Send `ready`. Before each run, call `pyodide.loadPackagesFromImports(source)` (this is how matplotlib loads lazily), then `machines.run`. Translate `emit` dicts to messages with `toJs({ dict_converter: Object.fromEntries })`, then replace `undefined` (Python `None`) with `null` and BigInt with Number. Datasets are fetched from `/datasets/<name>` (`packages/web/public/datasets/`, a copy of `fixtures/data/listings.csv`). The worker keeps a stack of open calls so `on_exit(i)` restores the outer call in `currentCall`. The interrupt buffer is zeroed at the start and end of each run. `file` messages return a CSV row count of non-empty lines minus the header.
+**Worker** (`runtime/worker.ts`) on start: load the self-hosted Pyodide from `/pyodide/` with progress messages. Load numpy, pandas, scipy and scikit-learn. Write `python/machines/*.py` (bundled with `import.meta.glob('…/python/machines/**/*.py', { query: '?raw', eager: true })`) to `/home/pyodide/machines/`. Write the datasets from `course.ts`. Install the hooks. Send `ready`. Before each run, call `pyodide.loadPackagesFromImports(source)` (this is how matplotlib loads lazily; while it loads for code that imports matplotlib the worker sends `progress` phase `matplotlib` 0/1, then 1/1, and the status line reads "Loading matplotlib…"), then `machines.run`. Translate `emit` dicts to messages with `toJs({ dict_converter: Object.fromEntries })`, then replace `undefined` (Python `None`) with `null` and BigInt with Number. Datasets are fetched from `/datasets/<name>` (`packages/web/public/datasets/`, a copy of `fixtures/data/listings.csv`). The worker keeps a stack of open calls so `on_exit(i)` restores the outer call in `currentCall`. The interrupt buffer is zeroed at the start and end of each run. `file` messages return a CSV row count of non-empty lines minus the header.
 
 **App store** (`store.ts`, zustand), the single source of state shared by the UI beads:
 
