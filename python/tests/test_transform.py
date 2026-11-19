@@ -616,6 +616,13 @@ def _volatile_binds(src: str) -> set[str]:
         ("a = 1\nb = 2\nglobals()\n", {"a", "b"}),
         ("a = 1\nexec('a = 2')\n", {"a"}),
         ("a = 1\nfrom m import *\n", {"a"}),
+        ("import sys\nk1 = 1\nsys.modules[__name__].k1 = 2\n", {"k1"}),
+        ("k2 = 1\nsetattr(object(), 'k2', 2)\n", {"k2"}),
+        ("import sys\nk3 = 1\nsys.modules['__main__'].__dict__['k3'] = 2\n", {"k3"}),
+        ("import __main__\nk4 = 1\n__main__.k4 = 2\n", {"k4"}),
+        ("from importlib import import_module\nk5 = 1\n", {"k5"}),
+        ("k6 = 1\nx = k6.__dict__\n", {"k6", "x"}),
+        ("k7 = 1\ndelattr(object(), 'k7')\n", {"k7"}),
     ],
 )
 def test_volatile_bind_sites(src: str, expected: set[str]) -> None:

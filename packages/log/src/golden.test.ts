@@ -76,8 +76,8 @@ function checkChip(log: EventLog, g: GraphModel, ed: GEdge): void {
 }
 
 describe('fixtures', () => {
-  it('has the 31 programs', () => {
-    expect(names.length).toBe(31);
+  it('has the 32 programs', () => {
+    expect(names.length).toBe(32);
   });
 
   describe.each(names)('%s', (n) => {
@@ -678,5 +678,16 @@ describe('edge_alias_volatile', () => {
     for (const b of instances(g))
       for (const a of b.aliases ?? []) expect(['df4', 'keep']).not.toContain(a.name);
     expect(stateAt(g, log, g.steps.length).aliases.get(df.id)).toEqual(['df2']);
+  });
+});
+
+describe('edge_alias_reflect', () => {
+  const log = readLog('edge_alias_reflect');
+  const g = buildGraph(log, { fold: false });
+
+  it('reflective rebinding of module globals: no alias is ever shown', () => {
+    expect(log.scopes[0]!.bindings.some(([, name]) => name === 'k1')).toBe(true);
+    for (const b of instances(g)) expect(b.aliases, b.id).toBeUndefined();
+    expect(stateAt(g, log, g.steps.length).aliases.size).toBe(0);
   });
 });

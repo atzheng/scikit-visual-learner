@@ -224,7 +224,21 @@ def _class_scope_names(node: ast.ClassDef) -> frozenset[str]:
     return frozenset(out)
 
 
-_DYNAMIC_NAMESPACE = frozenset({"globals", "vars", "locals", "exec", "eval"})
+_DYNAMIC_NAMESPACE = frozenset(
+    {
+        "globals",
+        "vars",
+        "locals",
+        "exec",
+        "eval",
+        "setattr",
+        "delattr",
+        "sys",
+        "__main__",
+        "importlib",
+        "inspect",
+    }
+)
 
 
 def _volatile_names(tree: ast.Module) -> frozenset[str] | None:
@@ -244,15 +258,22 @@ def _volatile_names(tree: ast.Module) -> frozenset[str] | None:
                 return None
             if isinstance(n.ctx, ast.Del):
                 out.add(n.id)
+        elif isinstance(n, ast.Attribute) and n.attr == "__dict__":
+            return None
         elif isinstance(n, (ast.Global, ast.Nonlocal)):
             out.update(n.names)
         elif isinstance(n, ast.NamedExpr) and isinstance(n.target, ast.Name):
             out.add(n.target.id)
         elif isinstance(n, (ast.Import, ast.ImportFrom)):
             for a in n.names:
-                if a.name == "*":
+                if a.name == "*" or a.name.split(".")[0] in _DYNAMIC_NAMESPACE:
                     return None
                 out.add(a.asname or a.name.split(".")[0])
+            if (
+                isinstance(n, ast.ImportFrom)
+                and (n.module or "").split(".")[0] in _DYNAMIC_NAMESPACE
+            ):
+                return None
         elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             out.add(n.name)
         elif isinstance(n, ast.ExceptHandler) and n.name:

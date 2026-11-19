@@ -1,0 +1,230 @@
+{
+  "nodes": [
+    {
+      "id": "m:1gqk3rq.0.12occe0",
+      "kind": "import",
+      "parent": null,
+      "order": 300000,
+      "name": "__main__",
+      "source": null,
+      "site": 10,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 400000,
+      "name": "pd",
+      "source": "pandas",
+      "site": 11,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "m:1szm6nw.0.1i79b12",
+      "kind": "import",
+      "parent": null,
+      "order": 500000,
+      "name": "sys",
+      "source": null,
+      "site": 12,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:wf71yq.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "DataFrame",
+      "module": "pandas",
+      "parent": null,
+      "order": 700005,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:data",
+          "param": "data",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "data = {\"a\": [3, 1, 2]}"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false,
+      "importedFrom": "pandas"
+    },
+    {
+      "id": "i:wf71yq.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 700005,
+      "className": "DF",
+      "varName": "df",
+      "createdAt": 3,
+      "createdBy": "n:wf71yq.0",
+      "params": [
+        {
+          "name": "data",
+          "text": "{\"a\": [3, 1, 2]}"
+        }
+      ],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v1.0",
+          "kind": "new"
+        }
+      ]
+    },
+    {
+      "id": "n:mxn2k39@i:wf71yq.0",
+      "kind": "call",
+      "mergeKey": "s2",
+      "name": "DataFrame.copy",
+      "module": "pandas",
+      "parent": "i:wf71yq.0",
+      "order": 800008,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "other"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "i:1x9xhnv.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 800008,
+      "className": "DF",
+      "varName": "other",
+      "createdAt": 4,
+      "createdBy": "n:mxn2k39@i:wf71yq.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 4,
+          "token": "v2.0",
+          "kind": "new"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:wf71yq.0.out:0>i:wf71yq.0.",
+      "from": {
+        "node": "n:wf71yq.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:wf71yq.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:mxn2k39@i:wf71yq.0.out:0>i:1x9xhnv.0.",
+      "from": {
+        "node": "n:mxn2k39@i:wf71yq.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1x9xhnv.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ]
+}
