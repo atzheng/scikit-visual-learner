@@ -24,6 +24,7 @@ export function summaryText(parts: readonly SummaryPart[]): string {
 
 const MAX_CODE = 60;
 const MAX_LIST = 4;
+const MAX_ATTRS = 6;
 const MAX_MESSAGE = 80;
 
 function oneLine(s: string): string {
@@ -44,8 +45,19 @@ function baseType(v: ValueSummary): string {
   if (v.type === 'DF') return 'DataFrame';
   if (v.type === 'sparse') return 'sparse matrix';
   const m = COLLECTION.exec(v.type);
-  if (m) return `${m[1]} of ${m[2]} item${m[2] === '1' ? '' : 's'}`;
+  if (m) return m[1]!;
   return v.type;
+}
+/** Types a student knows as plain data: no "object" after them (class instances keep it). */
+function isBuiltin(v: ValueSummary): boolean {
+  return (
+    !v.machine && (['DF', 'Series', 'array', 'sparse'].includes(v.type) || COLLECTION.test(v.type))
+  );
+}
+/** "3 items" for a collection, or null. */
+function itemsText(v: ValueSummary): string | null {
+  const m = COLLECTION.exec(v.type);
+  return m ? `${m[2]} item${m[2] === '1' ? '' : 's'}` : null;
 }
 /** `Series of bool`, `array of float64`: the type with the dtype when there is one. */
 function typeName(v: ValueSummary): string {
@@ -65,15 +77,20 @@ function scalarText(tok: Token, v: ValueSummary): string | null {
 function describeValue(tok: Token, log: EventLog): string {
   const v = log.values[tok];
   if (!v) return 'a value';
-  const detail = shapeText(v) ?? scalarText(tok, v);
   const name = typeName(v);
+  const items = itemsText(v);
+  if (items !== null) {
+    const whole = scalarText(tok, v);
+    return `${article(name)} ${name}${whole !== null ? `, ${whole}` : ` (${items})`}`;
+  }
+  const detail = shapeText(v) ?? scalarText(tok, v);
   return `${article(name)} ${name}${detail ? ` (${detail})` : ''}`;
 }
 /** "DataFrame, 376 × 4", for an item in a list. */
 function typeAndShape(tok: Token, log: EventLog): string {
   const v = log.values[tok];
   if (!v) return 'value';
-  const detail = shapeText(v) ?? scalarText(tok, v);
+  const detail = shapeText(v) ?? itemsText(v) ?? scalarText(tok, v);
   return detail ? `${typeName(v)}, ${detail}` : typeName(v);
 }
 
@@ -128,12 +145,12 @@ function ownerText(site: Site | undefined): string | null {
 // ---- source text
 
 /** The call as written, or `callee(...)` when it is long: never more than MAX_CODE characters of code. */
-function callText(site: Site | undefined, ev: Event): string {
+function callText(site: Site | undefined, ev: Event): string | null {
   if (!site) return `${ev.name}(...)`;
   const full = oneLine(site.text);
   if (Array.from(full).length <= MAX_CODE) return full;
-  if (site.func_text !== undefined) return clip(`${oneLine(site.func_text)}(...)`, MAX_CODE);
-  return clip(full, MAX_CODE);
+  const short = site.func_text === undefined ? '' : `${oneLine(site.func_text)}(...)`;
+  return short !== '' && Array.from(short).length <= MAX_CODE ? short : null;
 }
 
 // ---- the sentences
@@ -227,8 +244,8 @@ function outputsTail(ctx: Ctx, call: boolean): { created: boolean; parts: Summar
     const v = log.values[tok];
     const born = call && createdHere(ctx, tok);
     if (born && v) {
-      const detail = shapeText(v);
-      const what = `created a new ${baseType(v)} object${detail ? ` (${detail})` : ''}`;
+      const detail = shapeText(v) ?? itemsText(v);
+      const what = `created a new ${baseType(v)}${isBuiltin(v) ? '' : ' object'}${detail ? ` (${detail})` : ''}`;
       return { created: true, parts: [t(what), ...nameParts(name, ', ')] };
     }
     return { created: false, parts: [t(describeValue(tok, log)), ...nameParts(name, ', named ')] };
@@ -260,7 +277,7 @@ function attrSentence(ctx: Ctx, owner: string | null): Sentence | null {
     (r) => r.changed,
   );
   if (changed.length === 0) return null;
-  const shown = changed.slice(0, MAX_LIST);
+  const shown = changed.slice(0, MAX_ATTRS);
   const parts: SummaryPart[] = [
     t(`It changed ${changed.length} attribute${changed.length === 1 ? '' : 's'} of `),
     owner !== null ? c(owner) : t('the object'),
@@ -275,19 +292,20 @@ function attrSentence(ctx: Ctx, owner: string | null): Sentence | null {
   return parts;
 }
 
+/** The error sentence(s): what was raised, then (when it was) that the program caught it. */
+function errorSentences(ev: Event): Sentence[] {
+  const s = errorSentence(ev);
+  if (!s) return [];
+  return ev.error!.handled ? [s, [t('The program caught it and carried on.')]] : [s];
+}
+
 function errorSentence(ev: Event): Sentence | null {
   const e = ev.error;
   if (!e) return null;
   const msg = clip(oneLine(e.message), MAX_MESSAGE);
   const what = msg ? `${e.type}: ${msg}` : e.type;
-  if (e.propagated)
-    return [
-      t('The error '),
-      c(e.type),
-      t(' passed through this call'),
-      t(e.handled ? ' (handled).' : '.'),
-    ];
-  return [t('It raised '), c(what), t(e.handled ? ' (handled).' : '.')];
+  if (e.propagated) return [t('The error '), c(e.type), t(' passed through this call.')];
+  return [t('It raised '), c(what), t('.')];
 }
 
 const STORE_KEY = /^\s*([A-Za-z_]\w*)\[\s*(['"])([^'"\\\n]+)\2\s*\]\s*=(?!=)/;
@@ -313,7 +331,7 @@ function storeSentence(ctx: Ctx): Sentence {
 }
 
 function callSentences(ctx: Ctx): Sentence[] {
-  const { ev, site, model, state } = ctx;
+  const { ev, site, model, state, log } = ctx;
   const out: Sentence[] = [];
   const text = callText(site, ev);
   const node = model.nodes.find(
@@ -322,10 +340,14 @@ function callSentences(ctx: Ctx): Sentence[] {
   const from = node?.importedFrom;
   const owner = ev.kind === 'method' ? ownerText(site) : null;
   const who = ev.kind === 'student_function' ? 'Called your function ' : 'Called ';
-  out.push([t(who), c(text), ...(from ? [t(' from '), c(from)] : []), t('.')]);
-  const err = errorSentence(ev);
-  if (err) {
-    out.push(err);
+  out.push([
+    ...(text === null ? [t('Made a call')] : [t(who), c(text)]),
+    ...(from ? [t(' from '), c(from)] : []),
+    t('.'),
+  ]);
+  const errs = errorSentences(ev);
+  if (errs.length > 0) {
+    out.push(...errs);
     return out;
   }
   const attrs = attrSentence(ctx, owner);
@@ -336,14 +358,19 @@ function callSentences(ctx: Ctx): Sentence[] {
     );
   const ret = outputsTail(ctx, true);
   if (ret) out.push([t(ret.created ? 'It ' : 'It returned '), ...ret.parts, t('.')]);
-  // A call that changed objects in place without returning them: data methods (`df.dropna(inplace=True)`).
+  // In place only where it is safe to say: the call returned nothing or itself, or the changed object is
+  // a nameable owner of a plain data type. The recorder can report a change on a helper object (a groupby),
+  // so anything else stays silent.
   if (ev.mutates.length > 0 && ctx.state.attrsAfter === undefined) {
     const ownerKey = ev.owner ? keyOf(ev.owner) : null;
     const ownerChanged = ownerKey !== null && ev.mutates.some(([b]) => keyOf(b) === ownerKey);
     const others = ev.mutates.filter(([b]) => keyOf(b) !== ownerKey).length;
-    if (ownerChanged && owner) out.push([t('It changed '), c(owner), t(' in place.')]);
-    else if (ownerChanged) out.push([t('It changed the object in place.')]);
-    if (others > 0)
+    const quiet = ev.outputs.length === 0 || ev.returns_self;
+    const ov = ev.owner ? log.values[ev.owner] : undefined;
+    if (ownerChanged && owner && ov && isBuiltin(ov) && ov.type !== 'sparse')
+      out.push([t('It changed '), c(owner), t(' in place.')]);
+    else if (ownerChanged && quiet) out.push([t('It changed the object in place.')]);
+    if (others > 0 && quiet)
       out.push([
         t(
           `It changed ${others} ${ownerChanged ? 'other ' : ''}object${others === 1 ? '' : 's'} in place.`,
@@ -356,6 +383,9 @@ function callSentences(ctx: Ctx): Sentence[] {
 /** "pass 2 of 3" when the current box is one of several runs of the same site, or holds several objects. */
 function passNote(ctx: Ctx): string | null {
   const { state, ev, model, log } = ctx;
+  // Said only when one counter is certain: every run of the box is the same site, and the box holds every
+  // run of that site (a box split per object counts differently from the loop).
+  const siteRuns = log.events.filter((e) => e.site === ev.site).length;
   const id = state.currentNode;
   if (id !== null) {
     const b = state.badge.get(id);
@@ -363,12 +393,12 @@ function passNote(ctx: Ctx): string | null {
       const node = model.nodes.find((n) => n.id === id);
       const execs = node && 'executions' in node ? node.executions : [];
       const sameSite = execs.every((x) => findEvent(log.events, x.i)?.site === ev.site);
-      return `${sameSite ? 'pass' : 'call'} ${b.k} of ${b.n}`;
+      return sameSite && b.n === siteRuns ? `pass ${b.k} of ${b.n}` : null;
     }
   }
   for (const n of ctx.instances.values()) {
     const ob = state.objectBadge.get(n.id);
-    if (ob && n.createdAt === ev.i) return `pass ${ob.k} of ${ob.n}`;
+    if (ob && n.createdAt === ev.i && ob.n === siteRuns) return `pass ${ob.k} of ${ob.n}`;
   }
   return null;
 }
@@ -409,13 +439,30 @@ export function describeStep(
       break;
     case 'expr': {
       const text = clip(oneLine(ev.name), MAX_CODE);
-      const err = errorSentence(ev);
+      const errs = errorSentences(ev);
       const outs = outputsTail(ctx, false);
-      sentences = err
-        ? [[t('Computed '), c(text), t('.')], err]
-        : outs
-          ? [[t('Computed '), c(text), t(', '), ...outs.parts, t('.')]]
-          : [[t('Computed '), c(text), t('.')]];
+      // clipped source is left out: "Computed a dict (2 items), named models."
+      const clipped = Array.from(oneLine(ev.name)).length > MAX_CODE;
+      const what: SummaryPart[] = clipped ? [] : [c(text)];
+      sentences =
+        errs.length > 0
+          ? [
+              [
+                t(clipped ? 'Evaluated an expression.' : 'Computed '),
+                ...what,
+                ...(clipped ? [] : [t('.')]),
+              ],
+              ...errs,
+            ]
+          : outs
+            ? [[t('Computed '), ...what, t(clipped ? '' : ', '), ...outs.parts, t('.')]]
+            : [
+                [
+                  t(clipped ? 'Evaluated an expression.' : 'Computed '),
+                  ...what,
+                  ...(clipped ? [] : [t('.')]),
+                ],
+              ];
       break;
     }
     default:

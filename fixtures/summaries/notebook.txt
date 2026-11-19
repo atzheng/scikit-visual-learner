@@ -3,8 +3,8 @@
 2 (event 1): Imported LinearRegression from sklearn.linear_model.
 3 (event 2): Imported train_test_split from sklearn.model_selection.
 4 (event 3): Imported OneHotEncoder from sklearn.preprocessing.
-5 (event 4): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7), df.
-6 (event 5): Called df.dropna(). It created a new DataFrame object (471 × 7), df.
+5 (event 4): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
+6 (event 5): Called df.dropna(). It created a new DataFrame (471 × 7), df.
 7 (event 6): Computed df[["beds", "baths", "sqft", "neighbourhood"]], a DataFrame (471 × 4), named X.
 8 (event 7): Computed df["price"], a Series of float64 (471), named y.
 9 (event 8): Called train_test_split(X, y, test_size=0.2, random_state=0) from sklearn.model_selection. It returned 4 objects: X_train (DataFrame, 376 × 4), X_test (DataFrame, 95 × 4), y_train (Series of float64, 376), y_test (Series of float64, 95).
@@ -12,10 +12,10 @@
 11 (event 10): Computed X_train[["neighbourhood"]], a DataFrame (376 × 1).
 12 (event 11): Called enc.fit(X_train[["neighbourhood"]]). It changed 4 attributes of enc: categories_, drop_idx_, feature_names_in_, n_features_in_. It returned enc itself.
 13 (event 12): Computed X_train[["neighbourhood"]], a DataFrame (376 × 1).
-14 (event 13): Called enc.transform(X_train[["neighbourhood"]]). It created a new array object (376 × 6), hood_train (call 1 of 2).
+14 (event 13): Called enc.transform(X_train[["neighbourhood"]]). It created a new array (376 × 6), hood_train.
 15 (event 14): Computed X_test[["neighbourhood"]], a DataFrame (95 × 1).
-16 (event 15): Called enc.transform(X_test[["neighbourhood"]]). It created a new array object (95 × 6), hood_test (call 2 of 2).
+16 (event 15): Called enc.transform(X_test[["neighbourhood"]]). It created a new array (95 × 6), hood_test.
 17 (event 16): Called LinearRegression() from sklearn.linear_model. It created a new LinearRegression object, model.
-18 (event 17): Called model.fit(hood_train, y_train). It changed 5 attributes of model: coef_, intercept_, n_features_in_, rank_ (and 1 more). It returned model itself.
+18 (event 17): Called model.fit(hood_train, y_train). It changed 5 attributes of model: coef_, intercept_, n_features_in_, rank_, singular_. It returned model itself.
 19 (event 18): Called model.score(hood_test, y_test). It returned a float (0.14301225707642218), named score.
-20 (event 19): Called model.predict(hood_test). It created a new array object (95), pred.
+20 (event 19): Called model.predict(hood_test). It created a new array (95), pred.

@@ -1,7 +1,7 @@
 0 (event -1): Before the program runs.
 1 (event 0): Imported pandas as pd.
 2 (event 1): Imported LinearRegression from sklearn.linear_model.
-3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7), df.
+3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
 4 (event 3): Computed df[["beds", "baths", "sqft"]], a DataFrame (500 × 3), named X.
 5 (event 4): Computed df["price"], a Series of float64 (500), named y.
 6 (event 5): Called LinearRegression() from sklearn.linear_model. It created a new LinearRegression object.

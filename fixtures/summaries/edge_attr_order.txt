@@ -2,10 +2,10 @@
 1 (event 0): Imported numpy as np.
 2 (event 1): Imported pandas as pd.
 3 (event 2): Imported LinearRegression from sklearn.linear_model.
-4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7).
-5 (event 4): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame object (471 × 7), df.
+4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7).
+5 (event 4): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame (471 × 7), df.
 6 (event 5): Computed df[["beds", "baths", "sqft"]], a DataFrame (471 × 3), named X.
 7 (event 6): Computed df["price"], a Series of float64 (471), named y.
 8 (event 7): Called LinearRegression() from sklearn.linear_model. It created a new LinearRegression object, model.
-9 (event 8): Called model.fit(X, y). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_ (and 2 more). It returned model itself.
-10 (event 9): Called np.round(model.coef_) from numpy. It created a new array object (3), r.
+9 (event 8): Called model.fit(X, y). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_, rank_, singular_. It returned model itself.
+10 (event 9): Called np.round(model.coef_) from numpy. It created a new array (3), r.

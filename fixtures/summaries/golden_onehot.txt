@@ -2,11 +2,11 @@
 1 (event 0): Imported pandas as pd.
 2 (event 1): Imported train_test_split from sklearn.model_selection.
 3 (event 2): Imported OneHotEncoder from sklearn.preprocessing.
-4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7), df.
+4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
 5 (event 4): Computed df[["neighbourhood"]], a DataFrame (500 × 1), named X.
 6 (event 5): Computed df["price"], a Series of float64 (500), named y.
 7 (event 6): Called train_test_split(X, y, test_size=0.2, random_state=0) from sklearn.model_selection. It returned 4 objects: X_train (DataFrame, 400 × 1), X_test (DataFrame, 100 × 1), y_train (Series of float64, 400), y_test (Series of float64, 100).
 8 (event 7): Called OneHotEncoder(handle_unknown="ignore") from sklearn.preprocessing. It created a new OneHotEncoder object, enc.
 9 (event 8): Called enc.fit(X_train). It changed 4 attributes of enc: categories_, drop_idx_, feature_names_in_, n_features_in_. It returned enc itself.
-10 (event 9): Called enc.transform(X_train). It created a new sparse matrix object (400 × 6), train_enc (call 1 of 2).
-11 (event 10): Called enc.transform(X_test). It created a new sparse matrix object (100 × 6), test_enc (call 2 of 2).
+10 (event 9): Called enc.transform(X_train). It created a new sparse matrix (400 × 6), train_enc.
+11 (event 10): Called enc.transform(X_test). It created a new sparse matrix (100 × 6), test_enc.

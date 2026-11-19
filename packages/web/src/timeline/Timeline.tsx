@@ -1,10 +1,12 @@
-import { describeStep, eventLabel } from '@machines/log';
-import { useMemo, useState, type KeyboardEvent } from 'react';
+import { describeStep, eventLabel, summaryText } from '@machines/log';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { useStore } from '../store';
 import { EventList } from './EventList';
 import { SummaryText } from './SummaryText';
 import { clampStep, stepForKey } from './steps';
 import './timeline.css';
+
+const ANNOUNCE_DELAY_MS = 300;
 
 /** Slider over steps 0..N with prev/next, a "k of n" label and a collapsible event list. */
 export function Timeline() {
@@ -20,6 +22,17 @@ export function Timeline() {
     () => (model && log ? describeStep(model, log, cur) : []),
     [model, log, cur],
   );
+  const running = useStore((s) => s.running);
+  const [announced, setAnnounced] = useState('');
+  const spoken = useMemo(() => summaryText(summary), [summary]);
+  useEffect(() => {
+    if (running) {
+      setAnnounced('');
+      return;
+    }
+    const h = setTimeout(() => setAnnounced(spoken), ANNOUNCE_DELAY_MS);
+    return () => clearTimeout(h);
+  }, [spoken, running]);
   const text = `Step ${cur} of ${max}`;
   const onKeyDown = (e: KeyboardEvent) => {
     const next = stepForKey(e.nativeEvent, cur, max, { vertical: true });
@@ -76,9 +89,17 @@ export function Timeline() {
       <p className="current-event" data-testid="current-event">
         {event ?? (max > 0 ? 'Before the first step' : 'No steps yet')}
       </p>
-      {/* polite: read out when the step changes. The parts are memoised on (model, log, step), so an unrelated re-render leaves the text alone. */}
-      <p className="step-summary" data-testid="step-summary" aria-live="polite" aria-atomic="true">
+      <p className="step-summary" data-testid="step-summary">
         <SummaryText parts={summary} />
+      </p>
+      {/* The visible sentence is instant; what a screen reader hears waits for the step to settle (a slider drag does not spam) and stays silent while a run streams. */}
+      <p
+        className="visually-hidden"
+        data-testid="step-summary-live"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {announced}
       </p>
       <div id="event-list-region" hidden={!listOpen}>
         {listOpen && <EventList />}

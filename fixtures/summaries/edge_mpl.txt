@@ -1,13 +1,13 @@
 0 (event -1): Before the program runs.
 1 (event 0): Imported matplotlib.pyplot as plt.
 2 (event 1): Imported pandas as pd.
-3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7).
-4 (event 3): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame object (471 × 7), df.
+3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7).
+4 (event 3): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame (471 × 7), df.
 5 (event 4): Computed df["sqft"], a Series of float64 (471).
-6 (event 5): Called df["sqft"].sort_values(). It created a new Series object (471).
-7 (event 6): Called df["sqft"].sort_values().to_numpy(). It created a new array object (471).
+6 (event 5): Called df["sqft"].sort_values(). It created a new Series (471).
+7 (event 6): Called df["sqft"].sort_values().to_numpy(). It created a new array (471).
 8 (event 7): Computed df["price"], a Series of float64 (471).
-9 (event 8): Called df["price"].sort_values(). It created a new Series object (471).
-10 (event 9): Called df["price"].sort_values().to_numpy(). It created a new array object (471).
-11 (event 10): Called plt.plot(...) from matplotlib.pyplot. It created a new list of 1 item object.
+9 (event 8): Called df["price"].sort_values(). It created a new Series (471).
+10 (event 9): Called df["price"].sort_values().to_numpy(). It created a new array (471).
+11 (event 10): Called plt.plot(...) from matplotlib.pyplot. It created a new list (1 item).
 12 (event 11): Called plt.show() from matplotlib.pyplot.

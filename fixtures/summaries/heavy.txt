@@ -2,13 +2,13 @@
 1 (event 0): Imported pandas as pd.
 2 (event 1): Imported RandomForestRegressor from sklearn.ensemble.
 3 (event 2): Imported GridSearchCV and train_test_split from sklearn.model_selection.
-4 (event 3): Called pd.read_csv("listings_10k.csv") from pandas. It created a new DataFrame object (10000 × 7).
-5 (event 4): Called pd.read_csv("listings_10k.csv").dropna(). It created a new DataFrame object (9407 × 7), df.
-6 (event 5): Computed df[["beds", "baths", "sqft", "year_built", "neighbourhood",…, a DataFrame (9407 × 6).
-7 (event 6): Called pd.get_dummies(...) from pandas. It created a new DataFrame object (9407 × 13), X.
+4 (event 3): Called pd.read_csv("listings_10k.csv") from pandas. It created a new DataFrame (10000 × 7).
+5 (event 4): Called pd.read_csv("listings_10k.csv").dropna(). It created a new DataFrame (9407 × 7), df.
+6 (event 5): Computed a DataFrame (9407 × 6).
+7 (event 6): Called pd.get_dummies(...) from pandas. It created a new DataFrame (9407 × 13), X.
 8 (event 7): Computed df["price"], a Series of float64 (9407), named y.
 9 (event 8): Called train_test_split(X, y, test_size=0.2, random_state=0) from sklearn.model_selection. It returned 4 objects: X_train (DataFrame, 7525 × 13), X_test (DataFrame, 1882 × 13), y_train (Series of float64, 7525), y_test (Series of float64, 1882).
 10 (event 9): Called RandomForestRegressor(random_state=0) from sklearn.ensemble. It created a new RandomForestRegressor object, forest.
 11 (event 10): Called GridSearchCV(forest, grid, cv=3) from sklearn.model_selection. It created a new GridSearchCV object, search.
-12 (event 11): Called search.fit(X_train, y_train). It changed 10 attributes of search: best_estimator_, best_index_, best_params_, best_score_ (and 6 more). It returned search itself.
+12 (event 11): Called search.fit(X_train, y_train). It changed 10 attributes of search: best_estimator_, best_index_, best_params_, best_score_, cv_results_, feature_names_in_ (and 4 more). It returned search itself.
 13 (event 12): Called search.score(X_test, y_test). It returned a float (0.959804707950971).

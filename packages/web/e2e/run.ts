@@ -344,7 +344,8 @@ async function main(): Promise<void> {
     await step('the step summary at the fit step mentions coef_ (aria-live)', async () => {
       const { m } = await stepCount(page);
       const summary = page.getByTestId('step-summary');
-      check((await summary.getAttribute('aria-live')) === 'polite', 'summary is not aria-live');
+      const live = page.getByTestId('step-summary-live');
+      check((await live.getAttribute('aria-live')) === 'polite', 'summary is not aria-live');
       let fit = -1;
       for (let k = 1; k <= m && fit < 0; k++) {
         await gotoStep(page, k);
@@ -358,6 +359,14 @@ async function main(): Promise<void> {
         (await summary.locator('code', { hasText: 'coef_' }).count()) > 0,
         'names are not code elements',
       );
+      await page.waitForFunction(
+        () =>
+          /coef_/.test(
+            document.querySelector('[data-testid="step-summary-live"]')?.textContent ?? '',
+          ),
+        undefined,
+        { timeout: 3000 },
+      ); // the announcement follows after the debounce
       await gotoStep(page, 0);
       check(/Before the program runs/.test((await summary.textContent()) ?? ''), 'step 0 summary');
     });

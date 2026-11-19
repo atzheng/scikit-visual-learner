@@ -1,5 +1,5 @@
 0 (event -1): Before the program runs.
 1 (event 0): Imported pandas as pd.
-2 (event 1): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7), df.
-3 (event 2): Called df.dropna(). It created a new DataFrame object (471 × 7).
-4 (event 3): Called df.dropna().reset_index(). It created a new DataFrame object (471 × 8), clean.
+2 (event 1): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
+3 (event 2): Called df.dropna(). It created a new DataFrame (471 × 7).
+4 (event 3): Called df.dropna().reset_index(). It created a new DataFrame (471 × 8), clean.

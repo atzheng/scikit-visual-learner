@@ -166,9 +166,7 @@ describe('describeStep, hand-built', () => {
     });
     b.ev(b.site('noop()'), 'function', 'noop');
     const log = b.log();
-    expect(say(log, 1)).toBe(
-      'Called load("a.csv"). It created a new DataFrame object (3 × 2), df.',
-    );
+    expect(say(log, 1)).toBe('Called load("a.csv"). It created a new DataFrame (3 × 2), df.');
     expect(say(log, 2)).toBe(
       'Called split(df). It returned 2 objects: a (DataFrame, 2 × 2), a Series of int64 (2).',
     );
@@ -193,7 +191,7 @@ describe('describeStep, hand-built', () => {
     b.bind('late', 'v1.0');
     const log = b.log();
     expect(say(log, 2)).toBe('Called same(df). It returned a DataFrame (1 × 1).');
-    expect(say(log, 3)).toBe('Called make(). It created a new DataFrame object (1 × 1).');
+    expect(say(log, 3)).toBe('Called make(). It created a new DataFrame (1 × 1).');
   });
 
   it('a volatile name is never given', () => {
@@ -203,7 +201,7 @@ describe('describeStep, hand-built', () => {
       outputs: [b.val('v0.0', 'DF', { shape: [1, 1] })],
     });
     b.bind('df', 'v0.0');
-    expect(say(b.log(), 1)).toBe('Called load(). It created a new DataFrame object (1 × 1).');
+    expect(say(b.log(), 1)).toBe('Called load(). It created a new DataFrame (1 × 1).');
   });
 
   it('method on an instance: changed attributes, returns self', () => {
@@ -227,10 +225,10 @@ describe('describeStep, hand-built', () => {
     });
     const log = b.log();
     expect(say(log, 2)).toBe(
-      'Called model.fit(X, y). It changed 6 attributes of model: coef_, intercept_, a_, b_ (and 2 more). It returned model itself.',
+      'Called model.fit(X, y). It changed 6 attributes of model: coef_, intercept_, a_, b_, c_, d_. It returned model itself.',
     );
     expect(say(log, 2, true)).toBe(
-      'It changed 6 attributes of model: coef_, intercept_, a_, b_ (and 2 more). It returned model itself.',
+      'It changed 6 attributes of model: coef_, intercept_, a_, b_, c_, d_. It returned model itself.',
     );
   });
 
@@ -307,6 +305,43 @@ describe('describeStep, hand-built', () => {
     expect(say(b.log(), 2)).toBe('Called df.dropna(inplace=True). It changed df in place.');
   });
 
+  it('does not call a groupby change "in place" (a recorder false positive)', () => {
+    const b = new B();
+    b.ev(b.site('g()'), 'function', 'g', { outputs: [b.val('v0.0', 'SeriesGroupBy')] });
+    b.val('v0.1', 'SeriesGroupBy');
+    b.ev(b.site('g.mean()', { func_text: 'g.mean' }), 'method', 'SeriesGroupBy.mean', {
+      owner: 'v0.0',
+      outputs: [b.val('v1.0', 'Series', { shape: [3], dtype: 'float64' })],
+      mutates: [['v0.0', 'v0.1']],
+    });
+    expect(say(b.log(), 2)).toBe('Called g.mean(). It created a new Series (3).');
+  });
+
+  it('built-ins have no "object"; collections say their items; long source is left out', () => {
+    const b = new B();
+    b.ev(b.site('mk()'), 'function', 'mk', { outputs: [b.val('v0.0', 'list[3]')] });
+    b.ev(b.site('t = (3,)', { kind: 'bind' }), 'expr', 'x'.repeat(70), {
+      outputs: [b.val('v1.0', 'dict[2]')],
+    });
+    b.bind('models', 'v1.0');
+    b.ev(b.site('shape(a)'), 'function', 'shape', {
+      outputs: [b.val('s0', 'tuple[1]', { repr: '(3,)' })],
+    });
+    const log = b.log();
+    expect(say(log, 1)).toBe('Called mk(). It created a new list (3 items).');
+    expect(say(log, 2)).toBe('Computed a dict (2 items), named models.');
+    expect(say(log, 3)).toBe('Called shape(a). It returned a tuple, (3,).');
+  });
+
+  it('a pass is named only when the box holds every run of its site', () => {
+    const b = new B();
+    const s = b.site('f(i)');
+    for (let k = 0; k < 3; k++) {
+      b.ev(s, 'function', 'f', { count: k + 1, outputs: [b.val(`v${k}.0`, 'Thing')] });
+    }
+    expect(say(b.log(), 2)).toContain('(pass 2 of 3)');
+  });
+
   it('expr: type, shape and name', () => {
     const b = new B();
     b.ev(b.site('mask = df["p"] > 1', { kind: 'bind' }), 'expr', 'df["p"] > 1', {
@@ -327,7 +362,9 @@ describe('describeStep, hand-built', () => {
     b.ev(b.site('h()'), 'function', 'h', { interrupted: true });
     const log = b.log();
     expect(say(log, 1)).toBe('Called f(). It raised ValueError: bad thing.');
-    expect(say(log, 2)).toBe("Called g(). It raised KeyError: 'k' (handled).");
+    expect(say(log, 2)).toBe(
+      "Called g(). It raised KeyError: 'k'. The program caught it and carried on.",
+    );
     expect(say(log, 3)).toBe('Called h(). The run was stopped during this step.');
   });
 

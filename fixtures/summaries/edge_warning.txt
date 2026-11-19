@@ -2,11 +2,11 @@
 1 (event 0): Imported warnings.
 2 (event 1): Imported pandas as pd.
 3 (event 2): Imported LogisticRegression from sklearn.linear_model.
-4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7).
-5 (event 4): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame object (471 × 7), df.
+4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7).
+5 (event 4): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame (471 × 7), df.
 6 (event 5): Computed df[["beds", "baths", "sqft", "year_built"]], a DataFrame (471 × 4), named X.
 7 (event 6): Computed df["price"], a Series of float64 (471).
 8 (event 7): Called df["price"].median(). It returned a float64 (162.34).
 9 (event 8): Computed df["price"] > df["price"].median(), a Series of bool (471), named y.
 10 (event 9): Called LogisticRegression(max_iter=2) from sklearn.linear_model. It created a new LogisticRegression object, clf.
-11 (event 10): Called clf.fit(X, y). It changed 6 attributes of clf: classes_, coef_, feature_names_in_, intercept_ (and 2 more). It returned clf itself.
+11 (event 10): Called clf.fit(X, y). It changed 6 attributes of clf: classes_, coef_, feature_names_in_, intercept_, n_features_in_, n_iter_. It returned clf itself.
