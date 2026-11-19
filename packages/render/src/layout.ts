@@ -210,7 +210,8 @@ const MAX_ALIASES = 3;
 export function instanceTitleWith(n: InstanceNode, aliases: readonly string[]): string {
   const base = instanceTitle(n);
   if (aliases.length === 0 || !n.varName) return base;
-  const shown = aliases.slice(0, MAX_ALIASES).join(', ') + (aliases.length > MAX_ALIASES ? ', …' : '');
+  const shown =
+    aliases.slice(0, MAX_ALIASES).join(', ') + (aliases.length > MAX_ALIASES ? ', …' : '');
   const name = n.varName;
   return `${name} (also ${shown})${base.slice(name.length)}`;
 }

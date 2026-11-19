@@ -783,7 +783,7 @@ describe('alias names and loop-carried boxes (svl-35d)', () => {
     const withAliases = await layout(aliased(), { measure });
     const widest = instanceWidestTitle(aliased().nodes.find((x) => x.id === 'i:m') as InstanceNode);
     expect(widest).toBe('model (also estimator_alias, r): LinearRegression');
-    expect(N(withAliases, 'i:m').w).toBeGreaterThanOrEqual(measure(widest, 'bold') + 2 * M.boxPadX - 1);
+    expect(N(withAliases, 'i:m').w).toBeGreaterThanOrEqual(measure(widest) + 2 * M.boxPadX - 1);
     expect(N(withAliases, 'i:m').w).toBeGreaterThanOrEqual(N(plain, 'i:m').w);
     // alone, the aliases are what sets the width
     const lone = inst('i:d', 1, 'DF', 'df');

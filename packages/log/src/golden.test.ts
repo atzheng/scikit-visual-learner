@@ -599,7 +599,7 @@ describe('edge_alias', () => {
   it('stateAt shows an alias from its bind step and drops it when the name is rebound', () => {
     const df = box('df');
     const other = box('other');
-    const at = (i: number): ReturnType<typeof stateAt> => stateAt(g, log, stepOfEvent(g, i));
+    const at = (i: number): ReturnType<typeof stateAt> => stateAt(g, log, stepOfEvent(g, i) ?? 0);
     expect(at(2).aliases.get(df.id)).toEqual(['df2']);
     expect(at(3).aliases.get(df.id)).toBeUndefined();
     expect(at(3).aliases.get(other.id)).toEqual(['df2']);

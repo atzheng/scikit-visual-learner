@@ -1284,7 +1284,9 @@ export function applyState(
       h.label +
       (uncalled ? ', not called yet' : '') +
       (b ? `, run ${b.k} of ${b.n}` : '') +
-      (isInst && state.aliases.has(h.id) ? `, also named ${state.aliases.get(h.id)!.join(', ')}` : '') +
+      (isInst && state.aliases.has(h.id)
+        ? `, also named ${state.aliases.get(h.id)!.join(', ')}`
+        : '') +
       (status ? `, ${status.text.replace(/^(⚠|⏹) /, '')}` : '') +
       (isCurrent ? ', current step' : '');
 
