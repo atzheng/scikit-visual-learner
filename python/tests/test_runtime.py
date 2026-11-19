@@ -157,7 +157,7 @@ def test_input_error() -> None:
     assert log["error"]["type"] == "RuntimeError"
     assert log["error"]["message"] == "input() is not supported here"
     assert log["error"]["line"] == 1
-    assert log["output"] == []
+    assert [(o["stream"], o["text"]) for o in log["output"]] == [("stdout", "Name? ")]
 
 
 def test_traceback_edge_error_only_student_frames_and_one_library(in_data: None) -> None:

@@ -114,6 +114,8 @@ class _Stream(io.TextIOBase):
 
 
 def _input(prompt: object = "", /) -> str:
+    # plain Python writes the prompt to stdout before reading (and hitting EOF)
+    sys.stdout.write(str(prompt))
     raise RuntimeError("input() is not supported here")
 
 
