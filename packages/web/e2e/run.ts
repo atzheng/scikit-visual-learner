@@ -596,6 +596,14 @@ async function main(): Promise<void> {
         'end cue wording',
       );
       check((await page.getByTestId('more-output').count()) === 1, 'more-output hint missing');
+      await page.waitForFunction(
+        () =>
+          /ends in an error/.test(
+            document.querySelector('[data-testid="step-summary-live"]')?.textContent ?? '',
+          ),
+        undefined,
+        { timeout: 5000 },
+      );
       await settle(page);
       await shotBothThemes(page, '06b-error-cue');
       await cue.getByRole('button', { name: `Jump to step ${m}` }).click();

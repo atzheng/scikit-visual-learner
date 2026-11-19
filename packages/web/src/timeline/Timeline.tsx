@@ -1,5 +1,5 @@
 import { describeStep, eventLabel, stateAt, summaryText } from '@machines/log';
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useStore } from '../store';
 import { EventList } from './EventList';
 import { SummaryText } from './SummaryText';
@@ -24,18 +24,25 @@ export function Timeline() {
   );
   const running = useStore((s) => s.running);
   const twoPane = useStore((s) => s.view) === 'two';
+  const status = useStore((s) => s.log?.status ?? 'ok');
+  const cue = endCue(status, running, max);
   const [announced, setAnnounced] = useState('');
+  // The end cue is spoken once per run, with the first update after the run finishes; stepping never repeats it.
+  const cueSpokenFor = useRef<unknown>(null);
   const spoken = useMemo(() => summaryText(summary), [summary]);
   useEffect(() => {
     if (running) {
       setAnnounced('');
       return;
     }
-    const h = setTimeout(() => setAnnounced(spoken), ANNOUNCE_DELAY_MS);
+    const h = setTimeout(() => {
+      if (cue && cueSpokenFor.current !== log) {
+        cueSpokenFor.current = log;
+        setAnnounced(`The run ${cue}. ${spoken}`);
+      } else setAnnounced(spoken);
+    }, ANNOUNCE_DELAY_MS);
     return () => clearTimeout(h);
-  }, [spoken, running]);
-  const status = useStore((s) => s.log?.status ?? 'ok');
-  const cue = endCue(status, running, max);
+  }, [spoken, running, cue, log]);
   const moreOutput = useMemo(
     () =>
       model && log && !running
