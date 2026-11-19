@@ -475,6 +475,57 @@
       "kind": "call",
       "line": 16,
       "text": "print(models[\"rf\"].score(X, y) > 0.5)"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 11,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 50,
+      "end_line": 5,
+      "id": 12,
+      "imports": [
+        {
+          "attr": "RandomForestRegressor",
+          "module": "sklearn.ensemble",
+          "name": "RandomForestRegressor",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "from sklearn.ensemble import RandomForestRegressor"
+    },
+    {
+      "col": 0,
+      "end_col": 38,
+      "end_line": 6,
+      "id": 13,
+      "imports": [
+        {
+          "attr": "Ridge",
+          "module": "sklearn.linear_model",
+          "name": "Ridge",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "from sklearn.linear_model import Ridge"
     }
   ],
   "status": "ok",

@@ -562,6 +562,57 @@
       "kind": "call",
       "line": 16,
       "text": "print(train_enc.shape, test_enc.shape)"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 14,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 52,
+      "end_line": 5,
+      "id": 15,
+      "imports": [
+        {
+          "attr": "train_test_split",
+          "module": "sklearn.model_selection",
+          "name": "train_test_split",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "from sklearn.model_selection import train_test_split"
+    },
+    {
+      "col": 0,
+      "end_col": 47,
+      "end_line": 6,
+      "id": 16,
+      "imports": [
+        {
+          "attr": "OneHotEncoder",
+          "module": "sklearn.preprocessing",
+          "name": "OneHotEncoder",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "from sklearn.preprocessing import OneHotEncoder"
     }
   ],
   "status": "ok",

@@ -86,7 +86,7 @@ function buildIndex(model: GraphModel, log: EventLog): Index {
   for (const n of model.nodes) {
     nodeById.set(n.id, n);
     if (n.kind === 'instance') first.set(n.id, n.createdAt);
-    else if (n.kind !== 'source') {
+    else if (n.kind !== 'source' && n.kind !== 'import') {
       if (n.executions.length > 0) first.set(n.id, n.executions[0]!.i);
       // A method slot exists from its instance's creation, before its first call.
       const par = n.parent !== null ? nodeById.get(n.parent) : undefined;
@@ -107,7 +107,7 @@ function buildIndex(model: GraphModel, log: EventLog): Index {
 
   const producerRet = (e: GEdge, token: Token, useI: number): number => {
     const from = nodeById.get(e.from.node);
-    if (!from || from.kind === 'source') return -Infinity;
+    if (!from || from.kind === 'source' || from.kind === 'import') return -Infinity;
     if (from.kind === 'instance') {
       const v = from.versions.find((x) => x.token === token);
       if (v) return findEvent(log.events, v.i)?.ret ?? -Infinity;
@@ -134,7 +134,7 @@ function buildIndex(model: GraphModel, log: EventLog): Index {
     for (const u of uses) if (u.at < minAt) minAt = u.at;
     const idx = edges.push({ id: e.id, minAt, uses, to: e.to.node }) - 1;
     const from = nodeById.get(e.from.node);
-    if (from && from.kind === 'source') {
+    if (from && (from.kind === 'source' || from.kind === 'import')) {
       const l = sourceEdges.get(from.id);
       if (l) l.push(idx);
       else sourceEdges.set(from.id, [idx]);

@@ -70,7 +70,7 @@ export function validateLog(x: unknown): EventLog {
     const p = `$.sites[${k}]`;
     const so = obj(s, p);
     if (int(so.id, `${p}.id`) !== k) fail(`${p}.id`, 'site id must equal its index');
-    oneOf(so.kind, ['call', 'bind', 'store', 'ret'], `${p}.kind`);
+    oneOf(so.kind, ['call', 'bind', 'store', 'ret', 'import'], `${p}.kind`);
     for (const f of ['line', 'col', 'end_line', 'end_col']) int(so[f], `${p}.${f}`);
     str(so.text, `${p}.text`);
     const checkOrigin = (o: unknown, op: string): void => {

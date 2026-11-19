@@ -1,6 +1,33 @@
 {
   "nodes": [
     {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 399999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 14
+    },
+    {
+      "id": "m:1vnkpvx.0.11i6nkl",
+      "kind": "import",
+      "parent": null,
+      "order": 499999.75,
+      "name": "train_test_split",
+      "source": "sklearn.model_selection",
+      "site": 15
+    },
+    {
+      "id": "m:k8ohks.0.cqq2h6",
+      "kind": "import",
+      "parent": null,
+      "order": 599999.75,
+      "name": "OneHotEncoder",
+      "source": "sklearn.preprocessing",
+      "site": 16
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -482,6 +509,66 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:1vnkpvx.0.11i6nkl.>n:15uvz5m.0.",
+      "from": {
+        "node": "m:1vnkpvx.0.11i6nkl",
+        "port": null
+      },
+      "to": {
+        "node": "n:15uvz5m.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:k8ohks.0.cqq2h6.>n:1ntullb.0.",
+      "from": {
+        "node": "m:k8ohks.0.cqq2h6",
+        "port": null
+      },
+      "to": {
+        "node": "n:1ntullb.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:66mkbo.0.>n:15uvz5m.0.in:arrays[0]",
       "from": {

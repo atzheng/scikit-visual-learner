@@ -478,6 +478,57 @@
       "kind": "call",
       "line": 15,
       "text": "print(hasattr(base, \"coef_\"))"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 13,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 38,
+      "end_line": 5,
+      "id": 14,
+      "imports": [
+        {
+          "attr": "Ridge",
+          "module": "sklearn.linear_model",
+          "name": "Ridge",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "from sklearn.linear_model import Ridge"
+    },
+    {
+      "col": 0,
+      "end_col": 48,
+      "end_line": 6,
+      "id": 15,
+      "imports": [
+        {
+          "attr": "GridSearchCV",
+          "module": "sklearn.model_selection",
+          "name": "GridSearchCV",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "from sklearn.model_selection import GridSearchCV"
     }
   ],
   "status": "ok",

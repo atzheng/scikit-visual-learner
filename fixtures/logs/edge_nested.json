@@ -404,6 +404,23 @@
       "kind": "call",
       "line": 9,
       "text": "print(summary.shape, n)"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 11,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",

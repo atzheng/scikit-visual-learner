@@ -889,6 +889,40 @@
       "kind": "call",
       "line": 18,
       "text": "print(n1, n2, t1, t2, f1, f2, x, y)"
+    },
+    {
+      "col": 0,
+      "end_col": 18,
+      "end_line": 4,
+      "id": 25,
+      "imports": [
+        {
+          "attr": null,
+          "module": "numpy",
+          "name": "np",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import numpy as np"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 5,
+      "id": 26,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",

@@ -471,6 +471,57 @@
       "kind": "call",
       "line": 16,
       "text": "print(\"done\")"
+    },
+    {
+      "col": 0,
+      "end_col": 15,
+      "end_line": 4,
+      "id": 12,
+      "imports": [
+        {
+          "attr": null,
+          "module": "warnings",
+          "name": "warnings",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import warnings"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 6,
+      "id": 13,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 51,
+      "end_line": 7,
+      "id": 14,
+      "imports": [
+        {
+          "attr": "LogisticRegression",
+          "module": "sklearn.linear_model",
+          "name": "LogisticRegression",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 7,
+      "text": "from sklearn.linear_model import LogisticRegression"
     }
   ],
   "status": "ok",

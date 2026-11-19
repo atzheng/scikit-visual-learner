@@ -242,6 +242,14 @@ function leafSize(
       return { w: Math.ceil(measure(n.text, FONT_MONO) + 2 * M.textPadX + 8), h: M.storeH };
     case 'source':
       return { w: Math.ceil(measure(n.label, FONT_MONO) + 2 * M.textPadX), h: M.exprH };
+    case 'import': {
+      // a pill: the bound name, and under it the module it comes from (gray)
+      const w = Math.max(
+        measure(n.name, FONT_NAME),
+        n.source === null ? 0 : measure(n.source, FONT_WNAME),
+      );
+      return { w: Math.ceil(w + 2 * M.textPadX), h: n.source === null ? M.exprH : M.exprH + 14 };
+    }
   }
 }
 

@@ -392,6 +392,7 @@ describe('legend', () => {
       expr: true,
       store: true,
       source: true,
+      import: true,
     };
     const covered = new Set(LEGEND_ITEMS.flatMap((i) => i.covers));
     const wanted = [

@@ -32,7 +32,10 @@ def instrument(source: str) -> Instrumented:
     """Parse and rewrite `source`. A SyntaxError from `ast.parse` propagates unchanged."""
     tree = ast.parse(source)
     transformer = _Instrument(source)
+    imports = _import_sites(tree, transformer.src)  # analysed on the original tree
     new_tree = transformer.visit(tree)
+    for site in imports:  # appended last, so every other site id is unchanged
+        transformer._add(site)
     assert isinstance(new_tree, ast.Module)
     ast.fix_missing_locations(new_tree)
     return Instrumented(new_tree, transformer.sites)
@@ -181,6 +184,89 @@ def _class_scope_names(node: ast.ClassDef) -> frozenset[str]:
     for stmt in node.body:
         walk(stmt)
     return frozenset(out)
+
+
+def _import_sites(tree: ast.Module, src: _Source) -> list[dict[str, Any]]:
+    """One `import` site per module-level import statement (CONTRACTS section 3, "Imports").
+
+    Imports are not rewritten and not hooked: the site is the whole record. Each bound name says
+    whether it is `sole`: bound exactly once in the entire module (no other import, assignment,
+    parameter, `def`, `class`, `except ... as`, `del`, comprehension target ...) and the
+    module has no `from m import *`. Only then can the graph draw a callee wire from the name to a
+    call that uses it, because nothing can have rebound the name between the import and the call.
+    """
+    counts: dict[str, int] = {}
+
+    def bump(name: str) -> None:
+        counts[name] = counts.get(name, 0) + 1
+
+    star = False
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del)):
+            bump(n.id)
+        elif isinstance(n, ast.arg):
+            bump(n.arg)
+        elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            bump(n.name)
+        elif isinstance(n, (ast.Import, ast.ImportFrom)):
+            for a in n.names:
+                if a.name == "*":
+                    star = True
+                else:
+                    bump(a.asname or a.name.split(".")[0])
+        elif isinstance(n, ast.ExceptHandler) and n.name:
+            bump(n.name)
+        elif isinstance(n, (ast.MatchAs, ast.MatchStar)) and n.name:
+            bump(n.name)
+        elif isinstance(n, ast.MatchMapping) and n.rest:
+            bump(n.rest)
+        elif type(n).__name__ in ("TypeVar", "ParamSpec", "TypeVarTuple"):
+            bump(n.name)  # type: ignore[attr-defined]
+
+    out: list[dict[str, Any]] = []
+    for stmt in tree.body:
+        if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
+            continue
+        if isinstance(stmt, ast.ImportFrom) and (stmt.level or not stmt.module):
+            continue  # relative imports and `from __future__`-style oddities are not drawn
+        if isinstance(stmt, ast.ImportFrom) and stmt.module == "__future__":
+            continue
+        items: list[dict[str, Any]] = []
+        for a in stmt.names:
+            if a.name == "*":
+                continue
+            if isinstance(stmt, ast.Import):
+                name = a.asname or a.name.split(".")[0]
+                module = a.name if a.asname else name
+                attr = None
+            else:
+                name = a.asname or a.name
+                module = stmt.module
+                attr = a.name
+            items.append(
+                {
+                    "name": name,
+                    "module": module,
+                    "attr": attr,
+                    "sole": counts.get(name, 0) == 1 and not star,
+                }
+            )
+        if not items:
+            continue
+        span = src.span(stmt)
+        out.append(
+            {
+                "id": -1,
+                "kind": "import",
+                "line": span[0],
+                "col": span[1],
+                "end_line": span[2],
+                "end_col": span[3],
+                "text": src.text(span),
+                "imports": items,
+            }
+        )
+    return out
 
 
 class _Pending:

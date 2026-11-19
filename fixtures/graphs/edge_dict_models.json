@@ -1,6 +1,33 @@
 {
   "nodes": [
     {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 399999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 11
+    },
+    {
+      "id": "m:a80tic.0.1vjmf01",
+      "kind": "import",
+      "parent": null,
+      "order": 499999.75,
+      "name": "RandomForestRegressor",
+      "source": "sklearn.ensemble",
+      "site": 12
+    },
+    {
+      "id": "m:onprdx.0.1rcg1zk",
+      "kind": "import",
+      "parent": null,
+      "order": 599999.75,
+      "name": "Ridge",
+      "source": "sklearn.linear_model",
+      "site": 13
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -445,6 +472,66 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:onprdx.0.1rcg1zk.>n:8h82rt.0.",
+      "from": {
+        "node": "m:onprdx.0.1rcg1zk",
+        "port": null
+      },
+      "to": {
+        "node": "n:8h82rt.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:a80tic.0.1vjmf01.>n:8npe94.0.",
+      "from": {
+        "node": "m:a80tic.0.1vjmf01",
+        "port": null
+      },
+      "to": {
+        "node": "n:8npe94.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:f2rqav.0.>n:m1eglwfo@i:8npe94.0.in:X",
       "from": {

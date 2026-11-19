@@ -652,6 +652,57 @@
       "kind": "call",
       "line": 18,
       "text": "print(coefs)"
+    },
+    {
+      "col": 0,
+      "end_col": 18,
+      "end_line": 3,
+      "id": 17,
+      "imports": [
+        {
+          "attr": null,
+          "module": "numpy",
+          "name": "np",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 3,
+      "text": "import numpy as np"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 18,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 49,
+      "end_line": 5,
+      "id": 19,
+      "imports": [
+        {
+          "attr": "LinearRegression",
+          "module": "sklearn.linear_model",
+          "name": "LinearRegression",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "from sklearn.linear_model import LinearRegression"
     }
   ],
   "status": "ok",

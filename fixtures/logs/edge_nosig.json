@@ -767,6 +767,40 @@
       "kind": "call",
       "line": 12,
       "text": "print(logp.round(3).head(3).tolist(), total.head(3).tolist(), big.head(3).tolist())"
+    },
+    {
+      "col": 0,
+      "end_col": 18,
+      "end_line": 5,
+      "id": 17,
+      "imports": [
+        {
+          "attr": null,
+          "module": "numpy",
+          "name": "np",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "import numpy as np"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 6,
+      "id": 18,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",

@@ -207,6 +207,23 @@
       "kind": "call",
       "line": 8,
       "text": "print(df.shape, clean.shape)"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 6,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",

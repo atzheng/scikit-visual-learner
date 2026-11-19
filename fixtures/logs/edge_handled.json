@@ -631,6 +631,40 @@
       "kind": "call",
       "line": 16,
       "text": "print(round(model.score(df[[\"beds\", \"baths\", \"sqft\"]], df[\"price\"]), 3))"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 3,
+      "id": 14,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 3,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 49,
+      "end_line": 4,
+      "id": 15,
+      "imports": [
+        {
+          "attr": "LinearRegression",
+          "module": "sklearn.linear_model",
+          "name": "LinearRegression",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "from sklearn.linear_model import LinearRegression"
     }
   ],
   "status": "ok",

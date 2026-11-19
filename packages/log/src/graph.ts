@@ -1,5 +1,5 @@
 // EventLog -> GraphModel (CONTRACTS.md section 8, SPEC "Graph construction"). Pure and deterministic.
-import type { Event, EventError, EventLog, Input, Token } from './types';
+import type { Event, EventError, EventLog, ImportBinding, Input, Site, Token } from './types';
 
 export interface GraphModel {
   nodes: GNode[];
@@ -7,7 +7,7 @@ export interface GraphModel {
   steps: number[];
   tooMany?: number;
 }
-export type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode;
+export type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode | ImportNode;
 export interface NodeBase {
   id: string;
   parent: string | null;
@@ -65,6 +65,18 @@ export interface SourceNode extends NodeBase {
   label: string;
   token: Token;
 }
+/**
+ * A name bound by a module-level import that a recorded call uses as its callee root. `name` is the bound
+ * name (`pd`, `LinearRegression`); `source` the module it comes from (`pandas`, `sklearn.linear_model`),
+ * or null when it is the name itself (`import numpy`).
+ */
+export interface ImportNode extends NodeBase {
+  kind: 'import';
+  name: string;
+  source: string | null;
+  /** Id of the `import` site the node comes from. */
+  site: number;
+}
 export interface GEdge {
   id: string;
   from: { node: string; port: string | null };
@@ -72,9 +84,20 @@ export interface GEdge {
   dashed: boolean;
   uses: { i: number; token: Token }[];
   nameLabel: string | null;
+  /** A callee wire: an import node to a call that resolves its callee through the imported name. Carries no value. */
+  callee?: true;
 }
 
 export const MAX_NODES = 300;
+
+/** `pd.read_csv`, `LinearRegression`: a bare dotted name. `pd.read_csv(x).head` and `a[0].f` do not match. */
+const CALLEE_ROOT = /^([\p{L}_][\p{L}\p{N}_]*)(?:\.[\p{L}\p{N}_]+)*$/u;
+
+/** Gray text under the name: the module it comes from, unless that is the name itself. */
+function importSource(b: ImportBinding): string | null {
+  const full = b.attr !== null && b.attr !== b.name ? `${b.module}.${b.attr}` : b.module;
+  return full === b.name ? null : full;
+}
 
 interface Ref {
   node: string;
@@ -167,6 +190,13 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   const plainNameOf = (t: Token): string | null => firstNameByKey.get(keyOf(t)) ?? null;
 
   const events = log.events.filter((e) => e.scope === 0);
+
+  // ---- import bindings that nothing can have rebound (the transformer's `sole` flag)
+  const soleImports = new Map<string, { site: Site; binding: ImportBinding }>();
+  for (const s of sites)
+    for (const b of s.imports ?? [])
+      if (s.kind === 'import' && b.sole && !soleImports.has(b.name))
+        soleImports.set(b.name, { site: s, binding: b });
 
   const calls = new Map<string, CallInfo>();
   const mkCounts = new Map<string, Map<string, number>>(); // merge key -> method box id -> recorded executions
@@ -420,11 +450,13 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     use: { i: number; token: Token },
     nameLabel: string | null,
     dashed: boolean,
+    callee = false,
   ): void => {
     const id = `e:${from.node}.${from.port ?? ''}>${to.node}.${to.port ?? ''}`;
     let edge = edges.get(id);
     if (!edge) {
       edge = { id, from, to, dashed, uses: [], nameLabel: null };
+      if (callee) edge.callee = true;
       edges.set(id, edge);
     }
     edge.uses.push(use);
@@ -464,6 +496,44 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     src.label = plainNameOf(token) ?? typeOf(token) ?? token;
     return { ref: { node: src.id, port: null }, source: true };
   };
+
+  // ---- imports: one node per imported name that a recorded call resolves through (never guessed:
+  // only a `sole` binding, and only a call that comes textually after the import statement)
+  const importNodes = new Map<string, ImportNode>();
+  const calleeRef = (e: Event): Ref | null => {
+    const site = sites[e.site];
+    const root = site?.func_text === undefined ? null : CALLEE_ROOT.exec(site.func_text)?.[1];
+    if (!site || !root) return null;
+    const hit = soleImports.get(root);
+    if (!hit) return null;
+    const at = hit.site;
+    // a call before the import ran (or inside its statement) saw some other binding of the name
+    if (site.line < at.end_line || (site.line === at.end_line && site.col < at.end_col))
+      return null;
+    const id = `m:${siteIdBase[at.id]}.${hash(root)}`;
+    if (!importNodes.has(id)) {
+      const node: ImportNode = {
+        id,
+        kind: 'import',
+        parent: null,
+        order: orderOf(at.id) - 0.25,
+        name: hit.binding.name,
+        source: importSource(hit.binding),
+        site: at.id,
+      };
+      importNodes.set(id, node);
+      nodeOrder.push(node);
+    }
+    return { node: id, port: null };
+  };
+  for (const info of calls.values()) {
+    if (info.node.parent !== null) continue; // a method of a machine: its owner is the callee
+    for (const e of info.events) {
+      const ref = calleeRef(e);
+      if (ref)
+        addEdge(ref, { node: info.node.id, port: null }, { i: e.i, token: '' }, null, false, true);
+    }
+  }
 
   for (const info of calls.values()) {
     for (const e of info.events) {
@@ -611,7 +681,11 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     connected.add(ed.to.node);
   }
   let nodes = nodeOrder.filter((n) =>
-    n.kind === 'expr' ? live.has(n.id) : n.kind === 'source' ? connected.has(n.id) : true,
+    n.kind === 'expr'
+      ? live.has(n.id)
+      : n.kind === 'source' || n.kind === 'import'
+        ? connected.has(n.id)
+        : true,
   );
 
   // ---- truncate to MAX_NODES by source order

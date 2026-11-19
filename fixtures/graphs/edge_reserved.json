@@ -1,6 +1,15 @@
 {
   "nodes": [
     {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 499999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 13
+    },
+    {
       "id": "n:7g4jly.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -606,6 +615,26 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:7g4jly.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:7g4jly.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:7g4jly.0.>n:11lye33.0.in:args[0]",
       "from": {

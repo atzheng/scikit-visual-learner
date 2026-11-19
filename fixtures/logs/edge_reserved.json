@@ -563,6 +563,40 @@
       "kind": "call",
       "line": 35,
       "text": "print(df.assign(site=df[\"fn\"], fn=df[\"site\"]).sum().to_dict())"
+    },
+    {
+      "col": 0,
+      "end_col": 15,
+      "end_line": 3,
+      "id": 12,
+      "imports": [
+        {
+          "attr": null,
+          "module": "builtins",
+          "name": "builtins",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 3,
+      "text": "import builtins"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 5,
+      "id": 13,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",
