@@ -7,18 +7,14 @@
 :root {
   --md-fn-fill: #fbc9b8;
   --md-fn-stroke: #b9553a;
-  --md-uncalled-fill: #fdf0ea;
   --md-inst-fill: #dcebfa;
   --md-inst-stroke: #4f81b8;
   --md-inst-pill: #2f5f94;
   --md-inst-pill-text: #ffffff;
-  --md-store-fill: #eceff3;
   --md-wire: #2b3138;
-  --md-wire-dashed: #6a7480;
   --md-text: #1c2026;
   --md-text-muted: #4d5663;
   --md-error: #b42318;
-  --md-handled: #a35200;
   --md-current-stroke-width: 3.5px;
   --md-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --md-bg: #ffffff;
@@ -32,18 +28,14 @@
   :root:not([data-theme='light']) {
     --md-fn-fill: #6a3a2d;
     --md-fn-stroke: #f0a38b;
-    --md-uncalled-fill: #33282a;
     --md-inst-fill: #1d3450;
     --md-inst-stroke: #7fb0e6;
     --md-inst-pill: #3d78b8;
     --md-inst-pill-text: #ffffff;
-    --md-store-fill: #2a303a;
     --md-wire: #d3d9e1;
-    --md-wire-dashed: #98a3b1;
     --md-text: #e6e9ee;
     --md-text-muted: #aab3bf;
     --md-error: #ff8077;
-    --md-handled: #ffb454;
     --md-bg: #14171c;
     --md-focus: #8dbbff;
     --md-changed-flash: rgba(255, 180, 84, 0.5);
@@ -55,18 +47,14 @@
 :root[data-theme='dark'] {
   --md-fn-fill: #6a3a2d;
   --md-fn-stroke: #f0a38b;
-  --md-uncalled-fill: #33282a;
   --md-inst-fill: #1d3450;
   --md-inst-stroke: #7fb0e6;
   --md-inst-pill: #3d78b8;
   --md-inst-pill-text: #ffffff;
-  --md-store-fill: #2a303a;
   --md-wire: #d3d9e1;
-  --md-wire-dashed: #98a3b1;
   --md-text: #e6e9ee;
   --md-text-muted: #aab3bf;
   --md-error: #ff8077;
-  --md-handled: #ffb454;
   --md-bg: #14171c;
   --md-focus: #8dbbff;
   --md-changed-flash: rgba(255, 180, 84, 0.5);
@@ -120,7 +108,8 @@
 .md-inst-box {
   stroke-width: 1.5px;
 }
-.md-call .md-box {
+.md-call .md-box,
+.md-store .md-box {
   fill: var(--md-fn-fill);
   stroke: var(--md-fn-stroke);
 }
@@ -136,10 +125,6 @@
   fill: var(--md-inst-pill-text);
   font-weight: bold;
   font-size: 13px;
-}
-.md-store .md-box {
-  fill: var(--md-store-fill);
-  stroke: var(--md-wire-dashed);
 }
 .md-diagram .md-expr-text {
   font-style: italic;
@@ -186,13 +171,10 @@
 }
 /* errors: red outline plus a warning sign and message (see .md-msg) */
 .md-node.md-error .md-box,
-.md-inst-box.md-error {
-  stroke: var(--md-error);
-  stroke-width: var(--md-current-stroke-width);
-}
 .md-node.md-handled .md-box,
+.md-inst-box.md-error,
 .md-inst-box.md-handled {
-  stroke: var(--md-handled);
+  stroke: var(--md-error);
   stroke-width: var(--md-current-stroke-width);
 }
 .md-node.md-stopped .md-box {
@@ -206,11 +188,9 @@
   text-anchor: middle;
   font-weight: bold;
 }
-.md-diagram .md-error .md-msg {
-  fill: var(--md-error);
-}
+.md-diagram .md-error .md-msg,
 .md-diagram .md-handled .md-msg {
-  fill: var(--md-handled);
+  fill: var(--md-error);
 }
 .md-node.md-selected > .md-focus-ring {
   stroke: var(--md-focus);
@@ -259,27 +239,8 @@
   stroke-width: 1.5px;
 }
 .md-wire.md-dashed {
-  stroke: var(--md-wire-dashed);
+  stroke: var(--md-wire);
   stroke-dasharray: 5 4;
-}
-.md-wire.md-callee {
-  stroke: var(--md-wire-dashed);
-  stroke-dasharray: 1.5 4;
-  stroke-linecap: round;
-  opacity: 0.8;
-}
-.md-import .md-box {
-  fill: transparent;
-  stroke: var(--md-wire-dashed);
-}
-.md-diagram .md-import-name {
-  font-weight: bold;
-  text-anchor: middle;
-}
-.md-diagram .md-import-src {
-  font-size: 10px;
-  fill: var(--md-text-muted);
-  text-anchor: middle;
 }
 .md-arrow {
   fill: var(--md-wire);
@@ -324,17 +285,26 @@
   font-weight: bold;
 }
 
-/* method slot not called yet: dashed outline, lighter fill, no ports (also "not called yet" in its aria-label) */
-.md-node.md-uncalled .md-box {
-  fill: var(--md-uncalled-fill);
-  stroke-dasharray: 5 3;
+/* method not called yet: drawn like any call box; a small text cue under the name, no ports (svl-1x4) */
+.md-diagram .md-uncalled-cue {
+  display: none;
+  font-size: 11px;
+  font-style: italic;
+  fill: var(--md-text);
+  text-anchor: middle;
 }
-.md-diagram .md-node.md-uncalled .md-name {
-  font-weight: normal;
+.md-uncalled-bar {
   fill: var(--md-text-muted);
+}
+.md-diagram .md-node.md-uncalled .md-uncalled-cue {
+  display: block;
 }
 .md-node.md-uncalled .md-port-g {
   display: none;
+}
+.md-diagram .md-module {
+  font-weight: normal;
+  fill: var(--md-text-muted);
 }
 /* ports the active execution did not use */
 .md-port-g.md-port-unused {
@@ -442,13 +412,19 @@
   cursor: pointer;
   font-weight: bold;
 }
+.md-legend-more {
+  margin-top: 8px;
+}
+.md-legend-more summary {
+  font-weight: normal;
+}
 .md-legend ul {
   list-style: none;
   margin: 6px 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 6px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 12px;
 }
 .md-legend li {
   display: flex;

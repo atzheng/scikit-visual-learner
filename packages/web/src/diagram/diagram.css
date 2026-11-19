@@ -107,9 +107,9 @@
 
 .diagram-legend {
   flex: none;
-  max-height: 55%;
+  max-height: 38%;
   overflow: auto;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border-bottom: 1px solid var(--border);
   background: var(--md-bg, var(--surface));
 }
