@@ -770,6 +770,7 @@ Generated fixtures are reviewed like code. A PR that changes them must say why i
 21. **Expression events from arguments, owners and hidden calls** carry synthetic merge keys (section 4), and a store's expression RHS is wired through the names it reads (the hook does not receive the RHS object).
 22. **Binding rows are capped** at `4 * max_events` (section 4).
 23. **Unweakrefable containers are kept in a bounded LRU** (section 5), not until the end of the run.
+24. **Timeline rail** (svl-58j). `timeline/rail.ts` maps lines to steps (`stepsByLine`, by the call site's start line), decides dots or chip (`railCell`, `MAX_RAIL_DOTS` = 8) and the chip's click target. `EditorController.setRail` feeds the CodeMirror gutter and is ignored once the document differs from `runSource`. `stepForKey` takes `{ rail: true }` (Down/Up are later/earlier, opposite of the slider's `vertical`) and accepts `j`/`k` as next/previous everywhere. The diagram keeps ArrowUp/Down for panning, so it steps with Left/Right and j/k.
 
 ## 11. Hosting and security headers
 

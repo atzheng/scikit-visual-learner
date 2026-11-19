@@ -21,7 +21,7 @@ export function stepForKey(
   k: KeyLike,
   step: number,
   max: number,
-  opts: { vertical?: boolean } = {},
+  opts: { vertical?: boolean; rail?: boolean } = {},
 ): number | null {
   if (k.ctrlKey || k.metaKey || k.altKey) return null;
   let next: number;
@@ -35,11 +35,22 @@ export function stepForKey(
       next = step + 1;
       break;
     case 'ArrowUp':
-      if (!opts.vertical) return null;
-      next = step + 1;
+      // The rail runs top to bottom in time: Up is earlier. The slider's own Up is later.
+      if (opts.rail) next = step - 1;
+      else if (opts.vertical) next = step + 1;
+      else return null;
       break;
     case 'ArrowDown':
-      if (!opts.vertical) return null;
+      if (opts.rail) next = step + 1;
+      else if (opts.vertical) next = step - 1;
+      else return null;
+      break;
+    case 'j':
+      if (k.shiftKey) return null;
+      next = step + 1;
+      break;
+    case 'k':
+      if (k.shiftKey) return null;
       next = step - 1;
       break;
     case 'PageUp':

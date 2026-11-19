@@ -279,6 +279,8 @@ Events with the same merge key share one box with a ×n badge. The static graph 
 
 Steps follow event index `i`. An event's box appears at step `i` and its output wires at step `ret`, so a student function's box appears, then its interior plays, then its outputs appear.
 
+The timeline is also a rail in the code gutter (between the line numbers and the code). Each executed line shows one dot per recorded event on it, in time order: filled for ran, ringed for current, hollow for not yet reached. A line run more than 8 times collapses to a "×n" chip, which reads "k of n" while one of its executions is current. Clicking a dot steps there (a chip steps to the line's next execution). With the rail focused, Down/j and Up/k step later and earlier, Home/End jump to the ends. The rail clears when the code is edited after a run. The slider, prev/next buttons and event list stay under the diagram.
+
 **Layout**
 
 - ELK.js `layered` algorithm, direction `DOWN`, run in the main thread (it is fast enough for a few hundred nodes; move it to a second worker if not).
