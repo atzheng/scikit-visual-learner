@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
   buildManifest,
@@ -8,8 +9,7 @@ import {
   type BuildFile,
 } from './core';
 
-// Deterministic stand-in for a real hash: distinct inputs give distinct outputs here.
-const hash = (s: string): string => Buffer.from(s).toString('hex').slice(-24).padStart(24, '0');
+const hash = (s: string): string => createHash('sha256').update(s).digest('hex');
 
 const files: BuildFile[] = [
   { path: 'index.html', digest: 'a' },
@@ -54,7 +54,13 @@ describe('buildManifest', () => {
 describe('staleCaches', () => {
   const m = buildManifest(files, '314.0.8', hash);
   it('deletes old machines caches only', () => {
-    const old = ['machines-shell-old', 'machines-pyodide-313.0.0-x', m.shellCache, m.pyodideCache, 'other-app'];
+    const old = [
+      'machines-shell-old',
+      'machines-pyodide-313.0.0-x',
+      m.shellCache,
+      m.pyodideCache,
+      'other-app',
+    ];
     expect(staleCaches(old, m)).toEqual(['machines-shell-old', 'machines-pyodide-313.0.0-x']);
   });
 });

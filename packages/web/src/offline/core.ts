@@ -42,7 +42,8 @@ export function buildManifest(
   const isPy = (f: BuildFile) => f.path.startsWith('pyodide/');
   const py = kept.filter(isPy);
   const shell = kept.filter((f) => !isPy(f));
-  const id = (fs: BuildFile[]) => hash(fs.map((f) => `${f.path}:${f.digest}`).join('\n')).slice(0, 12);
+  const id = (fs: BuildFile[]) =>
+    hash(fs.map((f) => `${f.path}:${f.digest}`).join('\n')).slice(0, 12);
   return {
     shellCache: `${CACHE_PREFIX}shell-${id(shell)}`,
     pyodideCache: `${CACHE_PREFIX}pyodide-${pyodideVersion}-${id(py)}`,
