@@ -23,6 +23,7 @@ export function Timeline() {
     [model, log, cur],
   );
   const running = useStore((s) => s.running);
+  const twoPane = useStore((s) => s.view) === 'two';
   const [announced, setAnnounced] = useState('');
   const spoken = useMemo(() => summaryText(summary), [summary]);
   useEffect(() => {
@@ -38,7 +39,7 @@ export function Timeline() {
     const next = stepForKey(e.nativeEvent, cur, max, { vertical: true });
     if (next === null) return;
     e.preventDefault();
-    setStep(next);
+    setStep(next, Math.abs(next - cur) === 1);
   };
   return (
     <div className="timeline">
@@ -47,7 +48,7 @@ export function Timeline() {
           type="button"
           aria-label="Previous step"
           disabled={cur <= 0}
-          onClick={() => setStep(cur - 1)}
+          onClick={() => setStep(cur - 1, true)}
         >
           ◀
         </button>
@@ -70,7 +71,7 @@ export function Timeline() {
           type="button"
           aria-label="Next step"
           disabled={cur >= max}
-          onClick={() => setStep(cur + 1)}
+          onClick={() => setStep(cur + 1, true)}
         >
           ▶
         </button>
@@ -89,9 +90,12 @@ export function Timeline() {
       <p className="current-event" data-testid="current-event">
         {event ?? (max > 0 ? 'Before the first step' : 'No steps yet')}
       </p>
-      <p className="step-summary" data-testid="step-summary">
-        <SummaryText parts={summary} />
-      </p>
+      {/* In the two-pane view the sentence sits in the stage header; the live region below stays here. */}
+      {!twoPane && (
+        <p className="step-summary" data-testid="step-summary">
+          <SummaryText parts={summary} />
+        </p>
+      )}
       {/* The visible sentence is instant; what a screen reader hears waits for the step to settle (a slider drag does not spam) and stays silent while a run streams. */}
       <p
         className="visually-hidden"

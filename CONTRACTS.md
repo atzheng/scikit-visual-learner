@@ -485,7 +485,10 @@ interface AppState {
   running: boolean;
   elapsedMs: number;
   step: number;
-  setStep(n: number): void; // clamped to 0..model.steps.length (section 8) when a model exists
+  setStep(n: number, single?: boolean): void; // clamped to 0..model.steps.length (section 8) when a model exists. `single` marks a one-step move (step buttons, arrow keys); `stepSingle` keeps it for the two-pane view's animation (svl-61q.3), every other change sets it false
+  stepSingle: boolean;
+  view: 'two' | 'full'; // the diagram pane's view (svl-61q.4): two-pane shelf and stage (default) or the full diagram; localStorage `machines.view`
+  setView(v: 'two' | 'full'): void;
   runSeq: number; // incremented at each Run (not the worker's runId); the diagram resets per-run layout state on it
   runSource: string | null; // the source text of the last run; log.sites positions refer to it
   selectNode(id: string | null): void; // a box click: selection = { node, pinned: true } and step = that node's latest execution at or before the current step (else its first one)

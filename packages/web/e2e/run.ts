@@ -133,13 +133,18 @@ async function gotoStep(page: Page, target: number): Promise<void> {
 /** Visible boxes: nodes that are not hidden. */
 const visibleNodes = (page: Page) => page.locator('g.md-node[data-node]:not(.md-hidden)');
 
-/** Waits until the diagram stops moving (Follow pans and zooms it with a 0.25 s transition). */
+/** Waits until the diagram stops moving (Follow pans and zooms the full diagram; the two-pane cards move to the stage). */
 async function settle(page: Page, timeout = 5000): Promise<void> {
   // (a script string: tsx's name helpers do not exist in the page)
   await page.evaluate(`new Promise((resolve) => {
-    const stage = document.querySelector('.diagram-stage');
-    const key = () =>
-      stage ? stage.style.transform + '|' + JSON.stringify(stage.getBoundingClientRect()) : '';
+    const key = () => {
+      const stage = document.querySelector('.diagram-stage');
+      if (stage) return stage.style.transform + '|' + JSON.stringify(stage.getBoundingClientRect());
+      // the two-pane view: every card's place
+      return [...document.querySelectorAll('.md-card')]
+        .map((c) => JSON.stringify(c.getBoundingClientRect()))
+        .join('');
+    };
     const t0 = performance.now();
     let last = key();
     let since = t0;
@@ -176,22 +181,234 @@ async function shotBothThemes(page: Page, name: string): Promise<void> {
 async function pointOnEdge(
   page: Page,
   edgeIndex: number,
+  two: boolean,
 ): Promise<{ x: number; y: number } | null> {
-  return page.evaluate((k) => {
-    const paths = [
-      ...document.querySelectorAll<SVGPathElement>('g.md-edge[data-edge]:not(.md-hidden) path'),
-    ];
-    const p = paths[k];
-    if (!p) return null;
-    const pt = p.getPointAtLength(p.getTotalLength() / 2);
-    const m = p.getScreenCTM();
-    if (!m) return null;
-    const x = m.a * pt.x + m.c * pt.y + m.e;
-    const y = m.b * pt.x + m.d * pt.y + m.f;
-    // only a point where the wire is on top and in view (not under a box, the panel or off-screen)
-    const hit = document.elementFromPoint(x, y)?.closest('g.md-edge');
-    return hit && hit === p.closest('g.md-edge') ? { x, y } : null;
-  }, edgeIndex);
+  return page.evaluate(
+    ([k, two]) => {
+      const paths = [
+        ...document.querySelectorAll<SVGPathElement>('g.md-edge[data-edge]:not(.md-hidden) path'),
+      ];
+      const p = paths[k];
+      if (!p) return null;
+      const pt = p.getPointAtLength(p.getTotalLength() / 2);
+      const m = p.getScreenCTM();
+      if (!m) return null;
+      const x = m.a * pt.x + m.c * pt.y + m.e;
+      const y = m.b * pt.x + m.d * pt.y + m.f;
+      // only a point where the wire is on top and in view (not under a box, the panel or off-screen)
+      const top = document.elementFromPoint(x, y);
+      // the stage's wires take no pointer events: they only need to be in view and clear of every card
+      if (two) return top && !top.closest('.md-card') && top.closest('.md-stage') ? { x, y } : null;
+      const hit = top?.closest('g.md-edge');
+      return hit && hit === p.closest('g.md-edge') ? { x, y } : null;
+    },
+    [edgeIndex, two] as const,
+  );
+}
+
+type View = 'two' | 'full';
+
+async function setView(page: Page, view: View): Promise<void> {
+  await page
+    .getByRole('button', { name: view === 'two' ? 'Shelf and stage' : 'Full diagram' })
+    .click();
+  await page.locator(view === 'two' ? '[data-testid="twopane"]' : '.diagram-viewport').waitFor({
+    timeout: 10_000,
+  });
+}
+
+/** The attribute panel opens by itself at a call step and covers the right of the pane: close it when present. */
+async function closeAttributes(page: Page): Promise<void> {
+  const close = page.getByRole('button', { name: 'Close attributes panel' });
+  // it appears a moment after the step (not at every step): wait briefly, then close it if it came
+  await close.waitFor({ timeout: 1500 }).catch(() => undefined);
+  if (await close.count()) {
+    await close.click();
+    await page
+      .getByRole('complementary', { name: /^Attributes of/ })
+      .waitFor({ state: 'detached' });
+  }
+}
+
+/** The core checks (run, step, hover/pin a wire, the fit step, attributes, docs) in one view of the diagram. */
+async function core(page: Page, view: View): Promise<void> {
+  await setView(page, view);
+  await step(`[${view}] run notebook.py: diagram boxes appear`, async () => {
+    await runAndWait(page);
+    // the layout is asynchronous: it can land a moment after the run ends
+    await page
+      .locator('g.md-node[data-node]:not(.md-hidden)')
+      .first()
+      .waitFor({ state: 'attached', timeout: 15_000 })
+      .catch(() => undefined);
+    check((await page.locator('g.md-node[data-node]').count()) > 0, 'no boxes in the diagram');
+    check((await visibleNodes(page).count()) > 0, 'no visible boxes at the end of the run');
+    const { n, m } = await stepCount(page);
+    check(m > 0, 'no steps');
+    check(n === m, `expected to be at the last step after a run, got ${n} of ${m}`);
+    check(
+      (await page.locator('g.md-node[data-kind="instance"]').count()) > 0,
+      'no instance box (LinearRegression)',
+    );
+    await shotBothThemes(page, `02-notebook-end-${view}`);
+  });
+
+  await step(`[${view}] step through every event with the arrow key`, async () => {
+    await gotoStep(page, 0);
+    check((await currentEvent(page))?.includes('Before'), 'step 0 is not "Before the first step"');
+    check((await page.locator('.cm-site-highlight').count()) === 0, 'editor span shown at step 0');
+    const { m } = await stepCount(page);
+    const events = new Set<string>();
+    const boxes = new Set<string>();
+    const spans = new Set<string>();
+    let prevEvent = await currentEvent(page);
+    let withBox = 0;
+    let same = 0;
+    for (let k = 1; k <= m; k++) {
+      await page.keyboard.press('ArrowRight');
+      check((await stepCount(page)).n === k, `after → the step is not ${k} of ${m}`);
+      const ev = (await currentEvent(page)) ?? '';
+      if (ev === prevEvent) same++; // two steps can share a label (the same call site twice)
+      prevEvent = ev;
+      events.add(ev);
+      // a step may have no current box (an import, say): count first, so nothing waits for one
+      const cur = page.locator('g[aria-current="step"]');
+      const box = (await cur.count()) > 0 ? await cur.first().getAttribute('data-node') : null;
+      if (box) {
+        withBox++;
+        boxes.add(box);
+      }
+      const span = await page.locator('.cm-site-highlight').first().textContent();
+      if (span) spans.add(span);
+      else check(!box, `step ${k} has a current box but no editor span`);
+    }
+    check(
+      events.size > 2 && same < m / 2,
+      `the current event barely changed (${events.size} of ${m})`,
+    );
+    check(withBox > 0 && boxes.size > 1, `current box did not move (${boxes.size} distinct)`);
+    check(spans.size > 1, `editor span did not move (${spans.size} distinct)`);
+    await shot(page, `03-stepped-to-end-light-${view}`);
+  });
+
+  await step(`[${view}] hover a wire and see a preview`, async () => {
+    await gotoStep(page, (await stepCount(page)).m);
+    await closeAttributes(page);
+    const total = await page.locator('g.md-edge[data-edge]:not(.md-hidden) path').count();
+    check(total > 0, 'no visible wires');
+    await settle(page);
+    let shown = false;
+    for (let k = 0; k < total && !shown; k++) {
+      const pt = await pointOnEdge(page, k, view === 'two');
+      if (!pt) continue;
+      await page.mouse.move(pt.x - 40, pt.y - 40);
+      await page.mouse.move(pt.x, pt.y, { steps: 4 });
+      shown = await page
+        .locator('.pv-popover')
+        .first()
+        .waitFor({ timeout: 800 })
+        .then(
+          () => true,
+          () => false,
+        );
+      if (shown) {
+        await shot(page, `04-wire-preview-light-${view}`);
+        // Click pins it; Escape unpins.
+        await page.mouse.click(pt.x, pt.y);
+        await page.locator('.pv-popover.pinned').waitFor({ timeout: 2000 });
+        await page.keyboard.press('Escape');
+        await page.locator('.pv-popover.pinned').waitFor({ state: 'detached', timeout: 2000 });
+      } else {
+        await page.mouse.move(2, 2);
+      }
+    }
+    check(shown, `no preview on any of ${total} wires`);
+  });
+
+  await step(`[${view}] the step summary at the fit step mentions coef_ (aria-live)`, async () => {
+    const { m } = await stepCount(page);
+    const summary = page.getByTestId('step-summary');
+    const live = page.getByTestId('step-summary-live');
+    check((await live.getAttribute('aria-live')) === 'polite', 'summary is not aria-live');
+    let fit = -1;
+    for (let k = 1; k <= m && fit < 0; k++) {
+      await gotoStep(page, k);
+      if (/\bmodel\.fit\(/.test((await currentEvent(page)) ?? '')) fit = k;
+    }
+    check(fit > 0, 'no .fit step');
+    const text = (await summary.textContent()) ?? '';
+    check(/coef_/.test(text), `fit summary lacks coef_: ${text}`);
+    check(/model\.fit/.test(text), `fit summary lacks the call: ${text}`);
+    check(
+      (await summary.locator('code', { hasText: 'coef_' }).count()) > 0,
+      'names are not code elements',
+    );
+    await page.waitForFunction(
+      () =>
+        /coef_/.test(
+          document.querySelector('[data-testid="step-summary-live"]')?.textContent ?? '',
+        ),
+      undefined,
+      { timeout: 3000 },
+    ); // the announcement follows after the debounce
+    await gotoStep(page, 0);
+    check(/Before the program runs/.test((await summary.textContent()) ?? ''), 'step 0 summary');
+  });
+
+  await step(
+    `[${view}] click the LinearRegression box at the fit step: coef_ changed`,
+    async () => {
+      const { m } = await stepCount(page);
+      let fit = -1;
+      for (let k = 1; k <= m && fit < 0; k++) {
+        await gotoStep(page, k);
+        if (/\bmodel\.fit\(/.test((await currentEvent(page)) ?? '')) fit = k;
+      }
+      check(fit > 0, 'no .fit step');
+      await settle(page); // Follow pans the diagram after a step; a click while it moves misses
+      const id = await page
+        .locator('g.md-node[data-kind="instance"]:not(.md-hidden)')
+        .filter({ hasText: 'LinearRegression' })
+        .first()
+        .getAttribute('data-node');
+      check(id, 'no visible LinearRegression box');
+      // The instance's frame is drawn in a background layer, so the group's own centre is covered by
+      // that layer's rect (same data-node) and by the calls inside. A real click on the frame's lower
+      // left corner (inside the pane, clear of the calls) is what a student does.
+      const frame = page.locator(`rect.md-inst-box[data-node="${id}"]`);
+      await frame.scrollIntoViewIfNeeded();
+      const bb = await frame.boundingBox();
+      check(bb, 'the LinearRegression frame has no box');
+      await page.mouse.click(bb.x + 8, bb.y + bb.height - 8);
+      const panel = page.getByRole('complementary', { name: /^Attributes of/ });
+      await panel.waitFor({ timeout: 5000 });
+      const row = panel.locator('tr.changed', { hasText: 'coef_' });
+      check((await row.count()) > 0, 'coef_ is not marked as changed at the fit step');
+      check(
+        /changed/i.test((await row.first().textContent()) ?? ''),
+        'changed row has no text flag',
+      );
+      await shot(page, `05-attributes-light-${view}`);
+      await panel.getByRole('button', { name: 'Close attributes panel' }).click();
+    },
+  );
+
+  await step(`[${view}] the docs question mark opens the documentation`, async () => {
+    const { m } = await stepCount(page);
+    await gotoStep(page, m);
+    await closeAttributes(page);
+    await settle(page);
+    const row = page
+      .locator('g.md-node[data-kind="instance"]:not(.md-hidden) g[data-doc-attr]:not(.md-hidden)')
+      .first();
+    // the question mark is an aria-hidden glyph inside the row: click it without scrolling the pane
+    await row.locator('[data-docs-row-btn]').dispatchEvent('click');
+    const docs = page.getByRole('complementary', { name: 'Documentation' });
+    await docs.waitFor({ timeout: 5000 });
+    await shot(page, `10-docs-${view}`);
+    await docs.getByRole('button', { name: 'Close documentation' }).click();
+    await docs.waitFor({ state: 'detached', timeout: 5000 });
+  });
 }
 
 // ---- main ------------------------------------------------------------------------------------------
@@ -244,165 +461,39 @@ async function main(): Promise<void> {
     });
     if (!page) throw new Error('page did not load; nothing else can run');
 
-    await step('run notebook.py: diagram boxes appear', async () => {
+    for (const view of ['two', 'full'] as const) await core(page, view);
+
+    await step('the View toggle persists and works with the keyboard', async () => {
+      const two = page.getByRole('button', { name: 'Shelf and stage' });
+      const full = page.getByRole('button', { name: 'Full diagram' });
+      await setView(page, 'two');
+      await two.focus();
+      await page.keyboard.press('Tab');
+      await page.keyboard.press('Enter');
+      await page.locator('.diagram-viewport').waitFor({ timeout: 5000 });
+      check(
+        (await full.getAttribute('aria-pressed')) === 'true',
+        'Enter did not select Full diagram',
+      );
+      await page.reload();
+      await waitReady(page, LONG);
+      check(
+        (await page.getByRole('button', { name: 'Full diagram' }).getAttribute('aria-pressed')) ===
+          'true',
+        'the Full diagram choice did not survive a reload',
+      );
+      await setView(page, 'two');
+      await page.reload();
+      await waitReady(page, LONG);
+      await page.getByTestId('twopane').waitFor({ timeout: 5000 });
+      check(
+        (await page
+          .getByRole('button', { name: 'Shelf and stage' })
+          .getAttribute('aria-pressed')) === 'true',
+        'the Shelf and stage choice did not survive a reload',
+      );
+      await shot(page, '09-view-toggle-light');
       await runAndWait(page);
-      // the layout is asynchronous: it can land a moment after the run ends
-      await page
-        .locator('g.md-node[data-node]:not(.md-hidden)')
-        .first()
-        .waitFor({ state: 'attached', timeout: 15_000 })
-        .catch(() => undefined);
-      check((await page.locator('g.md-node[data-node]').count()) > 0, 'no boxes in the diagram');
-      check((await visibleNodes(page).count()) > 0, 'no visible boxes at the end of the run');
-      const { n, m } = await stepCount(page);
-      check(m > 0, 'no steps');
-      check(n === m, `expected to be at the last step after a run, got ${n} of ${m}`);
-      check(
-        (await page.locator('g.md-node[data-kind="instance"]').count()) > 0,
-        'no instance box (LinearRegression)',
-      );
-      await shotBothThemes(page, '02-notebook-end');
-    });
-
-    await step('step through every event with the arrow key', async () => {
-      await gotoStep(page, 0);
-      check(
-        (await currentEvent(page))?.includes('Before'),
-        'step 0 is not "Before the first step"',
-      );
-      check(
-        (await page.locator('.cm-site-highlight').count()) === 0,
-        'editor span shown at step 0',
-      );
-      const { m } = await stepCount(page);
-      const events = new Set<string>();
-      const boxes = new Set<string>();
-      const spans = new Set<string>();
-      let prevEvent = await currentEvent(page);
-      let withBox = 0;
-      let same = 0;
-      for (let k = 1; k <= m; k++) {
-        await page.keyboard.press('ArrowRight');
-        check((await stepCount(page)).n === k, `after → the step is not ${k} of ${m}`);
-        const ev = (await currentEvent(page)) ?? '';
-        if (ev === prevEvent) same++; // two steps can share a label (the same call site twice)
-        prevEvent = ev;
-        events.add(ev);
-        // a step may have no current box (an import, say): count first, so nothing waits for one
-        const cur = page.locator('g[aria-current="step"]');
-        const box = (await cur.count()) > 0 ? await cur.first().getAttribute('data-node') : null;
-        if (box) {
-          withBox++;
-          boxes.add(box);
-        }
-        const span = await page.locator('.cm-site-highlight').first().textContent();
-        if (span) spans.add(span);
-        else check(!box, `step ${k} has a current box but no editor span`);
-      }
-      check(
-        events.size > 2 && same < m / 2,
-        `the current event barely changed (${events.size} of ${m})`,
-      );
-      check(withBox > 0 && boxes.size > 1, `current box did not move (${boxes.size} distinct)`);
-      check(spans.size > 1, `editor span did not move (${spans.size} distinct)`);
-      await shot(page, '03-stepped-to-end-light');
-    });
-
-    await step('hover a wire and see a preview', async () => {
-      await gotoStep(page, (await stepCount(page)).m);
-      const total = await page.locator('g.md-edge[data-edge]:not(.md-hidden) path').count();
-      check(total > 0, 'no visible wires');
-      await settle(page);
-      let shown = false;
-      for (let k = 0; k < total && !shown; k++) {
-        const pt = await pointOnEdge(page, k);
-        if (!pt) continue;
-        await page.mouse.move(pt.x - 40, pt.y - 40);
-        await page.mouse.move(pt.x, pt.y, { steps: 4 });
-        shown = await page
-          .locator('.pv-popover')
-          .first()
-          .waitFor({ timeout: 800 })
-          .then(
-            () => true,
-            () => false,
-          );
-        if (shown) {
-          await shot(page, '04-wire-preview-light');
-          // Click pins it; Escape unpins.
-          await page.mouse.click(pt.x, pt.y);
-          await page.locator('.pv-popover.pinned').waitFor({ timeout: 2000 });
-          await page.keyboard.press('Escape');
-          await page.locator('.pv-popover.pinned').waitFor({ state: 'detached', timeout: 2000 });
-        } else {
-          await page.mouse.move(2, 2);
-        }
-      }
-      check(shown, `no preview on any of ${total} wires`);
-    });
-
-    await step('the step summary at the fit step mentions coef_ (aria-live)', async () => {
-      const { m } = await stepCount(page);
-      const summary = page.getByTestId('step-summary');
-      const live = page.getByTestId('step-summary-live');
-      check((await live.getAttribute('aria-live')) === 'polite', 'summary is not aria-live');
-      let fit = -1;
-      for (let k = 1; k <= m && fit < 0; k++) {
-        await gotoStep(page, k);
-        if (/\bmodel\.fit\(/.test((await currentEvent(page)) ?? '')) fit = k;
-      }
-      check(fit > 0, 'no .fit step');
-      const text = (await summary.textContent()) ?? '';
-      check(/coef_/.test(text), `fit summary lacks coef_: ${text}`);
-      check(/model\.fit/.test(text), `fit summary lacks the call: ${text}`);
-      check(
-        (await summary.locator('code', { hasText: 'coef_' }).count()) > 0,
-        'names are not code elements',
-      );
-      await page.waitForFunction(
-        () =>
-          /coef_/.test(
-            document.querySelector('[data-testid="step-summary-live"]')?.textContent ?? '',
-          ),
-        undefined,
-        { timeout: 3000 },
-      ); // the announcement follows after the debounce
-      await gotoStep(page, 0);
-      check(/Before the program runs/.test((await summary.textContent()) ?? ''), 'step 0 summary');
-    });
-
-    await step('click the LinearRegression box at the fit step: coef_ changed', async () => {
-      const { m } = await stepCount(page);
-      let fit = -1;
-      for (let k = 1; k <= m && fit < 0; k++) {
-        await gotoStep(page, k);
-        if (/\bmodel\.fit\(/.test((await currentEvent(page)) ?? '')) fit = k;
-      }
-      check(fit > 0, 'no .fit step');
-      await settle(page); // Follow pans the diagram after a step; a click while it moves misses
-      const id = await page
-        .locator('g.md-node[data-kind="instance"]:not(.md-hidden)')
-        .filter({ hasText: 'LinearRegression' })
-        .first()
-        .getAttribute('data-node');
-      check(id, 'no visible LinearRegression box');
-      // The instance's frame is drawn in a background layer, so the group's own centre is covered by
-      // that layer's rect (same data-node) and by the calls inside. A real click on the frame's lower
-      // left corner (inside the pane, clear of the calls) is what a student does.
-      const frame = page.locator(`rect.md-inst-box[data-node="${id}"]`);
-      const bb = await frame.boundingBox();
-      check(bb, 'the LinearRegression frame has no box');
-      await page.mouse.click(bb.x + 8, bb.y + bb.height - 8);
-      const panel = page.getByRole('complementary', { name: /^Attributes of/ });
-      await panel.waitFor({ timeout: 5000 });
-      const row = panel.locator('tr.changed', { hasText: 'coef_' });
-      check((await row.count()) > 0, 'coef_ is not marked as changed at the fit step');
-      check(
-        /changed/i.test((await row.first().textContent()) ?? ''),
-        'changed row has no text flag',
-      );
-      await shot(page, '05-attributes-light');
-      await panel.getByRole('button', { name: 'Close attributes panel' }).click();
     });
 
     await step('output hides when stepping back', async () => {

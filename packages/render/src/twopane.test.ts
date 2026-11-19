@@ -209,6 +209,18 @@ describe('every fixture, every step', () => {
 });
 
 describe('mount', () => {
+  test('a card that goes back to its slot loses the stage offset', async () => {
+    const { model } = await open('golden_linreg');
+    for (let s = 1; s <= model.steps.length; s++) tp!.setStep(s);
+    for (const c of tp!.cards()) {
+      if (c.where !== 'shelf') continue;
+      const el = tp!.card(c.key)!;
+      expect(el.parentElement?.classList.contains('md-slot')).toBe(true);
+      expect(el.style.position).toBe('');
+      expect(el.style.left).toBe('');
+    }
+  });
+
   test('golden_linreg: import, fit and predict', async () => {
     const { model, log } = await open('golden_linreg');
     expect(visible('.md-slot')).toHaveLength(0);

@@ -1,11 +1,5 @@
 import '@machines/render/theme.css';
-import {
-  stateAt,
-  type DocTarget,
-  type EventLog,
-  type GraphModel,
-  type StepState,
-} from '@machines/log';
+import { stateAt, type EventLog, type GraphModel, type StepState } from '@machines/log';
 import {
   attrRowsFor,
   createElk,
@@ -16,7 +10,6 @@ import {
   moreMethodsFor,
   type DiagramController,
   type Laid,
-  type MethodDocTarget,
 } from '@machines/render';
 import elkWorkerUrl from 'elkjs/lib/elk-worker.min.js?url';
 import {
@@ -27,8 +20,6 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
-import { DocsPanel } from '../docs/DocsPanel';
-import { docRequest } from '../docs/model';
 import { DocsOpenerContext } from '../docs/opener';
 import { useStore } from '../store';
 import { clampStep, nodeForSite, stepForKey } from '../timeline/steps';
@@ -37,6 +28,8 @@ import { followNodes, followView, READABLE_K, unionRect } from './follow';
 import { ensureVisible, fitView, panBy, zoomAt, type View } from './panzoom';
 import { Relayouter, layoutSignature, stickyTier, type Tier } from './pipeline';
 import { tooManyMessage } from './runBanner';
+import { useDocs, ViewToggle } from './shared';
+import { TwoPaneView } from './TwoPaneView';
 
 const LEGEND_KEY = 'machines.legendOpen';
 function readLegendOpen(): boolean {
@@ -114,7 +107,7 @@ const fitContent = (s: { w: number; h: number }) => ({ w: s.w, h: s.h > 0 ? s.h 
 const EMPTY_MODEL: GraphModel = { nodes: [], edges: [], steps: [] };
 const EMPTY_LAID: Laid = { width: 0, height: 0, nodes: {}, edges: {}, labels: {}, dropped: 0 };
 
-export function DiagramPane({
+function FullDiagram({
   cursorSite = null,
   onHoverEdge,
   onClickEdge,
@@ -150,21 +143,7 @@ export function DiagramPane({
   const lastStep = useRef<number | null>(null);
   const shownRef = useRef<Shown | null>(null);
   const [layoutError, setLayoutError] = useState<string | null>(null);
-  const [docs, setDocs] = useState<{
-    target: DocTarget;
-    nodeId: string;
-  } | null>(null);
-  const docsOpener = useRef<Element | null>(null);
-  const closeDocs = useCallback(() => {
-    setDocs(null);
-    const o = docsOpener.current;
-    docsOpener.current = null;
-    if (o instanceof HTMLElement || o instanceof SVGElement) o.focus();
-  }, []);
-  const openDocs = useCallback((t: MethodDocTarget, nodeId: string) => {
-    docsOpener.current ??= document.activeElement;
-    setDocs({ target: docRequest(t, useStore.getState().runSource), nodeId });
-  }, []);
+  const { openDocs, docsPanel } = useDocs();
   const latest = useRef({ onHoverEdge, onClickEdge });
   latest.current = { onHoverEdge, onClickEdge };
 
@@ -300,9 +279,12 @@ export function DiagramPane({
   }, [applyView, viewportSize]);
 
   // New run: reset the sticky tier and fit mode. The old diagram stays until the first update arrives.
+  const seenSeq = useRef<number | null>(null);
   useEffect(() => {
     tierRef.current = 0;
-    skipModel.current = useStore.getState().model;
+    // On the first mount (a switch from the other view) the existing model is the one to draw.
+    skipModel.current = seenSeq.current === null ? null : useStore.getState().model;
+    seenSeq.current = runSeq;
     autoFit.current = true;
     suspended.current = false;
     lastStep.current = null;
@@ -457,7 +439,7 @@ export function DiagramPane({
     const next = stepForKey(e.nativeEvent, clampStep(step, maxStep), maxStep);
     if (next !== null) {
       e.preventDefault();
-      setStep(next);
+      setStep(next, Math.abs(next - clampStep(step, maxStep)) === 1);
       return;
     }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -491,6 +473,7 @@ export function DiagramPane({
   return (
     <section className="diagram-pane" aria-label="Diagram">
       <div className="diagram-tools">
+        <ViewToggle />
         <button type="button" onClick={() => zoomBy(1.25)} aria-label="Zoom in" title="Zoom in (+)">
           +
         </button>
@@ -583,17 +566,14 @@ export function DiagramPane({
           )}
         </div>
         <DocsOpenerContext.Provider value={openDocs}>{children}</DocsOpenerContext.Provider>
-        {docs && (
-          <DocsPanel
-            target={docs.target}
-            nodeId={docs.nodeId}
-            model={model}
-            log={log}
-            step={step}
-            onClose={closeDocs}
-          />
-        )}
+        {docsPanel}
       </div>
     </section>
   );
+}
+
+/** The diagram pane: the two-pane view (default) or the full diagram, by the View toggle. */
+export function DiagramPane(props: DiagramPaneProps) {
+  const view = useStore((s) => s.view);
+  return view === 'two' ? <TwoPaneView {...props} /> : <FullDiagram {...props} />;
 }

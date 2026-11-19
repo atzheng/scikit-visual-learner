@@ -595,8 +595,14 @@ export async function mountTwoPane(
       slot.el.hidden = !shown;
       slot.ph.hidden = !(shown && here);
       slot.el.dataset.state = shown ? (here ? 'stage' : 'shelf') : 'hidden';
-      if (!here) slot.el.prepend(slot.card.wrap);
-      else if (slot.card.wrap.parentElement === slot.el) slot.card.wrap.remove();
+      if (!here) {
+        // back from the stage: drop the stage offset (`place`), or the card is drawn away from its slot
+        const s = slot.card.wrap.style;
+        s.removeProperty('position');
+        s.removeProperty('left');
+        s.removeProperty('top');
+        slot.el.prepend(slot.card.wrap);
+      } else if (slot.card.wrap.parentElement === slot.el) slot.card.wrap.remove();
       const n = byId.get(e.node);
       const inUse = [...onStage.values()].some(
         (s) => s.card?.node === e.node && s.card.object !== null,

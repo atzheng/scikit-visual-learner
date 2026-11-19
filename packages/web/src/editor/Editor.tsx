@@ -504,7 +504,7 @@ export function Editor({ sites, runSource, onSiteAtCursor, controllerRef }: Edit
       const next = stepForKey(e, cur, max, { rail: true });
       if (next === null) return;
       e.preventDefault();
-      useStore.getState().setStep(next);
+      useStore.getState().setStep(next, Math.abs(next - cur) === 1);
     };
     railEl?.addEventListener('keydown', onRailKey);
     // The skip link focuses the pane (tabIndex -1); hand focus on to the editor.
