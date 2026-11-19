@@ -83,7 +83,7 @@ export interface ValueSummary {
 }
 
 export type EventKind =
-  'function' | 'method' | 'constructor' | 'student_function' | 'expr' | 'store';
+  'function' | 'method' | 'constructor' | 'student_function' | 'expr' | 'store' | 'import';
 
 export interface Input {
   param: string;

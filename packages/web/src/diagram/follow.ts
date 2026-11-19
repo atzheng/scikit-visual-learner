@@ -8,7 +8,7 @@ const PAD = 24;
 
 /**
  * The boxes to keep in view at a step: the current node, the boxes wired into it or out of it (the visible
- * value wires; a callee wire from an import node is left out), and the instance that owns it.
+ * value wires), and the instance that owns it.
  */
 export function followNodes(model: GraphModel, state: StepState): string[] {
   const cur = state.currentNode;
@@ -17,7 +17,7 @@ export function followNodes(model: GraphModel, state: StepState): string[] {
   const node = model.nodes.find((n) => n.id === cur);
   if (node?.parent) ids.add(node.parent);
   for (const e of model.edges) {
-    if (e.callee || !state.visibleEdges.has(e.id)) continue;
+    if (!state.visibleEdges.has(e.id)) continue;
     if (e.to.node === cur) ids.add(e.from.node);
     else if (e.from.node === cur) ids.add(e.to.node);
   }

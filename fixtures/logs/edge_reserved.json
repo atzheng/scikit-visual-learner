@@ -6,6 +6,40 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s12",
+      "module": null,
+      "mutates": [],
+      "name": "import builtins",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 12
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s13",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 13
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +56,7 @@
         "v1.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 2,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -30,7 +64,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 3,
       "inputs": [
         {
           "origin": "name",
@@ -57,7 +91,7 @@
         "s0"
       ],
       "owner": null,
-      "ret": 1,
+      "ret": 3,
       "returns_self": false,
       "scope": 0,
       "site": 2
@@ -65,7 +99,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 4,
       "inputs": [
         {
           "origin": "call",
@@ -80,7 +114,7 @@
       "name": "print",
       "outputs": [],
       "owner": null,
-      "ret": 2,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 3
@@ -88,7 +122,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 5,
       "inputs": [],
       "kind": "constructor",
       "merge_key": "s4",
@@ -99,7 +133,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 4
@@ -107,7 +141,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 6,
       "inputs": [],
       "kind": "method",
       "merge_key": "s5",
@@ -118,7 +152,7 @@
         "s1"
       ],
       "owner": "v2.0",
-      "ret": 4,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 5
@@ -126,7 +160,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 5,
+      "i": 7,
       "inputs": [],
       "kind": "student_function",
       "merge_key": "s6",
@@ -137,7 +171,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 5,
+      "ret": 7,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -145,7 +179,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 6,
+      "i": 8,
       "inputs": [
         {
           "origin": "call",
@@ -165,7 +199,7 @@
       "name": "print",
       "outputs": [],
       "owner": null,
-      "ret": 6,
+      "ret": 8,
       "returns_self": false,
       "scope": 0,
       "site": 7
@@ -173,7 +207,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 7,
+      "i": 9,
       "inputs": [
         {
           "origin": "name",
@@ -190,7 +224,7 @@
         "v4.0"
       ],
       "owner": null,
-      "ret": 7,
+      "ret": 9,
       "returns_self": false,
       "scope": 0,
       "site": 8
@@ -198,7 +232,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 8,
+      "i": 10,
       "inputs": [
         {
           "origin": "name",
@@ -215,7 +249,7 @@
         "v5.0"
       ],
       "owner": null,
-      "ret": 8,
+      "ret": 10,
       "returns_self": false,
       "scope": 0,
       "site": 8
@@ -223,7 +257,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 9,
+      "i": 11,
       "inputs": [
         {
           "origin": "name",
@@ -250,7 +284,7 @@
         "v6.0"
       ],
       "owner": "v1.0",
-      "ret": 9,
+      "ret": 11,
       "returns_self": false,
       "scope": 0,
       "site": 8
@@ -258,7 +292,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 10,
+      "i": 12,
       "inputs": [
         {
           "origin": "expr",
@@ -275,7 +309,7 @@
         "v7.0"
       ],
       "owner": "v6.0",
-      "ret": 10,
+      "ret": 12,
       "returns_self": false,
       "scope": 0,
       "site": 9
@@ -283,7 +317,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 11,
+      "i": 13,
       "inputs": [
         {
           "origin": "expr",
@@ -300,7 +334,7 @@
         "v8.0"
       ],
       "owner": "v7.0",
-      "ret": 11,
+      "ret": 13,
       "returns_self": false,
       "scope": 0,
       "site": 10
@@ -308,7 +342,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 12,
+      "i": 14,
       "inputs": [
         {
           "origin": "call",
@@ -323,7 +357,7 @@
       "name": "print",
       "outputs": [],
       "owner": null,
-      "ret": 12,
+      "ret": 14,
       "returns_self": false,
       "scope": 0,
       "site": 11
@@ -331,17 +365,17 @@
   ],
   "output": [
     {
-      "i": 2,
+      "i": 4,
       "stream": "stdout",
       "text": "[shadowed] ('a', 'b', 1)\n"
     },
     {
-      "i": 6,
+      "i": 8,
       "stream": "stdout",
       "text": "[shadowed] child+base ['a', 'b']\n"
     },
     {
-      "i": 12,
+      "i": 14,
       "stream": "stdout",
       "text": "[shadowed] {'site': 7, 'fn': 3}\n"
     }
@@ -350,7 +384,7 @@
     {
       "bindings": [
         [
-          0,
+          2,
           "df",
           "v1.0"
         ]

@@ -129,10 +129,17 @@ describe('constructor box', () => {
     const inst = instOf(model, 'LinearRegression');
     expect(el(ctor.id).getAttribute('aria-label')).toContain('function LinearRegression');
     expect(el(ctor.id).classList.contains('md-ctor')).toBe(false);
-    // the import shows as (module) in the box; no import node or callee wire is drawn
+    // the call box shows (module); the import block is its own box with no wires (svl-i6s)
     expect(el(ctor.id).textContent).toContain('(sklearn.linear_model)');
-    expect(host.querySelector('.md-import, .md-callee')).toBeNull();
-    expect(host.querySelector('[data-kind="import"]')?.children.length ?? 0).toBe(0);
+    expect(host.querySelector('.md-callee')).toBeNull();
+    const imp = model.nodes.find((n) => n.kind === 'import' && n.name === 'LinearRegression')!;
+    expect(el(imp.id).textContent).toBe('LinearRegression (sklearn.linear_model)');
+    expect(el(imp.id).getAttribute('aria-label')).toBe(
+      'import LinearRegression from sklearn.linear_model',
+    );
+    expect(model.edges.some((e) => e.from.node === imp.id || e.to.node === imp.id)).toBe(false);
+    c.setState(stateAt(model, log, 0), log);
+    expect(el(imp.id).classList.contains('md-hidden')).toBe(true);
     // above the instance
     expect(laid.nodes[ctor.id]!.y + laid.nodes[ctor.id]!.h).toBeLessThanOrEqual(
       laid.nodes[inst.id]!.y,

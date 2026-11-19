@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-HOOK_NAMES = ("__rec__", "__bind__", "__store__", "__scope__", "__ret__")
+HOOK_NAMES = ("__rec__", "__bind__", "__store__", "__scope__", "__ret__", "__imp__")
 UNWRAPPED_CALLS = frozenset(
     {"super", "locals", "globals", "vars", "dir", "eval", "exec", "breakpoint"}
 )
@@ -33,9 +33,13 @@ def instrument(source: str) -> Instrumented:
     tree = ast.parse(source)
     transformer = _Instrument(source)
     imports = _import_sites(tree, transformer.src)  # analysed on the original tree
+    transformer.import_index = {id(stmt): k for k, (stmt, _) in enumerate(imports)}
     new_tree = transformer.visit(tree)
-    for site in imports:  # appended last, so every other site id is unchanged
+    first = len(transformer.sites)
+    for _, site in imports:  # appended last, so every other site id is unchanged
         transformer._add(site)
+    for k, const in transformer.import_hooks:  # the hook statements name their site
+        const.value = first + k
     assert isinstance(new_tree, ast.Module)
     ast.fix_missing_locations(new_tree)
     return Instrumented(new_tree, transformer.sites)
@@ -214,14 +218,16 @@ def _class_scope_names(node: ast.ClassDef) -> frozenset[str]:
     return frozenset(out)
 
 
-def _import_sites(tree: ast.Module, src: _Source) -> list[dict[str, Any]]:
-    """One `import` site per module-level import statement (CONTRACTS section 3, "Imports").
+def _import_sites(tree: ast.Module, src: _Source) -> list[tuple[ast.stmt, dict[str, Any]]]:
+    """One `import` site per import statement in module scope (CONTRACTS section 3, "Imports").
 
-    Imports are not rewritten and not hooked: the site is the whole record. Each bound name says
+    That is every import outside a `def` and a `class` body, including those under `if`, `try`,
+    a loop or a `with` (a conditional import that does not run gives no step). Imports are not
+    rewritten: `visit_Import` adds a hook statement after each one. Each bound name says
     whether it is `sole`: bound exactly once in the entire module (no other import, assignment,
     parameter, `def`, `class`, `except ... as`, `del`, comprehension target ...) and the
-    module has no `from m import *`. Only then can the graph draw a callee wire from the name to a
-    call that uses it, because nothing can have rebound the name between the import and the call.
+    module has no `from m import *`. Only then does the graph write the module in a call box,
+    because nothing can have rebound the name between the import and the call.
     """
     counts: dict[str, int] = {}
 
@@ -251,10 +257,8 @@ def _import_sites(tree: ast.Module, src: _Source) -> list[dict[str, Any]]:
         elif type(n).__name__ in ("TypeVar", "ParamSpec", "TypeVarTuple"):
             bump(n.name)  # type: ignore[attr-defined]
 
-    out: list[dict[str, Any]] = []
-    for stmt in tree.body:
-        if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
-            continue
+    out: list[tuple[ast.stmt, dict[str, Any]]] = []
+    for stmt in _module_scope_imports(tree):
         if isinstance(stmt, ast.ImportFrom) and (stmt.level or not stmt.module):
             continue  # relative imports and `from __future__`-style oddities are not drawn
         if isinstance(stmt, ast.ImportFrom) and stmt.module == "__future__":
@@ -283,18 +287,34 @@ def _import_sites(tree: ast.Module, src: _Source) -> list[dict[str, Any]]:
             continue
         span = src.span(stmt)
         out.append(
-            {
-                "id": -1,
-                "kind": "import",
-                "line": span[0],
-                "col": span[1],
-                "end_line": span[2],
-                "end_col": span[3],
-                "text": src.text(span),
-                "imports": items,
-            }
+            (
+                stmt,
+                {
+                    "id": -1,
+                    "kind": "import",
+                    "line": span[0],
+                    "col": span[1],
+                    "end_line": span[2],
+                    "end_col": span[3],
+                    "text": src.text(span),
+                    "imports": items,
+                },
+            )
         )
     return out
+
+
+def _module_scope_imports(node: ast.AST) -> list[ast.Import | ast.ImportFrom]:
+    """Import statements that run in module scope, in source order (not inside def or class)."""
+    found: list[ast.Import | ast.ImportFrom] = []
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            continue
+        if isinstance(child, (ast.Import, ast.ImportFrom)):
+            found.append(child)
+        else:
+            found.extend(_module_scope_imports(child))
+    return found
 
 
 class _Pending:
@@ -317,6 +337,8 @@ class _Instrument(ast.NodeTransformer):
         self.sites: list[dict[str, Any]] = []
         self.site_of: dict[ast.Call, int] = {}  # original Call node -> site id (wrapped only)
         self.in_class = False
+        self.import_index: dict[int, int] = {}  # id(import statement) -> index among import sites
+        self.import_hooks: list[tuple[int, ast.Constant]] = []  # patched with the site id later
         self.shadow: frozenset[str] = frozenset()  # names that do not mean the enclosing binding
 
     # -- helpers -----------------------------------------------------------------------------
@@ -644,3 +666,17 @@ class _Instrument(ast.NodeTransformer):
         return node
 
     visit_AsyncWith = visit_With  # type: ignore[assignment]
+
+    # -- imports -----------------------------------------------------------------------------
+
+    def visit_Import(self, node: ast.Import) -> ast.stmt | list[ast.stmt]:
+        # The statement runs exactly as written; a hook after it records the step. If the import
+        # raises, the hook does not run, so a failed import gives no step.
+        k = self.import_index.get(id(node))
+        if k is None:
+            return node
+        const = ast.Constant(-1)
+        self.import_hooks.append((k, const))
+        return [node, self._hook_stmt("__imp__", const, like=node)]
+
+    visit_ImportFrom = visit_Import  # type: ignore[assignment]

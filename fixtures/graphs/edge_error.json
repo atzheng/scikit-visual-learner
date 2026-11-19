@@ -4,19 +4,43 @@
       "id": "m:6w14qy.0.lg6rbl",
       "kind": "import",
       "parent": null,
-      "order": 399999.75,
+      "order": 400000,
       "name": "pd",
       "source": "pandas",
-      "site": 8
+      "site": 8,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "m:14z9t3a.0.15b7d91",
       "kind": "import",
       "parent": null,
-      "order": 499999.75,
+      "order": 500000,
       "name": "LinearRegression",
       "source": "sklearn.linear_model",
-      "site": 9
+      "site": 9,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "n:wcu5tk.0",
@@ -28,8 +52,8 @@
       "order": 700005,
       "executions": [
         {
-          "i": 0,
-          "ret": 0,
+          "i": 2,
+          "ret": 2,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0"
@@ -57,7 +81,8 @@
           "nameLabel": "df"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "pandas"
     },
     {
       "id": "i:wcu5tk.0",
@@ -66,12 +91,12 @@
       "order": 700005,
       "className": "DF",
       "varName": "df",
-      "createdAt": 0,
+      "createdAt": 2,
       "createdBy": "n:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 0,
+          "i": 2,
           "token": "v0.0",
           "kind": "new"
         }
@@ -85,8 +110,8 @@
       "text": "df[[\"beds\", \"baths\", \"sqft\"]]",
       "executions": [
         {
-          "i": 1,
-          "ret": 1,
+          "i": 3,
+          "ret": 3,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -107,12 +132,12 @@
       "order": 800000,
       "className": "DF",
       "varName": "X",
-      "createdAt": 1,
+      "createdAt": 3,
       "createdBy": "x:f2rqav.0",
       "params": [],
       "versions": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v1.0",
           "kind": "new"
         }
@@ -126,8 +151,8 @@
       "text": "df[\"price\"]",
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 4,
+          "ret": 4,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -148,12 +173,12 @@
       "order": 900000,
       "className": "Series",
       "varName": "y",
-      "createdAt": 2,
+      "createdAt": 4,
       "createdBy": "x:xaeoav.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v2.0",
           "kind": "new"
         }
@@ -169,8 +194,8 @@
       "order": 1100000,
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 5,
+          "ret": 5,
           "inputs": {},
           "outputs": {
             "out:0": "v3.0"
@@ -190,7 +215,8 @@
           "nameLabel": null
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "sklearn.linear_model"
     },
     {
       "id": "i:10epbgg.0",
@@ -199,17 +225,17 @@
       "order": 1100000,
       "className": "LinearRegression",
       "varName": null,
-      "createdAt": 3,
+      "createdAt": 5,
       "createdBy": "n:10epbgg.0",
       "params": [],
       "versions": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v3.0",
           "kind": "new"
         },
         {
-          "i": 4,
+          "i": 6,
           "token": "v3.1",
           "kind": "mutate"
         }
@@ -225,8 +251,8 @@
       "order": 1100000,
       "executions": [
         {
-          "i": 4,
-          "ret": 4,
+          "i": 6,
+          "ret": 6,
           "inputs": {
             "in:X": "v1.0",
             "in:y": "v2.0"
@@ -262,46 +288,6 @@
   ],
   "edges": [
     {
-      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
-      "from": {
-        "node": "m:6w14qy.0.lg6rbl",
-        "port": null
-      },
-      "to": {
-        "node": "n:wcu5tk.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
-      "id": "e:m:14z9t3a.0.15b7d91.>n:10epbgg.0.",
-      "from": {
-        "node": "m:14z9t3a.0.15b7d91",
-        "port": null
-      },
-      "to": {
-        "node": "n:10epbgg.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 3,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
       "id": "e:i:f2rqav.0.>n:m1gsyoeo@i:10epbgg.0.in:X",
       "from": {
         "node": "i:f2rqav.0",
@@ -314,7 +300,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v1.0"
         }
       ],
@@ -333,7 +319,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v2.0"
         }
       ],
@@ -352,7 +338,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v0.0"
         }
       ],
@@ -371,7 +357,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v0.0"
         }
       ],
@@ -390,7 +376,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 0,
+          "i": 2,
           "token": "v0.0"
         }
       ],
@@ -409,7 +395,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v1.0"
         }
       ],
@@ -428,7 +414,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v2.0"
         }
       ],
@@ -447,7 +433,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v3.0"
         }
       ],
@@ -459,6 +445,8 @@
     1,
     2,
     3,
-    4
+    4,
+    5,
+    6
   ]
 }

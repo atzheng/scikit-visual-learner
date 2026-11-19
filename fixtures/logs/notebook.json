@@ -6,6 +6,74 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s28",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 28
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s29",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.linear_model import LinearRegression",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 29
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s30",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.model_selection import train_test_split",
+      "outputs": [],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 30
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s31",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.preprocessing import OneHotEncoder",
+      "outputs": [],
+      "owner": null,
+      "ret": 3,
+      "returns_self": false,
+      "scope": 0,
+      "site": 31
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 4,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +90,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -30,7 +98,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 5,
       "inputs": [
         {
           "origin": "name",
@@ -47,7 +115,7 @@
         "v1.0"
       ],
       "owner": "v0.0",
-      "ret": 1,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 2
@@ -55,7 +123,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 6,
       "inputs": [
         {
           "origin": "name",
@@ -72,7 +140,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 4
@@ -80,7 +148,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 7,
       "inputs": [
         {
           "origin": "name",
@@ -97,7 +165,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 7,
       "returns_self": false,
       "scope": 0,
       "site": 5
@@ -105,7 +173,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 8,
       "inputs": [
         {
           "origin": "name",
@@ -140,7 +208,7 @@
         "v7.0"
       ],
       "owner": null,
-      "ret": 4,
+      "ret": 8,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -148,7 +216,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 5,
+      "i": 9,
       "inputs": [
         {
           "origin": "const",
@@ -170,7 +238,7 @@
         "v8.0"
       ],
       "owner": null,
-      "ret": 5,
+      "ret": 9,
       "returns_self": false,
       "scope": 0,
       "site": 8
@@ -178,7 +246,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 6,
+      "i": 10,
       "inputs": [
         {
           "origin": "name",
@@ -195,7 +263,7 @@
         "v9.0"
       ],
       "owner": null,
-      "ret": 6,
+      "ret": 10,
       "returns_self": false,
       "scope": 0,
       "site": 10
@@ -203,7 +271,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 7,
+      "i": 11,
       "inputs": [
         {
           "origin": "expr",
@@ -223,7 +291,7 @@
       "name": "OneHotEncoder.fit",
       "outputs": [],
       "owner": "v8.0",
-      "ret": 7,
+      "ret": 11,
       "returns_self": true,
       "scope": 0,
       "site": 10
@@ -231,7 +299,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 8,
+      "i": 12,
       "inputs": [
         {
           "origin": "name",
@@ -248,7 +316,7 @@
         "v12.0"
       ],
       "owner": null,
-      "ret": 8,
+      "ret": 12,
       "returns_self": false,
       "scope": 0,
       "site": 11
@@ -256,7 +324,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 9,
+      "i": 13,
       "inputs": [
         {
           "origin": "expr",
@@ -273,7 +341,7 @@
         "v13.0"
       ],
       "owner": "v8.1",
-      "ret": 9,
+      "ret": 13,
       "returns_self": false,
       "scope": 0,
       "site": 11
@@ -281,7 +349,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 10,
+      "i": 14,
       "inputs": [
         {
           "origin": "name",
@@ -298,7 +366,7 @@
         "v14.0"
       ],
       "owner": null,
-      "ret": 10,
+      "ret": 14,
       "returns_self": false,
       "scope": 0,
       "site": 13
@@ -306,7 +374,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 11,
+      "i": 15,
       "inputs": [
         {
           "origin": "expr",
@@ -323,7 +391,7 @@
         "v15.0"
       ],
       "owner": "v8.1",
-      "ret": 11,
+      "ret": 15,
       "returns_self": false,
       "scope": 0,
       "site": 13
@@ -331,7 +399,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 12,
+      "i": 16,
       "inputs": [],
       "kind": "constructor",
       "merge_key": "s15",
@@ -342,7 +410,7 @@
         "v16.0"
       ],
       "owner": null,
-      "ret": 12,
+      "ret": 16,
       "returns_self": false,
       "scope": 0,
       "site": 15
@@ -350,7 +418,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 13,
+      "i": 17,
       "inputs": [
         {
           "origin": "name",
@@ -375,7 +443,7 @@
       "name": "LinearRegression.fit",
       "outputs": [],
       "owner": "v16.0",
-      "ret": 13,
+      "ret": 17,
       "returns_self": true,
       "scope": 0,
       "site": 17
@@ -383,7 +451,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 14,
+      "i": 18,
       "inputs": [
         {
           "origin": "name",
@@ -405,7 +473,7 @@
         "s29"
       ],
       "owner": "v16.1",
-      "ret": 14,
+      "ret": 18,
       "returns_self": false,
       "scope": 0,
       "site": 18
@@ -413,7 +481,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 15,
+      "i": 19,
       "inputs": [
         {
           "origin": "name",
@@ -430,7 +498,7 @@
         "v19.0"
       ],
       "owner": "v16.1",
-      "ret": 15,
+      "ret": 19,
       "returns_self": false,
       "scope": 0,
       "site": 20
@@ -438,7 +506,7 @@
   ],
   "output": [
     {
-      "i": 15,
+      "i": 19,
       "stream": "stdout",
       "text": "rows: 471\nfirst prediction: 259.7\nR^2: 0.143\n"
     }
@@ -447,72 +515,72 @@
     {
       "bindings": [
         [
-          0,
+          4,
           "df",
           "v0.0"
         ],
         [
-          1,
+          5,
           "df",
           "v1.0"
         ],
         [
-          2,
+          6,
           "X",
           "v2.0"
         ],
         [
-          3,
+          7,
           "y",
           "v3.0"
         ],
         [
-          4,
+          8,
           "X_train",
           "v4.0"
         ],
         [
-          4,
+          8,
           "X_test",
           "v5.0"
         ],
         [
-          4,
+          8,
           "y_train",
           "v6.0"
         ],
         [
-          4,
+          8,
           "y_test",
           "v7.0"
         ],
         [
-          5,
+          9,
           "enc",
           "v8.0"
         ],
         [
-          9,
+          13,
           "hood_train",
           "v13.0"
         ],
         [
-          11,
+          15,
           "hood_test",
           "v15.0"
         ],
         [
-          12,
+          16,
           "model",
           "v16.0"
         ],
         [
-          14,
+          18,
           "score",
           "s29"
         ],
         [
-          15,
+          19,
           "pred",
           "v19.0"
         ]

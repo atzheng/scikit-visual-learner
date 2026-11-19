@@ -100,7 +100,7 @@ export function stepAtEvent(model: GraphModel, i: number): number {
 function executionEvents(model: GraphModel, nodeId: string): number[] | null {
   const n = model.nodes.find((x) => x.id === nodeId);
   if (!n) return null;
-  if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store')
+  if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store' || n.kind === 'import')
     return n.executions.map((e) => e.i);
   if (n.kind === 'instance') return [n.createdAt, ...n.versions.map((v) => v.i)];
   return null;
@@ -144,7 +144,7 @@ export function nodeForSite(model: GraphModel, log: EventLog, siteId: number): s
       if (s !== null && !map.has(s)) map.set(s, id);
     };
     for (const n of model.nodes) {
-      if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store')
+      if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store' || n.kind === 'import')
         for (const e of n.executions) add(e.i, n.id);
     }
     for (const n of model.nodes) if (n.kind === 'instance') add(n.createdAt, n.id);

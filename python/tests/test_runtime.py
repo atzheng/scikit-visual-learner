@@ -79,10 +79,11 @@ def test_print_between_calls_tagged_with_first_call() -> None:
 def test_output_before_any_event_and_streams_interleave() -> None:
     src = "import sys\nprint('a')\nprint('b', file=sys.stderr)\nprint('c')\n"
     log = record(src)
+    # the `import sys` step is event 0, the latest event started when each line was written
     assert [(o["i"], o["stream"], o["text"]) for o in log["output"]] == [
-        (-1, "stdout", "a\n"),
-        (-1, "stderr", "b\n"),
-        (-1, "stdout", "c\n"),
+        (0, "stdout", "a\n"),
+        (0, "stderr", "b\n"),
+        (0, "stdout", "c\n"),
     ]
 
 
@@ -115,7 +116,7 @@ def test_warning_attribution_student_level() -> None:
     )
     log = record(src)
     assert [o for o in log["output"] if o["stream"] == "warning"] == [
-        {"i": -1, "stream": "warning", "text": "4: FutureWarning: hey"}
+        {"i": 0, "stream": "warning", "text": "4: FutureWarning: hey"}
     ]
 
 
@@ -277,7 +278,10 @@ def test_keyboard_interrupt_from_hook_is_stopped_with_interrupted_event() -> Non
     run(src, {}, msgs.append, on_enter=on_enter)
     assert msgs[-1] == {"type": "done", "status": "stopped", "error": None}
     events = [e for m in msgs if m["type"] == "batch" for e in m["events"]]
-    assert [(e["name"], e.get("interrupted")) for e in events] == [("zeros", None), ("ones", True)]
+    assert [(e["name"], e.get("interrupted")) for e in events if e["kind"] != "import"] == [
+        ("zeros", None),
+        ("ones", True),
+    ]
     assert events[1]["error"] is None and events[1]["ret"] == events[1]["i"]
     texts = [o["text"] for m in msgs if m["type"] == "batch" for o in m["output"]]
     assert "never\n" not in texts
@@ -299,7 +303,7 @@ def test_on_enter_on_exit_called() -> None:
         on_enter=lambda i, s: seen.append(("in", i)),
         on_exit=lambda i: seen.append(("out", i)),
     )
-    assert seen == [("in", 0), ("out", 0)]
+    assert seen == [("in", 1), ("out", 1)]  # event 0 is the import step
 
 
 def test_figure_entry_for_edge_mpl(in_data: None) -> None:

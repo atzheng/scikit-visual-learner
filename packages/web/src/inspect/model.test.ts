@@ -161,7 +161,7 @@ describe('golden_linreg: the fit step', () => {
 
   test('every visible wire has a token to preview', () => {
     const st = stateAt(model, log, model.steps.length);
-    for (const e of model.edges.filter((x) => !x.callee && st.visibleEdges.has(x.id)))
+    for (const e of model.edges.filter((x) => st.visibleEdges.has(x.id)))
       expect(edgeToken(model, st, e.id)).not.toBeNull();
   });
 });

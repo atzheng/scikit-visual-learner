@@ -2,7 +2,7 @@
 import type { EventLog } from './types';
 
 const STATUSES = ['ok', 'error', 'timeout', 'stopped', 'limit'];
-const KINDS = ['function', 'method', 'constructor', 'student_function', 'expr', 'store'];
+const KINDS = ['function', 'method', 'constructor', 'student_function', 'expr', 'store', 'import'];
 const ORIGINS = ['const', 'name', 'call', 'expr', 'unknown'];
 const STREAMS = ['stdout', 'stderr', 'warning', 'figure'];
 

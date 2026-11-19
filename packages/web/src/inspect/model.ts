@@ -79,7 +79,7 @@ export function edgeToken(
   const active = state?.activeToken.get(edgeId);
   if (active) return active;
   const e = model.edges.find((x) => x.id === edgeId);
-  if (!e || e.callee) return null;
+  if (!e) return null;
   return e.chip?.token ?? e.uses[e.uses.length - 1]?.token ?? null;
 }
 

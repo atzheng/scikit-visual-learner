@@ -4,29 +4,23 @@ import { READABLE_K, followNodes, followView, unionRect } from './follow';
 
 const node = (id: string, parent: string | null = null) =>
   ({ id, parent, kind: 'call' }) as unknown as GraphModel['nodes'][number];
-const edge = (id: string, from: string, to: string, callee = false) =>
+const edge = (id: string, from: string, to: string) =>
   ({
     id,
     from: { node: from, port: null },
     to: { node: to, port: null },
-    callee,
   }) as unknown as GraphModel['edges'][number];
 const state = (cur: string | null, edges: string[]) =>
   ({ currentNode: cur, visibleEdges: new Set(edges) }) as unknown as StepState;
 
 describe('followNodes', () => {
   const model: GraphModel = {
-    nodes: [node('a'), node('b', 'i'), node('c'), node('i'), node('imp'), node('far')],
-    edges: [
-      edge('e1', 'a', 'b'),
-      edge('e2', 'b', 'c'),
-      edge('e3', 'imp', 'b', true),
-      edge('e4', 'far', 'a'),
-    ],
+    nodes: [node('a'), node('b', 'i'), node('c'), node('i'), node('far')],
+    edges: [edge('e1', 'a', 'b'), edge('e2', 'b', 'c'), edge('e4', 'far', 'a')],
     steps: [],
   };
-  test('current node, wired neighbours, owner; no callee wire, no hidden wire', () => {
-    expect(followNodes(model, state('b', ['e1', 'e2', 'e3'])).sort()).toEqual(['a', 'b', 'c', 'i']);
+  test('current node, wired neighbours, owner; no hidden wire', () => {
+    expect(followNodes(model, state('b', ['e1', 'e2'])).sort()).toEqual(['a', 'b', 'c', 'i']);
     expect(followNodes(model, state('b', ['e1'])).sort()).toEqual(['a', 'b', 'i']);
     expect(followNodes(model, state(null, ['e1']))).toEqual([]);
   });

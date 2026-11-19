@@ -887,8 +887,20 @@ export function buildSvg(
           s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + ln.h / 2 + 4 }, 'md-store-text', n.text),
         );
         break;
-      case 'import':
-        break; // not drawn (svl-1x4): the module shows inside the call box
+      case 'import': {
+        // a small box in the call box's style, no ports: `name (module)` (svl-i6s). Placed at its import step.
+        g.append(s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h, rx: 9 }, 'md-box'));
+        const title = s(
+          doc,
+          'text',
+          { x: ln.x + ln.w / 2, y: ln.y + M.emptyPortH + 16 },
+          'md-name',
+          n.name,
+        );
+        if (n.source !== null) title.append(s(doc, 'tspan', {}, 'md-module', ` (${n.source})`));
+        g.append(title);
+        break;
+      }
       case 'source':
         g.append(
           s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h }, 'md-hit'),

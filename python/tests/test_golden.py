@@ -171,7 +171,8 @@ def is_scalar(token: str) -> bool:
 
 
 def names(log: dict[str, Any]) -> list[str]:
-    return [e["name"] for e in log["events"]]
+    """Event names, without the import steps (every program starts with some)."""
+    return [e["name"] for e in log["events"] if e["kind"] != "import"]
 
 
 def line_of(log: dict[str, Any], ev: dict[str, Any]) -> int:
@@ -265,7 +266,8 @@ def test_edge_literals_never_wired() -> None:
 
 
 def one_of(log: dict[str, Any], i: int) -> dict[str, Any]:
-    return next(e for e in log["events"] if e["i"] == i)
+    """The `i`-th event, not counting the import steps."""
+    return [e for e in log["events"] if e["kind"] != "import"][i]
 
 
 def test_edge_gridsearch_original_unfitted() -> None:
@@ -462,7 +464,10 @@ def test_edge_syntax_nothing_runs() -> None:
 
 def test_edge_mpl_plot_show_and_figure() -> None:
     log = checked_in_log("edge_mpl")
-    assert [e["name"] for e in log["events"] if e["kind"] != "expr"][-2:] == ["plot", "show"]
+    assert [e["name"] for e in log["events"] if e["kind"] not in ("expr", "import")][-2:] == [
+        "plot",
+        "show",
+    ]
     figs = [o for o in log["output"] if o["stream"] == "figure"]
     assert len(figs) == 1 and figs[0]["i"] == one(log, "show")["i"]
     assert figs[0]["png"] and figs[0]["width"] > 0

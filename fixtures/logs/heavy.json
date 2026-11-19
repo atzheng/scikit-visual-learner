@@ -6,6 +6,57 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s18",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 18
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s19",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.ensemble import RandomForestRegressor",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 19
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s20",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.model_selection import GridSearchCV, train_test_split",
+      "outputs": [],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 20
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +73,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 3,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -30,7 +81,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 4,
       "inputs": [
         {
           "origin": "expr",
@@ -47,7 +98,7 @@
         "v1.0"
       ],
       "owner": "v0.0",
-      "ret": 1,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 1
@@ -55,7 +106,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 5,
       "inputs": [
         {
           "origin": "name",
@@ -72,7 +123,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 3
@@ -80,7 +131,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 6,
       "inputs": [
         {
           "origin": "expr",
@@ -97,7 +148,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 3
@@ -105,7 +156,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 7,
       "inputs": [
         {
           "origin": "name",
@@ -122,7 +173,7 @@
         "v4.0"
       ],
       "owner": null,
-      "ret": 4,
+      "ret": 7,
       "returns_self": false,
       "scope": 0,
       "site": 5
@@ -130,7 +181,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 5,
+      "i": 8,
       "inputs": [
         {
           "origin": "name",
@@ -165,7 +216,7 @@
         "v8.0"
       ],
       "owner": null,
-      "ret": 5,
+      "ret": 8,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -173,7 +224,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 6,
+      "i": 9,
       "inputs": [
         {
           "origin": "const",
@@ -190,7 +241,7 @@
         "v9.0"
       ],
       "owner": null,
-      "ret": 6,
+      "ret": 9,
       "returns_self": false,
       "scope": 0,
       "site": 8
@@ -198,7 +249,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 7,
+      "i": 10,
       "inputs": [
         {
           "origin": "name",
@@ -225,7 +276,7 @@
         "v11.0"
       ],
       "owner": null,
-      "ret": 7,
+      "ret": 10,
       "returns_self": false,
       "scope": 0,
       "site": 11
@@ -233,7 +284,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 8,
+      "i": 11,
       "inputs": [
         {
           "origin": "name",
@@ -258,7 +309,7 @@
       "name": "GridSearchCV.fit",
       "outputs": [],
       "owner": "v11.0",
-      "ret": 8,
+      "ret": 11,
       "returns_self": true,
       "scope": 0,
       "site": 13
@@ -266,7 +317,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 9,
+      "i": 12,
       "inputs": [
         {
           "origin": "name",
@@ -288,7 +339,7 @@
         "s39"
       ],
       "owner": "v11.1",
-      "ret": 9,
+      "ret": 12,
       "returns_self": false,
       "scope": 0,
       "site": 15
@@ -296,12 +347,12 @@
   ],
   "output": [
     {
-      "i": 8,
+      "i": 11,
       "stream": "stdout",
       "text": "{'max_depth': 12, 'n_estimators': 100}\n"
     },
     {
-      "i": 9,
+      "i": 12,
       "stream": "stdout",
       "text": "R^2: 0.96\n"
     }
@@ -310,52 +361,52 @@
     {
       "bindings": [
         [
-          1,
+          4,
           "df",
           "v1.0"
         ],
         [
-          3,
+          6,
           "X",
           "v3.0"
         ],
         [
-          4,
+          7,
           "y",
           "v4.0"
         ],
         [
-          5,
+          8,
           "X_train",
           "v5.0"
         ],
         [
-          5,
+          8,
           "X_test",
           "v6.0"
         ],
         [
-          5,
+          8,
           "y_train",
           "v7.0"
         ],
         [
-          5,
+          8,
           "y_test",
           "v8.0"
         ],
         [
-          6,
+          9,
           "forest",
           "v9.0"
         ],
         [
-          6,
+          9,
           "grid",
           "v10.0"
         ],
         [
-          7,
+          10,
           "search",
           "v11.0"
         ]
