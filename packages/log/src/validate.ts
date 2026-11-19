@@ -90,6 +90,13 @@ export function validateLog(x: unknown): EventLog {
     const p = `$.values.${tok}`;
     const vo = obj(v, p);
     str(vo.type, `${p}.type`);
+    if (vo.methods !== undefined) {
+      arr(vo.methods, `${p}.methods`).forEach((m, k) => {
+        const mo = obj(m, `${p}.methods[${k}]`);
+        str(mo.name, `${p}.methods[${k}].name`);
+        str(mo.doc, `${p}.methods[${k}].doc`);
+      });
+    }
     if (vo.attrs !== undefined) {
       for (const [a, t] of Object.entries(obj(vo.attrs, `${p}.attrs`))) {
         if (!(str(t, `${p}.attrs.${a}`) in values))

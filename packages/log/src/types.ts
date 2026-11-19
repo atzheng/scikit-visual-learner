@@ -63,6 +63,7 @@ export interface ValueSummary {
   preview?: Preview;
   repr?: string;
   attrs?: Record<string, Token>;
+  methods?: { name: string; doc: string }[];
   machine?: boolean;
 }
 

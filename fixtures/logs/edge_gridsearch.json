@@ -909,6 +909,32 @@
         "tol": "s7"
       },
       "machine": true,
+      "methods": [
+        {
+          "doc": "Fit Ridge regression model.",
+          "name": "fit"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Predict using the linear model.",
+          "name": "predict"
+        },
+        {
+          "doc": "Return :ref:`coefficient of determination <r2_score>` on test data.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        }
+      ],
       "type": "Ridge"
     },
     "v5.0": {
@@ -929,6 +955,28 @@
         "verbose": "s15"
       },
       "machine": true,
+      "methods": [
+        {
+          "doc": "Run fit with all sets of parameters.",
+          "name": "fit"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Return the score on the given data, if the estimator has been refit.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        }
+      ],
       "type": "GridSearchCV"
     },
     "v6.1": {

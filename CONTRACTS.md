@@ -142,6 +142,7 @@ interface ValueSummary {
   preview?: Preview; // omitted once the 1 MB preview budget is spent
   repr?: string; // scalars and other objects: reprlib.repr, max 40 chars
   attrs?: Record<string, Token>; // machines only (section 5)
+  methods?: { name: string; doc: string }[]; // machines only, first summary of each class in a run (section 5)
   machine?: boolean; // true for machines (estimators, student class instances, configured classes)
 }
 
@@ -323,6 +324,8 @@ class ValueTable:
 **Object table.** Keep `id → n` with a `weakref.finalize` for objects that support weak references. Keep others (lists, dicts, tuples, sets) alive in an LRU bounded by 256 entries and 16 MiB of estimated size (shallow size plus about 100 bytes per item for the fingerprint) (newest always kept); an evicted object also loses its `id → n` entry, so a later sighting gets a fresh object number.
 
 **Machines.** `isinstance(obj, sklearn.base.BaseEstimator)` (import lazily), or a class whose `__module__` is `__main__`, or a class in `machine_classes`. `attrs` for estimators: `get_params(deep=False)` plus public attributes ending in `_` (from `vars`). For student classes: public entries of `vars(obj)`. Scalar attrs get fresh tokens per summary.
+
+**Methods.** A machine summary may carry `methods: [{name, doc}]`: the class's public routines (no leading underscore; functions, static and class methods, builtin methods; properties and other descriptors excluded), `doc` the first non-empty docstring line clipped to 80 characters (`""` if none), sorted by name, at most 40. It is read from the `__dict__` of each class along the MRO (nearest definition wins), so no student code, property or `__getattr__` runs; it is computed under `reentry`. To keep versions small it is written once per class per run (the first machine summary of that class after `reset`, any depth), not on every version. Consumers find a class's methods by looking for any `values` entry with the same `type` that has `methods`. Classes without public routines get no field.
 
 **Attrs depth and cap.** Only the summarized machine's own attributes are expanded: attribute values get a token and a summary but, even if they are machines, no `attrs` of their own. At most 64 attributes per machine are kept, in sorted name order. The summary of a token is written (`{type}` at least) before any student `__repr__` runs; a `BaseException` from a repr (stop) propagates.
 

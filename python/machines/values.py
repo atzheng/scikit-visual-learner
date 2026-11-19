@@ -50,6 +50,7 @@ _LABEL_TYPES = (
 _ANGLE = re.compile(r"<[^<>]*>")
 _ADDRESS = re.compile(r"\s(?:at\s)?0x[0-9a-fA-F]+")
 _MAX_ATTRS = 64
+_MAX_METHODS = 40
 _KEEP_MAX = 256
 _KEEP_BYTES = 16 * 1024 * 1024
 _KEY_BYTES = 100
@@ -156,6 +157,53 @@ def _digest(data: bytes) -> str:
     return hashlib.blake2b(data, digest_size=16).hexdigest()
 
 
+_ROUTINES = (
+    types.FunctionType,
+    types.BuiltinFunctionType,
+    types.MethodDescriptorType,
+    types.WrapperDescriptorType,
+)
+
+
+def _first_doc_line(doc: object) -> str:
+    if not isinstance(doc, str):
+        return ""
+    for line in doc.splitlines():
+        if line.strip():
+            return _clip(line.strip(), 80)
+    return ""
+
+
+def _class_methods(cls: type) -> list[dict[str, str]]:
+    """Public methods of ``cls`` as ``[{name, doc}]``, sorted by name, at most ``_MAX_METHODS``.
+
+    Reads the class ``__dict__`` along the MRO only: no attribute lookup on the class or an
+    instance, so no property, descriptor or ``__getattr__`` of student code ever runs.
+    """
+    seen: set[str] = set()
+    found: dict[str, str] = {}
+    try:
+        mro = type.__getattribute__(cls, "__mro__")
+    except Exception:
+        return []
+    for klass in mro:
+        try:
+            members = list(type.__getattribute__(klass, "__dict__").items())
+        except Exception:
+            continue
+        for name, raw in members:
+            if not isinstance(name, str) or name in seen:
+                continue
+            seen.add(name)  # the nearest definition wins, even a non-callable one
+            if name.startswith("_"):
+                continue
+            fn = raw.__func__ if type(raw) in (staticmethod, classmethod) else raw
+            if not isinstance(fn, _ROUTINES):
+                continue  # properties, other descriptors, data
+            found[name] = _first_doc_line(getattr(fn, "__doc__", None))
+    return [{"name": n, "doc": found[n]} for n in sorted(found)[:_MAX_METHODS]]
+
+
 class ValueTable:
     def __init__(
         self,
@@ -183,6 +231,7 @@ class ValueTable:
         self.values: dict[str, dict[str, Any]] = {}
         self._new: dict[str, dict[str, Any]] = {}
         self._preview_used = 0
+        self._methods_done: set[type] = set()  # classes whose summary already carries methods
 
     # -- re-entry ---------------------------------------------------------------------------
 
@@ -471,6 +520,13 @@ class ValueTable:
                 attrs = {}
             if attrs:
                 summary["attrs"] = attrs
+            t = type(obj)
+            if t not in self._methods_done:
+                self._methods_done.add(t)
+                with self.reentry():
+                    methods = _class_methods(t)
+                if methods:
+                    summary["methods"] = methods
 
     def _machine_attrs(self, obj: Any, depth: int) -> dict[str, str]:
         items: dict[str, Any] = {}

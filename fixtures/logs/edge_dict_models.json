@@ -957,6 +957,32 @@
         "tol": "s7"
       },
       "machine": true,
+      "methods": [
+        {
+          "doc": "Fit Ridge regression model.",
+          "name": "fit"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Predict using the linear model.",
+          "name": "predict"
+        },
+        {
+          "doc": "Return :ref:`coefficient of determination <r2_score>` on test data.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        }
+      ],
       "type": "Ridge"
     },
     "v5.0": {
@@ -981,6 +1007,40 @@
         "warm_start": "s25"
       },
       "machine": true,
+      "methods": [
+        {
+          "doc": "Apply trees in the forest to X, return leaf indices.",
+          "name": "apply"
+        },
+        {
+          "doc": "Return the decision path in the forest.",
+          "name": "decision_path"
+        },
+        {
+          "doc": "Build a forest of trees from the training set (X, y).",
+          "name": "fit"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Predict regression target for X.",
+          "name": "predict"
+        },
+        {
+          "doc": "Return :ref:`coefficient of determination <r2_score>` on test data.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        }
+      ],
       "type": "RandomForestRegressor"
     },
     "v5.1": {
@@ -1018,6 +1078,52 @@
     },
     "v7.0": {
       "machine": true,
+      "methods": [
+        {
+          "doc": "Return the index of the leaf that each sample is predicted as.",
+          "name": "apply"
+        },
+        {
+          "doc": "Compute the pruning path during Minimal Cost-Complexity Pruning.",
+          "name": "cost_complexity_pruning_path"
+        },
+        {
+          "doc": "Return the decision path in the tree.",
+          "name": "decision_path"
+        },
+        {
+          "doc": "Build a decision tree regressor from the training set (X, y).",
+          "name": "fit"
+        },
+        {
+          "doc": "Return the depth of the decision tree.",
+          "name": "get_depth"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Return the number of leaves of the decision tree.",
+          "name": "get_n_leaves"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Predict class or regression value for X.",
+          "name": "predict"
+        },
+        {
+          "doc": "Return :ref:`coefficient of determination <r2_score>` on test data.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        }
+      ],
       "type": "DecisionTreeRegressor"
     },
     "v8.0": {
