@@ -1652,14 +1652,15 @@ export async function mountTwoPane(
           const sx = a.w > 0 ? b.w / a.w : 1;
           const sy = a.h > 0 ? b.h / a.h : 1;
           const scaled = Math.abs(sx - 1) > 0.005 || Math.abs(sy - 1) > 0.005;
+          const origin = scaled ? { transformOrigin: '0 0' } : {};
           play(
             w,
             [
               {
                 transform: `translate(${mv.dx / k}px, ${mv.dy / k}px)${scaled ? ` scale(${sx}, ${sy})` : ''}`,
-                transformOrigin: '0 0',
+                ...origin,
               },
-              { transform: 'none', transformOrigin: '0 0' },
+              { transform: 'none', ...origin },
             ],
             a,
           );
