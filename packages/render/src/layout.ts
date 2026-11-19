@@ -1,6 +1,6 @@
 // GraphModel -> ELK -> Laid (CONTRACTS.md section 8, SPEC "Layout").
 // `buildElkGraph` is a pure function (model + measure -> ELK input); `layout` runs ELK on it.
-import type { CallNode, GEdge, GNode, GraphModel, InstanceNode } from '@machines/log';
+import type { CallNode, DefNode, GEdge, GNode, GraphModel, InstanceNode } from '@machines/log';
 import ELKApi from 'elkjs/lib/elk-api';
 import type { ELK, ElkExtendedEdge, ElkNode, ElkPort } from 'elkjs/lib/elk-api';
 
@@ -119,6 +119,7 @@ export const M = {
   storeH: 28,
   textPadX: 8,
   emptyPortH: 6,
+  defLineH: 17, // svl-jl3: a signature or methods line on a function/class card
   laneGap: 8, // spacing of wires entering an instance below its attribute rows
   moreH: 22, // the "more methods (N)" control row at the bottom of an instance
 };
@@ -339,7 +340,32 @@ function leafSize(n: GNode, measure: Measure, o: SizeOpts): { w: number; h: numb
         ),
         h: M.nameH + M.emptyPortH,
       };
+    case 'def': {
+      // svl-jl3: the name line, then the signature and, for a class with methods, the methods line (mono)
+      const lines = defLines(n);
+      return {
+        w: Math.ceil(
+          Math.max(
+            M.minBoxW,
+            measure(defTitle(n), FONT_NAME) + 2 * M.boxPadX,
+            ...lines.map((x) => measure(x, FONT_MONO) + 2 * M.boxPadX),
+          ),
+        ),
+        h: M.emptyPortH + M.nameH + lines.length * M.defLineH + 4,
+      };
+    }
   }
+}
+
+/** The name line of a function or class card: `def f`, `class C`. */
+export const defTitle = (n: DefNode): string =>
+  `${n.defKind === 'class' ? 'class' : 'def'} ${n.name}`;
+
+/** The mono lines under a def card's title: the signature, and a class's methods. */
+export function defLines(n: DefNode): string[] {
+  const out = [n.signature];
+  if (n.defKind === 'class' && n.methods.length > 0) out.push(`methods: ${n.methods.join(', ')}`);
+  return out.map((x) => (x.length > 48 ? `${x.slice(0, 47)}…` : x));
 }
 
 /** Pure: GraphModel -> ELK input graph. */

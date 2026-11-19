@@ -110,9 +110,18 @@ interface ImportBinding {
   sole: boolean; // the name is bound exactly once in the whole module (no other import, assignment, loop or with target, `def`, `class`, parameter, `except … as`, `del`, `:=`, comprehension target, in any scope) and the module has no `from m import *`
 }
 
+interface DefInfo {
+  name: string;
+  kind: 'function' | 'class';
+  signature: string; // `f(x, y=2)` (`ast.unparse` of the parameters, annotations kept, cut at 200 chars); a class shows its own `__init__` without `self`: `C(a, b=1)`; `C()` for a class with no bases, keywords, decorators or `__init__`; `C(…)` when the constructor is inherited or a decorator may change it
+  methods?: string[]; // class only: names of the `def`s directly in the body, source order, without dunder methods
+  decorated: boolean;
+  link: boolean; // a call of the name certainly reaches the object the statement made: every binding of the name in the whole module is an undecorated module-scope `def`/`class` statement (no assignment, loop or with target, import, parameter, `del`, `global`/`nonlocal`, `:=`, `except … as`, match capture, nested def of that name), and the module does not reach its namespace dynamically (names `globals`, `vars`, `locals`, `exec`, `eval`, `setattr`, `delattr`, `sys`, `__main__`, `importlib`, `inspect`, an attribute `__dict__`, or `from m import *`)
+}
+
 interface Site {
   id: number; // index into sites
-  kind: 'call' | 'bind' | 'store' | 'ret' | 'import';
+  kind: 'call' | 'bind' | 'store' | 'ret' | 'import' | 'def';
   line: number;
   col: number;
   end_line: number;
@@ -131,6 +140,8 @@ interface Site {
   volatile?: true; // svl-35d: a target is a volatile name (section 3, "Volatile names"); set by `instrument`, absent otherwise
   // kind 'import' (svl-b4w, svl-i6s): one per `import` / `from … import` statement that runs in module scope (section 3, "Imports"); the statement is not rewritten, a hook after it records an `import` event
   imports?: ImportBinding[]; // the names the statement binds, in order
+  // kind 'def' (svl-jl3): one per `def` / `class` statement that runs in module scope (section 3, "Definitions"); static, no student values
+  def?: DefInfo;
   // kind 'store'
   root?: string; // the root Name of the target (df in df.loc[m, "c"])
   value?: Origin; // RHS origin; only when the target is the whole left-hand side of Assign/AnnAssign and no target is a tuple, list or starred (section 3)
@@ -163,7 +174,7 @@ type Preview =
   | { kind: 'table'; columns: string[]; index: string[]; rows: string[][] } // DF: 5 rows x 8 cols; Series: one column
   | { kind: 'matrix'; rows: string[][] }; // array / sparse: first 5 x 5 (1-D: one row)
 
-type EventKind = 'function' | 'method' | 'constructor' | 'student_function' | 'expr' | 'store' | 'import';
+type EventKind = 'function' | 'method' | 'constructor' | 'student_function' | 'expr' | 'store' | 'import' | 'def';
 
 interface Input {
   param: string; // signature name, "arrays[0]" for varargs, "arg0".. when binding fails, "self" for the owner of a data method
@@ -242,7 +253,7 @@ Rules for M1–3 (SPEC "Transformer rules", narrowed):
 - Decorator expressions are visited like any other code (so `@lru_cache(maxsize=None)` records a call); the decorated `def` body is not.
 - Assignment statements (`Assign`, `AugAssign`, `AnnAssign` with a value), `for` targets and `with … as` targets at module level → a `__bind__(site, {name: value, …})` statement after the assignment, or as the first statement of the body for `for`/`with`. Nested tuple and starred targets flatten to their Names. Subscript and attribute targets whose root is a `Name` → `__store__(site, <root name>)` after the statement. Statements directly in a class body get neither.
 - `NamedExpr`, `import`, `del`, `except … as`, `match` captures, `global` and class/def names are not bound (resolution falls back as in section 5).
-- **Imports** (svl-b4w, changed by svl-i6s). Each `import` / `from … import` statement that runs in module scope adds one `import` site: at the top level, and under `if`, `try`, `else`, a loop or a `with` (a conditional import that does not run gives no event, one that runs twice gives two). Not in a `def` or `class` body (function bodies are not instrumented at all, and a class body has no hooks), not relative, not `__future__`; a star import binds nothing and has no site. The statement is left exactly as written; the transformer puts a hook statement `__imp__(site)` right after it, and a marker `__imp__(site, True)` right before it (svl-wqe; the pre hook is the same `__imp__` builtin with a second argument, so `HOOK_NAMES` is unchanged). If the import raises, the post hook does not run, so a failed import gives no event, and the error surfaces as in plain Python. Side effects, `__import__`, repeated and conditional imports all run as in plain Python (tests). The hook records one event `kind: 'import'`, `name` = the statement text, `module: null`, no inputs, no outputs, `owner: null`, `merge_key: s<site>`, `count` and `slot` as for any site, `scope: 0`. It looks at no values and issues no tokens, so it cannot change the program. **Import events count toward `max_events`, but only the first `per_site` runs of a site are recorded**: later runs are silently skipped (no event, no `count`, no slot, no `limit_hit`), as hidden calls are, so an import in a long loop can neither flood the log nor use up the budget of later calls. The `import` sites are appended after all other sites, so every other site id is unchanged. The import event also carries `submodules?: string[]` (svl-ac6; omitted when empty): the names of a `from m import a [as b]` whose bound object is, right after the statement, a plain `types.ModuleType` with `__name__ == 'm.a'` (a submodule; `from os import path` is not, it is `posixpath`). The check reads the module dict and `__name__` of a real module only. The transformer computes `sole` for each bound name by walking the whole original tree (rule in `ImportBinding`). It is no longer a wire rule: the graph uses it to write `(module)` in the call box only when nothing can have rebound the name. Not caught: rebinding through `globals()[...]`, `setattr(module, …)` or `exec`.
+- **Imports** (svl-b4w, changed by svl-i6s). Each `import` / `from … import` statement that runs in module scope adds one `import` site: at the top level, and under `if`, `try`, `else`, a loop or a `with` (a conditional import that does not run gives no event, one that runs twice gives two). Not in a `def` or `class` body (function bodies are not instrumented at all, and a class body has no hooks), not relative, not `__future__`; a star import binds nothing and has no site. The statement is left exactly as written; the transformer puts a hook statement `__imp__(site)` right after it, and a marker `__imp__(site, True)` right before it (svl-wqe; the pre hook is the same `__imp__` builtin with a second argument, so `HOOK_NAMES` is unchanged). If the import raises, the post hook does not run, so a failed import gives no event, and the error surfaces as in plain Python. Side effects, `__import__`, repeated and conditional imports all run as in plain Python (tests). The hook records one event `kind: 'import'`, `name` = the statement text, `module: null`, no inputs, no outputs, `owner: null`, `merge_key: s<site>`, `count` and `slot` as for any site, `scope: 0`. It looks at no values and issues no tokens, so it cannot change the program. **Import events count toward `max_events`, but only the first `per_site` runs of a site are recorded**: later runs are silently skipped (no event, no `count`, no slot, no `limit_hit`), as hidden calls are, so an import in a long loop can neither flood the log nor use up the budget of later calls. The `import` sites are appended after all other sites, so every other site id is unchanged (the `def` sites, see "Definitions", follow the import sites). The import event also carries `submodules?: string[]` (svl-ac6; omitted when empty): the names of a `from m import a [as b]` whose bound object is, right after the statement, a plain `types.ModuleType` with `__name__ == 'm.a'` (a submodule; `from os import path` is not, it is `posixpath`). The check reads the module dict and `__name__` of a real module only. The transformer computes `sole` for each bound name by walking the whole original tree (rule in `ImportBinding`). It is no longer a wire rule: the graph uses it to write `(module)` in the call box only when nothing can have rebound the name. Not caught: rebinding through `globals()[...]`, `setattr(module, …)` or `exec`.
 - Origins: `Constant` and unary minus on a numeric constant → `const`. Tuples, lists, sets and dicts whose elements are all `const` → `const` with the source text. `Name` → `name`. A `Call` that is itself wrapped → `call` with its site id. Everything else → `expr`, with `reads` the `Name` loads inside it, excluding names under nested lambdas and comprehension targets.
 - Bind and store sites take the span and text of the whole statement (`for`: the target; `with`: `expr as target`). `for` and `with` targets give no `__store__`. Annotations and function bodies are not visited; defaults are. Site ids are assigned in post-order (inner calls first).
 - For `AugAssign` the bind `value` is an `expr` origin (text: the whole statement, reads: the target names then the RHS reads), not the RHS origin: `x += f(y)` must not wire f's output to x.
@@ -250,6 +261,8 @@ Rules for M1–3 (SPEC "Transformer rules", narrowed):
 - **No `value` on destructuring.** A bind or store site carries `value` only when no target of the statement is a tuple, list or starred target, or in the one `unpack` case (single tuple/list target of plain Names whose RHS is a wrapped call). Omitted for `a, *b = f(x)`, `a, b = c = f(1)`, `x[0], y = f(1)`, `a, b = c` and `(a, b), c = f(1), 2`: the names hold parts of the value, so an origin would be a false wire. A missing wire is acceptable.
 - **Shadowed names.** A bare Name inside a comprehension that refers to one of that comprehension's own targets, or inside a class body that the class body itself binds, does not get a `name` origin: it is `{origin: 'expr', text: <name>, reads: []}`. Such names are also dropped from `reads` of other `expr` origins. (`n = 5; [f(n) for n in xs]` must not wire the outer `n` to `f`.)
 - **Frame-sensitive callees.** The recorder makes each call from a `<student>` eval frame that shares the caller's globals and locals (section 4), so `sys._getframe(1)`, `locals()`/`eval`/`exec` aliases (`e = eval; e("x")`), pandas' `df.query("a > @t")` / `pd.eval` and `warnings.warn(stacklevel=...)` see the student's namespace, at the call's reported line, as in plain Python. Known limit: stack _listings_ made by student code (`traceback.format_exc()`, `traceback.extract_stack()`, `inspect.stack()`) show the recorder's frames (`_rec_hook`, `_rec`, `_call`) and the extra `<student>` frame; svl-a8j.4's `student_traceback` cleans only the tracebacks the runtime formats itself.
+
+**Definitions** (svl-jl3). Each `def` / `async def` / `class` statement that runs in module scope adds one `def` site (appended after the import sites, so every other site id and every import site id is unchanged): at the top level, and under `if`, `try`, `else`, a loop or a `with`. Not inside a `def` (bodies are opaque, so nested defs are never steps) and not in a class body (methods are not steps; they appear in the class's `methods`). The statement is left exactly as written; the transformer puts `__imp__(site)` right after it and the output marker `__imp__(site, True)` right before it, the same two hooks as for imports (`HOOK_NAMES` unchanged; the recorder tells the site kinds apart), so text printed by a decorator or a class body belongs to the def's step. If the decorator, the defaults or the class body raises, the post hook does not run: no event, and the error surfaces as in plain Python. The hook records one event `kind: 'def'`, `name` = the defined name, `module: null`, no inputs, outputs or owner, `merge_key: s<site>`, `scope: 0`. It looks at no values and issues no tokens. Like imports, def events count toward `max_events` and only the first `per_site` runs of a site are recorded. Student calls were and are recorded as ordinary events (`student_function`, `constructor` with `module: "__main__"`, `method`); the def step is separate and comes before them. `DefInfo.link` (section 2) is computed on the whole original tree and is the only thing the graph trusts to connect a call to the object. A def that is decorated is a step and an object, but never linked (the name is bound to whatever the decorator returned). Redefinition: two def sites, two nodes; if the module binds the name only by `def`/`class`, a call links to the latest def event before it, otherwise to none.
 
 **Volatile names** (svl-35d). `instrument` marks a `bind` site `volatile: true` when any of its targets is a name the recorder cannot follow: a name that is `del`'d, declared `global` or `nonlocal`, bound by `:=`, an import, a `def` or `class`, `except ... as`, or a match capture, anywhere in the module (any scope: conservative); or every bind site when the module can rebind its globals reflectively: it names `globals`, `vars`, `locals`, `exec`, `eval`, `setattr`, `delattr`, `sys`, `__main__`, `importlib` or `inspect` (as a name, or as an imported module), uses an attribute `__dict__`, or has `from m import *` (`sys.modules[__name__].k = x`, `setattr(sys.modules["__main__"], "k", x)`, `import __main__; __main__.k = x`). The graph shows none of the targets of a volatile site as an alias (section 8), because the log cannot say that the name still refers to the object it was bound to. Nothing is rewritten differently: the flag is data only.
 
@@ -500,7 +513,7 @@ interface AppState {
 }
 ```
 
-`run()` clears `log`, `model` and `selection` and sets `step` 0 at once, so nothing of the previous run is linked against the new `runSource`. The slider then follows the newest step while streaming (a new run starts at its end; a student who stepped back stays put) and the run ends with it at the last step.
+`run()` clears `log`, `model` and `selection` and sets `step` 0 at once, so nothing of the previous run is linked against the new `runSource`. The first streamed update that has a step moves `step` to 1 (the first line); after that the slider keeps the student's step and never follows the stream, and a run ends with it wherever the student left it (svl-hyr; `nextStep(prevStep, prevMax, newMax)`). Step 0 stays reachable with Back. The timeline sits above the editor in the left column, and the two-pane view puts the stage and the shelf side by side from 800 px of pane width.
 
 ## 8. Graph model, timeline and renderer
 
@@ -516,7 +529,7 @@ interface GraphModel {
   folded?: number; // number of chips (edges with `chip`)
 }
 
-type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode | ImportNode;
+type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode | ImportNode | DefNode;
 interface NodeBase {
   id: string;
   parent: string | null;
@@ -542,6 +555,7 @@ interface Execution {
   owner: Token | null;
   error: EventError | null;
   interrupted: boolean;
+  callee?: string; // svl-jl3: id of the ImportNode or DefNode the call certainly resolves to (below, "Callee"); absent when unsure. Not a wire
 }
 interface InstanceNode extends NodeBase {
   kind: 'instance';
@@ -573,6 +587,16 @@ interface ImportNode extends NodeBase {
   name: string; // the bound name (`pd`, `LinearRegression`)
   source: string | null; // the module in parentheses after the name: `pandas`, `sklearn.linear_model`, `sklearn.linear_model.Ridge` for `from … import Ridge as R`; null when it equals `name` (`import numpy`)
   site: number; // the `import` site
+  executions: Execution[]; // one per run of the statement; inputs and outputs are empty
+}
+interface DefNode extends NodeBase {
+  kind: 'def'; // svl-jl3
+  name: string;
+  defKind: 'function' | 'class'; // a class is its constructor
+  signature: string; // `DefInfo.signature`
+  methods: string[]; // class: its method names; [] for a function
+  decorated: boolean;
+  site: number; // the `def` site
   executions: Execution[]; // one per run of the statement; inputs and outputs are empty
 }
 interface Port {
@@ -612,6 +636,10 @@ Construction follows SPEC "Graph construction" with these decisions:
 - Port and node ids are stable across re-runs of the same source, so the layout stays put. Ids are `n:<h>` (call), `i:<h>` (instance), `x:<h>` (expr), `t:<h>` (store), `src:<consumer id>:<param>` (source), with `<h>` = hash of the site's kind and text plus the occurrence number among sites with equal text. They use no site ids or tokens, so editing an unrelated line (even adding one) keeps them. Port ids: `in:<param>`, `out:<k>` (k = index in `outputs`), `out:mut:<param>` (changed in place).
 
 **Folded temporaries** (svl-lo6). With `fold` (default), an object (reference value, key = token up to the dot) folds into a **chip** on its wire when ALL hold: no scope binds it to a name; no event mutates it; it is not made by a `constructor` event; exactly one scope-0 event outputs it, and no other object shares that output slot (site, index); it has exactly one use in the whole log, as an input port or as the owner of a method call, by a scope-0 event that is not an `expr` event and runs after the producer. The box is not drawn; one edge `f:<box id>` runs from the producer's node and port straight to the consumer's port, with `uses: [{i: consumer event, token}]` (exactly that token) and `chip: {node: <the box id it would have>, token, type, shape}`. When the temporary owned a method (`df["a"].isna()`), the method box is top level (`parent: null`) with an `in:self` port, fed by the chip wire; its executions carry `inputs["in:self"]`. Named objects, loops (one box, many objects), models and anything used twice keep their boxes. `unfold: Set(chip.node)` draws chosen ones as boxes; `fold: false` draws all. The no-false-wires check runs for both forms and, for each chip, re-derives from the log that the object is unnamed, unmutated, output once and used once, by the wire's consumer. The renderer draws a chip as a dashed pill `+ <type> (<shape>)` on the wire (`.md-chip`, focusable, `aria-label` "temporary ..., press Enter"); a click or Enter reports `onClickEdge(chip edge id)`, and the web app expands it (`store.unfold`). The web diagram pane also has "All objects" (fold off) and "Follow" (pan and zoom to the current step's boxes at 80% or more; a manual pan or zoom pauses it until the next step).
+
+**Def nodes and callees** (svl-jl3). A `def` event makes one `DefNode` (id `f:<h of the def site>`; `order` is the site's order), revealed at that step, on the shelf from the next step, with no edges. A function object is its signature; a class object is its constructor and lists its method names. A statement that runs again adds an execution to the same node; a conditional def that did not run has no node; a redefinition is another site, hence another node. Def nodes count toward `MAX_NODES` and are cut by source order. Decision (owner, svl-jl3): a new node kind rather than an extension of `ImportNode`, because it carries a signature and methods and the two are told apart by every consumer (aria text, legend, describeStep). Everything else treats the two alike: the timeline (`first`, `activeExecution`, `currentNode`), `steps`, `shelfOrder`/`shelfAt`, and the stage of its own step (one `created` participant of kind `def`).
+
+**Callee** (svl-jl3). `Execution.callee` is set on a call node's execution when the call certainly resolves to one shelf block, else absent. Not a wire. (1) An import block: the callee is a bare dotted name whose root has a `sole` binding, the call lies textually after the import statement and an event of that import ran before the call (exactly the `importedFrom` conditions, checked per execution), and the event is not a method (`kind !== 'method'`, `owner === null`). The callee is the block of the root name (`pd` for `pd.read_csv`, `LinearRegression` for `LinearRegression()`). (2) A def or class: the callee is a bare name (not dotted) whose `DefInfo.link` holds, and the block is the def node of the latest def event of that name with `i` below the call's. Methods of student classes have no callee (their box is a method of the instance). A rebound, volatile, decorated or dynamically reachable name has none. `stageAt` adds one participant `role: 'callee'`, `kind` of the block, `object`/`token`/`port`/`param`/`edge` null, `changed` false, only when the node is in the model. The callee and the owner never occur together.
 
 **Import nodes** (svl-b4w, rewritten by svl-i6s). An `import` event makes one `ImportNode` per name its site binds (`import numpy as np, pandas as pd` is one step and two nodes, `np` first), revealed at that step, not at the first call. Unused imports are shown: every executed import places an object (decided with the owner). Id `m:<h of the import site>.<h of the name>`; `order` is the site's order plus 0.01 per name, so imports sit in source order among the other boxes. The node has no edges at all (the old callee edges and `MAX_CALLEE_WIRES` are gone). A statement that runs again adds an execution to the same nodes (merge key = site). An import that did not run (`if False:`, a failed import) has no node. Import nodes count toward `MAX_NODES` and are cut by source order like any other. The timeline treats an import node like a call node: `first` is its first execution, `activeExecution` and `currentNode` follow it; a multi-name statement makes its first name the current node. The `(module)` in a call box (`CallNode.importedFrom`, section 8 `callModules`) is separate and still needs the old conditions, because it makes a claim about the call: the callee is a bare dotted name (`pd.read_csv`, `LinearRegression`; not `pd.read_csv(x).head` or `a[0].f`) whose root name has a `sole` binding (section 3), the call site lies textually after the import statement, and an event of that import ran before the call (a call before it saw another binding, for instance a builtin the import later shadows). Nothing is guessed. When the binding is a module for certain (svl-ac6: `import a.b.c` has `dotted`; a `from m import a` whose import event lists it in `submodules`), the label is the full module: for `import numpy.random`, `numpy.random.default_rng()` gives `numpy.random`, and `numpy.zeros()` or `numpy.linalg.norm()` give `numpy` (the longest prefix the callee shares with the import path; the rest may be attributes); `from sklearn import linear_model; linear_model.LinearRegression()` gives `sklearn.linear_model`. Without that certainty the shorter label stays (`sklearn`). For `from m import Ridge as R` the source is `m.Ridge` and the box shows `m` (a trailing `.<call name>` is cut).
 
@@ -686,9 +714,9 @@ interface StageModel {
   participants: StageParticipant[]; // objects, in order: owner, inputs (port order), outputs and created (out-port order)
   values: StageValue[]; // inline scalars and literals
 }
-type StageRole = 'owner' | 'input' | 'output' | 'created';
+type StageRole = 'owner' | 'callee' | 'input' | 'output' | 'created'; // callee (svl-jl3): the function or class block the call certainly resolves to
 interface StageParticipant {
-  kind: 'instance' | 'import' | 'chip'; // instance: a shelf object; import: an import block; chip: a folded temporary, stage-only
+  kind: 'instance' | 'import' | 'def' | 'chip'; // instance: a shelf object; import: an import block; def: a function or class made by a `def`/`class` step; chip: a folded temporary, stage-only
   role: StageRole;
   node: string; // instance or import node id; a chip: the id its box would have (`GEdge.chip.node`)
   object: string | null; // `v12`; null for an import
@@ -715,10 +743,10 @@ interface ShelfSlot extends ShelfEntry {
   filled: number; // objects of the box that exist so far (`new` versions with i < the step's event); at the end all of them; 1 for an import
 }
 interface ShelfEntry {
-  node: string; // instance or import node id
-  kind: 'instance' | 'import';
-  at: number; // event i at which the entry appears: `createdAt`, or the import's first run
-  objects: number; // instances: how many objects the box holds (a merged loop box is ONE entry); 1 for an import
+  node: string; // instance, import or def node id
+  kind: 'instance' | 'import' | 'def';
+  at: number; // event i at which the entry appears: `createdAt`, or the first run of the import / def statement
+  objects: number; // instances: how many objects the box holds (a merged loop box is ONE entry); 1 for an import or def
 }
 ```
 
@@ -828,6 +856,8 @@ function nodeDocTarget(model: GraphModel, node: GNode): { module: string | null;
 function portViews(model, node: CallNode, exec: Execution | undefined, log): { in: Record<string, PortView>; out: Record<string, PortView> }; // what a call box's ports show for one execution
 function wireTypeLabel(token: Token, values): string; // wire type text: scalars only ('' for an object token)
 ```
+
+**Def cards and callees (svl-jl3).** A def node is drawn as a card in the import block's style (class `md-def`, `data-kind=def`, no ports, no wires, hidden until its step): a bold name line `def f` / `class C`, then mono lines: the signature, and for a class with methods `methods: a, b` (each cut at 48 characters; aria-label `function f(x, y=2)` / `class C(…), methods fit, predict`, `, decorated` when it is). Legend entry `def` (level `more`). In the two-pane view the callee's shelf card moves to the stage like any participant (it leaves its dashed placeholder) and stands where the owner does, left of the call box, joined to it by a plain line labelled `calls` (the owner's line is labelled `owner`); a call box's own name line is unchanged. The stage's screen-reader label for the card is `called by <call name>`.
 
 **Slots, constructor and shared boxes (svl-0qe, changed by svl-1x4).** A call box in `StepState.uncalled` has class `md-uncalled` and `, not called yet` in its aria-label. It is drawn solid, like a called box (no dashed outline, no different fill); its ports are hidden and a small text `not called yet` (`.md-uncalled-cue`, in every call box, shown only under `.md-uncalled`) sits under its name. A constructor box (a call node that creates an instance of the class of its own name) is an ordinary function box: no `md-ctor` class, aria-label `function <Name>`; the wire from its out-port to the instance stays. **Imports** (svl-i6s): an import node is drawn as a small box in the call box's style (class `md-import`, `data-kind=import`, no ports, one name line `name (module)` with the same lighter `.md-module` tspan; aria-label `import <name> from <module>`, or `import <name>` when the source is null), hidden until its import step. It has no wires. `callModules(model)` (layout.ts) maps each call box to `CallNode.importedFrom`. Such a box writes `name (module)` on its name line (`.md-name` with a lighter `.md-module` tspan; aria-label `function <name> from <module>`), and the layout measures the full text. An instance of a class with hidden methods shows a control `▸ more methods (N)` in its last row (a `role=button` group, `tabindex=0`, `aria-expanded`, `data-more=<instance id>`, in a layer above the diagram); opening it draws a list under the box, one entry per method with the one-line doc. Each entry has `data-doc-module`, `data-doc-name`, `data-doc-method` and `data-doc-node`, and is a button (`tabindex=0`) only when `onOpenDocs` is given. The list overlays what is below it and does not change the layout. Data boxes (DataFrame, Series, arrays) get no list (decided): their `methods` are the first 40 alphabetically, not a useful set of other methods; their docs open from the method boxes.
 

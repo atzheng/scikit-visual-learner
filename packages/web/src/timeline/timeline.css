@@ -6,6 +6,7 @@
 .timeline-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -76,6 +77,17 @@
   border-radius: 3px;
   background: var(--surface);
   border: 1px solid var(--border);
+}
+
+/* Text and a warning glyph, not colour alone. */
+.run-cue {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.cue-jump {
+  font-size: 12px;
+  padding: 1px 8px;
 }
 
 .event-label {

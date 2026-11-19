@@ -40,6 +40,40 @@
       "count": 1,
       "error": null,
       "i": 2,
+      "inputs": [],
+      "kind": "def",
+      "merge_key": "s12",
+      "module": null,
+      "mutates": [],
+      "name": "chunks",
+      "outputs": [],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 12
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
+      "inputs": [],
+      "kind": "def",
+      "merge_key": "s13",
+      "module": null,
+      "mutates": [],
+      "name": "total_price",
+      "outputs": [],
+      "owner": null,
+      "ret": 3,
+      "returns_self": false,
+      "scope": 0,
+      "site": 13
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 4,
       "inputs": [
         {
           "origin": "const",
@@ -56,7 +90,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -64,7 +98,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 5,
       "inputs": [
         {
           "origin": "name",
@@ -86,7 +120,7 @@
         "v1.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 3
@@ -94,7 +128,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 6,
       "inputs": [
         {
           "origin": "name",
@@ -111,7 +145,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 4,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 4
@@ -119,7 +153,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 5,
+      "i": 7,
       "inputs": [
         {
           "origin": "name",
@@ -136,7 +170,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 5,
+      "ret": 7,
       "returns_self": false,
       "scope": 0,
       "site": 5
@@ -144,7 +178,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 6,
+      "i": 8,
       "inputs": [
         {
           "origin": "name",
@@ -161,7 +195,7 @@
         "s0"
       ],
       "owner": null,
-      "ret": 6,
+      "ret": 8,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -169,7 +203,7 @@
   ],
   "output": [
     {
-      "i": 6,
+      "i": 8,
       "stream": "stdout",
       "text": "[200, 200, 100] 89204.02\n"
     }
@@ -178,17 +212,17 @@
     {
       "bindings": [
         [
-          2,
+          4,
           "df",
           "v0.0"
         ],
         [
-          4,
+          6,
           "sizes",
           "v2.0"
         ],
         [
-          6,
+          8,
           "total",
           "s0"
         ]
@@ -421,6 +455,38 @@
       "kind": "import",
       "line": 5,
       "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "def": {
+        "decorated": false,
+        "kind": "function",
+        "link": true,
+        "name": "chunks",
+        "signature": "chunks(df, size)"
+      },
+      "end_col": 43,
+      "end_line": 10,
+      "id": 12,
+      "kind": "def",
+      "line": 8,
+      "text": "def chunks(df, size):\n    for start in range(0, len(df), size):\n        yield df.iloc[start : start + size]"
+    },
+    {
+      "col": 0,
+      "def": {
+        "decorated": false,
+        "kind": "function",
+        "link": true,
+        "name": "total_price",
+        "signature": "total_price(df)"
+      },
+      "end_col": 28,
+      "end_line": 15,
+      "id": 13,
+      "kind": "def",
+      "line": 13,
+      "text": "async def total_price(df):\n    await asyncio.sleep(0)\n    return df[\"price\"].sum()"
     }
   ],
   "status": "ok",

@@ -177,6 +177,12 @@ async function shotBothThemes(page: Page, name: string): Promise<void> {
   await page.emulateMedia({ colorScheme: 'light' });
 }
 
+/** Runs, then steps to the last step: a run starts at step 1, and output and errors show at their own step. */
+async function runToEnd(page: Page): Promise<void> {
+  await runAndWait(page);
+  await gotoStep(page, (await stepCount(page)).m);
+}
+
 /** A point on a wire path in page coordinates (the middle of the path). */
 async function pointOnEdge(
   page: Page,
@@ -242,10 +248,18 @@ async function core(page: Page, view: View): Promise<void> {
       .waitFor({ state: 'attached', timeout: 15_000 })
       .catch(() => undefined);
     check((await page.locator('g.md-node[data-node]').count()) > 0, 'no boxes in the diagram');
-    check((await visibleNodes(page).count()) > 0, 'no visible boxes at the end of the run');
     const { n, m } = await stepCount(page);
     check(m > 0, 'no steps');
-    check(n === m, `expected to be at the last step after a run, got ${n} of ${m}`);
+    check(n === 1, `expected to start at step 1 after a run, got ${n} of ${m}`);
+    // the timeline heads the left column, above the editor
+    const tl = await page.locator('.timeline').boundingBox();
+    const ed = await page.locator('#pane-editor').boundingBox();
+    check(tl && ed && tl.y + tl.height <= ed.y + 1, 'the timeline is not above the editor');
+    await slider(page).focus();
+    await page.keyboard.press('ArrowRight');
+    check((await stepCount(page)).n === 2, '→ after a run did not go to step 2');
+    await gotoStep(page, m);
+    check((await visibleNodes(page).count()) > 0, 'no visible boxes at the last step');
     await page
       .locator('g.md-node[data-kind="instance"]')
       .first()
@@ -559,7 +573,7 @@ async function main(): Promise<void> {
 
     await step('edge_error.py: error box and traceback', async () => {
       await setSource(page, program('edge_error.py'));
-      await runAndWait(page);
+      await runToEnd(page);
       const err = page.getByTestId('run-error');
       await err.waitFor({ timeout: 5000 });
       check(/ValueError/.test((await err.textContent()) ?? ''), 'error box lacks ValueError');
@@ -574,6 +588,39 @@ async function main(): Promise<void> {
       );
       await frames.first().click();
       await shotBothThemes(page, '06-error');
+    });
+
+    await step('edge_error.py: timeline cue at step 1, jump to the error', async () => {
+      await setSource(page, program('edge_error.py'));
+      await runAndWait(page);
+      await gotoStep(page, 1);
+      const { m } = await stepCount(page);
+      const cue = page.getByTestId('run-cue');
+      await cue.waitFor({ timeout: 5000 });
+      check(
+        (await page.getByTestId('run-cue-end').textContent()) ===
+          `The run ends in an error at step ${m}.`,
+        'end cue wording',
+      );
+      check((await page.getByTestId('more-output').count()) === 1, 'more-output hint missing');
+      await page.waitForFunction(
+        () =>
+          /ends in an error/.test(
+            document.querySelector('[data-testid="step-summary-live"]')?.textContent ?? '',
+          ),
+        undefined,
+        { timeout: 5000 },
+      );
+      await settle(page);
+      await shotBothThemes(page, '06b-error-cue');
+      await cue.getByRole('button', { name: `Jump to step ${m}` }).click();
+      check((await stepCount(page)).n === m, 'jump did not reach the last step');
+      check(
+        (await page.getByTestId('more-output').count()) === 0,
+        'more-output hint stays at the end',
+      );
+      check((await cue.getByRole('button').count()) === 0, 'jump button stays at the end');
+      check((await page.getByTestId('run-cue-end').count()) === 1, 'end cue vanished at the end');
     });
 
     await step('Stop on an infinite loop', async () => {
@@ -622,7 +669,7 @@ async function main(): Promise<void> {
       await page.locator('details.files summary').click();
       await page.getByText('3 rows, yours').waitFor({ timeout: 5000 });
       await setSource(page, 'import pandas as pd\nprint("rows", len(pd.read_csv("mini.csv")))\n');
-      await runAndWait(page);
+      await runToEnd(page);
       check(
         /rows 3/.test((await page.getByRole('region', { name: 'Output' }).textContent()) ?? ''),
         'the uploaded file was not read',
@@ -677,7 +724,7 @@ async function main(): Promise<void> {
         });
       })()`);
       await setSource(p, program('edge_mpl.py'));
-      await runAndWait(p);
+      await runToEnd(p);
       await p.locator('.out-figure img').first().waitFor({ timeout: 10_000 });
       const alt = await p.locator('.out-figure img').first().getAttribute('alt');
       check(/Figure 1/.test(alt ?? ''), `figure alt is "${alt}"`);

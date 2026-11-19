@@ -12,7 +12,8 @@ export interface GraphModel {
   /** Number of unnamed temporaries folded into chips on their wire (`GEdge.chip`). */
   folded?: number;
 }
-export type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode | ImportNode;
+export type GNode =
+  CallNode | InstanceNode | ExprNode | StoreNode | SourceNode | ImportNode | DefNode;
 export interface NodeBase {
   id: string;
   parent: string | null;
@@ -27,6 +28,13 @@ export interface Execution {
   owner: Token | null;
   error: EventError | null;
   interrupted: boolean;
+  /**
+   * svl-jl3: the shelf block the call certainly resolves to: the `ImportNode` of the callee's root name (a `sole`
+   * import that ran before the call, as for `importedFrom`) or the `DefNode` of a student function or class
+   * (every binding of the name is a module-level `def`/`class`; the latest one that ran). Absent when unsure.
+   * Not a wire: the stage shows the block as a participant with role `callee`.
+   */
+  callee?: string;
 }
 export interface Port {
   id: string;
@@ -110,6 +118,26 @@ export interface ImportNode extends NodeBase {
   name: string;
   source: string | null;
   /** Id of the `import` site the node comes from. */
+  site: number;
+  executions: Execution[];
+}
+/**
+ * A function or class made by a `def` / `class` statement that ran in module scope (svl-jl3): an object on the
+ * board from the statement's step, like an import block, with no wires. A redefinition or a second branch is
+ * another node (its own site); a statement that runs again (a loop) adds an execution. `executions` has one
+ * entry per run (inputs and outputs empty).
+ */
+export interface DefNode extends NodeBase {
+  kind: 'def';
+  name: string;
+  /** What the statement defines: a function, or a class (its constructor). */
+  defKind: 'function' | 'class';
+  /** `f(x, y=2)`, `C(a, b=1)` (the card shows it). */
+  signature: string;
+  /** A class: its method names, source order, no dunders. Empty for a function. */
+  methods: string[];
+  decorated: boolean;
+  /** Id of the `def` site the node comes from. */
   site: number;
   executions: Execution[];
 }
@@ -317,6 +345,8 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
         soleImports.set(b.name, { site: s, binding: b });
 
   const importNodes = new Map<string, ImportNode>();
+  const defNodes = new Map<string, DefNode>();
+  const defRuns: { i: number; node: DefNode }[] = []; // every run of a def statement, by event index
   const calls = new Map<string, CallInfo>();
   const mkCounts = new Map<string, Map<string, number>>(); // merge key -> method box id -> recorded executions
   const siteCounts = new Map<string, Map<string, number>>(); // method box id -> merge key -> latest count
@@ -427,6 +457,33 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
         }
         node.executions.push(makeExecution(e, {}, {}));
       });
+      continue;
+    }
+
+    if (e.kind === 'def') {
+      const d = sites[e.site]?.def;
+      if (!d) continue;
+      const id = `f:${siteIdBase[e.site]}`;
+      let node = defNodes.get(id);
+      if (!node) {
+        node = {
+          id,
+          kind: 'def',
+          parent: null,
+          order: orderOf(e.site),
+          name: d.name,
+          defKind: d.kind,
+          signature: d.signature,
+          methods: d.methods ?? [],
+          decorated: d.decorated,
+          site: e.site,
+          executions: [],
+        };
+        defNodes.set(id, node);
+        nodeOrder.push(node);
+      }
+      node.executions.push(makeExecution(e, {}, {}));
+      defRuns.push({ i: e.i, node });
       continue;
     }
 
@@ -732,6 +789,51 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
     }
   }
 
+  // ---- the shelf block a call certainly resolves to (svl-jl3): a call of a `sole` import that ran before it
+  // (same rule as `importedFrom`), or of a student function or class whose name is only ever bound by
+  // module-level `def`/`class` statements (the latest that ran). Otherwise nothing: no false participants.
+  const defsByName = new Map<string, DefNode[]>(); // def nodes of linkable names, by name
+  for (const d of defNodes.values())
+    if (sites[d.site]?.def?.link === true) {
+      const l = defsByName.get(d.name);
+      if (l) l.push(d);
+      else defsByName.set(d.name, [d]);
+    }
+  for (const info of calls.values()) {
+    for (const e of info.events) {
+      if (e.kind === 'method' || e.owner !== null) continue;
+      const site = sites[e.site];
+      const ft = site?.func_text;
+      if (!site || ft === undefined) continue;
+      let callee: string | undefined;
+      const root = CALLEE_ROOT.exec(ft)?.[1];
+      const hit = root ? soleImports.get(root) : undefined;
+      if (hit && root) {
+        const at = hit.site;
+        const after =
+          site.line > at.end_line || (site.line === at.end_line && site.col >= at.end_col);
+        const ran = importRanAt.get(at.id);
+        if (after && ran !== undefined && ran <= e.i) {
+          const id = `m:${siteIdBase[at.id]}.${hash(root)}`;
+          if (importNodes.has(id)) callee = id;
+        }
+      } else if (root === ft && !hit) {
+        // a bare name: the latest def of it that ran before the call
+        const cands = defsByName.get(ft);
+        if (cands) {
+          let best: { i: number; node: DefNode } | undefined;
+          for (const r of defRuns)
+            if (r.i < e.i && cands.includes(r.node) && (!best || r.i > best.i)) best = r;
+          if (best) callee = best.node.id;
+        }
+      }
+      if (callee !== undefined) {
+        const ex = info.node.executions.find((x) => x.i === e.i);
+        if (ex) ex.callee = callee;
+      }
+    }
+  }
+
   for (const info of calls.values()) {
     for (const e of info.events) {
       for (const x of drawnInputs(e)) {
@@ -970,7 +1072,13 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
   // ---- steps: every drawn execution and every instance version
   const stepSet = new Set<number>();
   for (const n of nodes) {
-    if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store' || n.kind === 'import')
+    if (
+      n.kind === 'call' ||
+      n.kind === 'expr' ||
+      n.kind === 'store' ||
+      n.kind === 'import' ||
+      n.kind === 'def'
+    )
       for (const x of n.executions) stepSet.add(x.i);
     else if (n.kind === 'instance') for (const v of n.versions) stepSet.add(v.i);
   }

@@ -2,6 +2,8 @@ import type { CallNode, EventLog, GraphModel, InstanceNode } from '@machines/log
 import { describe, expect, test } from 'vitest';
 import {
   clampStep,
+  endCue,
+  hasLaterOutput,
   eventSiteId,
   nextStep,
   nodeForSite,
@@ -81,11 +83,13 @@ describe('step following', () => {
     expect(clampStep(9, 4)).toBe(4);
     expect(clampStep(NaN, 4)).toBe(0);
   });
-  test('a new run starts at the end; a student at the end follows; one who stepped back stays', () => {
-    expect(nextStep(2, 9, 3, true)).toBe(3);
-    expect(nextStep(5, 5, 8, false)).toBe(8);
-    expect(nextStep(2, 5, 8, false)).toBe(2);
-    expect(nextStep(7, 9, 3, false)).toBe(3);
+  test('a new run starts at step 1 and stays there as steps stream in; Back to 0 is kept', () => {
+    expect(nextStep(0, 0, 0)).toBe(0); // nothing yet
+    expect(nextStep(0, 0, 3)).toBe(1); // the first steps arrive
+    expect(nextStep(1, 3, 9)).toBe(1); // more arrive: no jump to the end
+    expect(nextStep(5, 5, 8)).toBe(5); // even a student at the end stays
+    expect(nextStep(0, 3, 9)).toBe(0); // the student went back to "Before the program runs"
+    expect(nextStep(7, 9, 3)).toBe(3);
   });
 });
 
@@ -108,5 +112,19 @@ describe('event, node and site lookups', () => {
     expect(nodeForSite(model, log, 13)).toBe('b'); // call box wins over the instance created at event 3
     expect(nodeForSite(model, log, 15)).toBeNull();
     expect(nodeForSite(model, log, 11)).toBeNull();
+  });
+  test('endCue words each status and is null for ok, running and empty runs', () => {
+    expect(endCue('error', false, 7)).toBe('ends in an error at step 7');
+    expect(endCue('stopped', false, 3)).toBe('stopped at step 3');
+    expect(endCue('timeout', false, 3)).toBe('hit the time limit at step 3');
+    expect(endCue('limit', false, 9)).toBe('stopped recording at step 9 (limit)');
+    expect(endCue('ok', false, 7)).toBeNull();
+    expect(endCue('error', true, 7)).toBeNull();
+    expect(endCue('error', false, 0)).toBeNull();
+  });
+  test('hasLaterOutput appears while output is cut and goes away at the end', () => {
+    expect(hasLaterOutput(1, 2)).toBe(true);
+    expect(hasLaterOutput(2, 2)).toBe(false);
+    expect(hasLaterOutput(0, 0)).toBe(false);
   });
 });

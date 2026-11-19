@@ -102,7 +102,7 @@ def test_function_body_untouched_but_decorators_and_defaults_visited() -> None:
     assert "@__rec__(0, deco, 1)" in out
     assert "a=__rec__(1, g, 2)" in out
     assert "return h(a)" in out
-    assert [s["text"] for s in sites(source)] == ["deco(1)", "g(2)"]
+    assert [s["text"] for s in sites(source) if s["kind"] != "def"] == ["deco(1)", "g(2)"]
 
 
 def test_async_generator_and_lambda_untouched() -> None:

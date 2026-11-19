@@ -73,7 +73,8 @@ describe('planStage (pure)', () => {
           if (p.role === 'input') expect(it.rect.y + it.rect.h).toBeLessThanOrEqual(plan.box.y);
           if (p.role === 'output' || p.role === 'created')
             expect(it.rect.y).toBeGreaterThanOrEqual(plan.box.y + plan.box.h);
-          if (p.role === 'owner') expect(it.rect.x + it.rect.w).toBeLessThanOrEqual(plan.box.x);
+          if (p.role === 'owner' || p.role === 'callee')
+            expect(it.rect.x + it.rect.w).toBeLessThanOrEqual(plan.box.x);
         }
       } else expect(plan.wires).toEqual([]);
     }
@@ -235,6 +236,44 @@ describe('mount', () => {
       expect(el.style.position).toBe('');
       expect(el.style.left).toBe('');
     }
+  });
+
+  test('a called function moves from the shelf onto the stage (svl-jl3)', async () => {
+    const { model, log } = await open('edge_student_fn');
+    let seen = 0;
+    for (let s = 1; s <= model.steps.length; s++) {
+      const callee = stageAt(model, log, s)?.participants.find((p) => p.role === 'callee');
+      if (!callee) continue;
+      seen++;
+      tp!.setStep(s);
+      const card = tp!.card(callee.node)!;
+      expect(card.parentElement).toBe(tp!.stageEl); // the shelf card itself moved
+      expect(slot(callee.node).dataset.state).toBe('stage');
+      expect((slot(callee.node).querySelector('.md-slot-ph') as HTMLElement).hidden).toBe(false);
+      expect(tp!.plan!.wires.some((w) => w.label?.name === 'calls')).toBe(true);
+      tp!.setStep(s + 1 <= model.steps.length ? s + 1 : s);
+    }
+    expect(seen).toBe(2); // load and Pipeline; pipe.run is a method, so it has no callee
+  });
+
+  test('a def step shows the function card with its signature, and a class its methods', async () => {
+    const { model } = await open('edge_student_fn');
+    const stepOf = (name: string): number =>
+      model.steps.findIndex((i) =>
+        model.nodes.some((n) => n.kind === 'def' && n.name === name && n.executions[0]!.i === i),
+      ) + 1;
+    tp!.setStep(stepOf('load'));
+    const fn = visible('.md-stage-canvas .md-def')
+      .map((e) => e.textContent ?? '')
+      .join(' ');
+    expect(fn).toContain('def load');
+    expect(fn).toContain('load(path)');
+    tp!.setStep(stepOf('Pipeline'));
+    const cls = visible('.md-stage-canvas .md-def')
+      .map((e) => e.textContent ?? '')
+      .join(' ');
+    expect(cls).toContain('class Pipeline');
+    expect(cls).toContain('methods: run');
   });
 
   test('golden_linreg: import, fit and predict', async () => {

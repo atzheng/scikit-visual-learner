@@ -5,15 +5,17 @@ import type { Execution, GEdge, GNode, GraphModel, InstanceNode, InstanceVersion
 import { stateAt } from './timeline';
 import type { EventError, EventLog, Token } from './types';
 
-export type StageRole = 'owner' | 'input' | 'output' | 'created';
+/** `callee` (svl-jl3): the function or class block a call certainly resolves to (an import block or a `def`/`class` object). */
+export type StageRole = 'owner' | 'callee' | 'input' | 'output' | 'created';
 
 /**
  * An object that takes part in the step. `kind: 'instance'` is a shelf object (`node` is its instance box);
- * `kind: 'import'` is an import block (created by an import step); `kind: 'chip'` is a folded temporary: it
+ * `kind: 'import'` is an import block (created by an import step), `kind: 'def'` a function or class made by a
+ * `def` / `class` step (also created by its step, and the callee of later calls); `kind: 'chip'` is a folded temporary: it
  * has no box and never lives on the shelf, the stage draws it only for this step (`chip`).
  */
 export interface StageParticipant {
-  kind: 'instance' | 'import' | 'chip';
+  kind: 'instance' | 'import' | 'def' | 'chip';
   role: StageRole;
   /** Instance or import node id; for a chip, the id its box would have (`GEdge.chip.node`). */
   node: string;
@@ -80,7 +82,7 @@ export interface StageModel {
 export interface ShelfEntry {
   /** Instance or import node id. */
   node: string;
-  kind: 'instance' | 'import';
+  kind: 'instance' | 'import' | 'def';
   /** Event i at which the entry appears: `createdAt` (instance), or the first run of the statement (import). */
   at: number;
   /** Instances: how many objects the box holds (a merged loop box is one entry holding n); 1 for an import. */
@@ -129,9 +131,9 @@ export function shelfOrder(model: GraphModel): ShelfEntry[] {
         e: { node: n.id, kind: 'instance', at: n.createdAt, objects: objectsOf(n) },
         order: n.order,
       });
-    else if (n.kind === 'import' && n.executions.length > 0)
+    else if ((n.kind === 'import' || n.kind === 'def') && n.executions.length > 0)
       out.push({
-        e: { node: n.id, kind: 'import', at: n.executions[0]!.i, objects: 1 },
+        e: { node: n.id, kind: n.kind, at: n.executions[0]!.i, objects: 1 },
         order: n.order,
       });
   }
@@ -226,6 +228,23 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
     dropped: 0,
     values: [],
   };
+
+  if (node.kind === 'def') {
+    // a def or class statement makes one object
+    result.participants.push({
+      kind: 'def',
+      role: 'created',
+      node: node.id,
+      object: null,
+      token: null,
+      port: null,
+      param: null,
+      edge: null,
+      changed: false,
+      newBox: node.executions[0]!.i === cur,
+    });
+    return result;
+  }
 
   if (node.kind === 'import') {
     // one statement can bind several names: every block it placed is created now
@@ -334,6 +353,23 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
       edge: role === 'input' ? inEdge(port, token) : outEdge(port, null),
     });
   };
+
+  // The block the call resolves to (a `sole` import, a def or class), only when the graph is certain of it.
+  if (node.kind === 'call' && ex.callee !== undefined) {
+    const c = model.nodes.find((n) => n.id === ex.callee);
+    if (c && (c.kind === 'import' || c.kind === 'def'))
+      result.participants.push({
+        kind: c.kind,
+        role: 'callee',
+        node: c.id,
+        object: null,
+        token: null,
+        port: null,
+        param: null,
+        edge: null,
+        changed: false,
+      });
+  }
 
   // A chip owner is listed by its `in:self` wire as an input, not here.
   if (

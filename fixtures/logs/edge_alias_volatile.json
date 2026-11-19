@@ -74,9 +74,9 @@
       "error": null,
       "i": 3,
       "inputs": [],
-      "kind": "student_function",
-      "merge_key": "s7",
-      "module": "__main__",
+      "kind": "def",
+      "merge_key": "s10",
+      "module": null,
       "mutates": [],
       "name": "g",
       "outputs": [],
@@ -84,12 +84,29 @@
       "ret": 3,
       "returns_self": false,
       "scope": 0,
+      "site": 10
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 4,
+      "inputs": [],
+      "kind": "student_function",
+      "merge_key": "s7",
+      "module": "__main__",
+      "mutates": [],
+      "name": "g",
+      "outputs": [],
+      "owner": null,
+      "ret": 4,
+      "returns_self": false,
+      "scope": 0,
       "site": 7
     }
   ],
   "output": [
     {
-      "i": 3,
+      "i": 4,
       "stream": "stdout",
       "text": "(3, 2)\n"
     }
@@ -294,6 +311,22 @@
       "kind": "import",
       "line": 4,
       "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "def": {
+        "decorated": false,
+        "kind": "function",
+        "link": true,
+        "name": "g",
+        "signature": "g()"
+      },
+      "end_col": 16,
+      "end_line": 16,
+      "id": 10,
+      "kind": "def",
+      "line": 14,
+      "text": "def g():\n    global keep\n    keep = other"
     }
   ],
   "status": "ok",

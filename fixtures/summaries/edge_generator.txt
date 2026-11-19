@@ -1,7 +1,9 @@
 0 (event -1): Before the program runs.
 1 (event 0): Imported asyncio.
 2 (event 1): Imported pandas as pd.
-3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
-4 (event 3): Called your function chunks(df, 200). It created a new generator object.
-5 (event 4): Computed [len(c) for c in chunks(df, 200)], a list (3 items), named sizes.
-6 (event 5): Called your function total_price(df). It created a new coroutine object.
+3 (event 2): Defined function chunks(df, size).
+4 (event 3): Defined function total_price(df).
+5 (event 4): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
+6 (event 5): Called your function chunks(df, 200). It created a new generator object.
+7 (event 6): Computed [len(c) for c in chunks(df, 200)], a list (3 items), named sizes.
+8 (event 7): Called your function total_price(df). It created a new coroutine object.

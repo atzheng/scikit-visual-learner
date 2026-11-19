@@ -25,6 +25,8 @@ import type { MethodDocTarget } from './svg';
 
 /** Room around a card's box inside its element: the "x3" badge above, a status message below. */
 export const CARD_PAD = { l: 6, t: 22, r: 6, b: 30 };
+/** Tallest shelf placeholder (px): about one shelf row. */
+export const PH_MAX_H = 100;
 export const STAGE = { margin: 16, colGap: 24, rowGap: 76, sideGap: 72, valuesGap: 24 };
 
 export interface Rect {
@@ -72,6 +74,29 @@ export interface StagePlan {
 export function cardKey(p: StageParticipant, merged: boolean): string {
   if (p.kind === 'chip') return `chip:${p.edge ?? p.node}`;
   return merged && p.object !== null ? `${p.node}#${p.object}` : p.node;
+}
+
+/** Inline values are cut at this many characters; they sit beside the call box unless that is wider than the other. */
+const VALUE_MAX_CHARS = 22;
+const VALUES_BESIDE_MAX = 400;
+
+/** Does any (axis-aligned) segment of the polyline touch the rect, padded by 6 px? */
+function wireHits(
+  points: [number, number][],
+  r: { x: number; y: number; w: number; h: number },
+): boolean {
+  const pad = 6;
+  for (let i = 1; i < points.length; i++) {
+    const [ax, ay] = points[i - 1]!;
+    const [bx, by] = points[i]!;
+    const x0 = Math.min(ax, bx);
+    const x1 = Math.max(ax, bx);
+    const y0 = Math.min(ay, by);
+    const y1 = Math.max(ay, by);
+    if (x1 >= r.x - pad && x0 <= r.x + r.w + pad && y1 >= r.y - pad && y0 <= r.y + r.h + pad)
+      return true;
+  }
+  return false;
 }
 
 const rowWidth = (sizes: Size[]): number =>
@@ -127,7 +152,9 @@ export function planStage(
     };
   }
 
-  const owner = stage.participants.find((p) => p.role === 'owner');
+  // the callee (svl-jl3, a function or class block) stands where the owner does, left of the call box; a call
+  // with a callee has no owner, so there is one participant on the left
+  const owner = stage.participants.find((p) => p.role === 'owner' || p.role === 'callee');
   const ins = stage.participants.filter((p) => p.role === 'input');
   const outs = stage.participants.filter((p) => p.role === 'output' || p.role === 'created');
   const inH = Math.max(0, ...S(ins).map((s) => s.h));
@@ -241,19 +268,39 @@ export function planStage(
         [boxX, cy],
       ],
       arrow: false,
-      label: { x: s.w + STAGE.sideGap / 2, y: cy - 6, type: '', name: 'owner', anchor: 'middle' },
+      label: {
+        x: s.w + STAGE.sideGap / 2,
+        y: cy - 6,
+        type: '',
+        name: owner.role === 'callee' ? 'calls' : 'owner',
+        anchor: 'middle',
+      },
     });
   }
 
   let vals: StagePlan['values'] = null;
   if (stage.values.length) {
     const lines = stage.values.map(valueLine);
-    vals = {
-      x: boxX + box.w + STAGE.valuesGap,
-      y: boxY,
-      w: Math.ceil(Math.max(...lines.map((l) => l.length)) * 7.2) + 16,
-      lines,
-    };
+    // a long value is cut at VALUE_MAX_CHARS (the renderer ellipsizes it and keeps the full text as its title),
+    // so one inline value cannot widen the canvas and shrink the stage's zoom
+    const w =
+      Math.ceil(Math.min(VALUE_MAX_CHARS, Math.max(...lines.map((l) => l.length))) * 7.2) + 16;
+    const h = lines.length * 18;
+    let x = boxX + box.w + STAGE.valuesGap;
+    let y = boxY;
+    // beside the box would make a wide canvas: put the values under the box's right edge instead when no
+    // wire runs through that spot
+    if (x + w > VALUES_BESIDE_MAX) {
+      const below = { x: Math.max(boxX, boxX + box.w - w), y: boxY + box.h + 6, w, h };
+      if (
+        (!outs.length || h + 14 <= STAGE.rowGap - 8) &&
+        !wires.some((wr) => wireHits(wr.points, below))
+      ) {
+        x = below.x;
+        y = below.y;
+      }
+    }
+    vals = { x, y, w, lines };
   }
 
   // shift everything so nothing is left of the margin, then size the canvas
@@ -428,7 +475,7 @@ function pick<V>(rec: Record<string, V>, ids: ReadonlySet<string>): Record<strin
   return Object.fromEntries(Object.entries(rec).filter(([k]) => ids.has(k)));
 }
 
-const STAGEABLE = new Set<GNode['kind']>(['instance', 'import', 'call', 'expr', 'store']);
+const STAGEABLE = new Set<GNode['kind']>(['instance', 'import', 'def', 'call', 'expr', 'store']);
 let uid = 0;
 
 export async function mountTwoPane(
@@ -614,7 +661,9 @@ export async function mountTwoPane(
     ph.hidden = true;
     // the dashed outline is the card's box; the card's padding becomes its margin, so the slot keeps its size
     ph.style.width = `${card.size.w}px`;
-    ph.style.height = `${card.size.h}px`;
+    // a tall card (an instance with its attributes and methods) leaves a placeholder of about one shelf row;
+    // the cards after it reflow while it is away
+    ph.style.height = `${Math.min(card.size.h, PH_MAX_H)}px`;
     ph.style.margin = `${CARD_PAD.t}px ${CARD_PAD.r}px ${CARD_PAD.b}px ${CARD_PAD.l}px`;
     const label = byId.get(e.node) ? slotLabel(byId.get(e.node)!) : e.node;
     ph.append(
@@ -983,14 +1032,18 @@ export async function mountTwoPane(
           ? n.name
           : n.kind === 'import'
             ? `import ${n.name}`
-            : n.kind === 'expr' || n.kind === 'store'
-              ? n.text
-              : null;
+            : n.kind === 'def'
+              ? `${n.defKind === 'class' ? 'class' : 'def'} ${n.name}`
+              : n.kind === 'expr' || n.kind === 'store'
+                ? n.text
+                : null;
     switch (p.role) {
       case 'input':
         return p.param ? `input to ${p.param}` : 'input';
       case 'owner':
         return what ? `owner of ${what}` : 'changed on this line';
+      case 'callee':
+        return what ? `called by ${what}` : 'called on this line';
       case 'output':
         return what ? `output of ${what}` : 'output';
       case 'created':
@@ -1016,7 +1069,7 @@ export async function mountTwoPane(
             add(it.participant.kind === 'chip' ? chipEls.get(it.key) : cards.get(it.key)?.wrap);
       };
       by((p) => p.role === 'input');
-      by((p) => p.role === 'owner');
+      by((p) => p.role === 'owner' || p.role === 'callee');
       if (curBox) add(curBox.wrap);
       by((p) => p.role === 'output' || p.role === 'created');
     }
@@ -1163,6 +1216,7 @@ export async function mountTwoPane(
     valuesEl.style.width = `${plan.values.w}px`;
     for (const l of plan.values.lines) {
       const row = el(doc, 'div', 'md-stage-value', l);
+      row.title = l;
       row.setAttribute('role', 'listitem');
       valuesEl.append(row);
     }
@@ -1281,5 +1335,6 @@ export async function mountTwoPane(
 function slotLabel(n: GNode): string {
   if (n.kind === 'instance') return n.varName ? `${n.varName}: ${n.className}` : n.className;
   if (n.kind === 'import') return `import ${n.name}`;
+  if (n.kind === 'def') return `${n.defKind === 'class' ? 'class' : 'def'} ${n.name}`;
   return n.id;
 }

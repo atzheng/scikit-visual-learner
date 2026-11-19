@@ -1,5 +1,5 @@
 /** Pure step logic: keyboard stepping, event/site/node lookups. No React, no DOM. */
-import type { EventLog, GraphModel } from '@machines/log';
+import type { EventLog, GraphModel, RunStatus } from '@machines/log';
 
 export function clampStep(step: number, max: number): number {
   return Math.min(Math.max(0, Math.trunc(step) || 0), Math.max(0, max));
@@ -72,16 +72,12 @@ export function stepForKey(
 }
 
 /**
- * Where the slider goes when a streamed update arrives: a new run starts at its end and then follows the
- * newest step; a user who has stepped back stays where they are.
+ * Where the slider goes when a streamed update arrives. A new run starts at its first step (step 1, the first
+ * line) as soon as one exists, and stays at the student's step from then on: streaming never carries the slider
+ * to the end. Step 0 stays reachable with Back and is kept if the student goes back to it.
  */
-export function nextStep(
-  prevStep: number,
-  prevMax: number,
-  newMax: number,
-  first: boolean,
-): number {
-  if (first || prevStep >= prevMax) return newMax;
+export function nextStep(prevStep: number, prevMax: number, newMax: number): number {
+  if (prevMax === 0 && newMax > 0) return 1;
   return clampStep(prevStep, newMax);
 }
 
@@ -100,7 +96,13 @@ export function stepAtEvent(model: GraphModel, i: number): number {
 function executionEvents(model: GraphModel, nodeId: string): number[] | null {
   const n = model.nodes.find((x) => x.id === nodeId);
   if (!n) return null;
-  if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store' || n.kind === 'import')
+  if (
+    n.kind === 'call' ||
+    n.kind === 'expr' ||
+    n.kind === 'store' ||
+    n.kind === 'import' ||
+    n.kind === 'def'
+  )
     return n.executions.map((e) => e.i);
   if (n.kind === 'instance') return [n.createdAt, ...n.versions.map((v) => v.i)];
   return null;
@@ -144,7 +146,13 @@ export function nodeForSite(model: GraphModel, log: EventLog, siteId: number): s
       if (s !== null && !map.has(s)) map.set(s, id);
     };
     for (const n of model.nodes) {
-      if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store' || n.kind === 'import')
+      if (
+        n.kind === 'call' ||
+        n.kind === 'expr' ||
+        n.kind === 'store' ||
+        n.kind === 'import' ||
+        n.kind === 'def'
+      )
         for (const e of n.executions) add(e.i, n.id);
     }
     for (const n of model.nodes) if (n.kind === 'instance') add(n.createdAt, n.id);
@@ -152,4 +160,29 @@ export function nodeForSite(model: GraphModel, log: EventLog, siteId: number): s
     nodeBySite.set(model, c);
   }
   return c.map.get(siteId) ?? null;
+}
+
+/**
+ * The timeline's note about how the run ended: "ends in an error at step 7". Null for a run that finished
+ * normally, is still running, or has no steps. The run ends at its last step.
+ */
+export function endCue(status: RunStatus, running: boolean, max: number): string | null {
+  if (running || max < 1) return null;
+  switch (status) {
+    case 'error':
+      return `ends in an error at step ${max}`;
+    case 'stopped':
+      return `stopped at step ${max}`;
+    case 'timeout':
+      return `hit the time limit at step ${max}`;
+    case 'limit':
+      return `stopped recording at step ${max} (limit)`;
+    default:
+      return null;
+  }
+}
+
+/** True when the output at the last step has more entries than at the current step (output only grows). */
+export function hasLaterOutput(currentCount: number, lastCount: number): boolean {
+  return lastCount > currentCount;
 }
