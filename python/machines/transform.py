@@ -321,14 +321,15 @@ def _import_sites(tree: ast.Module, src: _Source) -> list[tuple[ast.stmt, dict[s
                 name = a.asname or a.name
                 module = stmt.module
                 attr = a.name
-            items.append(
-                {
-                    "name": name,
-                    "module": module,
-                    "attr": attr,
-                    "sole": counts.get(name, 0) == 1 and not star,
-                }
-            )
+            item: dict[str, Any] = {
+                "name": name,
+                "module": module,
+                "attr": attr,
+                "sole": counts.get(name, 0) == 1 and not star,
+            }
+            if isinstance(stmt, ast.Import) and not a.asname and "." in a.name:
+                item["dotted"] = a.name  # `import a.b.c` binds `a`, and a.b.c is a module (svl-ac6)
+            items.append(item)
         if not items:
             continue
         span = src.span(stmt)

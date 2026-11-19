@@ -310,6 +310,7 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
   // ---- import bindings that nothing can have rebound (the transformer's `sole` flag)
   const soleImports = new Map<string, { site: Site; binding: ImportBinding }>();
   const importRanAt = new Map<number, number>(); // import site -> i of its first execution
+  const importSubmodules = new Map<number, string[]>(); // import site -> `submodules` of its first execution
   for (const s of sites)
     for (const b of s.imports ?? [])
       if (s.kind === 'import' && b.sole && !soleImports.has(b.name))
@@ -403,7 +404,10 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
 
     if (e.kind === 'import') {
       // one block per bound name, all revealed at this step (no wires, no values)
-      if (!importRanAt.has(e.site)) importRanAt.set(e.site, e.i);
+      if (!importRanAt.has(e.site)) {
+        importRanAt.set(e.site, e.i);
+        importSubmodules.set(e.site, e.submodules ?? []);
+      }
       (sites[e.site]?.imports ?? []).forEach((b, k) => {
         const id = `m:${siteIdBase[e.site]}.${hash(b.name)}`;
         let node = importNodes.get(id);
@@ -704,7 +708,24 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
       if (site.line < at.end_line || (site.line === at.end_line && site.col < at.end_col)) continue;
       const ran = importRanAt.get(at.id);
       if (ran === undefined || ran > e.i) continue;
-      const src = importSource(hit.binding) ?? hit.binding.name;
+      const b = hit.binding;
+      // A binding that is a module for certain (`import a.b.c`, or a `from m import a` that bound
+      // the submodule `m.a`, as the recorder saw) names the full module. For `import a.b.c` that is
+      // the longest prefix the callee's qualifier shares with `a.b.c`; whatever follows may be an
+      // attribute, not a module.
+      if (b.dotted !== undefined) {
+        const q = (site.func_text ?? '').split('.').slice(0, -1);
+        const d = b.dotted.split('.');
+        let n = 0;
+        while (n < q.length && n < d.length && q[n] === d[n]) n++;
+        info.node.importedFrom = d.slice(0, Math.max(n, 1)).join('.');
+        break;
+      }
+      if (b.attr !== null && importSubmodules.get(at.id)?.includes(b.name)) {
+        info.node.importedFrom = `${b.module}.${b.attr}`;
+        break;
+      }
+      const src = importSource(b) ?? b.name;
       const tail = `.${info.node.name}`;
       info.node.importedFrom = src.endsWith(tail) ? src.slice(0, -tail.length) : src;
       break;
