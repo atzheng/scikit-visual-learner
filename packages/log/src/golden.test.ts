@@ -33,9 +33,44 @@ if (process.env.UPDATE_GRAPHS) {
   for (const n of names) writeFileSync(graphPath(n), dumps(buildGraph(readLog(n))));
 }
 
+/**
+ * A chip wire is exactly the two wires its object's box would have had, joined. The object is never bound to
+ * a name, mutated or output twice, and has exactly one use in the whole log: the one the wire ends at.
+ */
+function checkChip(log: EventLog, g: GraphModel, ed: GEdge): void {
+  const c = ed.chip!;
+  const key = keyOf(c.token);
+  expect(ed.uses, ed.id).toHaveLength(1);
+  expect(ed.uses[0]!.token, ed.id).toBe(c.token);
+  expect(ed.callee, ed.id).toBeUndefined();
+  expect(
+    g.nodes.some((x) => x.kind === 'instance' && x.versions.some((v) => keyOf(v.token) === key)),
+    `${ed.id}: a chip's object has no box`,
+  ).toBe(false);
+  for (const sc of log.scopes)
+    for (const [, name, t] of sc.bindings)
+      expect(keyOf(t), `${ed.id} bound to ${name}`).not.toBe(key);
+  const uses: number[] = [];
+  let made = 0;
+  for (const e of log.events) {
+    for (const [b, a] of e.mutates) {
+      expect(keyOf(b), ed.id).not.toBe(key);
+      expect(keyOf(a), ed.id).not.toBe(key);
+    }
+    made += e.outputs.filter((t) => keyOf(t) === key).length;
+    const owner = e.kind === 'method' && e.owner !== null && keyOf(e.owner) === key;
+    for (const x of e.inputs)
+      if (x.value !== undefined && keyOf(x.value) === key && !(owner && x.param === 'self'))
+        uses.push(e.i);
+    if (owner) uses.push(e.i);
+  }
+  expect(made, `${ed.id} output once`).toBe(1);
+  expect(uses, `${ed.id} used once, by the consumer`).toEqual([ed.uses[0]!.i]);
+}
+
 describe('fixtures', () => {
-  it('has the 26 programs', () => {
-    expect(names.length).toBe(27);
+  it('has the 28 programs', () => {
+    expect(names.length).toBe(28);
   });
 
   describe.each(names)('%s', (n) => {
@@ -55,45 +90,70 @@ describe('fixtures', () => {
       expect(JSON.parse(dumps(buildGraph(readLog(n))))).toEqual(expected);
     });
 
-    it('has no false wires: every use is backed by the log', () => {
-      const g = buildGraph(readLog(n));
-      const byId = new Map(g.nodes.map((x) => [x.id, x]));
-      const execsOf = (x: GNode | undefined): Execution[] =>
-        x && (x.kind === 'call' || x.kind === 'expr' || x.kind === 'store') ? x.executions : [];
-      for (const ed of g.edges) {
-        if (ed.callee) continue; // callee wires carry no value: checked below
-        const from = byId.get(ed.from.node);
-        const to = byId.get(ed.to.node);
-        expect(from, ed.id).toBeDefined();
-        expect(to, ed.id).toBeDefined();
-        expect(ed.uses.length, ed.id).toBeGreaterThan(0);
-        for (const u of ed.uses) {
-          // consumer side: an execution at i took exactly this token on this port
-          if (to?.kind === 'call' || to?.kind === 'expr' || to?.kind === 'store') {
-            const ex = execsOf(to).find((x) => x.i === u.i);
-            expect(ex, `${ed.id} consumer @${u.i}`).toBeDefined();
-            const ins =
-              ed.to.port === null ? Object.values(ex?.inputs ?? {}) : [ex?.inputs[ed.to.port]];
-            expect(ins, `${ed.id} consumes ${u.token}`).toContain(u.token);
-          }
-          // producer side: the token is an output of an execution that had returned before the consumer began
-          if (from?.kind === 'call' || from?.kind === 'expr' || from?.kind === 'store') {
-            const port = ed.from.port;
-            const ok = execsOf(from).some(
-              (x) =>
-                (port === null ? Object.values(x.outputs) : [x.outputs[port]]).includes(u.token) &&
-                // an instance has no execution: its creating wire is used exactly at the creator's return
-                (to?.kind === 'instance' ? x.ret === u.i : x.ret < u.i),
-            );
-            expect(ok, `${ed.id} produced ${u.token} before @${u.i}`).toBe(true);
-          } else if (from?.kind === 'instance') {
-            expect(
-              from.versions.some((v) => keyOf(v.token) === keyOf(u.token)),
-              `${ed.id} instance holds ${u.token}`,
-            ).toBe(true);
+    it.each([true, false])(
+      'has no false wires, fold=%s: every use is backed by the log',
+      (fold) => {
+        const log = readLog(n);
+        const g = buildGraph(log, { fold });
+        if (!fold) expect(g.edges.some((x) => x.chip)).toBe(false);
+        const byId = new Map(g.nodes.map((x) => [x.id, x]));
+        const execsOf = (x: GNode | undefined): Execution[] =>
+          x && (x.kind === 'call' || x.kind === 'expr' || x.kind === 'store') ? x.executions : [];
+        for (const ed of g.edges) {
+          if (ed.callee) continue; // callee wires carry no value: checked below
+          const from = byId.get(ed.from.node);
+          const to = byId.get(ed.to.node);
+          expect(from, ed.id).toBeDefined();
+          expect(to, ed.id).toBeDefined();
+          expect(ed.uses.length, ed.id).toBeGreaterThan(0);
+          if (ed.chip) checkChip(log, g, ed);
+          for (const u of ed.uses) {
+            // consumer side: an execution at i took exactly this token on this port
+            if (to?.kind === 'call' || to?.kind === 'expr' || to?.kind === 'store') {
+              const ex = execsOf(to).find((x) => x.i === u.i);
+              expect(ex, `${ed.id} consumer @${u.i}`).toBeDefined();
+              const ins =
+                ed.to.port === null ? Object.values(ex?.inputs ?? {}) : [ex?.inputs[ed.to.port]];
+              expect(ins, `${ed.id} consumes ${u.token}`).toContain(u.token);
+            }
+            // producer side: the token is an output of an execution that had returned before the consumer began
+            if (from?.kind === 'call' || from?.kind === 'expr' || from?.kind === 'store') {
+              const port = ed.from.port;
+              const ok = execsOf(from).some(
+                (x) =>
+                  (port === null ? Object.values(x.outputs) : [x.outputs[port]]).includes(
+                    u.token,
+                  ) &&
+                  // an instance has no execution: its creating wire is used exactly at the creator's return
+                  (to?.kind === 'instance' ? x.ret === u.i : x.ret < u.i),
+              );
+              expect(ok, `${ed.id} produced ${u.token} before @${u.i}`).toBe(true);
+            } else if (from?.kind === 'instance') {
+              expect(
+                from.versions.some((v) => keyOf(v.token) === keyOf(u.token)),
+                `${ed.id} instance holds ${u.token}`,
+              ).toBe(true);
+            }
           }
         }
-      }
+      },
+    );
+
+    it('folding only removes unnamed one-use object boxes, and nothing else', () => {
+      const log = readLog(n);
+      const on = buildGraph(log);
+      const off = buildGraph(log, { fold: false });
+      const chips = on.edges.filter((x) => x.chip);
+      expect(on.folded ?? 0).toBe(chips.length);
+      if (off.tooMany !== undefined) return; // cut at the cap: the two forms keep different boxes
+      const kept = new Set(on.nodes.map((x) => x.id));
+      const dropped = off.nodes.filter((x) => !kept.has(x.id));
+      expect(dropped.map((x) => x.id).sort()).toEqual(chips.map((x) => x.chip!.node).sort());
+      for (const x of on.nodes)
+        expect(
+          off.nodes.some((y) => y.id === x.id),
+          x.id,
+        ).toBe(true);
     });
 
     it('callee wires: the import binds the call root name, and nothing rebound it', () => {
@@ -124,24 +184,28 @@ describe('fixtures', () => {
       }
     });
 
-    it('every object is one box: no object token is a source, no object is in two boxes', () => {
-      const g = buildGraph(readLog(n));
-      for (const x of g.nodes)
-        if (x.kind === 'source') expect(x.token.startsWith('s'), x.id).toBe(true);
-      const owner = new Map<string, string>();
-      for (const b of g.nodes.filter((x): x is InstanceNode => x.kind === 'instance')) {
-        for (const v of b.versions) {
-          const k = keyOf(v.token);
-          expect(owner.get(k) ?? b.id, `object ${k}`).toBe(b.id);
-          owner.set(k, b.id);
+    it.each([true, false])(
+      'every object is one box, fold=%s: no object token is a source, no object is in two boxes',
+      (fold) => {
+        const g = buildGraph(readLog(n), { fold });
+        for (const x of g.nodes)
+          if (x.kind === 'source') expect(x.token.startsWith('s'), x.id).toBe(true);
+        const owner = new Map<string, string>();
+        for (const b of g.nodes.filter((x): x is InstanceNode => x.kind === 'instance')) {
+          for (const v of b.versions) {
+            const k = keyOf(v.token);
+            expect(owner.get(k) ?? b.id, `object ${k}`).toBe(b.id);
+            owner.set(k, b.id);
+          }
         }
-      }
-    });
+      },
+    );
 
     it('is deterministic and does not mutate the log', () => {
       const log = readLog(n);
       const before = JSON.stringify(log);
       expect(dumps(buildGraph(log))).toBe(dumps(buildGraph(log)));
+      expect(dumps(buildGraph(log, { fold: false }))).toBe(dumps(buildGraph(log, { fold: false })));
       expect(JSON.stringify(log)).toBe(before);
     });
   });
@@ -149,7 +213,7 @@ describe('fixtures', () => {
 
 // ---- slide-level structure of the three golden programs (explicit, not just snapshots)
 
-const graphOf = (n: string): GraphModel => buildGraph(readLog(n));
+const graphOf = (n: string): GraphModel => buildGraph(readLog(n), { fold: false });
 const calls = (g: GraphModel, name: string): CallNode[] =>
   g.nodes.filter((x): x is CallNode => x.kind === 'call' && x.name === name);
 const instances = (g: GraphModel, className?: string): InstanceNode[] =>

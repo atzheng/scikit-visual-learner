@@ -1,5 +1,11 @@
 import '@machines/render/theme.css';
-import { stateAt, type DocTarget, type EventLog, type GraphModel } from '@machines/log';
+import {
+  stateAt,
+  type DocTarget,
+  type EventLog,
+  type GraphModel,
+  type StepState,
+} from '@machines/log';
 import {
   attrRowsFor,
   createElk,
@@ -25,6 +31,7 @@ import { docRequest } from '../docs/model';
 import { useStore } from '../store';
 import { clampStep, nodeForSite, stepForKey } from '../timeline/steps';
 import './diagram.css';
+import { followNodes, followView, READABLE_K, unionRect } from './follow';
 import { ensureVisible, fitView, panBy, zoomAt, type View } from './panzoom';
 import { Relayouter, layoutSignature, stickyTier, type Tier } from './pipeline';
 import { tooManyMessage } from './runBanner';
@@ -44,6 +51,24 @@ function writeLegendOpen(open: boolean): void {
     // storage denied: the legend just starts closed next time
   }
 }
+
+const FOLLOW_KEY = 'machines.follow';
+function readFollow(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(FOLLOW_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
+function writeFollow(on: boolean): void {
+  try {
+    globalThis.localStorage?.setItem(FOLLOW_KEY, on ? '1' : '0');
+  } catch {
+    // storage denied: Follow starts on next time
+  }
+}
+const reducedMotion = (): boolean =>
+  typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** The legend list, built by the renderer package and kept in the DOM while open. */
 function LegendPanel() {
@@ -98,6 +123,8 @@ export function DiagramPane({
   const step = useStore((s) => s.step);
   const setStep = useStore((s) => s.setStep);
   const selectedNode = useStore((s) => s.selection.node);
+  const showAll = useStore((s) => s.showAllObjects);
+  const setShowAll = useStore((s) => s.setShowAllObjects);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -112,6 +139,11 @@ export function DiagramPane({
     writeLegendOpen(!legendOpen);
     setLegendOpen(!legendOpen);
   };
+  const [followOn, setFollowOn] = useState(readFollow);
+  /** A manual pan or zoom pauses following until the next step (or the Follow button). */
+  const suspended = useRef(false);
+  const lastStep = useRef<number | null>(null);
+  const shownRef = useRef<Shown | null>(null);
   const [layoutError, setLayoutError] = useState<string | null>(null);
   const [docs, setDocs] = useState<{
     target: DocTarget;
@@ -127,10 +159,14 @@ export function DiagramPane({
   const latest = useRef({ onHoverEdge, onClickEdge });
   latest.current = { onHoverEdge, onClickEdge };
 
-  const applyView = useCallback((v: View) => {
+  const applyView = useCallback((v: View, animate = false) => {
     viewRef.current = v;
     const stage = stageRef.current;
-    if (stage) stage.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.k})`;
+    if (stage) {
+      // only a step's pan glides, and not at all under reduced motion; dragging and zooming never lag
+      stage.style.transition = animate && !reducedMotion() ? 'transform 0.25s ease-out' : 'none';
+      stage.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.k})`;
+    }
     setZoomPct(Math.round(v.k * 100));
   }, []);
   const viewportSize = useCallback(() => {
@@ -139,14 +175,51 @@ export function DiagramPane({
   }, []);
   const fit = useCallback(() => {
     autoFit.current = true;
+    suspended.current = true;
     applyView(fitView(fitContent(laidSize.current), viewportSize()));
   }, [applyView, viewportSize]);
   const userView = useCallback(
     (v: View) => {
       autoFit.current = false;
+      suspended.current = true;
       applyView(v);
     },
     [applyView],
+  );
+  /** A move the pane makes by itself (follow, keeping the editor's box in view): does not pause following. */
+  const moveView = useCallback(
+    (v: View, animate = false) => {
+      autoFit.current = false;
+      applyView(v, animate);
+    },
+    [applyView],
+  );
+  /** Pan and zoom to the boxes of the step in `st` (or fit, when the whole diagram is readable). */
+  const followStep = useCallback(
+    (st: StepState | null, animate: boolean) => {
+      const ctl = ctlRef.current;
+      const sh = shownRef.current;
+      if (!ctl || !sh) return;
+      const bounds = (id: string) => ctl.nodeBounds(id);
+      const rects = st
+        ? followNodes(sh.model, st).flatMap((id) => {
+            const b = bounds(id);
+            return b ? [b] : [];
+          })
+        : [];
+      const content = fitContent(laidSize.current);
+      const vp = viewportSize();
+      const v = followView(
+        viewRef.current,
+        unionRect(rects),
+        st?.currentNode ? bounds(st.currentNode) : null,
+        content,
+        vp,
+      );
+      autoFit.current = fitView(content, vp).k >= READABLE_K;
+      applyView(v, animate);
+    },
+    [applyView, viewportSize],
   );
 
   // ---- the diagram controller, created once
@@ -164,6 +237,12 @@ export function DiagramPane({
       },
       onHoverEdge: (id, at) => latest.current.onHoverEdge?.(id, at),
       onClickEdge: (id) => {
+        // a folded temporary's chip opens into its box
+        const chip = useStore.getState().model?.edges.find((e) => e.id === id)?.chip;
+        if (chip) {
+          useStore.getState().unfold(chip.node);
+          return;
+        }
         useStore.setState({ selection: { edge: id, pinned: true } });
         latest.current.onClickEdge?.(id);
       },
@@ -205,6 +284,7 @@ export function DiagramPane({
         const st = stateAt(m, l, clampStep(useStore.getState().step, m.steps.length));
         ctl.setState(st, l);
         if (autoFit.current) applyView(fitView(fitContent(laidSize.current), viewportSize()));
+        shownRef.current = { model: m, log: l };
         setShown({ model: m, log: l });
       },
       onError: (e) => setLayoutError(e instanceof Error ? e.message : String(e)),
@@ -221,6 +301,8 @@ export function DiagramPane({
     tierRef.current = 0;
     skipModel.current = useStore.getState().model;
     autoFit.current = true;
+    suspended.current = false;
+    lastStep.current = null;
     relayouter.current?.reset();
   }, [runSeq]);
 
@@ -229,6 +311,7 @@ export function DiagramPane({
       // A new run cleared the log: drop the old diagram too.
       ctlRef.current?.setGraph(EMPTY_MODEL, EMPTY_LAID);
       laidSize.current = { w: 0, h: 0 };
+      shownRef.current = null;
       setShown(null);
       return;
     }
@@ -247,12 +330,26 @@ export function DiagramPane({
     const ctl = ctlRef.current;
     if (!ctl || !stepState || !shown) return;
     ctl.setState(stepState, shown.log);
+    const stepNow = stepState.current;
+    const stepped = lastStep.current !== stepNow;
+    lastStep.current = stepNow;
+    // the next step resumes following, unless it is only the slider tracking a streaming run
+    if (stepped && !useStore.getState().running) suspended.current = false;
+    if (followOn) {
+      if (!suspended.current) followStep(stepState, stepped);
+      return;
+    }
     const id = stepState.currentNode;
     if (id && !autoFit.current) {
       const b = ctl.nodeBounds(id);
-      if (b) userView(ensureVisible(viewRef.current, b, viewportSize()));
+      if (b) moveView(ensureVisible(viewRef.current, b, viewportSize()));
     }
-  }, [stepState, shown, userView, viewportSize]);
+  }, [stepState, shown, followOn, followStep, moveView, viewportSize]);
+  const toggleFollow = () => {
+    writeFollow(!followOn);
+    suspended.current = false;
+    setFollowOn(!followOn);
+  };
 
   useEffect(() => {
     ctlRef.current?.setSelectedNode(selectedNode ?? null);
@@ -267,9 +364,9 @@ export function DiagramPane({
     ctl.hoverNode(id);
     if (id && !autoFit.current) {
       const b = ctl.nodeBounds(id);
-      if (b) userView(ensureVisible(viewRef.current, b, viewportSize()));
+      if (b) moveView(ensureVisible(viewRef.current, b, viewportSize()));
     }
-  }, [cursorSite, shown, userView, viewportSize]);
+  }, [cursorSite, shown, moveView, viewportSize]);
 
   // ---- pan / zoom
   useEffect(() => {
@@ -386,7 +483,7 @@ export function DiagramPane({
     if (handled) e.preventDefault();
   };
 
-  const tooMany = shown?.model.tooMany;
+  const truncated = shown?.model.truncated;
   const empty = shown !== null && shown.model.nodes.length === 0;
   return (
     <section className="diagram-pane" aria-label="Diagram">
@@ -410,6 +507,24 @@ export function DiagramPane({
         </span>
         <button
           type="button"
+          className="follow-toggle"
+          aria-pressed={followOn}
+          onClick={toggleFollow}
+          title="Keep the boxes of the current step in view, at a readable size"
+        >
+          Follow
+        </button>
+        <button
+          type="button"
+          className="objects-toggle"
+          aria-pressed={showAll}
+          onClick={() => setShowAll(!showAll)}
+          title="Draw every object as a box, instead of folding unnamed one-use temporaries into small chips on their wires"
+        >
+          All objects
+        </button>
+        <button
+          type="button"
           className="legend-toggle"
           aria-expanded={legendOpen}
           aria-controls="diagram-legend"
@@ -426,10 +541,10 @@ export function DiagramPane({
         )}
       </div>
       {legendOpen && <LegendPanel />}
-      {tooMany !== undefined && (
+      {truncated && (
         <p className="banner" role="status" data-testid="too-many">
           <span aria-hidden="true">⚠ </span>
-          {tooManyMessage(tooMany)}
+          {tooManyMessage(truncated)}
         </p>
       )}
       {layoutError && (

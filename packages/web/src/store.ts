@@ -26,12 +26,32 @@ export interface AppState {
   /** A click on a box: select it and move the step to its latest execution. */
   selectNode(id: string | null): void;
   expanded: Set<string>;
+  /** Draw every object as a box: no unnamed temporary is folded into a chip on its wire. */
+  showAllObjects: boolean;
+  setShowAllObjects(on: boolean): void;
+  /** Ids (`GEdge.chip.node`) of folded temporaries the student expanded to boxes. */
+  unfolded: ReadonlySet<string>;
+  /** Expands one chip to its box, selects the box. */
+  unfold(id: string): void;
   run(): Promise<void>;
   stop(): void;
   restart(): Promise<void>;
 }
 
 const ELAPSED_TICK_MS = 250;
+
+/** The graph of a log under the student's folding choices. */
+function graphFor(log: EventLog): GraphModel {
+  const s = useStore.getState();
+  return buildGraph(log, { expanded: s.expanded, fold: !s.showAllObjects, unfold: s.unfolded });
+}
+
+/** The folding choices changed: build the same log's graph again (the steps do not change). */
+function rebuild(): void {
+  const { log } = useStore.getState();
+  if (!log) return;
+  useStore.setState({ model: graphFor(log) });
+}
 
 export const useStore = create<AppState>()((set, get) => ({
   runtime: { state: 'loading', progress: 'Starting…' },
@@ -54,6 +74,16 @@ export const useStore = create<AppState>()((set, get) => ({
     set({ selection: { node: id, pinned: true }, ...(target !== null && { step: target }) });
   },
   expanded: new Set(),
+  showAllObjects: false,
+  setShowAllObjects: (on) => {
+    set({ showAllObjects: on, unfolded: new Set() });
+    rebuild();
+  },
+  unfolded: new Set(),
+  unfold: (id) => {
+    set((s) => ({ unfolded: new Set([...s.unfolded, id]), selection: { node: id, pinned: true } }));
+    rebuild();
+  },
   run: async () => {
     const rt = currentRuntime();
     if (!rt || get().running || rt.state !== 'ready') return;
@@ -62,6 +92,7 @@ export const useStore = create<AppState>()((set, get) => ({
       running: true,
       elapsedMs: 0,
       runSeq: s.runSeq + 1,
+      unfolded: new Set(),
       runSource: s.source,
       // Nothing of the previous run may be linked against the new source text.
       log: null,
@@ -76,7 +107,7 @@ export const useStore = create<AppState>()((set, get) => ({
     // The slider follows the newest step unless the student stepped back (nextStep).
     let first = true;
     const show = (log: EventLog): void => {
-      const model = buildGraph(log, { expanded: get().expanded });
+      const model = graphFor(log);
       const prev = get();
       const step = nextStep(prev.step, prev.model?.steps.length ?? 0, model.steps.length, first);
       first = false;

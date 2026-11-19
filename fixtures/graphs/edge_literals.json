@@ -261,35 +261,20 @@
       "student": false
     },
     {
-      "id": "i:3t9yj8.0",
-      "kind": "instance",
-      "parent": null,
-      "order": 1300005,
-      "className": "array",
-      "varName": null,
-      "createdAt": 6,
-      "createdBy": "n:3t9yj8.0",
-      "params": [],
-      "versions": [
-        {
-          "i": 6,
-          "token": "v4.0"
-        }
-      ]
-    },
-    {
       "id": "n:ms5mjy0@i:3t9yj8.0",
       "kind": "call",
       "mergeKey": "s13",
       "name": "ndarray.any",
       "module": "numpy",
-      "parent": "i:3t9yj8.0",
+      "parent": null,
       "order": 1300005,
       "executions": [
         {
           "i": 7,
           "ret": 7,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v4.0"
+          },
           "outputs": {
             "out:0": "s4"
           },
@@ -299,7 +284,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -353,35 +345,20 @@
       "student": false
     },
     {
-      "id": "i:13bjf7z.0",
-      "kind": "instance",
-      "parent": null,
-      "order": 1400005,
-      "className": "array",
-      "varName": null,
-      "createdAt": 8,
-      "createdBy": "n:13bjf7z.0",
-      "params": [],
-      "versions": [
-        {
-          "i": 8,
-          "token": "v5.0"
-        }
-      ]
-    },
-    {
       "id": "n:ms5mjy0@i:13bjf7z.0",
       "kind": "call",
       "mergeKey": "s16",
       "name": "ndarray.any",
       "module": "numpy",
-      "parent": "i:13bjf7z.0",
+      "parent": null,
       "order": 1400005,
       "executions": [
         {
           "i": 9,
           "ret": 9,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v5.0"
+          },
           "outputs": {
             "out:0": "s5"
           },
@@ -391,7 +368,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -711,6 +695,33 @@
       "nameLabel": null
     },
     {
+      "id": "f:i:3t9yj8.0",
+      "from": {
+        "node": "n:3t9yj8.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:ms5mjy0@i:3t9yj8.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:3t9yj8.0",
+        "token": "v4.0",
+        "type": "array",
+        "shape": [
+          3
+        ]
+      }
+    },
+    {
       "id": "e:i:1itnbtf.1.>n:13bjf7z.0.in:x",
       "from": {
         "node": "i:1itnbtf.1",
@@ -728,6 +739,33 @@
         }
       ],
       "nameLabel": null
+    },
+    {
+      "id": "f:i:13bjf7z.0",
+      "from": {
+        "node": "n:13bjf7z.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:ms5mjy0@i:13bjf7z.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 9,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:13bjf7z.0",
+        "token": "v5.0",
+        "type": "array",
+        "shape": [
+          3
+        ]
+      }
     },
     {
       "id": "e:n:1itnbtf.0.out:0>i:1itnbtf.0.",
@@ -768,44 +806,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:n:3t9yj8.0.out:0>i:3t9yj8.0.",
-      "from": {
-        "node": "n:3t9yj8.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "i:3t9yj8.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 6,
-          "token": "v4.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:n:13bjf7z.0.out:0>i:13bjf7z.0.",
-      "from": {
-        "node": "n:13bjf7z.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "i:13bjf7z.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 8,
-          "token": "v5.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:ifs6pd.0.out:0>i:ifs6pd.0.",
       "from": {
         "node": "n:ifs6pd.0",
@@ -837,5 +837,6 @@
     10,
     11,
     13
-  ]
+  ],
+  "folded": 2
 }

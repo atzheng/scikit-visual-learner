@@ -311,6 +311,15 @@
   font-size: 10px;
   fill: var(--md-text-muted);
 }
+.md-chip .md-chip-bg {
+  fill: var(--md-inst-fill);
+  stroke: var(--md-inst-stroke);
+  stroke-width: 1px;
+  stroke-dasharray: 3 2;
+}
+.md-chip.md-hover .md-chip-bg {
+  stroke-width: 2px;
+}
 .md-edge-label.md-hover .md-wtype {
   font-weight: bold;
 }

@@ -345,23 +345,6 @@
       ]
     },
     {
-      "id": "i:1jl2bar.0~2ruef4",
-      "kind": "instance",
-      "parent": null,
-      "order": 1500004,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 6,
-      "createdBy": "x:1jl2bar.0~2ruef4",
-      "params": [],
-      "versions": [
-        {
-          "i": 6,
-          "token": "v6.0"
-        }
-      ]
-    },
-    {
       "id": "x:1jl2bar.0~31u043",
       "kind": "expr",
       "parent": null,
@@ -381,23 +364,6 @@
           "owner": null,
           "error": null,
           "interrupted": false
-        }
-      ]
-    },
-    {
-      "id": "i:1jl2bar.0~31u043",
-      "kind": "instance",
-      "parent": null,
-      "order": 1500004,
-      "className": "Series",
-      "varName": null,
-      "createdAt": 7,
-      "createdBy": "x:1jl2bar.0~31u043",
-      "params": [],
-      "versions": [
-        {
-          "i": 7,
-          "token": "v7.0"
         }
       ]
     },
@@ -425,23 +391,6 @@
       ]
     },
     {
-      "id": "i:j5a9i.0~2ruef4",
-      "kind": "instance",
-      "parent": null,
-      "order": 1600012,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 9,
-      "createdBy": "x:j5a9i.0~2ruef4",
-      "params": [],
-      "versions": [
-        {
-          "i": 9,
-          "token": "v11.0"
-        }
-      ]
-    },
-    {
       "id": "x:j5a9i.0~31u043",
       "kind": "expr",
       "parent": null,
@@ -461,23 +410,6 @@
           "owner": null,
           "error": null,
           "interrupted": false
-        }
-      ]
-    },
-    {
-      "id": "i:j5a9i.0~31u043",
-      "kind": "instance",
-      "parent": null,
-      "order": 1600012,
-      "className": "Series",
-      "varName": null,
-      "createdAt": 10,
-      "createdBy": "x:j5a9i.0~31u043",
-      "params": [],
-      "versions": [
-        {
-          "i": 10,
-          "token": "v12.0"
         }
       ]
     },
@@ -611,80 +543,114 @@
       "nameLabel": null
     },
     {
-      "id": "e:i:1jl2bar.0~2ruef4.>n:m1gsyoeo@i:10epbgg.0.in:X",
+      "id": "f:i:1jl2bar.0~2ruef4",
       "from": {
-        "node": "i:1jl2bar.0~2ruef4",
+        "node": "x:1jl2bar.0~2ruef4",
         "port": null
       },
       "to": {
         "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:X"
       },
-      "dashed": false,
+      "dashed": true,
       "uses": [
         {
           "i": 8,
           "token": "v6.0"
         }
       ],
-      "nameLabel": null
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1jl2bar.0~2ruef4",
+        "token": "v6.0",
+        "type": "DF",
+        "shape": [
+          471,
+          3
+        ]
+      }
     },
     {
-      "id": "e:i:1jl2bar.0~31u043.>n:m1gsyoeo@i:10epbgg.0.in:y",
+      "id": "f:i:1jl2bar.0~31u043",
       "from": {
-        "node": "i:1jl2bar.0~31u043",
+        "node": "x:1jl2bar.0~31u043",
         "port": null
       },
       "to": {
         "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:y"
       },
-      "dashed": false,
+      "dashed": true,
       "uses": [
         {
           "i": 8,
           "token": "v7.0"
         }
       ],
-      "nameLabel": null
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1jl2bar.0~31u043",
+        "token": "v7.0",
+        "type": "Series",
+        "shape": [
+          471
+        ]
+      }
     },
     {
-      "id": "e:i:j5a9i.0~2ruef4.>n:mnnwzah@i:10epbgg.0.in:X",
+      "id": "f:i:j5a9i.0~2ruef4",
       "from": {
-        "node": "i:j5a9i.0~2ruef4",
+        "node": "x:j5a9i.0~2ruef4",
         "port": null
       },
       "to": {
         "node": "n:mnnwzah@i:10epbgg.0",
         "port": "in:X"
       },
-      "dashed": false,
+      "dashed": true,
       "uses": [
         {
           "i": 11,
           "token": "v11.0"
         }
       ],
-      "nameLabel": null
+      "nameLabel": null,
+      "chip": {
+        "node": "i:j5a9i.0~2ruef4",
+        "token": "v11.0",
+        "type": "DF",
+        "shape": [
+          471,
+          3
+        ]
+      }
     },
     {
-      "id": "e:i:j5a9i.0~31u043.>n:mnnwzah@i:10epbgg.0.in:y",
+      "id": "f:i:j5a9i.0~31u043",
       "from": {
-        "node": "i:j5a9i.0~31u043",
+        "node": "x:j5a9i.0~31u043",
         "port": null
       },
       "to": {
         "node": "n:mnnwzah@i:10epbgg.0",
         "port": "in:y"
       },
-      "dashed": false,
+      "dashed": true,
       "uses": [
         {
           "i": 11,
           "token": "v12.0"
         }
       ],
-      "nameLabel": null
+      "nameLabel": null,
+      "chip": {
+        "node": "i:j5a9i.0~31u043",
+        "token": "v12.0",
+        "type": "Series",
+        "shape": [
+          471
+        ]
+      }
     },
     {
       "id": "e:i:wcu5tk.0.>x:f2rqav.0.",
@@ -894,82 +860,6 @@
         }
       ],
       "nameLabel": null
-    },
-    {
-      "id": "e:x:1jl2bar.0~2ruef4.>i:1jl2bar.0~2ruef4.",
-      "from": {
-        "node": "x:1jl2bar.0~2ruef4",
-        "port": null
-      },
-      "to": {
-        "node": "i:1jl2bar.0~2ruef4",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 6,
-          "token": "v6.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:1jl2bar.0~31u043.>i:1jl2bar.0~31u043.",
-      "from": {
-        "node": "x:1jl2bar.0~31u043",
-        "port": null
-      },
-      "to": {
-        "node": "i:1jl2bar.0~31u043",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 7,
-          "token": "v7.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:j5a9i.0~2ruef4.>i:j5a9i.0~2ruef4.",
-      "from": {
-        "node": "x:j5a9i.0~2ruef4",
-        "port": null
-      },
-      "to": {
-        "node": "i:j5a9i.0~2ruef4",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 9,
-          "token": "v11.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:j5a9i.0~31u043.>i:j5a9i.0~31u043.",
-      "from": {
-        "node": "x:j5a9i.0~31u043",
-        "port": null
-      },
-      "to": {
-        "node": "i:j5a9i.0~31u043",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 10,
-          "token": "v12.0"
-        }
-      ],
-      "nameLabel": null
     }
   ],
   "steps": [
@@ -985,5 +875,6 @@
     9,
     10,
     11
-  ]
+  ],
+  "folded": 4
 }

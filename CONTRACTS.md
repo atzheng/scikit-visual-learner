@@ -491,7 +491,7 @@ interface AppState {
 
 ## 8. Graph model, timeline and renderer
 
-`graph.ts`: `buildGraph(log: EventLog, opts: { expanded: Set<string> }): GraphModel`. Pure and deterministic.
+`graph.ts`: `buildGraph(log: EventLog, opts?: { expanded?: Set<string>; fold?: boolean; unfold?: ReadonlySet<string>; maxNodes?: number }): GraphModel`. Pure and deterministic. `fold` (default true) folds unnamed temporaries (below); `unfold` lists folded ids to draw as boxes; `maxNodes` defaults to `MAX_NODES` = 600.
 
 ```ts
 interface GraphModel {
@@ -499,6 +499,8 @@ interface GraphModel {
   edges: GEdge[];
   steps: number[] /* event i's, sorted */;
   tooMany?: number;
+  truncated?: { shown: number; total: number; line: number }; // with tooMany: boxes shown, total, source line of the last one shown
+  folded?: number; // number of chips (edges with `chip`)
 }
 
 type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode | ImportNode;
@@ -574,6 +576,7 @@ interface GEdge {
   to: { node: string; port: string | null }; // null: same
   dashed: boolean; // into or out of an expr node
   uses: { i: number; token: Token }[]; // per consumer execution: which value travelled
+  chip?: { node: string; token: Token; type: string; shape: number[] | null }; // svl-lo6: a folded temporary, see "Folded temporaries"
   callee?: true; // svl-b4w: an import node to a call box. Carries no value: `uses[].token` is '' and `nameLabel` null. Not a value wire (no producer, no type label)
   nameLabel: string | null; // the bound name of the latest token in the drawn scope; each new value bound to a name gets one more prime in time order (`X`, `X′`, `X″`, capped at `‴`)
 }
@@ -589,8 +592,10 @@ Construction follows SPEC "Graph construction" with these decisions:
 - An object passed as an argument (a DataFrame, a model, a list) is an edge from its instance border (`port: null`); the wire's `nameLabel` is null.
 - `returns_self` gives no out-port. `mutates` on any object only adds a version `{ i, token: after }` to its instance (svl-skw: data no longer gets an `out:mut:` port; `Port.changedInPlace` and `out:mut:` ids remain in the type but are produced only for a non-object `before`, which the recorder does not emit).
 - Expr nodes whose output reaches no call/store/instance node are dropped, transitively. An expr whose output is an object creates that object's instance (`createdBy` = the expr node id, creating edge from `port: null`, dashed), so it is kept; an expr that returns an object which already has a box adds no box and no edge.
-- More than 300 nodes after merging: return only the first 300 by `order`, and set `tooMany` to the total.
+- More than `MAX_NODES` (600) nodes after merging and folding: return only the first 600 by `order`, set `tooMany` to the total and `truncated` to `{shown, total, line}`; the diagram pane and the event list say "Showing the first N boxes (up to line L)". 600 is where the dense worst case (every box 3 ports and 3 wires, 24 instances with children) still lays out in under 10 s; the 98-line pandas fixture `large_pandas` has 460 boxes unfolded (364 folded), about 0.7 s.
 - Port and node ids are stable across re-runs of the same source, so the layout stays put. Ids are `n:<h>` (call), `i:<h>` (instance), `x:<h>` (expr), `t:<h>` (store), `src:<consumer id>:<param>` (source), with `<h>` = hash of the site's kind and text plus the occurrence number among sites with equal text. They use no site ids or tokens, so editing an unrelated line (even adding one) keeps them. Port ids: `in:<param>`, `out:<k>` (k = index in `outputs`), `out:mut:<param>` (changed in place).
+
+**Folded temporaries** (svl-lo6). With `fold` (default), an object (reference value, key = token up to the dot) folds into a **chip** on its wire when ALL hold: no scope binds it to a name; no event mutates it; it is not made by a `constructor` event; exactly one scope-0 event outputs it, and no other object shares that output slot (site, index); it has exactly one use in the whole log, as an input port or as the owner of a method call, by a scope-0 event that is not an `expr` event and runs after the producer. The box is not drawn; one edge `f:<box id>` runs from the producer's node and port straight to the consumer's port, with `uses: [{i: consumer event, token}]` (exactly that token) and `chip: {node: <the box id it would have>, token, type, shape}`. When the temporary owned a method (`df["a"].isna()`), the method box is top level (`parent: null`) with an `in:self` port, fed by the chip wire; its executions carry `inputs["in:self"]`. Named objects, loops (one box, many objects), models and anything used twice keep their boxes. `unfold: Set(chip.node)` draws chosen ones as boxes; `fold: false` draws all. The no-false-wires check runs for both forms and, for each chip, re-derives from the log that the object is unnamed, unmutated, output once and used once, by the wire's consumer. The renderer draws a chip as a dashed pill `+ <type> (<shape>)` on the wire (`.md-chip`, focusable, `aria-label` "temporary ..., press Enter"); a click or Enter reports `onClickEdge(chip edge id)`, and the web app expands it (`store.unfold`). The web diagram pane also has "All objects" (fold off) and "Follow" (pan and zoom to the current step's boxes at 80% or more; a manual pan or zoom pauses it until the next step).
 
 **Import nodes** (svl-b4w). A call node (not a method slot inside an instance) whose site `func_text` is a bare dotted name (`pd.read_csv`, `LinearRegression`, `np.random.seed`; not `pd.read_csv(x).head` or `a[0].f`) with root name `r` gets a **callee edge** from the import node for `r`, when a `sole` binding of `r` exists (section 3) and the call site lies textually after the import statement (a call before it saw another binding, for instance a builtin the import later shadows). Nothing is guessed: no `sole` binding, no node, no edge. An import node exists only when at least one recorded call resolves through it (unused imports are hidden, so the diagram stays small). The edge goes `from {node: import, port: null}` to `{node: call, port: null}`, for a constructor too: the import wires into the constructor box, and the constructor's out-port wires to the instance as before, never import to instance. One `use` per call execution `{ i, token: '' }`. An import node is wired to at most `MAX_CALLEE_WIRES` = 5 call boxes, the earliest by first execution (a name used by 30 calls would otherwise clutter the diagram); later boxes get no wire, a missing wire being acceptable. Id: `m:<h of the import site>.<h of the name>`; `order` is the import site's order less 0.25, so imports lead in source order. The timeline treats an import node like a source node: it is shown when one of its wires is, and a wire is shown from the step of the call it feeds (`at` = the call's `i`). The no-false-wires check skips callee edges (no value travels). A separate check (`golden.test.ts`) asserts that for every callee edge the import node's name is the root of each use's call `func_text`, the binding is `sole`, and the call follows the import.
 
@@ -605,7 +610,7 @@ Decisions made while building `graph.ts` (SPEC was silent):
 - **Producer order.** An edge from a producer to a consumer is drawn only when the producing event's `i` is lower than the consumer event's `i`. A use that ran before the token's producer is treated as having no producer for that use: a source node for a scalar, the (lazy) instance for an object. This is a general guard against a late-recorded producer being wired to earlier uses.
 - A loop's source tokens (a new token each iteration, no producer) share one source node per consumer node and param; `SourceNode.token` is the latest.
 - `steps` = every execution `i` of drawn nodes plus every instance version `i`, sorted and unique. Dropped expr events and events outside scope 0 are not steps.
-- Truncation keeps the first 300 nodes by `order` (sources sort just before their first consumer); a kept node whose parent was cut gets `parent: null`.
+- Truncation keeps the first `MAX_NODES` nodes by `order` (sources sort just before their first consumer); a kept node whose parent was cut gets `parent: null`.
 - A merged node takes its name, module and `student` flag from its own first non-interrupted event.
 - Self-edges occur: `x = g(x)` in a loop gives an edge from a box's out-port to its own in-port (uses per iteration).
 - Ids of lazy instances (no producing event) and of instances for outputs after the first use object numbers (`!v12`, `#k`), so they are less stable across edits than other ids.

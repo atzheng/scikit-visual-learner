@@ -334,7 +334,7 @@ The timeline is also a rail in the code gutter (between the line numbers and the
 - Wall-clock: 30 seconds per run, with Stop always available. Model fitting is slower in WebAssembly than natively; check the course's heaviest example in milestone 1 and adjust.
 - Per merge key: the first 20 executions and the latest one are recorded in full; the rest are only counted. The "latest" event is sent as a replaceable slot. Without this, one early loop would use the whole event budget and nothing after it would be drawn.
 - Events: 5,000 recorded in total, as a backstop. Beyond that the recorder stops recording, keeps running the code, and sets `status: "limit"`.
-- Drawn boxes: 300 after merging; beyond that the view asks the student to expand a function or narrow the code.
+- Drawn boxes: 600 after merging and folding; beyond that the view shows the first 600 and says "Showing the first N boxes (up to line L)" in the diagram pane and the event list. Unnamed temporaries used once (`df["sqft"].isna()`) are folded into small chips on their wire; click or Enter on a chip draws its box, and "All objects" draws every box. The diagram follows the current step (readable scale, 80% or more); Fit still shows everything.
 - Previews: 5 rows × 8 columns per DataFrame, 1 MB in total. Past that, new values keep type and shape but lose their preview.
 - Uploads: warn above 10,000 rows.
 

@@ -12,6 +12,8 @@ describe('runBanner', () => {
     expect(runBanner('stopped', false)).toMatch(/You stopped/);
   });
   test('too many boxes', () => {
-    expect(tooManyMessage(412)).toMatch(/412 boxes.*first 300/);
+    expect(tooManyMessage({ shown: 600, total: 812, line: 65 })).toMatch(
+      /first 600 boxes \(up to line 65\).*812/,
+    );
   });
 });

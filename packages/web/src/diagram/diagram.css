@@ -98,7 +98,9 @@
   pointer-events: none;
 }
 
-.legend-toggle[aria-expanded='true'] {
+.legend-toggle[aria-expanded='true'],
+.follow-toggle[aria-pressed='true'],
+.objects-toggle[aria-pressed='true'] {
   background: var(--surface-2, var(--border));
   font-weight: bold;
 }

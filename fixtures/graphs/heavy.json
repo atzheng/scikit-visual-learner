@@ -78,35 +78,20 @@
       "student": false
     },
     {
-      "id": "i:6zos1t.0",
-      "kind": "instance",
-      "parent": null,
-      "order": 900005,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 0,
-      "createdBy": "n:6zos1t.0",
-      "params": [],
-      "versions": [
-        {
-          "i": 0,
-          "token": "v0.0"
-        }
-      ]
-    },
-    {
       "id": "n:m1pltk3k@i:6zos1t.0",
       "kind": "call",
       "mergeKey": "s1",
       "name": "DataFrame.dropna",
       "module": "pandas",
-      "parent": "i:6zos1t.0",
+      "parent": null,
       "order": 900005,
       "executions": [
         {
           "i": 1,
           "ret": 1,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v0.0"
+          },
           "outputs": {
             "out:0": "v1.0"
           },
@@ -116,7 +101,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -164,23 +156,6 @@
           "owner": null,
           "error": null,
           "interrupted": false
-        }
-      ]
-    },
-    {
-      "id": "i:13qdsoa.0~2ruef4",
-      "kind": "instance",
-      "parent": null,
-      "order": 1000004,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 2,
-      "createdBy": "x:13qdsoa.0~2ruef4",
-      "params": [],
-      "versions": [
-        {
-          "i": 2,
-          "token": "v2.0"
         }
       ]
     },
@@ -797,23 +772,60 @@
       "callee": true
     },
     {
-      "id": "e:i:13qdsoa.0~2ruef4.>n:13qdsoa.0.in:data",
+      "id": "f:i:6zos1t.0",
       "from": {
-        "node": "i:13qdsoa.0~2ruef4",
+        "node": "n:6zos1t.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:m1pltk3k@i:6zos1t.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:6zos1t.0",
+        "token": "v0.0",
+        "type": "DF",
+        "shape": [
+          10000,
+          7
+        ]
+      }
+    },
+    {
+      "id": "f:i:13qdsoa.0~2ruef4",
+      "from": {
+        "node": "x:13qdsoa.0~2ruef4",
         "port": null
       },
       "to": {
         "node": "n:13qdsoa.0",
         "port": "in:data"
       },
-      "dashed": false,
+      "dashed": true,
       "uses": [
         {
           "i": 3,
           "token": "v2.0"
         }
       ],
-      "nameLabel": null
+      "nameLabel": null,
+      "chip": {
+        "node": "i:13qdsoa.0~2ruef4",
+        "token": "v2.0",
+        "type": "DF",
+        "shape": [
+          9407,
+          6
+        ]
+      }
     },
     {
       "id": "e:i:13qdsoa.0.>n:15uvz5m.0.in:arrays[0]",
@@ -1006,25 +1018,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:n:6zos1t.0.out:0>i:6zos1t.0.",
-      "from": {
-        "node": "n:6zos1t.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "i:6zos1t.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": "v0.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1pltk3k@i:6zos1t.0.out:0>i:z9k9xu.0.",
       "from": {
         "node": "n:m1pltk3k@i:6zos1t.0",
@@ -1039,25 +1032,6 @@
         {
           "i": 1,
           "token": "v1.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:13qdsoa.0~2ruef4.>i:13qdsoa.0~2ruef4.",
-      "from": {
-        "node": "x:13qdsoa.0~2ruef4",
-        "port": null
-      },
-      "to": {
-        "node": "i:13qdsoa.0~2ruef4",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 2,
-          "token": "v2.0"
         }
       ],
       "nameLabel": null
@@ -1226,5 +1200,6 @@
     7,
     8,
     9
-  ]
+  ],
+  "folded": 2
 }
