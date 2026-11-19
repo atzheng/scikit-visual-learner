@@ -72,6 +72,29 @@ export function cardKey(p: StageParticipant, merged: boolean): string {
   return merged && p.object !== null ? `${p.node}#${p.object}` : p.node;
 }
 
+/** Inline values are cut at this many characters; they sit beside the call box unless that is wider than the other. */
+const VALUE_MAX_CHARS = 22;
+const VALUES_BESIDE_MAX = 400;
+
+/** Does any (axis-aligned) segment of the polyline touch the rect, padded by 6 px? */
+function wireHits(
+  points: [number, number][],
+  r: { x: number; y: number; w: number; h: number },
+): boolean {
+  const pad = 6;
+  for (let i = 1; i < points.length; i++) {
+    const [ax, ay] = points[i - 1]!;
+    const [bx, by] = points[i]!;
+    const x0 = Math.min(ax, bx);
+    const x1 = Math.max(ax, bx);
+    const y0 = Math.min(ay, by);
+    const y1 = Math.max(ay, by);
+    if (x1 >= r.x - pad && x0 <= r.x + r.w + pad && y1 >= r.y - pad && y0 <= r.y + r.h + pad)
+      return true;
+  }
+  return false;
+}
+
 const rowWidth = (sizes: Size[]): number =>
   sizes.reduce((a, s) => a + s.w, 0) + Math.max(0, sizes.length - 1) * STAGE.colGap;
 
@@ -246,12 +269,26 @@ export function planStage(
   let vals: StagePlan['values'] = null;
   if (stage.values.length) {
     const lines = stage.values.map(valueLine);
-    vals = {
-      x: boxX + box.w + STAGE.valuesGap,
-      y: boxY,
-      w: Math.ceil(Math.max(...lines.map((l) => l.length)) * 7.2) + 16,
-      lines,
-    };
+    // a long value is cut at VALUE_MAX_CHARS (the renderer ellipsizes it and keeps the full text as its title),
+    // so one inline value cannot widen the canvas and shrink the stage's zoom
+    const w =
+      Math.ceil(Math.min(VALUE_MAX_CHARS, Math.max(...lines.map((l) => l.length))) * 7.2) + 16;
+    const h = lines.length * 18;
+    let x = boxX + box.w + STAGE.valuesGap;
+    let y = boxY;
+    // beside the box would make a wide canvas: put the values under the box's right edge instead when no
+    // wire runs through that spot
+    if (x + w > VALUES_BESIDE_MAX) {
+      const below = { x: Math.max(boxX, boxX + box.w - w), y: boxY + box.h + 6, w, h };
+      if (
+        (!outs.length || h + 14 <= STAGE.rowGap - 8) &&
+        !wires.some((wr) => wireHits(wr.points, below))
+      ) {
+        x = below.x;
+        y = below.y;
+      }
+    }
+    vals = { x, y, w, lines };
   }
 
   // shift everything so nothing is left of the margin, then size the canvas
@@ -996,6 +1033,7 @@ export async function mountTwoPane(
     valuesEl.style.width = `${plan.values.w}px`;
     for (const l of plan.values.lines) {
       const row = el(doc, 'div', 'md-stage-value', l);
+      row.title = l;
       row.setAttribute('role', 'listitem');
       valuesEl.append(row);
     }

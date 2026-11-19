@@ -181,13 +181,13 @@
   }
   .twopane-host .md-stage {
     flex: 1.2 1 0;
-    min-width: 0;
+    min-width: 280px;
     max-height: none;
   }
   .twopane-host .md-shelf-sec {
     flex: 1 1 0;
-    min-width: 0;
     min-height: 0;
+    overflow-x: hidden; /* it is sized to its widest card (fitStage) and scrolls vertically only */
   }
 }
 

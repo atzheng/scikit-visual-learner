@@ -137,6 +137,15 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
     const kW = (sec.clientWidth - 18) / (w || 1);
     // stacked: the shelf keeps room under the stage; side by side the stage has the whole pane height
     const sideBySide = getComputedStyle(root).flexDirection === 'row';
+    // the shelf never clips a card: side by side it is at least as wide as its widest card (the stage gives way)
+    const shelfSec = root.querySelector<HTMLElement>('.md-shelf-sec');
+    if (shelfSec) {
+      let need = 0;
+      if (sideBySide)
+        for (const c of shelfSec.querySelectorAll<HTMLElement>('.md-slot:not([hidden]) .md-card'))
+          need = Math.max(need, c.offsetWidth);
+      shelfSec.style.minWidth = need ? `${need + 20}px` : '';
+    }
     const reserve = sideBySide ? 0 : STAGE_RESERVE;
     const kH = (root.clientHeight - reserve - overhead - 2) / (h || 1);
     const k = w > 0 ? Math.max(MIN_STAGE_SCALE, Math.min(1, kW, kH)) : 1;

@@ -158,7 +158,7 @@ function StatusLine() {
 }
 
 export function App() {
-  const [cols, setCols] = useState(40);
+  const [cols, setCols] = useState(35);
   const [leftRows, setLeftRows] = useState(65);
   const mainRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLElement>(null);
