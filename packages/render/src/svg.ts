@@ -328,6 +328,20 @@ export function methodDocTarget(
   return { module, name: `${inst.className}.${method}` };
 }
 
+/**
+ * What to document for a box: a call box documents its callee (a method box is `Owner.method`), an
+ * instance box its class (module from its constructor box). Null for boxes with no docs (expression,
+ * store, source) (svl-3ms).
+ */
+export function nodeDocTarget(model: GraphModel, node: GNode): MethodDocTarget | null {
+  if (node.kind === 'call') return { module: node.module, name: node.name };
+  if (node.kind === 'instance') {
+    const t = methodDocTarget(model, node, '');
+    return { module: t.module, name: node.className };
+  }
+  return null;
+}
+
 export interface PortView {
   /** False when the active execution did not use this port: it is drawn dimmed. */
   used: boolean;
@@ -796,6 +810,18 @@ export function buildSvg(
       g.append(msg);
       h.msg = msg;
       h.msgChars = Math.max(24, Math.floor(ln.w / 6.5));
+    }
+    if (opts.docs && nodeDocTarget(model, n)) {
+      // The "?" docs button on the box corner. Mouse only: keyboard users press "?" on the focused box.
+      g.setAttribute('aria-keyshortcuts', '?');
+      g.setAttribute('aria-label', `${label}, press question mark for documentation`);
+      const btn = s(doc, 'g', { 'data-docs-btn': n.id, 'aria-hidden': 'true' }, 'md-docs-btn');
+      btn.append(
+        s(doc, 'title', {}, '', 'Show documentation'),
+        s(doc, 'circle', { cx: ln.x + 2, cy: ln.y + 2, r: 9 }),
+        s(doc, 'text', { x: ln.x + 2, y: ln.y + 6, 'text-anchor': 'middle' }, '', '?'),
+      );
+      g.append(btn);
     }
     g.append(
       s(

@@ -1,5 +1,5 @@
 import '@machines/render/theme.css';
-import { stateAt, type EventLog, type GraphModel } from '@machines/log';
+import { stateAt, type DocTarget, type EventLog, type GraphModel } from '@machines/log';
 import {
   attrRowsFor,
   createElk,
@@ -20,6 +20,8 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
+import { DocsPanel } from '../docs/DocsPanel';
+import { docRequest } from '../docs/model';
 import { useStore } from '../store';
 import { clampStep, nodeForSite, stepForKey } from '../timeline/steps';
 import './diagram.css';
@@ -111,6 +113,17 @@ export function DiagramPane({
     setLegendOpen(!legendOpen);
   };
   const [layoutError, setLayoutError] = useState<string | null>(null);
+  const [docs, setDocs] = useState<{
+    target: DocTarget;
+    nodeId: string;
+  } | null>(null);
+  const docsOpener = useRef<Element | null>(null);
+  const closeDocs = useCallback(() => {
+    setDocs(null);
+    const o = docsOpener.current;
+    docsOpener.current = null;
+    if (o instanceof HTMLElement || o instanceof SVGElement) o.focus();
+  }, []);
   const latest = useRef({ onHoverEdge, onClickEdge });
   latest.current = { onHoverEdge, onClickEdge };
 
@@ -142,6 +155,13 @@ export function DiagramPane({
     if (!stage) return;
     const ctl = mount(stage, {
       onSelectNode: (id) => useStore.getState().selectNode(id),
+      onOpenDocs: (t, nodeId) => {
+        docsOpener.current ??= document.activeElement;
+        setDocs({
+          target: docRequest(t, useStore.getState().runSource),
+          nodeId,
+        });
+      },
       onHoverEdge: (id, at) => latest.current.onHoverEdge?.(id, at),
       onClickEdge: (id) => {
         useStore.setState({ selection: { edge: id, pinned: true } });
@@ -418,29 +438,41 @@ export function DiagramPane({
           The diagram could not be laid out: {layoutError}
         </p>
       )}
-      <div
-        ref={viewportRef}
-        className="diagram-viewport"
-        tabIndex={0}
-        role="group"
-        aria-label="Diagram. Left and right arrows step through the run. Plus, minus and zero zoom. Up and down arrows pan."
-        onKeyDown={onKeyDown}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerEnd}
-        onPointerCancel={onPointerEnd}
-        onClickCapture={onClickCapture}
-      >
-        <div ref={stageRef} className="diagram-stage" />
-        {!shown && !running && (
-          <p className="diagram-empty muted">Run your code to see its diagram here.</p>
-        )}
-        {!shown && running && <p className="diagram-empty muted">Waiting for the first call…</p>}
-        {empty && (
-          <p className="diagram-empty muted">
-            The run made no library calls to draw. Call something from numpy, pandas or
-            scikit-learn.
-          </p>
+      <div className="diagram-body">
+        <div
+          ref={viewportRef}
+          className="diagram-viewport"
+          tabIndex={0}
+          role="group"
+          aria-label="Diagram. Left and right arrows step through the run. Plus, minus and zero zoom. Up and down arrows pan."
+          onKeyDown={onKeyDown}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerEnd}
+          onPointerCancel={onPointerEnd}
+          onClickCapture={onClickCapture}
+        >
+          <div ref={stageRef} className="diagram-stage" />
+          {!shown && !running && (
+            <p className="diagram-empty muted">Run your code to see its diagram here.</p>
+          )}
+          {!shown && running && <p className="diagram-empty muted">Waiting for the first call…</p>}
+          {empty && (
+            <p className="diagram-empty muted">
+              The run made no library calls to draw. Call something from numpy, pandas or
+              scikit-learn.
+            </p>
+          )}
+        </div>
+        {docs && (
+          <DocsPanel
+            target={docs.target}
+            nodeId={docs.nodeId}
+            model={model}
+            log={log}
+            step={step}
+            onClose={closeDocs}
+          />
         )}
       </div>
     </section>
