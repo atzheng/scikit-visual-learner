@@ -1,0 +1,71 @@
+/**
+ * Service worker (hand-written, no vite-plugin-pwa: the manifest is two lists from the build output,
+ * and the page must keep COOP/COEP, which a generic plugin would not know about).
+ *
+ * - install: fetch the shell and /pyodide/* into versioned caches (only files not already cached).
+ *   Does NOT skipWaiting: the page shows "update available" and asks before reloading.
+ * - activate: delete caches this build does not name, then claim open pages.
+ * - fetch: same-origin GETs are served cache-first. Cached responses are the originals the host sent,
+ *   so their COOP/COEP headers are kept and crossOriginIsolated stays true offline.
+ *
+ * Built by scripts/build-sw.ts, which injects __MANIFEST__.
+ */
+import { cacheKey, missingUrls, shouldHandle, staleCaches, type Manifest } from './offline/core';
+
+declare const __MANIFEST__: Manifest;
+
+interface ExtEvent extends Event {
+  waitUntil(p: Promise<unknown>): void;
+}
+interface FetchEv extends ExtEvent {
+  request: Request;
+  respondWith(r: Promise<Response> | Response): void;
+}
+const sw = self as unknown as {
+  location: Location;
+  clients: { claim(): Promise<void> };
+  skipWaiting(): Promise<void>;
+  addEventListener(t: string, fn: (e: never) => void): void;
+};
+const m = __MANIFEST__;
+
+async function fill(cacheName: string, urls: string[]): Promise<void> {
+  const cache = await caches.open(cacheName);
+  const have = (await cache.keys()).map((r) => new URL(r.url).pathname);
+  for (const url of missingUrls(urls, have)) {
+    const res = await fetch(url, { cache: 'reload' });
+    if (!res.ok) throw new Error(`precache ${url}: ${res.status}`);
+    await cache.put(url, res);
+  }
+}
+
+sw.addEventListener('install', ((e: ExtEvent) => {
+  e.waitUntil(Promise.all([fill(m.shellCache, m.shell), fill(m.pyodideCache, m.pyodide)]));
+}) as (e: never) => void);
+
+sw.addEventListener('activate', ((e: ExtEvent) => {
+  e.waitUntil(
+    (async () => {
+      for (const n of staleCaches(await caches.keys(), m)) await caches.delete(n);
+      await sw.clients.claim();
+    })(),
+  );
+}) as (e: never) => void);
+
+sw.addEventListener('message', ((e: { data?: { type?: string } }) => {
+  if (e.data?.type === 'SKIP_WAITING') void sw.skipWaiting();
+}) as (e: never) => void);
+
+sw.addEventListener('fetch', ((e: FetchEv) => {
+  const { request } = e;
+  if (!shouldHandle(request.method, request.url, sw.location.origin)) return;
+  const key = cacheKey(request.url, request.mode === 'navigate');
+  e.respondWith(
+    (async () => {
+      const hit =
+        (await (await caches.open(m.shellCache)).match(key)) ??
+        (await (await caches.open(m.pyodideCache)).match(key));
+      return hit ?? fetch(request);
+    })(),
+  );
+}) as (e: never) => void);

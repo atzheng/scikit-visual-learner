@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './app.css';
 import { DEFAULT_RUN_CONFIG } from './course';
+import { UpdateNotice } from './offline/UpdateNotice';
 import { startRuntime, useStore } from './store';
 
 startRuntime();
@@ -14,6 +15,10 @@ if (root) {
       <App />
     </StrictMode>,
   );
+  // Own root so the notice does not touch App.tsx.
+  const notice = document.createElement('div');
+  document.body.appendChild(notice);
+  createRoot(notice).render(<UpdateNotice />);
 }
 
 // ?debug exposes the store for browser checks (svl-bwv.2); remove with the real diagram pane if unwanted.
