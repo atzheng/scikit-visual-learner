@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { buildGraph, shelfAt, stageAt } from '@machines/log';
+import { buildGraph, shelfAt, stageAt, stateAt } from '@machines/log';
 import type { EventLog, GraphModel, StageParticipant } from '@machines/log';
 import { cardKey, FLY_Z, MOVE_MS, mountTwoPane, planMoves, planStage, valueLine } from './twopane';
 import type { Rect, TwoPaneController } from './twopane';
@@ -345,6 +345,117 @@ describe('mount', () => {
     tp!.destroy();
     expect(host.children).toHaveLength(0);
     tp = undefined;
+  });
+});
+
+describe('instance cards hold their method boxes (svl-faf)', () => {
+  const linreg = (model: GraphModel): { id: string; kids: string[] } => {
+    const inst = model.nodes.find(
+      (n) => n.kind === 'instance' && n.className === 'LinearRegression',
+    )!;
+    return {
+      id: inst.id,
+      kids: model.nodes.filter((n) => n.kind === 'call' && n.parent === inst.id).map((n) => n.id),
+    };
+  };
+  const shown = (card: Element, kind: string): Element[] =>
+    [...card.querySelectorAll(`.md-node.md-${kind}`)].filter(
+      (g) => !g.classList.contains('md-hidden'),
+    );
+
+  test('the shelf card draws its method boxes, no wires, and the more-methods button, as the full view does', async () => {
+    const { model } = await open('golden_linreg');
+    const { id, kids } = linreg(model);
+    expect(kids.length).toBeGreaterThan(1);
+    tp!.setStep(model.steps.length); // the end of the run: the card is on the shelf
+    const card = tp!.card(id)!;
+    expect(card.querySelectorAll('.md-edge').length).toBe(0);
+    // every method box is drawn inside the instance's rectangle
+    const laidIds = [...card.querySelectorAll('.md-node.md-call')].map((g) =>
+      g.getAttribute('data-node'),
+    );
+    expect(laidIds.sort()).toEqual([...kids].sort());
+    expect(card.querySelector('.md-more')).not.toBeNull();
+  });
+
+  test('methods not called yet show the cue; called ones do not (the full view at the same step)', async () => {
+    const { model, log } = await open('golden_linreg');
+    const { id, kids } = linreg(model);
+    const e = model.steps.length;
+    let sawUncalled = false;
+    for (let s = 1; s <= e; s++) {
+      tp!.setStep(s);
+      const card = tp!.card(id)!;
+      if (card.hidden) continue;
+      const st = stateAt(model, log, s);
+      for (const k of kids) {
+        const g = card.querySelector(`.md-node[data-node="${k}"]`)!;
+        expect(!g.classList.contains('md-hidden')).toBe(st.visibleNodes.has(k));
+        expect(g.classList.contains('md-uncalled')).toBe(st.uncalled.has(k));
+        if (st.uncalled.has(k) && st.visibleNodes.has(k)) sawUncalled = true;
+      }
+    }
+    expect(sawUncalled).toBe(true);
+  });
+
+  test('the card is as wide as the measured text needs', async () => {
+    const wide = async (m: (t: string) => number): Promise<number> => {
+      const log = readLog('golden_linreg');
+      const model = buildGraph(log, { expanded: new Set() });
+      const h = document.createElement('div');
+      document.body.append(h);
+      const t = await mountTwoPane(h, model, log, { measure: m });
+      t.setStep(model.steps.length);
+      const w = parseFloat(t.card(linreg(model).id)!.style.width);
+      t.destroy();
+      h.remove();
+      return w;
+    };
+    const narrow = await wide((t) => t.length * 5);
+    const broad = await wide((t) => t.length * 10);
+    expect(broad).toBeGreaterThan(narrow);
+  });
+
+  test('keyboard: Tab stops at the card; ArrowDown reaches rows, methods and more-methods; Escape returns', async () => {
+    const { model } = await open('golden_linreg');
+    const { id, kids } = linreg(model);
+    tp!.setStep(model.steps.length);
+    const card = tp!.card(id)!;
+    const box = card.querySelector<SVGElement>(`.md-node[data-node="${id}"]`)!;
+    // methods and the button are not tab stops
+    for (const k of kids)
+      expect(card.querySelector(`.md-node[data-node="${k}"]`)!.getAttribute('tabindex')).toBe('-1');
+    expect(card.querySelector('.md-more-ctl')!.getAttribute('tabindex')).toBe('-1');
+    box.focus();
+    const down = (): void => {
+      document.activeElement!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+      );
+    };
+    const seen: Element[] = [];
+    for (let i = 0; i < 40; i++) {
+      down();
+      const a = document.activeElement!;
+      if (seen.at(-1) === a) break;
+      seen.push(a);
+    }
+    const methods = seen.filter((e) => e.matches('.md-node.md-call'));
+    expect(methods.length).toBe(shown(card, 'call').length);
+    expect(seen.at(-1)!.matches('.md-more-ctl')).toBe(true);
+    seen
+      .at(-1)!
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+    expect(document.activeElement).toBe(box);
+  });
+
+  test('an instance with no methods drawn still mounts, and a method box on a card names its instance', async () => {
+    const { model } = await open('golden_linreg');
+    const { id } = linreg(model);
+    tp!.setStep(model.steps.length);
+    const g = tp!.card(id)!.querySelector('.md-node.md-call:not(.md-hidden)')!;
+    expect(g.getAttribute('aria-label')).toMatch(/, in /);
   });
 });
 
