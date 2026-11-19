@@ -485,7 +485,6 @@
    a row shows only its row's. */
 .md-node:hover > .md-docs-btn,
 .md-node:focus-visible > .md-docs-btn,
-.md-node.md-hover > .md-docs-btn,
 g[data-doc-attr]:hover > .md-docs-btn,
 g[data-doc-attr]:focus > .md-docs-btn,
 g[data-doc-attr]:focus-visible > .md-docs-btn {
