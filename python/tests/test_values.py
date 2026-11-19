@@ -805,3 +805,36 @@ def test_methods_cap() -> None:
     vt.summarize(vt.token(obj), obj)
     names = [m["name"] for m in vt.values["v0.0"]["methods"]]  # type: ignore[attr-defined]
     assert len(names) == 40 and names == sorted(names)
+
+
+def test_lazy_pandas_cache_is_not_a_change(vt: ValueTable) -> None:
+    df = pd.DataFrame({"a": [1, 2, 1], "p": [1.0, 2.0, 3.0]})
+    objs = [
+        df.groupby("a"),
+        df.groupby("a")["p"],
+        df["p"].rolling(2),
+        df.set_index(pd.date_range("2020", periods=3)).resample("D"),
+    ]
+    for o in objs:
+        vt.token(o)
+        assert vt.check(o) is None
+        o.mean()  # first evaluation fills pandas' internal `_cache`
+        assert vt.check(o) is None, type(o).__name__
+
+
+def test_cache_attribute_on_other_objects_still_counts(vt: ValueTable) -> None:
+    class Box:
+        pass
+
+    b = Box()
+    vt.token(b)
+    b._cache = [1]  # type: ignore[attr-defined]
+    assert changed(vt, b)
+
+
+def test_real_change_to_groupby_still_counts(vt: ValueTable) -> None:
+    df = pd.DataFrame({"a": [1, 2, 1], "p": [1.0, 2.0, 3.0]})
+    g = df.groupby("a")
+    vt.token(g)
+    g.foo = 1  # type: ignore[attr-defined]
+    assert changed(vt, g)
