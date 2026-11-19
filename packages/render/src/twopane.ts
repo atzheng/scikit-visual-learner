@@ -1256,7 +1256,6 @@ export async function mountTwoPane(
     plan = null;
     onStage = new Map();
     if (stage) {
-      const boxNode = stage.kind === 'call' || stage.kind === 'expr' || stage.kind === 'store';
       const merged = (p: StageParticipant): boolean =>
         p.kind !== 'chip' && (entryOf.get(p.node)?.objects ?? 0) > 1;
       const sizeOf = (p: StageParticipant): Size =>
