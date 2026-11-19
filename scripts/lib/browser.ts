@@ -64,6 +64,24 @@ export function stopPreview(child: ChildProcess): void {
   }
 }
 
+/**
+ * On Ctrl-C or SIGTERM, runs `cleanup` (stop the preview's process group, close the browser) and exits
+ * non-zero. The preview is detached, so without this an interrupted run would leave vite running.
+ */
+export function cleanupOnSignal(cleanup: () => Promise<void> | void): void {
+  let done = false;
+  for (const sig of ['SIGINT', 'SIGTERM'] as const) {
+    process.on(sig, () => {
+      if (done) return;
+      done = true;
+      Promise.resolve()
+        .then(cleanup)
+        .catch(() => undefined)
+        .finally(() => process.exit(sig === 'SIGINT' ? 130 : 143));
+    });
+  }
+}
+
 export async function newPage(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
   const ctx = await browser.newContext();
   return { ctx, page: await ctx.newPage() };

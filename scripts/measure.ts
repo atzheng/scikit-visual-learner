@@ -24,6 +24,7 @@ import { chromium, type Browser, type BrowserContext, type Page } from 'playwrig
 import {
   CHROME,
   ROOT,
+  cleanupOnSignal,
   freePort,
   newPage,
   startPreview as startPreviewOn,
@@ -322,6 +323,11 @@ async function main(): Promise<void> {
   const preview = await startPreview();
   const proxy = await startProxy(link);
   const browser = await chromium.launch({ executablePath: CHROME, headless: true });
+  cleanupOnSignal(async () => {
+    stopPreview(preview);
+    proxy.close();
+    await browser.close();
+  });
   const rows: [string, string][] = [];
   const raw: Record<string, unknown> = {};
   try {

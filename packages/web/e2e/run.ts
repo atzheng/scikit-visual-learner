@@ -5,7 +5,9 @@
  *
  *   pnpm e2e                 all checks
  *   pnpm e2e --only share    only checks whose name contains "share"
- *   E2E_KEEP=1 pnpm e2e      keep the screenshot directory (it is always kept: the path is printed)
+ *
+ * Screenshots go to a temp directory that is always kept; its path is printed at the start and the end.
+ * Ctrl-C stops the preview server and the browser before exiting.
  *
  * The checks use roles, aria-labels, data- attributes and relative "N of M" step counts rather than
  * exact step counts or pixel positions, so UI beads that add steps or restyle should leave them alone.
@@ -18,6 +20,7 @@ import { chromium, type Browser, type BrowserContext, type Page } from 'playwrig
 import {
   CHROME,
   ROOT,
+  cleanupOnSignal,
   freePort,
   startPreview,
   stopPreview,
@@ -130,6 +133,27 @@ async function gotoStep(page: Page, target: number): Promise<void> {
 /** Visible boxes: nodes that are not hidden. */
 const visibleNodes = (page: Page) => page.locator('g.md-node[data-node]:not(.md-hidden)');
 
+/** Waits until the diagram stops moving (Follow pans and zooms it with a 0.25 s transition). */
+async function settle(page: Page, timeout = 5000): Promise<void> {
+  // (a script string: tsx's name helpers do not exist in the page)
+  await page.evaluate(`new Promise((resolve) => {
+    const stage = document.querySelector('.diagram-stage');
+    const key = () =>
+      stage ? stage.style.transform + '|' + JSON.stringify(stage.getBoundingClientRect()) : '';
+    const t0 = performance.now();
+    let last = key();
+    let since = t0;
+    const tick = () => {
+      const now = performance.now();
+      const k = key();
+      if (k !== last) { last = k; since = now; }
+      if (now - since >= 300 || now - t0 >= ${timeout}) resolve();
+      else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  })`);
+}
+
 async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: path.join(SHOTS, `${name}.png`) });
 }
@@ -137,7 +161,12 @@ async function shot(page: Page, name: string): Promise<void> {
 async function shotBothThemes(page: Page, name: string): Promise<void> {
   for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme });
-    await page.waitForTimeout(150);
+    // the theme is applied by CSS variables: wait until the page's colour scheme query agrees
+    await page.waitForFunction(
+      (dark) => matchMedia('(prefers-color-scheme: dark)').matches === dark,
+      scheme === 'dark',
+    );
+    await settle(page);
     await shot(page, `${name}-${scheme}`);
   }
   await page.emulateMedia({ colorScheme: 'light' });
@@ -172,6 +201,24 @@ async function main(): Promise<void> {
   const preview = await startPreview(port);
   const base = `http://127.0.0.1:${port}`;
   const browser: Browser = await chromium.launch({ executablePath: CHROME, headless: true });
+  cleanupOnSignal(async () => {
+    stopPreview(preview);
+    await browser.close();
+  });
+  // Student code and data never leave the browser: any request off the page's own origin is a failure.
+  const offOrigin: string[] = [];
+  const guard = (c: BrowserContext): void => {
+    c.on('request', (r) => {
+      const u = r.url();
+      if (!u.startsWith(base) && !u.startsWith('data:') && !u.startsWith('blob:'))
+        offOrigin.push(u);
+    });
+  };
+  const newContext = async (): Promise<BrowserContext> => {
+    const c = await browser.newContext(ctxOptions);
+    guard(c);
+    return c;
+  };
   const ctxOptions = {
     viewport: VIEWPORT,
     colorScheme: 'light' as const,
@@ -179,7 +226,7 @@ async function main(): Promise<void> {
   };
   try {
     console.log(`e2e: ${base}, screenshots in ${SHOTS}`);
-    const ctx = await browser.newContext(ctxOptions);
+    const ctx = await newContext();
     let page!: Page;
 
     await step('load and wait for ready', async () => {
@@ -241,7 +288,9 @@ async function main(): Promise<void> {
         if (ev === prevEvent) same++; // two steps can share a label (the same call site twice)
         prevEvent = ev;
         events.add(ev);
-        const box = await page.locator('g[aria-current="step"]').first().getAttribute('data-node');
+        // a step may have no current box (an import, say): count first, so nothing waits for one
+        const cur = page.locator('g[aria-current="step"]');
+        const box = (await cur.count()) > 0 ? await cur.first().getAttribute('data-node') : null;
         if (box) {
           withBox++;
           boxes.add(box);
@@ -263,6 +312,7 @@ async function main(): Promise<void> {
       await gotoStep(page, (await stepCount(page)).m);
       const total = await page.locator('g.md-edge[data-edge]:not(.md-hidden) path').count();
       check(total > 0, 'no visible wires');
+      await settle(page);
       let shown = false;
       for (let k = 0; k < total && !shown; k++) {
         const pt = await pointOnEdge(page, k);
@@ -299,12 +349,12 @@ async function main(): Promise<void> {
         if (/\bmodel\.fit\(/.test((await currentEvent(page)) ?? '')) fit = k;
       }
       check(fit > 0, 'no .fit step');
-      // (a plain click can miss: the diagram may be panned to follow the step)
+      await settle(page); // Follow pans the diagram after a step; a click while it moves misses
       await page
         .locator('g.md-node[data-kind="instance"]:not(.md-hidden)')
         .filter({ hasText: 'LinearRegression' })
         .first()
-        .dispatchEvent('click');
+        .click({ timeout: 5000 });
       const panel = page.getByRole('complementary', { name: /^Attributes of/ });
       await panel.waitFor({ timeout: 5000 });
       const row = panel.locator('tr.changed', { hasText: 'coef_' });
@@ -351,7 +401,12 @@ async function main(): Promise<void> {
       await setSource(page, 'import numpy as np\nwhile True:\n    pass\n');
       await runButton(page).click();
       await stopButton(page).waitFor({ timeout: 30_000 });
-      await page.waitForTimeout(500);
+      // the program is running (the log exists) before Stop is pressed
+      await page.waitForFunction(
+        () => (window as unknown as { __machines: Store }).__machines.getState().log !== null,
+        undefined,
+        { timeout: 30_000 },
+      );
       await stopButton(page).click();
       await runButton(page).waitFor({ timeout: LONG });
       await page.waitForFunction(
@@ -407,7 +462,7 @@ async function main(): Promise<void> {
       else url = await page.evaluate(() => navigator.clipboard.readText());
       check(url.includes('#'), `no share URL (got "${url.slice(0, 60)}")`);
       // A new browser context: nothing from this one (local storage) carries over.
-      const ctx2 = await browser.newContext(ctxOptions);
+      const ctx2 = await newContext();
       const p2 = await ctx2.newPage();
       await p2.goto(url);
       await waitReady(p2, LONG);
@@ -429,7 +484,7 @@ async function main(): Promise<void> {
     await ctx.close();
 
     await step('edge_mpl.py: matplotlib progress and a figure', async () => {
-      const c = await browser.newContext(ctxOptions);
+      const c = await newContext();
       const p = await open(c, base);
       // Record every status-line text from now on.
       // (a script string: tsx's helpers do not exist in the page)
@@ -454,6 +509,10 @@ async function main(): Promise<void> {
       );
       await shotBothThemes(p, '08-matplotlib');
       await c.close();
+    });
+
+    await step('no request left the page origin', async () => {
+      check(offOrigin.length === 0, `requests off origin: ${[...new Set(offOrigin)].join(', ')}`);
     });
   } finally {
     await browser.close();
