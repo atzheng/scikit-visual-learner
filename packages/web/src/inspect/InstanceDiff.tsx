@@ -18,8 +18,15 @@ export function InstanceDiff() {
   const log = useStore((s) => s.log);
   const step = useStore((s) => s.step);
   const selected = useStore((s) => s.selection.node);
+  // the two-pane stage already marks the owner's changed attributes: the panel opens on a click or Enter only
+  const explicitOnly = useStore((s) => s.view) === 'two';
   const [open, setOpen] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState<string | null>(null);
+  const [dismissed, setDismissedKey] = useState<string | null>(null);
+  const setDismissed = (k: string | null) => {
+    setDismissedKey(k);
+    // two-pane: the panel belongs to the clicked card, so closing it forgets the selection
+    if (explicitOnly) useStore.setState({ selection: {} });
+  };
   const openDocsFn = useContext(DocsOpenerContext);
 
   const state = useMemo(
@@ -27,8 +34,11 @@ export function InstanceDiff() {
     [model, log, step],
   );
   const target = useMemo(
-    () => (model && log && state ? inspectTarget(model, log, state, selected) : null),
-    [model, log, state, selected],
+    () =>
+      model && log && state && !(explicitOnly && !selected)
+        ? inspectTarget(model, log, state, selected)
+        : null,
+    [model, log, state, selected, explicitOnly],
   );
   const key = target ? `${target.node.id}@${state?.current ?? ''}` : null;
   const visible = target !== null && dismissed !== key;

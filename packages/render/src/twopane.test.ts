@@ -209,6 +209,34 @@ describe('every fixture, every step', () => {
 });
 
 describe('mount', () => {
+  test('I on a focused card selects its node, and the card advertises it', async () => {
+    const log = readLog('golden_linreg');
+    const model = buildGraph(log, { expanded: new Set() });
+    host = document.createElement('div');
+    document.body.append(host);
+    const picked: string[] = [];
+    tp = await mountTwoPane(host, model, log, { measure, onSelectNode: (id) => picked.push(id) });
+    tp.setStep(model.steps.length);
+    const g = host.querySelector<SVGElement>(
+      '.md-stage-canvas .md-card:not([hidden]) g.md-node[data-node]',
+    )!;
+    expect(g.getAttribute('aria-keyshortcuts')).toContain('I');
+    g.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', bubbles: true, cancelable: true }));
+    expect(picked).toEqual([g.getAttribute('data-node')]);
+  });
+
+  test('a card that goes back to its slot loses the stage offset', async () => {
+    const { model } = await open('golden_linreg');
+    for (let s = 1; s <= model.steps.length; s++) tp!.setStep(s);
+    for (const c of tp!.cards()) {
+      if (c.where !== 'shelf') continue;
+      const el = tp!.card(c.key)!;
+      expect(el.parentElement?.classList.contains('md-slot')).toBe(true);
+      expect(el.style.position).toBe('');
+      expect(el.style.left).toBe('');
+    }
+  });
+
   test('golden_linreg: import, fit and predict', async () => {
     const { model, log } = await open('golden_linreg');
     expect(visible('.md-slot')).toHaveLength(0);

@@ -682,8 +682,14 @@ export async function mountTwoPane(
       slot.el.hidden = !shown;
       slot.ph.hidden = !(shown && here);
       slot.el.dataset.state = shown ? (here ? 'stage' : 'shelf') : 'hidden';
-      if (!here) slot.el.prepend(slot.card.wrap);
-      else if (slot.card.wrap.parentElement === slot.el) slot.card.wrap.remove();
+      if (!here) {
+        // back from the stage: drop the stage offset (`place`), or the card is drawn away from its slot
+        const s = slot.card.wrap.style;
+        s.removeProperty('position');
+        s.removeProperty('left');
+        s.removeProperty('top');
+        slot.el.prepend(slot.card.wrap);
+      } else if (slot.card.wrap.parentElement === slot.el) slot.card.wrap.remove();
       const n = byId.get(e.node);
       const inUse = [...onStage.values()].some(
         (s) => s.card?.node === e.node && s.card.object !== null,
@@ -753,6 +759,9 @@ export async function mountTwoPane(
             ? 'current line'
             : 'on the shelf';
         g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? ''}, ${suffix}`);
+        // I selects the card (the app opens the attribute panel); Enter still dives into its rows
+        const keys = (g.getAttribute('aria-keyshortcuts') ?? '').split(' ').filter(Boolean);
+        if (!keys.includes('I')) g.setAttribute('aria-keyshortcuts', [...keys, 'I'].join(' '));
       }
     }
     for (const [key, chip] of chipEls) {
@@ -889,6 +898,14 @@ export async function mountTwoPane(
     const at = m.indexOf(k.target as HTMLElement);
     if (at < 0) return; // inside a card: its own arrow keys and Escape (mount.ts)
     let to: HTMLElement | undefined;
+    if (k.key === 'i' || k.key === 'I') {
+      const node = (k.target as Element).closest('[data-node]')?.getAttribute('data-node');
+      if (!node) return;
+      k.preventDefault();
+      k.stopPropagation();
+      opts.onSelectNode?.(node);
+      return;
+    }
     if (k.key === 'ArrowRight') to = m[Math.min(at + 1, m.length - 1)];
     else if (k.key === 'ArrowLeft') to = m[Math.max(at - 1, 0)];
     else if (k.key === 'Home') to = m[0];

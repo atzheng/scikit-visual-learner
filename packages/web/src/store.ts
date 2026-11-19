@@ -4,6 +4,7 @@ import { DEFAULT_RUN_CONFIG, STARTER_EXAMPLE } from './course';
 import type { RuntimeState } from './runtime/client';
 import { currentRuntime, getRuntime } from './runtime/instance';
 import { clampStep, nextStep, stepForNode } from './timeline/steps';
+import { readView, writeView, type DiagramView } from './diagram/view';
 import { progressText, versionsText } from './runtime/status';
 
 /** CONTRACTS.md section 7. */
@@ -17,7 +18,12 @@ export interface AppState {
   running: boolean;
   elapsedMs: number;
   step: number;
-  setStep(n: number): void;
+  /** `single`: a one-step move (the step buttons, ←/→) that the two-pane view may animate; everything else snaps. */
+  setStep(n: number, single?: boolean): void;
+  stepSingle: boolean;
+  /** Which diagram view is shown: the two-pane shelf and stage (default) or the full diagram. Persisted per viewer. */
+  view: DiagramView;
+  setView(v: DiagramView): void;
   /** Incremented at each Run (not the worker's runId); lets the diagram reset per-run layout state. */
   runSeq: number;
   /** The source text of the last run (the log's site positions refer to it). */
@@ -63,7 +69,17 @@ export const useStore = create<AppState>()((set, get) => ({
   running: false,
   elapsedMs: 0,
   step: 0,
-  setStep: (step) => set((s) => ({ step: clampStep(step, s.model?.steps.length ?? Infinity) })),
+  setStep: (step, single = false) =>
+    set((s) => {
+      const n = clampStep(step, s.model?.steps.length ?? Infinity);
+      return { step: n, stepSingle: single && Math.abs(n - s.step) === 1 };
+    }),
+  stepSingle: false,
+  view: readView(),
+  setView: (view) => {
+    writeView(view);
+    set({ view });
+  },
   runSeq: 0,
   runSource: null,
   selection: {},
@@ -71,7 +87,11 @@ export const useStore = create<AppState>()((set, get) => ({
     const { model, step } = get();
     if (id === null || !model) return set({ selection: {} });
     const target = stepForNode(model, id, step);
-    set({ selection: { node: id, pinned: true }, ...(target !== null && { step: target }) });
+    set({
+      stepSingle: false,
+      selection: { node: id, pinned: true },
+      ...(target !== null && { step: target }),
+    });
   },
   expanded: new Set(),
   showAllObjects: false,
@@ -98,6 +118,7 @@ export const useStore = create<AppState>()((set, get) => ({
       log: null,
       model: null,
       step: 0,
+      stepSingle: false,
       selection: {},
     }));
     const tick = setInterval(() => set({ elapsedMs: performance.now() - t0 }), ELAPSED_TICK_MS);
@@ -111,7 +132,7 @@ export const useStore = create<AppState>()((set, get) => ({
       const prev = get();
       const step = nextStep(prev.step, prev.model?.steps.length ?? 0, model.steps.length, first);
       first = false;
-      set({ log, model, step });
+      set({ log, model, step, stepSingle: false });
     };
     try {
       await rt.run(get().source, DEFAULT_RUN_CONFIG, show);
