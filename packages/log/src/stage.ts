@@ -19,7 +19,7 @@ export interface StageParticipant {
   node: string;
   /** The object the step used or made (`v12`); null for an import block. */
   object: string | null;
-  /** The token that travelled (input, owner, output, created); the box's version at this step for an instance-only step; null for an import. */
+  /** The token that travelled (input, owner, output, created; a store's written object: the version before the write); the box's version at this step for an instance-only step; null for an import. */
   token: Token | null;
   /** Port of the stage node it binds to: an in-port for an input, an out-port for an output or created. Null for the owner, imports, and nodes without ports (expr, store). */
   port: string | null;
@@ -29,8 +29,14 @@ export interface StageParticipant {
   edge: string | null;
   /** This step changed the object in place (a `mutate` or `store` version made by the event). */
   changed: boolean;
-  /** The token after the in-place change (the box's version made by this event); present when `changed`. */
+  /** The token after the in-place change (the box's version made by this event); present when `changed`. A failed call may have changed its owner only partly. */
   after?: Token;
+  /**
+   * `created` only: true when this is the box's first object (the box appears on the shelf after this step);
+   * false when the box already exists (a later pass of a loop makes another object of it, a re-run import
+   * block is already on the shelf).
+   */
+  newBox?: boolean;
   /** Boxes holding several objects (a loop): 1-based position of this object and how many the box holds. */
   objectOf?: { k: number; n: number };
   /** Chips only. */
@@ -62,7 +68,11 @@ export interface StageModel {
   /** Source line of the event, null if the site is unknown. */
   line: number | null;
   error: EventError | null;
+  /** The call raised or was interrupted (`error !== null`): its `changed` participants may have changed only partly. */
+  failed: boolean;
   participants: StageParticipant[];
+  /** Object participants left out because no box or chip was found for them (a truncated graph). */
+  dropped: number;
   values: StageValue[];
 }
 
@@ -75,6 +85,12 @@ export interface ShelfEntry {
   at: number;
   /** Instances: how many objects the box holds (a merged loop box is one entry holding n); 1 for an import. */
   objects: number;
+}
+
+/** An entry of the shelf at one step. */
+export interface ShelfSlot extends ShelfEntry {
+  /** Objects of the box that exist so far (`new` versions before the current event); the rest are empty slots. 1 for an import. */
+  filled: number;
 }
 
 const objectsOf = (n: InstanceNode): number => n.versions.filter((v) => v.kind === 'new').length;
@@ -129,6 +145,31 @@ export function shelfOrder(model: GraphModel): ShelfEntry[] {
 }
 
 /**
+ * The shelf at `step`, in `shelfOrder` order: the entries whose line has finished (`at` before the step's
+ * event), each with how many of its objects exist so far. Step 0 is empty; the last step (the end) shows
+ * every entry, full. Entries still being made by the current step are on the stage, not here.
+ */
+export function shelfAt(model: GraphModel, step: number): ShelfSlot[] {
+  const total = model.steps.length;
+  const s = Number.isNaN(step) ? 0 : Math.max(0, Math.min(total, Math.trunc(step)));
+  if (s === 0 && total > 0) return [];
+  const atEnd = s === total;
+  const cur = s === 0 ? -1 : model.steps[s - 1]!;
+  const byId = new Map(model.nodes.map((n) => [n.id, n]));
+  const out: ShelfSlot[] = [];
+  for (const e of shelfOrder(model)) {
+    if (!atEnd && e.at >= cur) continue;
+    const n = byId.get(e.node);
+    const filled =
+      n?.kind === 'instance'
+        ? n.versions.filter((v) => v.kind === 'new' && (atEnd || v.i < cur)).length
+        : 1;
+    out.push({ ...e, filled });
+  }
+  return out;
+}
+
+/**
  * What takes part in the step: the node that ran, and around it the owner, the input objects, the output
  * objects and the objects it created, each with the port it binds to (so the stage can draw its wires).
  * Null at step 0, or when the current event's box is not in the model (a truncated graph).
@@ -150,6 +191,7 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
   if (node.kind === 'instance') {
     const ver = node.versions.find((v) => v.i === cur);
     const created = node.createdAt === cur;
+    const firstNew = node.versions.find((v) => v.kind === 'new');
     const p: StageParticipant = {
       kind: 'instance',
       role: created ? 'created' : 'owner',
@@ -161,7 +203,16 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
       edge: null,
       changed: ver !== undefined && ver.kind !== 'new',
     };
-    return { ...base, execution: null, error: null, participants: [p], values: [] };
+    if (created) p.newBox = firstNew?.i === cur;
+    return {
+      ...base,
+      execution: null,
+      error: null,
+      failed: false,
+      participants: [p],
+      dropped: 0,
+      values: [],
+    };
   }
 
   const ex = node.executions.find((e) => e.i === cur);
@@ -170,7 +221,9 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
     ...base,
     execution: ex,
     error: ex.error,
+    failed: ex.error !== null,
     participants: [],
+    dropped: 0,
     values: [],
   };
 
@@ -188,6 +241,7 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
           param: null,
           edge: null,
           changed: false,
+          newBox: n.executions[0]!.i === cur,
         });
     return result;
   }
@@ -245,6 +299,7 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
         changed: mut !== undefined,
       };
       if (mut) p.after = mut.token;
+      if (r === 'created') p.newBox = inst.versions.find((v) => v.kind === 'new')?.i === cur;
       const pos = positionIn(inst, key);
       if (pos) p.objectOf = pos;
       result.participants.push(p);
@@ -264,7 +319,7 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
         changed: false,
         chip: { type: ce.chip.type, shape: ce.chip.shape },
       });
-    // otherwise: no box and no chip (cut by truncation): leave it out
+    else result.dropped++; // no box and no chip (cut by truncation): leave it out
   };
 
   const scalar = (role: 'input' | 'output', port: string, param: string, token: Token): void => {
@@ -280,7 +335,13 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
     });
   };
 
-  if (ex.owner !== null && ex.owner.startsWith('v')) add('owner', ex.owner, null, null);
+  // A chip owner is listed by its `in:self` wire as an input, not here.
+  if (
+    ex.owner !== null &&
+    ex.owner.startsWith('v') &&
+    (byObject.has(keyOf(ex.owner)) || !chipEdge(ex.owner, 'in'))
+  )
+    add('owner', ex.owner, null, null);
 
   if (node.kind === 'call') {
     for (const p of node.inPorts) {
@@ -311,10 +372,43 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
     }
   } else {
     // expr and store nodes have no ports: operands are keyed `in:<param>`, results `out:<k>`
-    for (const [id, tok] of Object.entries(ex.inputs))
-      if (tok.startsWith('v')) add('input', tok, null, id.replace(/^in:/, ''));
-    for (const [id, tok] of Object.entries(ex.outputs))
-      if (tok.startsWith('v')) add('output', tok, null, id.replace(/^out:/, ''));
+    // One participant per object. A store's written object is its output: it is not repeated as an
+    // input (`target`, `value[df]`); its `token` is the version before the write (`after` the one after).
+    const isStore = node.kind === 'store';
+    const written = new Set(
+      Object.values(ex.outputs)
+        .filter((t) => t.startsWith('v'))
+        .map(keyOf),
+    );
+    const before = new Map<string, Token>();
+    const seen = new Set<string>();
+    const ordered = Object.entries(ex.inputs).sort(
+      ([a], [b]) => Number(b === 'in:target') - Number(a === 'in:target'),
+    );
+    for (const [id, tok] of ordered) {
+      if (!tok.startsWith('v')) continue;
+      const key = keyOf(tok);
+      if (isStore && written.has(key)) {
+        if (!before.has(key)) before.set(key, tok);
+        continue;
+      }
+      if (seen.has(key)) continue;
+      seen.add(key);
+      add('input', tok, null, id.replace(/^in:/, ''));
+    }
+    const outSeen = new Set<string>();
+    for (const [id, tok] of Object.entries(ex.outputs)) {
+      if (!tok.startsWith('v') || outSeen.has(keyOf(tok))) continue;
+      outSeen.add(keyOf(tok));
+      const n0 = result.participants.length;
+      add('output', tok, null, id.replace(/^out:/, ''));
+      const p = result.participants[n0];
+      const b = before.get(keyOf(tok));
+      if (isStore && p && p.kind === 'instance' && b !== undefined) {
+        p.token = b;
+        if (p.changed) p.after = tok;
+      }
+    }
   }
   return result;
 }

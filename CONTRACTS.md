@@ -669,6 +669,7 @@ Step `steps.length` (the end) shows everything, including wires ready after the 
 ```ts
 function stageAt(model: GraphModel, log: EventLog, step: number): StageModel | null; // null at step 0, or when the current event's box is not in the model
 function shelfOrder(model: GraphModel): ShelfEntry[];
+function shelfAt(model: GraphModel, step: number): ShelfSlot[]; // the entries on the shelf at that step, in shelfOrder order
 
 interface StageModel {
   node: string; // the call/expr/store/import node of the current event (an instance id for an instance-only step)
@@ -677,6 +678,8 @@ interface StageModel {
   i: number; // event i of the step
   line: number | null; // source line of the event
   error: EventError | null;
+  failed: boolean; // error !== null: a `changed` participant of a failed call may have changed only partly; word it "changed before it failed"
+  dropped: number; // object participants left out because they have no box or chip (cut by truncation)
   participants: StageParticipant[]; // objects, in order: owner, inputs (port order), outputs and created (out-port order)
   values: StageValue[]; // inline scalars and literals
 }
@@ -692,6 +695,7 @@ interface StageParticipant {
   edge: string | null; // the GEdge that carries it, so the stage can draw the wire; null for owner and imports
   changed: boolean; // the step changed it in place (a `mutate` or `store` version made by this event)
   after?: Token; // with `changed`: the version this event made
+  newBox?: boolean; // role `created` only: true = the box's first object (the box joins the shelf after this step); false = the box exists already (a later loop pass made another object of it; a re-run import block)
   objectOf?: { k: number; n: number }; // a merged loop box holding n > 1 objects: which one this step means
   chip?: { type: string; shape: number[] | null };
 }
@@ -703,6 +707,9 @@ interface StageValue {
   text: string | null; // the literal text (`0.2`, `"price"`), else the scalar's repr
   type: string | null;
   edge: string | null;
+}
+interface ShelfSlot extends ShelfEntry {
+  filled: number; // objects of the box that exist so far (`new` versions with i < the step's event); at the end all of them; 1 for an import
 }
 interface ShelfEntry {
   node: string; // instance or import node id
@@ -718,7 +725,10 @@ Rules:
 - **Roles.** `owner` = the execution's object owner (a method's receiver; it has no port and no edge). `input` = an object on an in-port. `output` = an object on an out-port that already had a box. `created` = an output object whose box has a `new` version at this event (a constructor, `read_csv`, each `train_test_split` result, an expr that yields an object). An import step has one `created` participant of kind `import` per name it binds. An object that is both an owner/input and changed (`fit`) has `changed: true`.
 - **Chips** (folded temporaries) are participants of kind `chip`, role `input` or `output`: they have no box, are never on the shelf, and exist on the stage only for the step that produces or consumes them (a chip is produced in one step and consumed in a later one; it is not carried between). `edge` is the chip wire.
 - **Scalars and constants are not participants.** They are `values`, drawn inline in the stage: a literal gives `token: null` and its text, a scalar gives its token and repr, scalar outputs (`score`) are `role: 'output'`. They are never shelf objects.
-- The same object can appear twice with different params (`df["c"] = df["a"] / df["b"]` uses `df` for `target` and for `value[df]`); both are listed, and may share an `edge` (edges are one per endpoint pair).
+- One participant per object on expr and store nodes. A store's written object is one participant, role `output`, `changed: true`, `token` = the version before the write and `after` = the version after; its `target` and `value[...]` operands and its `out:*` are not repeated. Other operands (the mask in `df.loc[mask, c] = 0`) stay `input` participants when they are different objects. Calls list an object once per port (`df.merge(df)` gives two inputs with different ports and one shared edge). A chip owner is listed once, as the `in:self` input.
+- `failed`: a call that raised keeps `changed` (the recorder logged the mutation, which may be partial); the renderer words it as "changed before it failed".
+- `created` and `newBox`: `created` always means an object appears now. `newBox` says whether its box is new: false for later passes of a loop box and for an import statement that runs again (its block is already on the shelf).
+- `shelfAt(model, step)`: step 0 is empty; at step s the entries with `at` before the step's event, each with `filled`; the end (`steps.length`) shows every entry full. So `filled` counts objects of a merged loop box that exist so far (the one being made by the current step is on the stage, not counted).
 - `shelfOrder` is sorted by `at`, then `order`, then id: creation order, with imports as entries at their step. A merged loop box is one entry. A box is on the shelf from the step after its `at` line; while that line is the current step its object is on the stage (so the renderer slides it in afterwards). Chips, scalars and sources are never entries. A truncated model (`tooMany`) lists only the boxes it kept, and `stageAt` returns null for steps whose box was cut; participants that were cut are left out.
 
 **Renderer** (`@machines/render`):

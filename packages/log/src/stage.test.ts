@@ -3,7 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 import { buildGraph, keyOf } from './graph';
-import { shelfOrder, stageAt } from './stage';
+import type { InstanceNode } from './graph';
+import { shelfAt, shelfOrder, stageAt } from './stage';
 import type { EventLog } from './types';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'logs');
@@ -133,5 +134,89 @@ describe('golden_linreg, hand-checked', () => {
       'model',
       'pred',
     ]);
+  });
+});
+
+describe('review fixes (svl-61q.1)', () => {
+  const stages = (n: string) => {
+    const log = readLog(n);
+    const g = buildGraph(log);
+    return { log, g, all: g.steps.map((_, k) => stageAt(g, log, k + 1)!) };
+  };
+
+  test('a store lists the written object once, keyed on object, with before and after', () => {
+    for (const n of names) {
+      for (const st of stages(n).all) {
+        if (st.kind !== 'store' && st.kind !== 'expr') continue;
+        const objs = st.participants.map((p) => p.object);
+        expect(new Set(objs).size, `${n} step ${st.i}`).toBe(objs.length);
+      }
+    }
+    const { all } = stages('edge_store');
+    const stores = all.filter((s) => s.kind === 'store');
+    expect(stores.length).toBeGreaterThan(1);
+    const first = stores[0]!;
+    expect(first.participants).toHaveLength(1);
+    const p = first.participants[0]!;
+    expect([p.role, p.changed, p.token, p.after]).toEqual(['output', true, 'v0.0', 'v0.1']);
+    // `mask` is a different object: it stays an input next to the written df
+    expect(stores[1]!.participants.map((x) => [x.role, x.changed])).toEqual([
+      ['input', false],
+      ['output', true],
+    ]);
+  });
+
+  test('a failed call says so and keeps changed', () => {
+    const { all } = stages('edge_error');
+    const failed = all.filter((s) => s.failed);
+    expect(failed.length).toBeGreaterThan(0);
+    for (const s of failed) expect(s.error).not.toBeNull();
+    expect(failed.some((s) => s.participants.some((p) => p.changed))).toBe(true);
+    expect(all.filter((s) => !s.failed).every((s) => s.error === null)).toBe(true);
+  });
+
+  test('shelfAt on edge_loop: one Ridge box filling up; later passes are not new boxes', () => {
+    const ridge = g.nodes.find(
+      (x): x is InstanceNode => x.kind === 'instance' && x.className === 'Ridge',
+    )!;
+    const ridge = g.nodes.find((x) => x.kind === 'instance' && x.className === 'Ridge')!;
+    const ctors = all.filter((s) =>
+      s.participants.some((p) => p.node === ridge.id && p.role === 'created'),
+    );
+    expect(ctors.length).toBeGreaterThan(2);
+    expect(ctors.map((s) => s.participants.find((p) => p.role === 'created')!.newBox)).toEqual(
+      ctors.map((_, k) => k === 0),
+    );
+    // while the constructor runs, the object is on the stage: not yet filled
+    ctors.forEach((s, k) => {
+      const slot = shelfAt(g, g.steps.indexOf(s.i) + 1).find((e) => e.node === ridge.id);
+      expect(slot?.filled).toBe(k === 0 ? undefined : k);
+    });
+    const end = shelfAt(g, g.steps.length);
+    expect(end.find((e) => e.node === ridge.id)?.filled).toBe(
+      ridge.versions.filter((v) => v.kind === 'new').length,
+    );
+    expect(end.map((e) => e.node)).toEqual(shelfOrder(g).map((e) => e.node));
+    expect(shelfAt(g, 0)).toEqual([]);
+    const order = shelfOrder(g).map((e) => e.node);
+    for (let s = 0; s <= g.steps.length; s++) {
+      const at = shelfAt(g, s).map((e) => e.node);
+      expect(at).toEqual(order.slice(0, at.length));
+    }
+  });
+
+  test('dropped is 0 on whole graphs and counts cut participants on a truncated one', () => {
+    for (const n of names) {
+      const { g, all } = stages(n);
+      if (g.tooMany === undefined)
+        for (const s of all)
+          expect(s.dropped, `${n} ${s.i} ${JSON.stringify(s.participants)}`).toBe(0);
+    }
+    const log = readLog('large_pandas');
+    const g = buildGraph(log, { maxNodes: 40 });
+    expect(g.tooMany).toBeDefined();
+    let dropped = 0;
+    for (let s = 1; s <= g.steps.length; s++) dropped += stageAt(g, log, s)?.dropped ?? 0;
+    expect(dropped).toBeGreaterThan(0);
   });
 });
