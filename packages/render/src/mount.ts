@@ -2,7 +2,7 @@
 // `setState` only toggles classes and text, so stepping never re-lays-out.
 import type { EventLog, GraphModel, StepState } from '@machines/log';
 import type { Laid } from './layout';
-import { applyState, buildSvg, setMoreOpen } from './svg';
+import { applyState, buildSvg, nodeDocTarget, setMoreOpen } from './svg';
 import type { MethodDocTarget } from './svg';
 import type { ApplyContext, SvgDom } from './svg';
 
@@ -107,7 +107,20 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
     toggleMore(id);
     (dom?.nodes.get(id)?.more?.ctl as SVGElement | undefined)?.focus();
   };
+  /** Open the docs of a box (its "?" button, or "?" on the focused box). */
+  const openNodeDocs = (id: string | null): boolean => {
+    const n = id === null ? undefined : dom?.nodes.get(id);
+    const t = n && dom ? nodeDocTarget(dom.model, n.node) : null;
+    if (!t || !opts.onOpenDocs) return false;
+    opts.onOpenDocs(t, n!.id);
+    return true;
+  };
   const onClick = (ev: Event): void => {
+    const btn = closest(ev.target, 'data-docs-btn');
+    if (btn) {
+      openNodeDocs(btn.getAttribute('data-docs-btn'));
+      return;
+    }
     const doc = closest(ev.target, 'data-doc-name');
     if (doc) {
       const t = docTarget(doc);
@@ -138,6 +151,14 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
         k.stopPropagation();
         toggleMore(id, false);
         (dom?.nodes.get(id)?.more?.ctl as SVGElement | undefined)?.focus();
+      }
+      return;
+    }
+    if (k.key === '?' && !k.ctrlKey && !k.metaKey && !k.altKey) {
+      const n = closest(k.target, 'data-node');
+      if (n && n === k.target && openNodeDocs(n.getAttribute('data-node'))) {
+        k.preventDefault();
+        k.stopPropagation();
       }
       return;
     }

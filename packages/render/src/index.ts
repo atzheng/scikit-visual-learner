@@ -35,6 +35,7 @@ export {
   hiddenMethods,
   moreMethodsFor,
   methodDocTarget,
+  nodeDocTarget,
   portViews,
   setMoreOpen,
   labelAnchor,

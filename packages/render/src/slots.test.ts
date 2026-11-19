@@ -393,3 +393,41 @@ describe('data box rows', () => {
     expect(box.w).toBeGreaterThanOrEqual(k.w);
   });
 });
+
+describe('docs on boxes (svl-3ms)', () => {
+  test('the "?" button and "?" on the focused box open the docs of method, constructor and instance boxes', async () => {
+    const { log, model, laid } = await prepare('golden_linreg');
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log);
+    const fit = callNode(model, 'LinearRegression.fit');
+    const ctor = callNode(model, 'LinearRegression');
+    const inst = instOf(model, 'LinearRegression');
+    (el(fit.id).querySelector('.md-docs-btn') as Element).dispatchEvent(
+      new MouseEvent('click', { bubbles: true }),
+    );
+    expect(docs.at(-1)).toEqual({
+      target: { module: fit.module, name: 'LinearRegression.fit' },
+      node: fit.id,
+    });
+    for (const n of [ctor, inst]) {
+      el(n.id).dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
+    }
+    expect(docs.slice(-2).map((d) => [d.target.name, d.node])).toEqual([
+      ['LinearRegression', ctor.id],
+      ['LinearRegression', inst.id],
+    ]);
+    expect(docs.at(-1)!.target.module).toBe(ctor.module);
+    expect(el(fit.id).getAttribute('aria-keyshortcuts')).toBe('?');
+  });
+
+  test('without a handler there is no button and "?" does nothing', async () => {
+    const { model, laid } = await prepare('golden_linreg');
+    const c = setup(false);
+    c.setGraph(model, laid);
+    const fit = callNode(model, 'LinearRegression.fit');
+    expect(host.querySelector('.md-docs-btn')).toBeNull();
+    el(fit.id).dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
+    expect(docs).toEqual([]);
+  });
+});
