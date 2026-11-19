@@ -35,11 +35,28 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": "df"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:wcu5tk.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 500005,
+      "className": "DF",
+      "varName": "df",
+      "createdAt": 0,
+      "createdBy": "n:wcu5tk.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ]
     },
     {
       "id": "t:1cu04t5.0",
@@ -89,20 +106,35 @@
       ]
     },
     {
-      "id": "n:1daqhqx.0",
+      "id": "i:1daqhqx.0~u7kfkb",
+      "kind": "instance",
+      "parent": null,
+      "order": 700007,
+      "className": "Series",
+      "varName": null,
+      "createdAt": 2,
+      "createdBy": "x:1daqhqx.0~u7kfkb",
+      "params": [],
+      "versions": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ]
+    },
+    {
+      "id": "n:m1km1vrn@i:1daqhqx.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s3",
       "name": "Series.isna",
       "module": "pandas",
-      "parent": null,
+      "parent": "i:1daqhqx.0~u7kfkb",
       "order": 700007,
       "executions": [
         {
           "i": 3,
           "ret": 3,
-          "inputs": {
-            "in:self": "v1.0"
-          },
+          "inputs": {},
           "outputs": {
             "out:0": "v2.0"
           },
@@ -112,23 +144,33 @@
           "interrupted": false
         }
       ],
-      "inPorts": [
-        {
-          "id": "in:self",
-          "param": "self",
-          "typeLabel": "Series",
-          "nameLabel": null
-        }
-      ],
+      "inPorts": [],
       "outPorts": [
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": "mask"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:1daqhqx.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 700007,
+      "className": "Series",
+      "varName": "mask",
+      "createdAt": 3,
+      "createdBy": "n:m1km1vrn@i:1daqhqx.0~u7kfkb",
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v2.0"
+        }
+      ]
     },
     {
       "id": "t:19um76j.0",
@@ -177,20 +219,35 @@
       ]
     },
     {
-      "id": "n:81hs4t.0",
+      "id": "i:81hs4t.0~u7kfkb",
+      "kind": "instance",
+      "parent": null,
+      "order": 900006,
+      "className": "Series",
+      "varName": null,
+      "createdAt": 5,
+      "createdBy": "x:81hs4t.0~u7kfkb",
+      "params": [],
+      "versions": [
+        {
+          "i": 5,
+          "token": "v3.0"
+        }
+      ]
+    },
+    {
+      "id": "n:m18y5h8q@i:81hs4t.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s6",
       "name": "Series.round",
       "module": "pandas",
-      "parent": null,
+      "parent": "i:81hs4t.0~u7kfkb",
       "order": 900006,
       "executions": [
         {
           "i": 6,
           "ret": 6,
-          "inputs": {
-            "in:self": "v3.0"
-          },
+          "inputs": {},
           "outputs": {
             "out:0": "v4.0"
           },
@@ -201,12 +258,6 @@
         }
       ],
       "inPorts": [
-        {
-          "id": "in:self",
-          "param": "self",
-          "typeLabel": "Series",
-          "nameLabel": null
-        },
         {
           "id": "in:decimals",
           "param": "decimals",
@@ -219,27 +270,42 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
       "student": false
     },
     {
-      "id": "n:8b0erw.0",
+      "id": "i:81hs4t.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 900006,
+      "className": "Series",
+      "varName": null,
+      "createdAt": 6,
+      "createdBy": "n:m18y5h8q@i:81hs4t.0~u7kfkb",
+      "params": [],
+      "versions": [
+        {
+          "i": 6,
+          "token": "v4.0"
+        }
+      ]
+    },
+    {
+      "id": "n:m1y9r6d0@i:81hs4t.0",
       "kind": "call",
       "mergeKey": "s7",
       "name": "Series.head",
       "module": "pandas",
-      "parent": null,
+      "parent": "i:81hs4t.0",
       "order": 900006,
       "executions": [
         {
           "i": 7,
           "ret": 7,
-          "inputs": {
-            "in:self": "v4.0"
-          },
+          "inputs": {},
           "outputs": {
             "out:0": "v5.0"
           },
@@ -249,88 +315,41 @@
           "interrupted": false
         }
       ],
-      "inPorts": [
-        {
-          "id": "in:self",
-          "param": "self",
-          "typeLabel": "Series",
-          "nameLabel": null
-        }
-      ],
+      "inPorts": [],
       "outPorts": [
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:8b0erw.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 900006,
+      "className": "Series",
+      "varName": null,
+      "createdAt": 7,
+      "createdBy": "n:m1y9r6d0@i:81hs4t.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 7,
+          "token": "v5.0"
+        }
+      ]
     }
   ],
   "edges": [
     {
-      "id": "e:x:1daqhqx.0~u7kfkb.>n:1daqhqx.0.in:self",
+      "id": "e:i:wcu5tk.0.>t:1cu04t5.0.",
       "from": {
-        "node": "x:1daqhqx.0~u7kfkb",
+        "node": "i:wcu5tk.0",
         "port": null
-      },
-      "to": {
-        "node": "n:1daqhqx.0",
-        "port": "in:self"
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 3,
-          "token": "v1.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:81hs4t.0~u7kfkb.>n:81hs4t.0.in:self",
-      "from": {
-        "node": "x:81hs4t.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "n:81hs4t.0",
-        "port": "in:self"
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 6,
-          "token": "v3.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:n:81hs4t.0.out:0>n:8b0erw.0.in:self",
-      "from": {
-        "node": "n:81hs4t.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "n:8b0erw.0",
-        "port": "in:self"
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 7,
-          "token": "v4.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:n:wcu5tk.0.out:0>t:1cu04t5.0.",
-      "from": {
-        "node": "n:wcu5tk.0",
-        "port": "out:0"
       },
       "to": {
         "node": "t:1cu04t5.0",
@@ -347,12 +366,12 @@
           "token": "v0.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
     },
     {
-      "id": "e:t:1cu04t5.0.>x:1daqhqx.0~u7kfkb.",
+      "id": "e:i:wcu5tk.0.>x:1daqhqx.0~u7kfkb.",
       "from": {
-        "node": "t:1cu04t5.0",
+        "node": "i:wcu5tk.0",
         "port": null
       },
       "to": {
@@ -366,12 +385,12 @@
           "token": "v0.1"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
     },
     {
-      "id": "e:t:1cu04t5.0.>t:19um76j.0.",
+      "id": "e:i:wcu5tk.0.>t:19um76j.0.",
       "from": {
-        "node": "t:1cu04t5.0",
+        "node": "i:wcu5tk.0",
         "port": null
       },
       "to": {
@@ -385,12 +404,12 @@
           "token": "v0.1"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
     },
     {
-      "id": "e:t:19um76j.0.>x:81hs4t.0~u7kfkb.",
+      "id": "e:i:wcu5tk.0.>x:81hs4t.0~u7kfkb.",
       "from": {
-        "node": "t:19um76j.0",
+        "node": "i:wcu5tk.0",
         "port": null
       },
       "to": {
@@ -404,7 +423,121 @@
           "token": "v0.2"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>i:wcu5tk.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:1daqhqx.0~u7kfkb.>i:1daqhqx.0~u7kfkb.",
+      "from": {
+        "node": "x:1daqhqx.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "i:1daqhqx.0~u7kfkb",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m1km1vrn@i:1daqhqx.0~u7kfkb.out:0>i:1daqhqx.0.",
+      "from": {
+        "node": "n:m1km1vrn@i:1daqhqx.0~u7kfkb",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1daqhqx.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:81hs4t.0~u7kfkb.>i:81hs4t.0~u7kfkb.",
+      "from": {
+        "node": "x:81hs4t.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "i:81hs4t.0~u7kfkb",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m18y5h8q@i:81hs4t.0~u7kfkb.out:0>i:81hs4t.0.",
+      "from": {
+        "node": "n:m18y5h8q@i:81hs4t.0~u7kfkb",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:81hs4t.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m1y9r6d0@i:81hs4t.0.out:0>i:8b0erw.0.",
+      "from": {
+        "node": "n:m1y9r6d0@i:81hs4t.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:8b0erw.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [

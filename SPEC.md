@@ -147,7 +147,7 @@ Wires connect the event that produced a value to the events that consumed it. Th
 
 **Scalars** (`int`, `float`, `bool`, `str`, `bytes`, `None`) are never matched by identity. CPython shares small integers, interned strings, `True`, `False`, `None` and constants within a code object, so matching them by `id()` would wire a function that returns `5` to every unrelated literal `5` in the program. A scalar gets a fresh token each time it is produced (by an event, an expression, or a loop target) and travels only through names: a `name` origin resolves to the token that name holds in the current scope, then its lexical parents, then the module. `__ret__` carries a returned scalar's token out to the calling event.
 
-**Expression nodes.** An `expr` origin creates an event of kind `expr` when its value has no token yet or is a scalar. It is drawn as a small unboxed label showing the source text, with dashed wires from the values of the names it reads. `y = df["price"]` therefore shows `y` coming from `df`, and `X_train - mean` shows both operands, without the recorder hooking subscripts or operators. If the value already has a token (`m = models["rf"]`), no node is created; the name is simply another label for the same value. Expression nodes whose result never reaches a machine are not drawn.
+**Expression nodes.** An `expr` origin creates an event of kind `expr` when its value has no token yet or is a scalar. It is drawn as a small unboxed label showing the source text, with dashed wires from the values of the names it reads. `y = df["price"]` therefore shows `y` coming from `df`, and `X_train - mean` shows both operands, without the recorder hooking subscripts or operators. If the value already has a token (`m = models["rf"]`), no node is created; the name is simply another label for the same value. Expression nodes whose result reaches no call, store or box are not drawn; one whose result is an object always has that object's box after it.
 
 **Tuple returns** are split into separate outputs only when the call is the right-hand side of an unpacking assignment with the same number of targets (`X_train, X_test, y_train, y_test = train_test_split(...)`), or when a student function returns a tuple literal. Otherwise the tuple is one output of type `tuple[n]`.
 
@@ -252,22 +252,28 @@ The main thread assembles the streamed messages into one JSON document. It is th
 
 The main thread turns the event log into a graph, lays it out with ELK.js, and draws SVG in the slides' visual style.
 
-**Machines and data**
+**Objects and scalars**
 
-A value is a **machine with memory** if it is an instance of `sklearn.base.BaseEstimator` or of a student-defined class. Everything else, including DataFrames, Series and arrays, is **data** that travels on wires. The course configuration can add machine classes.
+Every **reference value** (a token like `v12.0`) is an **object** and is drawn as its own blue instance box, one box per object: DataFrames, Series, arrays, sparse matrices, lists, dicts, estimators and student class instances alike (owner decision, 2026-11-18). A **machine with memory** (an instance of `sklearn.base.BaseEstimator` or of a student-defined class; the course configuration can add classes) is the same kind of box with more to show: its parameters and fitted attributes. A **data box** shows what the summary already holds: `shape`, then `dtype` (Series, arrays) or the first few `columns` (DataFrames, cut with "…"). Its title carries the type and the name: `X_train: DF`. Lists, dicts and tuples show only their title (`models: dict[2]`). Click opens the preview (inspect).
+
+**Scalars** (`s` tokens: numbers, strings, `None`, small tuples) are not boxes. They stay as const text on ports and as labelled wires (`float 0.2`, `r2`).
+
+In-place mutation (`df.dropna(inplace=True)`, `df["c"] = …`) is a **new version of the same box**, not a new box and not an output port. Two different objects are never merged into one box, and a call that returns an object that already has a box (`np.asarray(a)` returning `a`) adds no box and no wire: a missing wire is acceptable, a false one is not.
 
 **Graph construction**
 
 | Graph element | Built from |
 | --- | --- |
-| Function machine (orange box) | a `function` or `student_function` event; a `constructor` event (`LinearRegression()` is an orange box whose args are on input ports and whose output wire creates the instance box); a `constructor` event that returns data (`pd.DataFrame(...)`); a `method` event whose owner is data (`df.dropna()`), with the owner as its first input port, labelled `self` |
-| Instance machine (blue box) | created by the output wire of the call that first returns it: a constructor box, or a function that returns one (`make_pipeline`, `clone`). A machine that no recorded event produced appears at its first use. |
-| Method machine (orange box inside the blue one) | a `method` event whose owner is that instance. One box per method name and instance: `scaler.transform(X_train)` and `scaler.transform(X_test)` share one `transform` box with a ×2 badge, and its wires switch to each call's values as the timeline steps. The boxes for the methods this run calls on the instance exist from the moment the instance is created, in a "not called yet" state, and become active at their first call. |
-| Input port (top edge) | one per entry in `inputs`, labelled `type` with `param` in gray beneath. `const` inputs are written on the port as `param = text`. Constructor arguments are ports of the constructor box (and also listed in the instance's parameter list). |
-| Output port (bottom edge) | one per entry in `outputs`, labelled `type` with the bound name in gray beneath. An entry in `mutates` for data also gets an output port, marked "changed in place". |
-| Wire | from the event that produced a value version to each event that consumed it. A machine passed as an argument (`cross_val_score(model, X, y)`) is a wire from the instance box's border. |
-| Expression node (no box) | an `expr` event, with dashed wires from the values it reads |
-| Source node (no box) | a value that was consumed but has no producing event: a loop variable, or in Jupyter a variable from an earlier cell. Labelled with its name. |
+| Function machine (orange box) | a `function` or `student_function` event; a `constructor` event (`LinearRegression()` or `pd.DataFrame(...)` is an orange box whose args are on input ports and whose output wire creates the instance box) |
+| Instance box (blue) | one per object, created by the output wire of the call or expression that first returns it: a constructor box, `pd.read_csv`, each of `train_test_split`'s four outputs, `np.mean` returning an array, `make_pipeline`. An object that no recorded event produced appears at its first use. A loop's objects from one call site share one box (instances merge by creating site). |
+| Method machine (orange box inside the blue one) | a `method` event whose owner is that object, whether a model or data. One box per method name and object: `scaler.transform(X_train)` and `scaler.transform(X_test)` share one `transform` box with a ×2 badge, and its wires switch to each call's values as the timeline steps. `df.dropna()` is a `dropna` box inside the `df` box; its output wire creates the next box, `df′`. The boxes for the methods this run calls on an object exist from the moment the object is created, in a "not called yet" state, and become active at their first call. The owner is the box, so it is not a port (no `self`). |
+| Input port (top edge) | one per entry in `inputs`: `param` and, for a scalar, its type. `const` inputs are written on the port as `param = text`. An object input shows only `param`: the box it comes from shows the type and shape. Constructor arguments are ports of the constructor box (and also listed in the instance's parameter list). |
+| Output port (bottom edge) | one per entry in `outputs`, labelled with the bound name (and the type, for a scalar). An object output is wired to its new box. In-place mutation has no port: it is a new version of the owner's box. |
+| Wire | from the event that produced a value to each event that consumed it. An object is wired from its box's border: `train_test_split(X, y)` takes the `X` and `y` boxes, `model.fit(X_train, y_train)` takes the `X_train` and `y_train` boxes. Wires from a box carry no label (the box has the name); scalar wires keep `type` and name. |
+| Expression node (no box) | an `expr` event, with dashed wires from the values it reads. If its result is an object, a dashed wire leads on to that object's box (`y = df["price"]`: `df` box, expression, `y` box). |
+| Source node (no box) | a *scalar* that was consumed but has no producing event: a loop variable, or in Jupyter a variable from an earlier cell. Labelled with its name. |
+
+Example, `golden_split`: `read_csv` makes the `df′` box (superseded by the rebinding), the `dropna` box sits inside it and makes the `df` box, two dashed expressions make the `X` and `y` boxes, and `train_test_split` takes both and makes four boxes, `X_train`, `X_test`, `y_train`, `y_test`. A superseded name gets the prime, as on wires.
 
 Only events in the scope being viewed are drawn. The top-level view shows module-scope events. A box that is expanded becomes a compound node containing the events of every scope whose `parent_event` is that box's event. This applies to `student_function` boxes and to library calls that invoked student callbacks.
 
@@ -380,6 +386,7 @@ Each milestone ends with something students could use.
 **Open questions**
 
 - [x] Method boxes: one per method name and instance (owner decision, 2026-11-18). An instance used twice shows one `transform` box with ×2; the box exists from instantiation, uncalled until its first call.
+- [x] Every object is a blue box, one per object; scalars stay as port text and wire labels (owner decision, 2026-11-18).
 - [ ] Are dashed expression nodes enough for column selection (`X["price"]`) and attribute reads (`model.coef_`), or should those two draw as small machines?
 - [ ] Should pipelines (`make_pipeline(...)`) draw as one instance box containing its steps, using sklearn's own structure, rather than as a function with machine inputs?
 - [ ] How much of a DataFrame preview is useful on hover before it clutters?

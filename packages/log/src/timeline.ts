@@ -156,7 +156,7 @@ function ownerAttrs(
   log: EventLog,
   ev: Event | undefined,
 ): { before?: Record<string, Token>; after?: Record<string, Token> } | null {
-  if (!ev || ev.kind !== 'method' || !ev.owner || !log.values[ev.owner]?.machine) return null;
+  if (!ev || ev.kind !== 'method' || !ev.owner || !ev.owner.startsWith('v')) return null;
   const owner = ev.owner;
   const m = ev.mutates.find(([b]) => keyOf(b) === keyOf(owner));
   const before = log.values[m ? m[0] : owner]?.attrs;

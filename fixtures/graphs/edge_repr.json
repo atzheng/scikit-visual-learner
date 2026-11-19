@@ -35,11 +35,28 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": "df"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:wcu5tk.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1900005,
+      "className": "DF",
+      "varName": "df",
+      "createdAt": 0,
+      "createdBy": "n:wcu5tk.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ]
     },
     {
       "id": "n:g9r6uw.0",
@@ -69,7 +86,7 @@
         {
           "id": "in:df",
           "param": "df",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
@@ -77,7 +94,7 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "Table",
+          "typeLabel": "",
           "nameLabel": "t"
         }
       ],
@@ -108,10 +125,10 @@
   ],
   "edges": [
     {
-      "id": "e:n:wcu5tk.0.out:0>n:g9r6uw.0.in:df",
+      "id": "e:i:wcu5tk.0.>n:g9r6uw.0.in:df",
       "from": {
-        "node": "n:wcu5tk.0",
-        "port": "out:0"
+        "node": "i:wcu5tk.0",
+        "port": null
       },
       "to": {
         "node": "n:g9r6uw.0",
@@ -124,7 +141,26 @@
           "token": "v0.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>i:wcu5tk.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
     },
     {
       "id": "e:n:g9r6uw.0.out:0>i:g9r6uw.0.",

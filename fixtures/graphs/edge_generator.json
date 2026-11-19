@@ -35,11 +35,68 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": "df"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:wcu5tk.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1800005,
+      "className": "DF",
+      "varName": "df",
+      "createdAt": 0,
+      "createdBy": "n:wcu5tk.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ]
+    },
+    {
+      "id": "x:1y73kgs.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 1900000,
+      "text": "[len(c) for c in chunks(df, 200)]",
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:df": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "i:1y73kgs.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1900000,
+      "className": "list[3]",
+      "varName": "sizes",
+      "createdAt": 2,
+      "createdBy": "x:1y73kgs.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 2,
+          "token": "v2.0"
+        }
+      ]
     },
     {
       "id": "n:145mmls.0",
@@ -69,7 +126,7 @@
         {
           "id": "in:df",
           "param": "df",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         },
         {
@@ -84,11 +141,28 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "generator",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
       "student": true
+    },
+    {
+      "id": "i:145mmls.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1900025,
+      "className": "generator",
+      "varName": null,
+      "createdAt": 1,
+      "createdBy": "n:145mmls.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ]
     },
     {
       "id": "n:1n2ygm4.0",
@@ -118,7 +192,7 @@
         {
           "id": "in:df",
           "param": "df",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
@@ -126,19 +200,36 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "coroutine",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
       "student": true
+    },
+    {
+      "id": "i:1n2ygm4.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 2000020,
+      "className": "coroutine",
+      "varName": null,
+      "createdAt": 3,
+      "createdBy": "n:1n2ygm4.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v3.0"
+        }
+      ]
     }
   ],
   "edges": [
     {
-      "id": "e:n:wcu5tk.0.out:0>n:145mmls.0.in:df",
+      "id": "e:i:wcu5tk.0.>n:145mmls.0.in:df",
       "from": {
-        "node": "n:wcu5tk.0",
-        "port": "out:0"
+        "node": "i:wcu5tk.0",
+        "port": null
       },
       "to": {
         "node": "n:145mmls.0",
@@ -151,13 +242,13 @@
           "token": "v0.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
     },
     {
-      "id": "e:n:wcu5tk.0.out:0>n:1n2ygm4.0.in:df",
+      "id": "e:i:wcu5tk.0.>n:1n2ygm4.0.in:df",
       "from": {
-        "node": "n:wcu5tk.0",
-        "port": "out:0"
+        "node": "i:wcu5tk.0",
+        "port": null
       },
       "to": {
         "node": "n:1n2ygm4.0",
@@ -170,12 +261,108 @@
           "token": "v0.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
+    },
+    {
+      "id": "e:i:wcu5tk.0.>x:1y73kgs.0.",
+      "from": {
+        "node": "i:wcu5tk.0",
+        "port": null
+      },
+      "to": {
+        "node": "x:1y73kgs.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>i:wcu5tk.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:145mmls.0.out:0>i:145mmls.0.",
+      "from": {
+        "node": "n:145mmls.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:145mmls.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:1y73kgs.0.>i:1y73kgs.0.",
+      "from": {
+        "node": "x:1y73kgs.0",
+        "port": null
+      },
+      "to": {
+        "node": "i:1y73kgs.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:1n2ygm4.0.out:0>i:1n2ygm4.0.",
+      "from": {
+        "node": "n:1n2ygm4.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1n2ygm4.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [
     0,
     1,
+    2,
     3
   ]
 }
