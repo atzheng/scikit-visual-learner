@@ -350,3 +350,39 @@ def test_import_past_per_site_does_not_split_merged_output() -> None:
     assert [o["i"] for o in log["output"]] == list(range(20))
     assert log["output"][-1]["text"] == "19\n20\n21\n22\n23\n24\n"
     assert "".join(o["text"] for o in log["output"]) == p.stdout
+
+
+def test_dotted_binding_names_the_full_module() -> None:
+    b = bindings("import os.path\nimport xml.dom.minidom\nimport json\nimport a.b as c\n")
+    assert b["os"]["dotted"] == "os.path"  # `import a.b` binds `a`; a.b is a module
+    assert b["xml"]["dotted"] == "xml.dom.minidom"
+    assert "dotted" not in b["json"] and "dotted" not in b["c"]
+
+
+def test_submodules_are_recorded_only_for_real_submodules() -> None:
+    src = (
+        "from xml import dom\n"  # a submodule
+        "from os import path\n"  # a module, but posixpath, not os.path
+        "from json import loads\n"  # a function
+        "from collections import abc, OrderedDict as OD\n"  # abc is a submodule, OD a class
+        "import json\n"
+    )
+    evs = import_events(src)
+    assert [e.get("submodules") for e in evs] == [["dom"], None, None, ["abc"], None]
+
+
+def test_submodule_check_runs_no_student_code() -> None:
+    # A module whose class overrides __getattribute__ / __eq__ must not be consulted.
+    src = (
+        "import sys, types\n"
+        "class M(types.ModuleType):\n"
+        "    def __getattribute__(self, n):\n"
+        "        raise RuntimeError(n)\n"
+        "sys.modules['evil_pkg'] = m = M('evil_pkg')\n"
+        "sys.modules['evil_pkg.sub'] = s = M('evil_pkg.sub')\n"
+        "object.__setattr__(m, '__path__', [])\n"
+        "object.__setattr__(m, 'sub', s)\n"
+        "from evil_pkg import sub\n"
+    )
+    evs = import_events(src)
+    assert evs[-1].get("submodules") is None

@@ -18,9 +18,11 @@ class L {
     attr: string | null,
     sole = true,
     run = true,
+    extra: { dotted?: string; submodules?: string[] } = {},
   ): void {
     const site = this.sites.length;
-    if (run) this.event(site, 'import', text);
+    if (run)
+      this.event(site, 'import', text, extra.submodules ? { submodules: extra.submodules } : {});
     this.sites.push({
       id: this.sites.length,
       kind: 'import',
@@ -29,7 +31,7 @@ class L {
       end_line: line,
       end_col: text.length,
       text,
-      imports: [{ name, module, attr, sole }],
+      imports: [{ name, module, attr, sole, ...(extra.dotted ? { dotted: extra.dotted } : {}) }],
     });
   }
   event(site: number, kind: Event['kind'], name: string, extra: Partial<Event> = {}): void {
@@ -238,5 +240,80 @@ describe('import blocks (svl-i6s)', () => {
     l.event(0, 'import', 'import os', { count: 2 });
     const node = importNodes(l.graph())[0]!;
     expect(node.executions.map((x) => x.i)).toEqual([0, 1]);
+  });
+});
+
+describe('importedFrom resolves submodules (svl-ac6)', () => {
+  const label = (imp: (l: L) => void, callText: string, name: string): string | undefined => {
+    const l = new L();
+    imp(l);
+    l.values['v1.0'] = { type: 'Thing' };
+    l.call(callText, 5, 'function', name, { outputs: ['v1.0'] });
+    return callNode(l.graph()).importedFrom;
+  };
+  const dotted = (l: L, text = 'import numpy.random', d = 'numpy.random', sole = true): void =>
+    l.imp(text, 1, d.split('.')[0]!, d.split('.')[0]!, null, sole, true, { dotted: d });
+
+  test('import numpy.random; numpy.random.default_rng()', () => {
+    expect(label((l) => dotted(l), 'numpy.random.default_rng()', 'default_rng')).toBe(
+      'numpy.random',
+    );
+  });
+
+  test('the qualifier shorter than the import gives the shorter module', () => {
+    expect(label((l) => dotted(l), 'numpy.zeros()', 'zeros')).toBe('numpy');
+  });
+
+  test('a qualifier that leaves the import path keeps the common module', () => {
+    expect(label((l) => dotted(l), 'numpy.linalg.norm()', 'norm')).toBe('numpy');
+    expect(label((l) => dotted(l), 'numpy.random.x.f()', 'f')).toBe('numpy.random');
+  });
+
+  test('a dotted import that is not sole gives no label', () => {
+    expect(
+      label(
+        (l) => dotted(l, 'import numpy.random', 'numpy.random', false),
+        'numpy.random.default_rng()',
+        'default_rng',
+      ),
+    ).toBeUndefined();
+  });
+
+  test('from sklearn import linear_model; linear_model.LinearRegression()', () => {
+    const imp = (l: L, submodules: string[]): void =>
+      l.imp(
+        'from sklearn import linear_model',
+        1,
+        'linear_model',
+        'sklearn',
+        'linear_model',
+        true,
+        true,
+        { submodules },
+      );
+    expect(
+      label((l) => imp(l, ['linear_model']), 'linear_model.LinearRegression()', 'LinearRegression'),
+    ).toBe('sklearn.linear_model');
+  });
+
+  test('a from-import not known to be a submodule keeps the shorter label', () => {
+    const imp = (l: L): void =>
+      l.imp('from sklearn import linear_model', 1, 'linear_model', 'sklearn', 'linear_model');
+    expect(label(imp, 'linear_model.LinearRegression()', 'LinearRegression')).toBe('sklearn');
+  });
+
+  test('a submodule binding that is not sole gives no label', () => {
+    const imp = (l: L): void =>
+      l.imp(
+        'from sklearn import linear_model',
+        1,
+        'linear_model',
+        'sklearn',
+        'linear_model',
+        false,
+        true,
+        { submodules: ['linear_model'] },
+      );
+    expect(label(imp, 'linear_model.LinearRegression()', 'LinearRegression')).toBeUndefined();
   });
 });
