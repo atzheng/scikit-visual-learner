@@ -155,7 +155,18 @@
       "count": 1,
       "error": null,
       "i": 6,
-      "inputs": [],
+      "inputs": [
+        {
+          "origin": "call",
+          "param": "Ridge",
+          "value": "v4.0"
+        },
+        {
+          "origin": "call",
+          "param": "RandomForestRegressor",
+          "value": "v5.0"
+        }
+      ],
       "kind": "expr",
       "merge_key": "s7",
       "module": null,
@@ -403,6 +414,10 @@
       ],
       "text": "models = {\n    \"ridge\": Ridge(),\n    \"rf\": RandomForestRegressor(n_estimators=10, random_state=0),\n}",
       "value": {
+        "calls": [
+          5,
+          6
+        ],
         "origin": "expr",
         "reads": [
           "Ridge",
@@ -457,6 +472,9 @@
     {
       "args": [
         {
+          "calls": [
+            9
+          ],
           "origin": "expr",
           "reads": [
             "models",

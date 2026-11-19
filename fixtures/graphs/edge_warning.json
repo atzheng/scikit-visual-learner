@@ -171,7 +171,8 @@
           "i": 5,
           "ret": 5,
           "inputs": {
-            "in:df": "v1.0"
+            "in:df": "v1.0",
+            "in:df[\"price\"].median": "s0"
           },
           "outputs": {
             "out:0": "v4.0"
@@ -563,6 +564,25 @@
         {
           "i": 5,
           "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:mx41nfw@i:1nxnw93.0~u7kfkb.out:0>x:baf3pv.0.",
+      "from": {
+        "node": "n:mx41nfw@i:1nxnw93.0~u7kfkb",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:baf3pv.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 5,
+          "token": "s0"
         }
       ],
       "nameLabel": null

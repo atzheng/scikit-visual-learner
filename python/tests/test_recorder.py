@@ -1426,3 +1426,127 @@ def test_fixture_transparency(path: Path, monkeypatch: pytest.MonkeyPatch) -> No
         for ev in result.log["events"]:
             for tok in ev["outputs"]:
                 assert tok in result.log["values"]
+
+
+# -- svl-8r4: index operands of stores and calls inside expression origins ------------------------
+
+
+def test_store_index_operand_is_wired() -> None:
+    r = record(
+        FRAME
+        + """
+mask = df["a"] > 2
+df.loc[mask, "c"] = 0
+"""
+    )
+    (st,) = [e for e in r.events if e["kind"] == "store"]
+    assert inp(st, "index[mask]") == {
+        "param": "index[mask]",
+        "origin": "name",
+        "value": r.bound("mask"),
+    }
+    assert inp(st, "target")["value"] != r.bound("mask")
+    # the constant column label and the value draw nothing extra
+    assert {i["param"] for i in st["inputs"]} == {"target", "index[mask]", "value"}
+
+
+def test_store_index_expression_and_call_are_wired() -> None:
+    r = record(
+        FRAME
+        + """
+t = 2
+df[df["a"] > t] = 0
+df.loc[np.isnan(df["a"])] = 1
+"""
+    )
+    s1, s2 = [e for e in r.events if e["kind"] == "store"]
+    assert [i["param"] for i in s1["inputs"] if i["param"].startswith("index")] == ["index[t]"]
+    nan = r.by_name("isnan")[0]
+    assert inp(s2, "index[np.isnan]") == {
+        "param": "index[np.isnan]",
+        "origin": "call",
+        "value": nan["outputs"][0],
+    }
+
+
+def test_store_index_rebound_by_the_statement_gives_no_wire() -> None:
+    r = record(
+        """
+a = [0, 1, 2]
+i = 0
+a[i], i = 5, 2
+j = 1
+a[j] = j = 2
+""",
+        prelude=False,
+    )
+    assert r.err is None
+    for st in [e for e in r.events if e["kind"] == "store"]:
+        assert not [i for i in st["inputs"] if i["param"].startswith("index")]
+
+
+def test_store_index_evaluated_once_and_behaviour_unchanged() -> None:
+    src = """
+log = []
+def pick(k):
+    log.append(k)
+    return k
+d = {}
+mask = pd.Series([True, False, True])
+df = pd.DataFrame({"a": [1, 2, 3]})
+d[pick("x")] = pick(1)
+df.loc[mask, "c"] = pick(0)
+df[df["a"] > pick(1)] = pick(9)
+x = [d, df["c"].tolist(), df["a"].tolist()]
+"""
+    a, b = record(src), plain(src)
+    assert a.err is None and b.err is None
+    assert a.ns["log"] == b.ns["log"]
+    assert repr(a.ns["x"]) == repr(b.ns["x"])
+
+
+def test_list_literal_with_inline_calls_wires_the_instances() -> None:
+    r = record(
+        """
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+pipe = Pipeline([("s", StandardScaler()), ("m", LinearRegression())])
+"""
+    )
+    (ex,) = [e for e in r.events if e["kind"] == "expr"]
+    sc, lr = r.one("StandardScaler"), r.one("LinearRegression")
+    assert inp(ex, "StandardScaler")["value"] == sc["outputs"][0]
+    assert inp(ex, "LinearRegression")["value"] == lr["outputs"][0]
+    pl = r.one("Pipeline")
+    assert inp(pl, "steps")["value"] == ex["outputs"][0]
+
+
+def test_nested_call_in_expr_is_wired() -> None:
+    r = record(
+        FRAME
+        + """
+mask = df["a"] > df["a"].median()
+"""
+    )
+    med = [e for e in r.events if e["name"].endswith("median")]
+    assert len(med) == 1
+    ex = [e for e in r.events if e["kind"] == "expr" and e["name"].startswith('df["a"] >')]
+    assert len(ex) == 1
+    assert inp(ex[0], 'df["a"].median')["value"] == med[0]["outputs"][0]
+
+
+def test_conditional_and_lambda_calls_in_exprs_give_no_call_wire() -> None:
+    src = """
+out = []
+for f in [True, False]:
+    a = np.array([1.0, 2.0])
+    out.append([np.sum(a) if f else 0, f and np.max(a), (lambda: np.min(a))()])
+    out.append([np.abs(a) for _ in a])
+    v = [1, f or np.mean(a), (np.sum(a) if f else 7)]
+"""
+    r, p = record(src), plain(src)
+    assert r.err is None
+    for e in r.events:
+        if e["kind"] == "expr":
+            assert not [i for i in e["inputs"] if i["origin"] == "call"], e["name"]
+    assert repr(r.ns["out"]) == repr(p.ns["out"]) and repr(r.ns["v"]) == repr(p.ns["v"])

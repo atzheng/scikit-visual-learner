@@ -27,7 +27,7 @@ import sys
 import time
 import types
 import weakref
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field, fields
 from typing import Any
 
@@ -672,7 +672,9 @@ class Recorder:
         elif kind == "call":
             tok = self._out_token(o["site"], value) or self._hidden_call(o["site"], value)
         elif kind == "expr":
-            tok = self._expr_event(ex_site, ex_key, o["text"], o["reads"], value, ())
+            tok = self._expr_event(
+                ex_site, ex_key, o["text"], o["reads"], value, (), calls=o.get("calls", ())
+            )
         else:
             tok = vt.fresh_scalar(value)
         vt.summarize(tok, value)
@@ -682,7 +684,9 @@ class Recorder:
         vt = self.vt
         kind = o["origin"]
         if kind == "expr" and not vt.seen(value):
-            return self._expr_event(ex_site, ex_key, o["text"], o["reads"], value, ())
+            return self._expr_event(
+                ex_site, ex_key, o["text"], o["reads"], value, (), calls=o.get("calls", ())
+            )
         if kind == "call" and not vt.seen(value) and self._out_token(o["site"], value) is None:
             return self._hidden_call(o["site"], value)
         self._check(value)
@@ -752,6 +756,26 @@ class Recorder:
             out.append({"param": name, "origin": "name", "value": tok})
         return out
 
+    def _call_inputs(
+        self, calls: Sequence[int], have: list[dict[str, Any]], fmt: str = "{}"
+    ) -> list[dict[str, Any]]:
+        """Outputs of the calls an expression contains (`calls` of an `expr` origin).
+
+        The transformer lists only unconditional, outermost, wrapped calls of the expression, so
+        each ran exactly once while the expression was evaluated. A call with no recorded single
+        output (hidden, failed, tuple result) gives nothing: a missing wire, never a false one.
+        """
+        out: list[dict[str, Any]] = []
+        for c in calls:
+            outs = self._site_out.get(c)  # reset at the start of every execution of the site
+            if not outs or len(outs) != 1 or outs[0][1] is None:
+                continue
+            param = fmt.format(self.sites[c].get("func_text") or self.sites[c]["text"])
+            if any(i["param"] == param for i in (*have, *out)):
+                continue
+            out.append({"param": param, "origin": "call", "value": outs[0][1]})
+        return out
+
     def _expr_event(
         self,
         site: int,
@@ -762,10 +786,12 @@ class Recorder:
         rebound: Any,
         counts: bool = True,
         reuse: str | None = None,
+        calls: Sequence[int] = (),
     ) -> str:
         vt = self.vt
         scalar = vt.classify(value) == "scalar"
         inputs = self._read_inputs(reads, rebound)
+        inputs.extend(self._call_inputs(calls, inputs))
         if reuse is not None and not inputs:
             return reuse  # nothing to draw a wire from: the token stays a source
         tok = reuse or (vt.fresh_scalar(value) if scalar else vt.token(value))
@@ -1063,12 +1089,16 @@ class Recorder:
                 tok = self._out_token(inner, obj, pos)
                 return tok if tok is not None else self._hidden_call(inner, obj)
             elif kind == "expr":
-                return self._expr_event(site, key, o["text"], o["reads"], obj, rebound)  # type: ignore[index]
+                return self._expr_event(
+                    site, key, o["text"], o["reads"], obj, rebound, calls=o.get("calls", ())
+                )  # type: ignore[index]
             return vt.fresh_scalar(obj)
         # references
         if kind == "expr":
             if not vt.seen(obj):
-                return self._expr_event(site, key, o["text"], o["reads"], obj, rebound)  # type: ignore[index]
+                return self._expr_event(
+                    site, key, o["text"], o["reads"], obj, rebound, calls=o.get("calls", ())
+                )  # type: ignore[index]
             if name not in o["reads"] and _is_attr_chain(o["text"]):  # type: ignore[index]
                 # `coefs = model.coef_`: the object already has a token (the machine's summary)
                 # but no producer; show the read as an expression that outputs that same token
@@ -1083,6 +1113,7 @@ class Recorder:
                         obj,
                         rebound,
                         reuse=tok,  # type: ignore[index]
+                        calls=o.get("calls", ()),  # type: ignore[union-attr]
                     )
             if name in o["reads"]:  # type: ignore[index]
                 before = vt.token(obj)
@@ -1167,6 +1198,7 @@ class Recorder:
                 # the RHS object is not passed to the hook: wire the names it reads instead
                 for r in self._read_inputs(o["reads"], frozenset({root})):
                     inputs.append({**r, "param": f"value[{r['param']}]", "origin": "expr"})
+                inputs.extend(self._call_inputs(o.get("calls", ()), inputs, "value[{}]"))
             elif kind == "call":
                 # the call's output is usually already freed (a temporary): use the token that was
                 # issued for it, which cannot be a false wire (a `call` origin is static)
@@ -1179,6 +1211,18 @@ class Recorder:
                     inputs.append(self._input("value", o, ns[o["name"]], site, f"s{site}.value"))
                 elif kind == "const":
                     inputs.append({"param": "value", "origin": "const", "text": o["text"]})
+        # Index operands (`mask` in `df.loc[mask, "c"] = 0`): the hook gets only the root, so wire
+        # what the operand reads, or the output of a call in it. The root itself is the target.
+        for io in info.get("index") or ():
+            kind = io["origin"]
+            reads = [io["name"]] if kind == "name" else io.get("reads", [])
+            have = {inp["param"] for inp in inputs}
+            for r in self._read_inputs([n for n in reads if n != root], frozenset()):
+                param = f"index[{r['param']}]"
+                if param not in have:
+                    inputs.append({**r, "param": param, "origin": kind})
+            calls = [io["site"]] if kind == "call" else io.get("calls", ())
+            inputs.extend(self._call_inputs(calls, inputs, "index[{}]"))
         alloc = self._alloc(f"s{site}")
         if alloc is None:
             return

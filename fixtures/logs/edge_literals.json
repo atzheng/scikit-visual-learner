@@ -311,6 +311,11 @@
           "origin": "name",
           "param": "s",
           "value": "v7.0"
+        },
+        {
+          "origin": "call",
+          "param": "s.nunique",
+          "value": "s6"
         }
       ],
       "kind": "expr",
@@ -361,6 +366,11 @@
           "origin": "name",
           "param": "s",
           "value": "v7.0"
+        },
+        {
+          "origin": "call",
+          "param": "s.count",
+          "value": "s8"
         }
       ],
       "kind": "expr",
@@ -805,6 +815,9 @@
       ],
       "text": "x = s.nunique() + 2",
       "value": {
+        "calls": [
+          20
+        ],
         "origin": "expr",
         "reads": [
           "s"
@@ -837,6 +850,9 @@
       ],
       "text": "y = s.count() - 1",
       "value": {
+        "calls": [
+          22
+        ],
         "origin": "expr",
         "reads": [
           "s"

@@ -136,6 +136,11 @@
           "origin": "name",
           "param": "df",
           "value": "v1.0"
+        },
+        {
+          "origin": "call",
+          "param": "df[\"price\"].median",
+          "value": "s0"
         }
       ],
       "kind": "expr",
@@ -392,6 +397,9 @@
       ],
       "text": "y = df[\"price\"] > df[\"price\"].median()",
       "value": {
+        "calls": [
+          6
+        ],
         "origin": "expr",
         "reads": [
           "df"

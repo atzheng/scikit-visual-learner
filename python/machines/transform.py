@@ -133,6 +133,34 @@ def _reads(node: ast.AST) -> list[str]:
     return list(dict.fromkeys(name for _, _, name in found))
 
 
+def _outer_calls(node: ast.AST, out: list[ast.Call]) -> None:
+    """Wrapped calls in an expression that certainly ran, exactly once, when it was evaluated.
+
+    Only the outermost ones (the inner calls feed the outer call, not the expression directly).
+    Nothing under a lambda, a comprehension, a conditional expression's branches, the later
+    operands of `and`/`or` or of a chained comparison: those may not run, or run many times, and
+    a stale output must never become a wire.
+    """
+    if isinstance(node, ast.Call):
+        if not _is_unwrapped(node):
+            out.append(node)
+        return
+    if isinstance(node, (ast.Lambda, ast.Await, ast.Yield, ast.YieldFrom, *_COMPREHENSIONS)):
+        return
+    if isinstance(node, ast.IfExp):
+        _outer_calls(node.test, out)
+        return
+    if isinstance(node, ast.BoolOp):
+        _outer_calls(node.values[0], out)
+        return
+    if isinstance(node, ast.Compare) and len(node.comparators) > 1:
+        _outer_calls(node.left, out)
+        _outer_calls(node.comparators[0], out)
+        return
+    for child in ast.iter_child_nodes(node):
+        _outer_calls(child, out)
+
+
 def _flatten_targets(target: ast.expr) -> list[ast.expr]:
     if isinstance(target, (ast.Tuple, ast.List)):
         return [leaf for e in target.elts for leaf in _flatten_targets(e)]
@@ -272,9 +300,15 @@ def _import_sites(tree: ast.Module, src: _Source) -> list[dict[str, Any]]:
 class _Pending:
     """An origin computed before the children are rewritten (a call origin needs its site id)."""
 
-    def __init__(self, data: dict[str, Any] | None, call: ast.Call | None = None) -> None:
+    def __init__(
+        self,
+        data: dict[str, Any] | None,
+        call: ast.Call | None = None,
+        inner: list[ast.Call] | None = None,
+    ) -> None:
         self.data = data
         self.call = call
+        self.inner = inner or []  # expr origins: calls whose outputs the expression uses
 
 
 class _Instrument(ast.NodeTransformer):
@@ -315,7 +349,40 @@ class _Instrument(ast.NodeTransformer):
             return _Pending({"origin": "name", "name": node.id})
         if isinstance(node, ast.Call) and not _is_unwrapped(node):
             return _Pending(None, node)
-        return _Pending({"origin": "expr", "text": self._text(node), "reads": self._reads(node)})
+        inner: list[ast.Call] = []
+        _outer_calls(node, inner)
+        return _Pending(
+            {"origin": "expr", "text": self._text(node), "reads": self._reads(node)}, inner=inner
+        )
+
+    def _index_origins(self, leaf: ast.expr, exclude: frozenset[str]) -> list[_Pending]:
+        """Origins of the index operands of a store target (`mask` in `df.loc[mask, "c"] = 0`).
+
+        `exclude` are the names the statement itself rebinds: after it ran they no longer hold
+        what the index used, so they give no wire.
+        """
+        out: list[_Pending] = []
+        node: ast.expr = leaf
+        while isinstance(node, (ast.Attribute, ast.Subscript)):
+            if isinstance(node, ast.Subscript):
+                sl = node.slice
+                for e in sl.elts if isinstance(sl, ast.Tuple) else [sl]:
+                    if isinstance(e, ast.Starred):
+                        continue
+                    p = self._pre_origin(e)
+                    if p.data is not None and p.data["origin"] == "const":
+                        continue
+                    if p.data is not None and p.data["origin"] == "name":
+                        if p.data["name"] in exclude:
+                            continue
+                    elif p.data is not None:  # expr
+                        p.data = {
+                            **p.data,
+                            "reads": [r for r in p.data["reads"] if r not in exclude],
+                        }
+                    out.append(p)
+            node = node.value
+        return out
 
     def _reads(self, node: ast.AST) -> list[str]:
         return [n for n in _reads(node) if n not in self.shadow]
@@ -324,6 +391,9 @@ class _Instrument(ast.NodeTransformer):
         if pending.call is not None:
             return {"origin": "call", "site": self.site_of[pending.call]}
         assert pending.data is not None
+        calls = [self.site_of[c] for c in pending.inner if c in self.site_of]
+        if calls:
+            return {**pending.data, "calls": calls}
         return pending.data
 
     @staticmethod
@@ -347,12 +417,19 @@ class _Instrument(ast.NodeTransformer):
         return self._hook_stmt("__bind__", ast.Constant(sid), mapping, like=like)
 
     def _store_stmt(
-        self, root: str, span: Span, value: dict[str, Any] | None, like: ast.AST
+        self,
+        root: str,
+        span: Span,
+        value: dict[str, Any] | None,
+        like: ast.AST,
+        index: list[dict[str, Any]] | None = None,
     ) -> ast.Expr:
         site = self._base("store", span)
         site["root"] = root
         if value is not None:
             site["value"] = value
+        if index:
+            site["index"] = index
         sid = self._add(site)
         return self._hook_stmt(
             "__store__", ast.Constant(sid), ast.Name(root, ast.Load()), like=like
@@ -475,12 +552,19 @@ class _Instrument(ast.NodeTransformer):
                 pre = _Pending({"origin": "expr", "text": self.src.text(span), "reads": reads})
             else:
                 pre = self._pre_origin(value)
+        names = [n for t in targets for n in _names(t)]
+        idx_pre: dict[int, list[_Pending]] = {}
+        if pre is not None and not any(isinstance(n, ast.NamedExpr) for n in ast.walk(node)):
+            exclude = frozenset(names)
+            for t in targets:
+                for leaf in _flatten_targets(t):
+                    if _store_root(leaf) is not None:
+                        idx_pre[id(leaf)] = self._index_origins(leaf, exclude)
         self.generic_visit(node)
         if pre is None:
             return node  # statements directly in a class body get neither hook
         origin = self._resolve(pre)
 
-        names = [n for t in targets for n in _names(t)]
         destructure = any(isinstance(t, (ast.Tuple, ast.List, ast.Starred)) for t in targets)
         unpack = (
             not augmented
@@ -502,7 +586,13 @@ class _Instrument(ast.NodeTransformer):
                 if root is not None:
                     # The value is only recorded when the target is the whole left-hand side.
                     single = leaf is t and not augmented and not destructure
-                    extra.append(self._store_stmt(root, span, origin if single else None, node))
+                    index = [self._resolve(p) for p in idx_pre.get(id(leaf), [])]
+                    index = [
+                        o for o in index if o["origin"] != "expr" or o["reads"] or o.get("calls")
+                    ]
+                    extra.append(
+                        self._store_stmt(root, span, origin if single else None, node, index)
+                    )
         if unpack:
             self.sites[origin["site"]]["unpack"] = len(targets[0].elts)  # type: ignore[attr-defined]
         return [node, *extra] if extra else node
