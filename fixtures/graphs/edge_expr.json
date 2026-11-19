@@ -341,12 +341,27 @@
       "student": false
     },
     {
-      "id": "src:n:1m83oie.0:self",
-      "kind": "source",
+      "id": "x:u4f6m6.0",
+      "kind": "expr",
       "parent": null,
-      "order": 1600005.5,
-      "label": "coefs",
-      "token": "v11.0"
+      "order": 1500000,
+      "text": "model.coef_",
+      "executions": [
+        {
+          "i": 9,
+          "ret": 9,
+          "inputs": {
+            "in:model": "v10.1"
+          },
+          "outputs": {
+            "out:0": "v11.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "n:1m83oie.0",
@@ -358,8 +373,8 @@
       "order": 1600006,
       "executions": [
         {
-          "i": 9,
-          "ret": 9,
+          "i": 10,
+          "ret": 10,
           "inputs": {
             "in:self": "v11.0"
           },
@@ -514,23 +529,23 @@
       "nameLabel": "y_train"
     },
     {
-      "id": "e:src:n:1m83oie.0:self.>n:1m83oie.0.in:self",
+      "id": "e:x:u4f6m6.0.>n:1m83oie.0.in:self",
       "from": {
-        "node": "src:n:1m83oie.0:self",
+        "node": "x:u4f6m6.0",
         "port": null
       },
       "to": {
         "node": "n:1m83oie.0",
         "port": "in:self"
       },
-      "dashed": false,
+      "dashed": true,
       "uses": [
         {
-          "i": 9,
+          "i": 10,
           "token": "v11.0"
         }
       ],
-      "nameLabel": null
+      "nameLabel": "coefs"
     },
     {
       "id": "e:n:wehbtt.0.out:0>x:f2rqav.0.",
@@ -607,6 +622,25 @@
         }
       ],
       "nameLabel": "mean"
+    },
+    {
+      "id": "e:i:10epbgg.0.>x:u4f6m6.0.",
+      "from": {
+        "node": "i:10epbgg.0",
+        "port": null
+      },
+      "to": {
+        "node": "x:u4f6m6.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 9,
+          "token": "v10.1"
+        }
+      ],
+      "nameLabel": null
     }
   ],
   "steps": [
@@ -619,6 +653,7 @@
     6,
     7,
     8,
-    9
+    9,
+    10
   ]
 }

@@ -684,6 +684,27 @@ m = LinearRegression().fit(df[["a"]], z)
                 assert all(p["i"] < e["i"] for p in prod)
 
 
+def test_attribute_read_of_machine_attr_is_expr_event_with_existing_token() -> None:
+    r = record(
+        FRAME
+        + """
+df = pd.DataFrame({"a": [1.0, 2.0, 4.0], "b": [1.0, 0.0, 3.0]})
+m = LinearRegression().fit(df[["a"]], df["b"])
+coefs = m.coef_
+again = m.coef_
+models = {"rf": m}
+alias = models["rf"]
+"""
+    )
+    evs = [e for e in r.events if e["name"] == "m.coef_"]
+    assert len(evs) == 1  # the second read is an alias: the token has a producer now
+    ev = evs[0]
+    assert ev["kind"] == "expr" and ev["outputs"] == [r.bound("coefs")]
+    assert r.bound("again") == r.bound("coefs")
+    assert [(i["param"], i["value"]) for i in ev["inputs"]] == [("m", r.bound("m"))]
+    assert not [e for e in r.events if e["name"] == 'models["rf"]']  # plain aliasing: no node
+
+
 def test_hidden_call_becomes_expression_event() -> None:
     r = record(
         FRAME
