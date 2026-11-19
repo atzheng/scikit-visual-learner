@@ -376,7 +376,7 @@ def reset_between_runs() -> None       # close matplotlib figures, pd.reset_opti
 ```ts
 type ToWorker =
   | { type: 'init'; interruptBuffer?: SharedArrayBuffer; currentCall?: SharedArrayBuffer }
-  | { type: 'run'; runId: number; source: string; config: RunConfig }
+  | { type: 'run'; runId: number; source: string; config: RunConfig; debug?: 'plain' | 'timing' } // `debug`: measurement only, never set by the page; see below
   | { type: 'file'; name: string; bytes: ArrayBuffer } // written to /home/pyodide/<name>
   | { type: 'docs'; reqId: number; target: DocTarget }; // section 12
 
@@ -422,6 +422,8 @@ interface RunConfig {
   hash_cells: number;
 }
 ```
+
+**Debug run option (measurement only).** `run.debug` is set only by `scripts/measure.ts`, never by the page. `'plain'` execs the source with no recorder (stdout discarded) and answers with `started` (no sites) and `done` `ok`. `'timing'` runs the recorder normally and times content hashing. Both write one line `[machines-debug] {"mode","ms","hash_ms"?}` to the worker's `console.log` (`ms` is the in-Python time; `hash_ms` only for `'timing'`). Nothing from this path enters the event log or any other message.
 
 - An event is sent once it has finished (or in its slot form), and may be re-sent with the same `i` when its error is later found to be handled (`handled` flips to `true`); the assembler replaces by `i`. A re-sent slot event is dropped if a newer slot event for its merge key has arrived. `open` is the full stack of started, unfinished recorded calls at flush time, outermost first.
 - `currentCall` (only when `crossOriginIsolated`): an `Int32Array(2)` = `[i + 1, site]` of the innermost open recorded call, `0` when none, written by `on_enter`/`on_exit`.

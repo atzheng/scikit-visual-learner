@@ -59,6 +59,8 @@ function startPreview(): Promise<ChildProcess> {
       'exec',
       'vite',
       'preview',
+      '--host',
+      '127.0.0.1',
       '--port',
       String(PREVIEW_PORT),
       '--strictPort',
@@ -101,7 +103,7 @@ function startProxy(link: Link): Promise<http.Server> {
     setTimeout(() => {
       const up = http.request(
         {
-          host: 'localhost',
+          host: '127.0.0.1',
           port: PREVIEW_PORT,
           path: req.url,
           method: req.method,
@@ -183,15 +185,32 @@ async function coldLoads(
 }
 
 /** Cold load that fills the SW cache, then reloads with the cache enabled. */
-async function warmLoads(browser: Browser, n: number): Promise<number[]> {
+async function warmLoads(
+  browser: Browser,
+  n: number,
+): Promise<{ ms: number[]; fromSw: number; network: number }> {
   const { ctx, page } = await newPage(browser);
   await loadToReady(page);
   await swReady(page);
   await page.waitForTimeout(5000); // the SW precaches in the background after install
   const ms: number[] = [];
-  for (let i = 0; i < n; i++) ms.push(await loadToReady(page));
+  let fromSw = 0;
+  let network = 0;
+  for (let i = 0; i < n; i++) {
+    fromSw = 0;
+    network = 0;
+    const onResponse = (r: { fromServiceWorker(): boolean }): void => {
+      if (r.fromServiceWorker()) fromSw++;
+      else network++;
+    };
+    page.on('response', onResponse);
+    ms.push(await loadToReady(page));
+    page.off('response', onResponse);
+    const controlled = await page.evaluate(() => navigator.serviceWorker.controller !== null);
+    if (!controlled) throw new Error('warm load: the service worker does not control the page');
+  }
   await ctx.close();
-  return ms;
+  return { ms, fromSw, network };
 }
 
 /** Stop on a long C call (no Python bytecode to interrupt) until the runtime is ready again. */
@@ -210,21 +229,29 @@ async function restarts(browser: Browser, n: number): Promise<number[]> {
         .getState()
         .setSource('import numpy as np\nnp.linalg.eigvals(np.random.rand(4000, 4000))\n');
       const done = store.getState().run();
-      for (let k = 0; k < 500 && store.getState().runtime.state !== 'running'; k++)
+      // `started` has arrived once the log exists: the program is executing.
+      for (
+        let k = 0;
+        k < 1500 && !(store.getState().runtime.state === 'running' && store.getState().log);
+        k++
+      )
         await new Promise((r) => setTimeout(r, 20));
-      await new Promise((r) => setTimeout(r, 1000)); // let it get into the C call
+      if (!store.getState().log) throw new Error('restart: the run never started');
+      await new Promise((r) => setTimeout(r, 1000)); // margin: into the C call
+      if (!store.getState().running) throw new Error('restart: the run ended before Stop');
       const t0 = performance.now();
       store.getState().stop();
       // `running` -> `restarting` -> `ready`
       let sawRestart = false;
-      for (;;) {
-        const s = store.getState().runtime.state;
-        if (s === 'restarting') sawRestart = true;
-        if (sawRestart && s === 'ready') break;
+      while (!(sawRestart && store.getState().runtime.state === 'ready')) {
+        if (performance.now() - t0 > 120_000) throw new Error('restart: not ready after 120 s');
+        if (store.getState().runtime.state === 'restarting') sawRestart = true;
         await new Promise((r) => setTimeout(r, 10));
       }
       const t = performance.now() - t0;
       await done;
+      const status = store.getState().log?.status;
+      if (status !== 'stopped') throw new Error(`restart: run ended as ${status}, not stopped`);
       return t;
     });
     out.push(ms);
@@ -349,7 +376,11 @@ async function main(): Promise<void> {
     log('Cold load to ready (cache disabled)', spread(cold.ms), cold.ms);
     log('Cold load transfer (uncompressed)', `${cold.mb.toFixed(1)} MB`, cold.mb);
     const warm = await warmLoads(browser, reps);
-    log('Warm load to ready (service worker cache)', spread(warm), warm);
+    log('Warm load to ready (service worker cache)', spread(warm.ms), warm);
+    log(
+      'Warm load requests (last load)',
+      `${warm.fromSw} served by the service worker, ${warm.network} to the network`,
+    );
     const rs = await restarts(browser, reps);
     log('Worker restart after Stop on a C call, to ready', spread(rs), rs);
 
