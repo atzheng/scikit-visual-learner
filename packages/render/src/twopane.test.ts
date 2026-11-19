@@ -259,7 +259,8 @@ describe('mount', () => {
       expect(card.parentElement).toBe(tp!.stageEl); // the shelf card itself moved
       expect(slot(callee.node).dataset.state).toBe('stage');
       expect((slot(callee.node).querySelector('.md-slot-ph') as HTMLElement).hidden).toBe(false);
-      expect(tp!.plan!.wires.some((w) => w.label?.name === 'calls')).toBe(true);
+      expect(tp!.plan!.wires.some((w) => w.label?.name === 'calls')).toBe(false);
+      expect(tp!.plan!.calleeBox).toBe(true);
       tp!.setStep(s + 1 <= model.steps.length ? s + 1 : s);
     }
     expect(seen).toBe(2); // load and Pipeline; pipe.run is a method, so it has no callee
@@ -600,15 +601,49 @@ describe('a method is drawn inside its owner (svl-a9e)', () => {
     }
   });
 
-  test('constructors and functions keep their call box (and the calls line)', async () => {
+  test('constructors and functions are the block card itself, with no call box and no calls line (svl-u3v)', async () => {
     const { model, log } = await open('golden_linreg');
-    const s = stepOfCall(model, log, /^LinearRegression$/);
+    for (const [re, label] of [
+      [/^LinearRegression$/, 'LinearRegression'],
+      [/^read_csv$/, 'read_csv'],
+      [/^train_test_split$/, 'train_test_split'],
+    ] as const) {
+      const s = stepOfCall(model, log, re);
+      tp!.setStep(s);
+      const st = stageAt(model, log, s)!;
+      const callee = st.participants.find((p) => p.role === 'callee')!;
+      const plan = tp!.plan!;
+      expect(plan.nested).toBeUndefined();
+      expect(plan.calleeBox).toBe(true);
+      expect(tp!.card(st.node)).toBeNull(); // no card for the call itself
+      const card = tp!.card(callee.node)!;
+      expect(card.parentElement).toBe(tp!.stageEl); // the shelf card moved
+      expect(card.querySelector('g.md-node')!.classList.contains('md-current')).toBe(true);
+      expect(plan.items.find((i) => i.participant.role === 'callee')!.rect).toEqual(plan.box);
+      expect(plan.wires.some((w) => w.label?.name === 'calls' || w.edge === null)).toBe(false);
+      expect(host.querySelectorAll('.md-owner-line')).toHaveLength(0);
+      // the call's name is drawn beside the card only when the card does not already say it
+      expect([...host.querySelectorAll('.md-call-label')].map((e) => e.textContent)).toEqual(
+        label === 'read_csv' ? ['.read_csv()'] : [],
+      );
+      // every wire starts or ends on the card's top or bottom edge
+      for (const w of plan.wires) {
+        const [end, start] = [w.points[w.points.length - 1]!, w.points[0]!];
+        const at = w.to === 'box' ? end : start;
+        expect(at[1] === plan.box!.y || at[1] === plan.box!.y + plan.box!.h).toBe(true);
+        expect(at[0]).toBeGreaterThan(plan.box!.x);
+        expect(at[0]).toBeLessThan(plan.box!.x + plan.box!.w);
+      }
+      expect(tp!.stageEl.classList.contains('md-nested')).toBe(false);
+    }
+  });
+
+  test('a call without a certain callee keeps its plain call box', async () => {
+    const { model, log } = await open('golden_linreg');
+    const s = stepOfCall(model, log, /^DataFrame\.dropna$/);
     tp!.setStep(s);
-    const st = stageAt(model, log, s)!;
-    expect(tp!.plan!.nested).toBeUndefined();
-    expect(tp!.card(st.node)).not.toBeNull();
-    expect(tp!.plan!.wires.some((w) => w.label?.name === 'calls')).toBe(true);
-    expect(tp!.stageEl.classList.contains('md-nested')).toBe(false);
+    expect(tp!.plan!.calls!.find((c) => c.current)!.calleeBox).toBeUndefined();
+    expect(tp!.card(stageAt(model, log, s)!.node)).not.toBeNull();
   });
 
   test('a method of a student class is drawn the same way', async () => {
@@ -694,13 +729,17 @@ describe('a line keeps every call on the stage (svl-qol)', () => {
       [stageAt(model, log, read)!.node, false],
       [stageAt(model, log, drop)!.node, true],
     ]);
-    // both call boxes are cards on the stage; read_csv's is not the current one
-    for (const c of plan.calls!) expect(tp!.card(c.node)!.parentElement).toBe(tp!.stageEl);
-    const readG = tp!.card(plan.calls![0]!.node)!.querySelector('g.md-node')!;
-    expect(readG.classList.contains('md-current')).toBe(false);
-    expect(
-      tp!.card(plan.calls![1]!.node)!.querySelector('g.md-node')!.classList.contains('md-current'),
-    ).toBe(true);
+    // read_csv's call box is the `pd` block's card (svl-u3v); dropna has a call box of its own
+    expect(plan.calls![0]!.calleeBox).toBe(true);
+    const pd = stageAt(model, log, read)!.participants.find((p) => p.role === 'callee')!;
+    const readCard = tp!.card(pd.node)!;
+    expect(readCard.parentElement).toBe(tp!.stageEl);
+    expect(tp!.card(plan.calls![0]!.node)).toBeNull();
+    expect(readCard.querySelector('g.md-node')!.classList.contains('md-current')).toBe(false);
+    const dropCard = tp!.card(plan.calls![1]!.node)!;
+    expect(dropCard.parentElement).toBe(tp!.stageEl);
+    expect(dropCard.querySelector('g.md-node')!.classList.contains('md-current')).toBe(true);
+    expect(host.querySelectorAll('.md-call-label')).toHaveLength(1);
     // one chip, wired out of the first call and into the second
     const chips = plan.items.filter((i) => i.participant.kind === 'chip');
     expect(chips).toHaveLength(1);
@@ -714,18 +753,19 @@ describe('a line keeps every call on the stage (svl-qol)', () => {
     const names = [...host.querySelectorAll('.md-stage-canvas .md-node[aria-label]')].map((g) =>
       g.getAttribute('aria-label'),
     );
-    expect(names.some((n) => /earlier call 1 of 2 on this line/.test(n ?? ''))).toBe(true);
+    expect(names.some((n) => /the call of read_csv, call 1 of 2/.test(n ?? ''))).toBe(true);
     expect(names.some((n) => /current call/.test(n ?? ''))).toBe(true);
 
     // stepping back within the line removes the later call
     tp!.setStep(read);
     expect(host.querySelectorAll('.md-chipcard')).toHaveLength(1); // read_csv's own output chip
     expect(tp!.card(stageAt(model, log, drop)!.node)!.hidden).toBe(true);
+    expect(tp!.card(pd.node)!.parentElement).toBe(tp!.stageEl);
     // the next line sends every card of this one back to the shelf
     tp!.setStep(drop + 1);
     expect(tp!.plan!.calls).toBeUndefined();
     expect(host.querySelectorAll('.md-chipcard')).toHaveLength(0);
-    expect(tp!.card(stageAt(model, log, read)!.node)!.hidden).toBe(true);
+    expect(tp!.card(pd.node)!.parentElement).toBe(slot(pd.node)); // back on the shelf
   });
 
   test('fit and predict of one chain share the owner card, one method box each', async () => {
@@ -839,8 +879,9 @@ describe('a line keeps every call on the stage (svl-qol)', () => {
       if (ln.calls.length > 1)
         expect(tp!.plan!.calls!.map((c) => c.node)).toEqual(ln.calls.map((c) => c.stage.node));
       for (const c of ln.calls) {
+        const callee = c.stage.participants.find((p) => p.role === 'callee');
         const g = host.querySelector(
-          `.md-stage-canvas .md-node[data-node="${c.stage.node}"]:not(.md-hidden)`,
+          `.md-stage-canvas .md-node[data-node="${callee ? callee.node : c.stage.node}"]:not(.md-hidden)`,
         );
         expect(g).not.toBeNull();
       }
