@@ -43,6 +43,54 @@
       ]
     },
     {
+      "id": "f:auwjuy.0",
+      "kind": "def",
+      "parent": null,
+      "order": 800000,
+      "name": "chunks",
+      "defKind": "function",
+      "signature": "chunks(df, size)",
+      "methods": [],
+      "decorated": false,
+      "site": 12,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "f:v6in1v.0",
+      "kind": "def",
+      "parent": null,
+      "order": 1300000,
+      "name": "total_price",
+      "defKind": "function",
+      "signature": "total_price(df)",
+      "methods": [],
+      "decorated": false,
+      "site": 13,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -52,8 +100,8 @@
       "order": 1800005,
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 4,
+          "ret": 4,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0"
@@ -61,7 +109,8 @@
           "count": 1,
           "owner": null,
           "error": null,
-          "interrupted": false
+          "interrupted": false,
+          "callee": "m:6w14qy.0.lg6rbl"
         }
       ],
       "inPorts": [
@@ -91,12 +140,12 @@
       "order": 1800005,
       "className": "DF",
       "varName": "df",
-      "createdAt": 2,
+      "createdAt": 4,
       "createdBy": "n:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v0.0",
           "kind": "new"
         }
@@ -110,8 +159,8 @@
       "text": "[len(c) for c in chunks(df, 200)]",
       "executions": [
         {
-          "i": 4,
-          "ret": 4,
+          "i": 6,
+          "ret": 6,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -132,12 +181,12 @@
       "order": 1900000,
       "className": "list[3]",
       "varName": "sizes",
-      "createdAt": 4,
+      "createdAt": 6,
       "createdBy": "x:1y73kgs.0",
       "params": [],
       "versions": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v2.0",
           "kind": "new"
         }
@@ -153,8 +202,8 @@
       "order": 1900025,
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 5,
+          "ret": 5,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -164,7 +213,8 @@
           "count": 1,
           "owner": null,
           "error": null,
-          "interrupted": false
+          "interrupted": false,
+          "callee": "f:auwjuy.0"
         }
       ],
       "inPorts": [
@@ -199,12 +249,12 @@
       "order": 1900025,
       "className": "generator",
       "varName": null,
-      "createdAt": 3,
+      "createdAt": 5,
       "createdBy": "n:145mmls.0",
       "params": [],
       "versions": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v1.0",
           "kind": "new"
         }
@@ -220,8 +270,8 @@
       "order": 2000020,
       "executions": [
         {
-          "i": 5,
-          "ret": 5,
+          "i": 7,
+          "ret": 7,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -231,7 +281,8 @@
           "count": 1,
           "owner": null,
           "error": null,
-          "interrupted": false
+          "interrupted": false,
+          "callee": "f:v6in1v.0"
         }
       ],
       "inPorts": [
@@ -259,12 +310,12 @@
       "order": 2000020,
       "className": "coroutine",
       "varName": null,
-      "createdAt": 5,
+      "createdAt": 7,
       "createdBy": "n:1n2ygm4.0",
       "params": [],
       "versions": [
         {
-          "i": 5,
+          "i": 7,
           "token": "v3.0",
           "kind": "new"
         }
@@ -285,7 +336,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v0.0"
         }
       ],
@@ -304,7 +355,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 5,
+          "i": 7,
           "token": "v0.0"
         }
       ],
@@ -323,7 +374,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v0.0"
         }
       ],
@@ -342,7 +393,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v0.0"
         }
       ],
@@ -361,7 +412,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v1.0"
         }
       ],
@@ -380,7 +431,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v2.0"
         }
       ],
@@ -399,7 +450,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 5,
+          "i": 7,
           "token": "v3.0"
         }
       ],
@@ -412,6 +463,8 @@
     2,
     3,
     4,
-    5
+    5,
+    6,
+    7
   ]
 }

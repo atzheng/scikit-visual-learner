@@ -25,7 +25,7 @@ export type Origin =
 
 export interface Site {
   id: number;
-  kind: 'call' | 'bind' | 'store' | 'ret' | 'import';
+  kind: 'call' | 'bind' | 'store' | 'ret' | 'import' | 'def';
   line: number;
   col: number;
   end_line: number;
@@ -45,6 +45,21 @@ export interface Site {
   index?: Origin[];
   /** `import` sites: the names one module-level import statement binds. */
   imports?: ImportBinding[];
+  /** `def` sites (svl-jl3): one module-level `def` or `class` statement. */
+  def?: DefInfo;
+}
+
+/** What a `def` site says about its statement; static, no student values. */
+export interface DefInfo {
+  name: string;
+  kind: 'function' | 'class';
+  /** `f(x, y=2)`; a class shows its `__init__` without `self` (`C()`, or `C(…)` when the constructor is inherited or a decorator may change it). */
+  signature: string;
+  /** A class: its method names in source order, without dunder methods. */
+  methods?: string[];
+  decorated: boolean;
+  /** Every binding of the name in the module is an undecorated module-level `def`/`class` and the namespace is not reached dynamically: a call of the name reaches the latest such object that ran. */
+  link: boolean;
 }
 
 export interface ImportBinding {
@@ -86,7 +101,7 @@ export interface ValueSummary {
 }
 
 export type EventKind =
-  'function' | 'method' | 'constructor' | 'student_function' | 'expr' | 'store' | 'import';
+  'function' | 'method' | 'constructor' | 'student_function' | 'expr' | 'store' | 'import' | 'def';
 
 export interface Input {
   param: string;

@@ -62,6 +62,14 @@ export const LEGEND_ITEMS: LegendItem[] = [
     draw: (mk) => [box(mk)],
   },
   {
+    id: 'def',
+    covers: ['def'],
+    label: 'Function or class you defined: `def f` or `class C`, then its signature',
+    level: 'more',
+    cls: 'md-node md-def',
+    draw: (mk) => [box(mk)],
+  },
+  {
     id: 'wire',
     covers: ['edge'],
     label: 'Wire: a value, labelled with its type and shape, then its name',

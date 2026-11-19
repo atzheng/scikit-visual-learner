@@ -1335,15 +1335,16 @@ class Recorder:
                 return
             i, count, slot = alloc
             self._retag_import_output(i)
-            subs = self._submodules(site, frame)
+            is_def = self.sites[site]["kind"] == "def"
+            subs = [] if is_def else self._submodules(site, frame)
             self._add_event(
                 {
                     "i": i,
                     "ret": i,
                     "site": site,
                     "scope": 0,
-                    "kind": "import",
-                    "name": self.sites[site]["text"],
+                    "kind": "def" if is_def else "import",
+                    "name": self.sites[site]["def"]["name"] if is_def else self.sites[site]["text"],
                     "module": None,
                     "owner": None,
                     "inputs": [],

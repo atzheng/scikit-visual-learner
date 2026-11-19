@@ -127,6 +127,7 @@
 }
 .md-call .md-box,
 .md-import .md-box,
+.md-def .md-box,
 .md-store .md-box {
   fill: var(--md-fn-fill);
   stroke: var(--md-fn-stroke);
@@ -319,6 +320,12 @@
 }
 .md-node.md-uncalled .md-port-g {
   display: none;
+}
+.md-diagram .md-def-line {
+  font-family: var(--md-font-mono);
+  font-size: 11px;
+  text-anchor: middle;
+  fill: var(--md-text-muted);
 }
 .md-diagram .md-module {
   font-weight: normal;

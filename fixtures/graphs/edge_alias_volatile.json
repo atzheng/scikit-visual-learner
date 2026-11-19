@@ -40,7 +40,8 @@
           "count": 1,
           "owner": null,
           "error": null,
-          "interrupted": false
+          "interrupted": false,
+          "callee": "m:6w14qy.0.lg6rbl"
         }
       ],
       "inPorts": [
@@ -146,13 +147,16 @@
       ]
     },
     {
-      "id": "n:bvjtp7.0",
-      "kind": "call",
-      "mergeKey": "s7",
-      "name": "g",
-      "module": "__main__",
+      "id": "f:psgngv.0",
+      "kind": "def",
       "parent": null,
-      "order": 1900000,
+      "order": 1400000,
+      "name": "g",
+      "defKind": "function",
+      "signature": "g()",
+      "methods": [],
+      "decorated": false,
+      "site": 10,
       "executions": [
         {
           "i": 3,
@@ -163,6 +167,28 @@
           "owner": null,
           "error": null,
           "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:bvjtp7.0",
+      "kind": "call",
+      "mergeKey": "s7",
+      "name": "g",
+      "module": "__main__",
+      "parent": null,
+      "order": 1900000,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false,
+          "callee": "f:psgngv.0"
         }
       ],
       "inPorts": [],
@@ -214,6 +240,7 @@
     0,
     1,
     2,
-    3
+    3,
+    4
   ]
 }

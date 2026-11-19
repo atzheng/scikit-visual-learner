@@ -32,7 +32,9 @@ function compact(n: string): string[] {
         ? `${x.varName ?? x.className}`
         : x?.kind === 'import'
           ? `import ${x.name}`
-          : id;
+          : x?.kind === 'def'
+            ? `${x.defKind === 'class' ? 'class' : 'def'} ${x.name}`
+            : id;
     };
     const ps = st.participants.map(
       (p) =>
@@ -41,7 +43,13 @@ function compact(n: string): string[] {
     const vs = st.values.map((v) => `${v.role}:${v.param}=${v.text ?? '?'}`);
     const nd = g.nodes.find((x) => x.id === st.node)!;
     const label =
-      nd.kind === 'call' ? nd.name : nd.kind === 'import' ? `import ${nd.name}` : nd.kind;
+      nd.kind === 'call'
+        ? nd.name
+        : nd.kind === 'import'
+          ? `import ${nd.name}`
+          : nd.kind === 'def'
+            ? `${nd.defKind === 'class' ? 'class' : 'def'} ${nd.name}`
+            : nd.kind;
     lines.push(
       `${s}: L${st.line} ${label} [${ps.join(' ')}]${vs.length ? ` {${vs.join(' ')}}` : ''}`,
     );
@@ -60,7 +68,8 @@ describe('stageAt and shelfOrder on the golden fixtures', () => {
       expect(shelf.map((e) => e.at)).toEqual([...shelf.map((e) => e.at)].sort((a, b) => a - b));
       expect(new Set(shelf.map((e) => e.node)).size).toBe(shelf.length);
       expect(shelf.length).toBe(
-        g.nodes.filter((x) => x.kind === 'instance' || x.kind === 'import').length,
+        g.nodes.filter((x) => x.kind === 'instance' || x.kind === 'import' || x.kind === 'def')
+          .length,
       );
       const byId = new Map(g.nodes.map((x) => [x.id, x]));
       for (let s = 1; s <= g.steps.length; s++) {
@@ -74,7 +83,7 @@ describe('stageAt and shelfOrder on the golden fixtures', () => {
             continue;
           }
           expect(byId.get(p.node)?.kind).toBe(p.kind);
-          if (p.kind === 'import') continue;
+          if (p.kind === 'import' || p.kind === 'def') continue;
           // no false participants: the object really is one of the event's own tokens
           const ex = st.execution;
           if (ex) {
@@ -101,12 +110,12 @@ describe('golden_linreg, hand-checked', () => {
       '2: L5 import LinearRegression [created:import LinearRegression]',
       '3: L6 import train_test_split [created:import train_test_split]',
       // read_csv's result is an unnamed temporary: a chip, not a shelf object
-      '4: L8 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}',
+      '4: L8 read_csv [callee:import pd output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}',
       '5: L8 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]',
       '6: L9 expr [input:df created:X]',
       '7: L10 expr [input:df created:y]',
-      '8: L11 train_test_split [input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.2 input:random_state=0}',
-      '9: L12 LinearRegression [created:model@out:0]',
+      '8: L11 train_test_split [callee:import train_test_split input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.2 input:random_state=0}',
+      '9: L12 LinearRegression [callee:import LinearRegression created:model@out:0]',
       '10: L13 LinearRegression.fit [owner:model* input:X_train@in:X input:y_train@in:y]',
       '11: L14 LinearRegression.predict [owner:model input:X_test@in:X created:pred@out:0]',
       '12: L15 LinearRegression.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4162894314248661}',
@@ -218,5 +227,20 @@ describe('review fixes (svl-61q.1)', () => {
     let dropped = 0;
     for (let s = 1; s <= g.steps.length; s++) dropped += stageAt(g, log, s)?.dropped ?? 0;
     expect(dropped).toBeGreaterThan(0);
+  });
+});
+
+describe('edge_student_fn: def and class steps and their callees (svl-jl3)', () => {
+  test('every step', () => {
+    // Checked by hand against fixtures/programs/edge_student_fn.py: load and Pipeline are linked to
+    // their def steps; pipe.run is a method (its owner is pipe), so it gets no callee.
+    const lines = compact('edge_student_fn').filter((l) => !l.includes('import'));
+    expect(lines[0]).toBe('0: -');
+    expect(lines[1]).toMatch(/^\d+: L\d+ def load \[created:def load\]$/);
+    expect(lines[2]).toMatch(/^\d+: L\d+ class Pipeline \[created:class Pipeline\]$/);
+    expect(lines[3]).toMatch(/ load \[callee:def load /);
+    expect(lines[4]).toMatch(/ Pipeline \[callee:class Pipeline created:pipe@out:0\]/);
+    expect(lines[5]).toMatch(/ Pipeline\.run \[owner:pipe /);
+    expect(lines.some((l) => l.includes('callee:') && l.includes('run'))).toBe(false);
   });
 });

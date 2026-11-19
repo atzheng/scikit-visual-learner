@@ -17,6 +17,8 @@ export type {
   ExprNode,
   StoreNode,
   SourceNode,
+  ImportNode,
+  DefNode,
   Port,
   Execution,
   GEdge,

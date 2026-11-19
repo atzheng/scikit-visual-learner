@@ -33,7 +33,10 @@ def instrument(source: str) -> Instrumented:
     tree = ast.parse(source)
     volatile = _volatile_names(tree)  # analysed on the original tree
     transformer = _Instrument(source)
+    # Import and def/class sites are appended last (imports first), so every other site id and
+    # every import site id is unchanged by the def sites (svl-jl3).
     imports = _import_sites(tree, transformer.src)  # analysed on the original tree
+    imports += _def_sites(tree, transformer.src, volatile is None)
     transformer.import_index = {id(stmt): k for k, (stmt, _) in enumerate(imports)}
     new_tree = transformer.visit(tree)
     first = len(transformer.sites)
@@ -372,6 +375,149 @@ def _import_sites(tree: ast.Module, src: _Source) -> list[tuple[ast.stmt, dict[s
     return out
 
 
+def _def_sites(
+    tree: ast.Module, src: _Source, dynamic: bool
+) -> list[tuple[ast.stmt, dict[str, Any]]]:
+    """One `def` site per `def` / `class` statement that runs in module scope (CONTRACTS section 3,
+    "Definitions"): at the top level and under `if`, `try`, a loop or a `with`, not inside another
+    `def` or `class` (function bodies are opaque, a class body has no hooks).
+
+    The site is static: the name, the signature text and, for a class, the method names. It holds
+    no student value. `link` says that a call of the name certainly reaches the object the
+    statement makes: every binding of the name in the whole module is an undecorated module-scope
+    `def` or `class` statement (no other assignment, import, parameter, `del`, `global`, `:=`, ...),
+    and the module cannot rebind its globals reflectively (`dynamic`).
+    """
+    counts: dict[str, int] = {}
+    declared: set[str] = set()
+
+    def bump(name: str) -> None:
+        counts[name] = counts.get(name, 0) + 1
+
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del)):
+            bump(n.id)
+        elif isinstance(n, ast.arg):
+            bump(n.arg)
+        elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            bump(n.name)
+        elif isinstance(n, (ast.Import, ast.ImportFrom)):
+            for a in n.names:
+                if a.name == "*":
+                    dynamic = True
+                else:
+                    bump(a.asname or a.name.split(".")[0])
+        elif isinstance(n, (ast.Global, ast.Nonlocal)):
+            declared.update(n.names)
+        elif isinstance(n, ast.ExceptHandler) and n.name:
+            bump(n.name)
+        elif isinstance(n, (ast.MatchAs, ast.MatchStar)) and n.name:
+            bump(n.name)
+        elif isinstance(n, ast.MatchMapping) and n.rest:
+            bump(n.rest)
+        elif type(n).__name__ in ("TypeVar", "ParamSpec", "TypeVarTuple"):
+            bump(n.name)  # type: ignore[attr-defined]
+
+    found = _module_scope_defs(tree)
+    decorated = {d.name for d in found if d.decorator_list}
+    defs_of: dict[str, int] = {}
+    for d in found:
+        defs_of[d.name] = defs_of.get(d.name, 0) + 1
+
+    out: list[tuple[ast.stmt, dict[str, Any]]] = []
+    for stmt in found:
+        name = stmt.name
+        info: dict[str, Any] = {
+            "name": name,
+            "kind": "class" if isinstance(stmt, ast.ClassDef) else "function",
+            "signature": _def_signature(stmt),
+            "decorated": bool(stmt.decorator_list),
+            "link": (
+                not dynamic
+                and name not in declared
+                and name not in decorated
+                and counts.get(name, 0) == defs_of[name]
+            ),
+        }
+        if isinstance(stmt, ast.ClassDef):
+            info["methods"] = [
+                m.name
+                for m in stmt.body
+                if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))
+                and not (m.name.startswith("__") and m.name.endswith("__"))
+            ]
+        span = src.span(stmt)
+        out.append(
+            (
+                stmt,
+                {
+                    "id": -1,
+                    "kind": "def",
+                    "line": span[0],
+                    "col": span[1],
+                    "end_line": span[2],
+                    "end_col": span[3],
+                    "text": src.text(span),
+                    "def": info,
+                },
+            )
+        )
+    return out
+
+
+def _def_signature(stmt: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> str:
+    """`f(x, y=2)`; a class shows its `__init__` without `self` (`C()` for a class with no bases
+    and no `__init__`, `C(…)` when the constructor is inherited or a decorator may change it)."""
+    if isinstance(stmt, ast.ClassDef):
+        init = next(
+            (
+                m
+                for m in stmt.body
+                if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef)) and m.name == "__init__"
+            ),
+            None,
+        )
+        if init is None:
+            plain = not stmt.bases and not stmt.keywords and not stmt.decorator_list
+            return f"{stmt.name}()" if plain else f"{stmt.name}(…)"
+        args = _unparse_args(init.args, skip_first=True)
+    else:
+        args = _unparse_args(stmt.args, skip_first=False)
+    sig = f"{stmt.name}({args})"
+    return sig if len(sig) <= 200 else sig[:199] + "…"
+
+
+def _unparse_args(args: ast.arguments, skip_first: bool) -> str:
+    if skip_first:
+        args = ast.arguments(
+            posonlyargs=args.posonlyargs[1:] if args.posonlyargs else [],
+            args=args.args if args.posonlyargs else args.args[1:],
+            vararg=args.vararg,
+            kwonlyargs=args.kwonlyargs,
+            kw_defaults=args.kw_defaults,
+            kwarg=args.kwarg,
+            defaults=args.defaults,
+        )
+    try:
+        return ast.unparse(args)
+    except Exception:  # noqa: BLE001
+        return "…"
+
+
+def _module_scope_defs(
+    node: ast.AST,
+) -> list[ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef]:
+    """`def` and `class` statements that run in module scope, in source order (not nested in a
+    `def` or `class`, whose bodies are opaque or hook-free)."""
+    found: list[ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef] = []
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            found.append(child)
+        elif not isinstance(child, (ast.Lambda, ast.expr)):
+            found.extend(_module_scope_defs(child))
+    return found
+
+
 def _module_scope_imports(node: ast.AST) -> list[ast.Import | ast.ImportFrom]:
     """Import statements that run in module scope, in source order (not inside def or class)."""
     found: list[ast.Import | ast.ImportFrom] = []
@@ -587,7 +733,7 @@ class _Instrument(ast.NodeTransformer):
         # stringify the rewritten calls).
         node.decorator_list = [self.visit(d) for d in node.decorator_list]
         self._visit_defaults(node.args)
-        return node
+        return self._with_hooks(node)
 
     visit_AsyncFunctionDef = visit_FunctionDef  # type: ignore[assignment]
 
@@ -608,7 +754,7 @@ class _Instrument(ast.NodeTransformer):
         finally:
             self.in_class = outer
             self.shadow = outer_shadow
-        return node
+        return self._with_hooks(node)
 
     def _visit_comprehension(self, node: ast.expr) -> ast.expr:
         outer = self.shadow
@@ -737,9 +883,13 @@ class _Instrument(ast.NodeTransformer):
 
     # -- imports -----------------------------------------------------------------------------
 
-    def visit_Import(self, node: ast.Import) -> ast.stmt | list[ast.stmt]:
+    def visit_Import(self, node: ast.stmt) -> ast.stmt | list[ast.stmt]:
+        return self._with_hooks(node)
+
+    def _with_hooks(self, node: ast.stmt) -> ast.stmt | list[ast.stmt]:
         # The statement runs exactly as written; a hook after it records the step. If the import
-        # raises, the hook does not run, so a failed import gives no step.
+        # (or the def, with its decorators, or the class body) raises, the hook does not run, so
+        # it gives no step. Used for imports, and for `def` and `class` statements (svl-jl3).
         k = self.import_index.get(id(node))
         if k is None:
             return node

@@ -40,6 +40,40 @@
       "count": 1,
       "error": null,
       "i": 2,
+      "inputs": [],
+      "kind": "def",
+      "merge_key": "s9",
+      "module": null,
+      "mutates": [],
+      "name": "load",
+      "outputs": [],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 9
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
+      "inputs": [],
+      "kind": "def",
+      "merge_key": "s10",
+      "module": null,
+      "mutates": [],
+      "name": "Pipeline",
+      "outputs": [],
+      "owner": null,
+      "ret": 3,
+      "returns_self": false,
+      "scope": 0,
+      "site": 10
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 4,
       "inputs": [
         {
           "origin": "const",
@@ -57,7 +91,7 @@
         "v1.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -65,7 +99,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 5,
       "inputs": [],
       "kind": "constructor",
       "merge_key": "s2",
@@ -76,7 +110,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 2
@@ -84,7 +118,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 6,
       "inputs": [
         {
           "origin": "name",
@@ -106,7 +140,7 @@
         "s0"
       ],
       "owner": "v2.0",
-      "ret": 4,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 4
@@ -114,7 +148,7 @@
   ],
   "output": [
     {
-      "i": 4,
+      "i": 6,
       "stream": "stdout",
       "text": "0.37\n"
     }
@@ -123,17 +157,17 @@
     {
       "bindings": [
         [
-          2,
+          4,
           "X",
           "v0.0"
         ],
         [
-          2,
+          4,
           "y",
           "v1.0"
         ],
         [
-          3,
+          5,
           "pipe",
           "v2.0"
         ]
@@ -302,6 +336,41 @@
       "kind": "import",
       "line": 6,
       "text": "from sklearn.linear_model import LinearRegression"
+    },
+    {
+      "col": 0,
+      "def": {
+        "decorated": false,
+        "kind": "function",
+        "link": true,
+        "name": "load",
+        "signature": "load(path)"
+      },
+      "end_col": 53,
+      "end_line": 11,
+      "id": 9,
+      "kind": "def",
+      "line": 9,
+      "text": "def load(path):\n    df = pd.read_csv(path).dropna()\n    return df[[\"beds\", \"baths\", \"sqft\"]], df[\"price\"]"
+    },
+    {
+      "col": 0,
+      "def": {
+        "decorated": false,
+        "kind": "class",
+        "link": true,
+        "methods": [
+          "run"
+        ],
+        "name": "Pipeline",
+        "signature": "Pipeline()"
+      },
+      "end_col": 37,
+      "end_line": 20,
+      "id": 10,
+      "kind": "def",
+      "line": 14,
+      "text": "class Pipeline:\n    def __init__(self):\n        self.model = LinearRegression()\n\n    def run(self, X, y):\n        self.model.fit(X, y)\n        return self.model.score(X, y)"
     }
   ],
   "status": "ok",
