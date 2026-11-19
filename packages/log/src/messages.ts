@@ -73,7 +73,14 @@ export interface Doc {
 
 export type ToWorker =
   | { type: 'init'; interruptBuffer?: SharedArrayBuffer; currentCall?: SharedArrayBuffer }
-  | { type: 'run'; runId: number; source: string; config: RunConfig }
+  | {
+      type: 'run';
+      runId: number;
+      source: string;
+      config: RunConfig;
+      /** Measurement only (`pnpm measure`); never set by the page. `plain`: no instrumentation. `timing`: instrumented, with the hashing share. Results go to console.log, not the log. */
+      debug?: 'plain' | 'timing';
+    }
   | { type: 'file'; name: string; bytes: ArrayBuffer }
   | { type: 'docs'; reqId: number; target: DocTarget };
 
