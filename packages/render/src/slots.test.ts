@@ -12,7 +12,14 @@ import { layout } from './layout';
 import type { Laid } from './layout';
 import { mount } from './mount';
 import type { DiagramController } from './mount';
-import { attrRowsFor, hiddenMethods, moreMethodsFor, portViews } from './svg';
+import {
+  attrDocTarget,
+  attrRowsFor,
+  hiddenMethods,
+  moreMethodsFor,
+  nodeDocTarget,
+  portViews,
+} from './svg';
 import type { MethodDocTarget } from './svg';
 
 const measure = (t: string): number => t.length * 7;
@@ -433,5 +440,76 @@ describe('docs on boxes (svl-3ms)', () => {
     expect(host.querySelector('.md-docs-btn')).toBeNull();
     el(fit.id).dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
     expect(docs).toEqual([]);
+  });
+});
+
+describe('attribute docs (svl-3du)', () => {
+  test('an attribute-read box documents that attribute of its owner class', async () => {
+    const { log, model, laid } = await prepare('edge_expr');
+    const read = model.nodes.find((n) => n.kind === 'expr' && n.text === 'model.coef_')!;
+    const inst = instOf(model, 'LinearRegression');
+    expect(nodeDocTarget(model, read)).toEqual({
+      module: 'sklearn.linear_model._base',
+      name: 'LinearRegression.coef_',
+      attr: true,
+    });
+    expect(attrDocTarget(model, inst, 'alpha')).toEqual({
+      module: 'sklearn.linear_model._base',
+      name: 'LinearRegression.alpha',
+      attr: true,
+    });
+    const other = model.nodes.find((n) => n.kind === 'expr' && n.text === 'X_train - mean')!;
+    expect(nodeDocTarget(model, other)).toBeNull();
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log);
+    expect(host.querySelector(`[data-docs-btn="${read.id}"]`)).not.toBeNull();
+    el(read.id).dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
+    expect(docs).toEqual([
+      {
+        target: {
+          module: 'sklearn.linear_model._base',
+          name: 'LinearRegression.coef_',
+          attr: true,
+        },
+        node: read.id,
+      },
+    ]);
+  });
+
+  test('instance rows: the button and a focused row open the attribute docs; a row click does not', async () => {
+    const { log, model, laid } = await prepare('edge_expr');
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log);
+    const inst = instOf(model, 'LinearRegression');
+    const rows = [...host.querySelectorAll('.md-attr[data-doc-attr]')].filter(
+      (r) => !r.classList.contains('md-hidden'),
+    );
+    const coef = rows.find((r) => r.getAttribute('data-doc-name') === 'LinearRegression.coef_')!;
+    expect(coef).toBeDefined();
+    expect(coef.getAttribute('tabindex')).toBe('0');
+    expect(coef.getAttribute('data-doc-node')).toBe(inst.id);
+    coef.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(docs).toEqual([]);
+    coef.querySelector('.md-docs-btn')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    coef.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true, cancelable: true }));
+    coef.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    );
+    const want = {
+      target: { module: 'sklearn.linear_model._base', name: 'LinearRegression.coef_', attr: true },
+      node: inst.id,
+    };
+    expect(docs).toEqual([want, want, want]);
+  });
+
+  test('without a docs handler rows have no button and are not focusable', async () => {
+    const { log, model, laid } = await prepare('edge_expr');
+    const c = setup(false);
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log);
+    expect(host.querySelector('.md-attr .md-docs-btn')).toBeNull();
+    expect(host.querySelector('.md-attr[tabindex]')).toBeNull();
   });
 });

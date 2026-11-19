@@ -52,10 +52,10 @@ sys.meta_path.insert(0, _OfflineFinder)
 def _machines_worker_run(source, config, emit, on_enter, on_exit):
     _machines_runtime.run(source, config, emit, on_enter=on_enter, on_exit=on_exit)
 
-def _machines_docs(module, name, source):
+def _machines_docs(module, name, source, attr):
     import json
     from machines.docs import docs
-    return json.dumps(docs(module, name, source))
+    return json.dumps(docs(module, name, source, bool(attr)))
 
 def _machines_versions():
     import numpy, pandas, sklearn
@@ -295,12 +295,12 @@ function lookupDocs(msg: Extract<ToWorker, { type: 'docs' }>): void {
   let doc: Doc;
   try {
     doc = JSON.parse(
-      fn(target.module ?? undefined, target.name, target.source ?? undefined),
+      fn(target.module ?? undefined, target.name, target.source ?? undefined, target.attr === true),
     ) as Doc;
   } catch {
     doc = {
       qualname: target.name,
-      kind: 'function',
+      kind: target.attr ? 'attribute' : 'function',
       signature: null,
       summary: '',
       description: '',

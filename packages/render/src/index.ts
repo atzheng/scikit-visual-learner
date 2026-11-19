@@ -34,6 +34,7 @@ export {
   dataRowModels,
   hiddenMethods,
   moreMethodsFor,
+  attrDocTarget,
   methodDocTarget,
   nodeDocTarget,
   portViews,

@@ -89,10 +89,9 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
     if (!el || !opts.onOpenDocs) return null;
     const name = el.getAttribute('data-doc-name');
     if (name === null) return null;
-    return [
-      { module: el.getAttribute('data-doc-module'), name },
-      el.getAttribute('data-doc-node') ?? '',
-    ];
+    const target: MethodDocTarget = { module: el.getAttribute('data-doc-module'), name };
+    if (el.hasAttribute('data-doc-attr')) target.attr = true;
+    return [target, el.getAttribute('data-doc-node') ?? ''];
   };
   const toggleMore = (id: string, open?: boolean): void => {
     if (!dom) return;
@@ -122,7 +121,8 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
       return;
     }
     const doc = closest(ev.target, 'data-doc-name');
-    if (doc) {
+    // an attribute row opens its docs from its "?" only: a click elsewhere on the row selects the box
+    if (doc && (!doc.hasAttribute('data-doc-attr') || closest(ev.target, 'data-docs-row-btn'))) {
       const t = docTarget(doc);
       if (t) opts.onOpenDocs?.(t[0], t[1]);
       return;
@@ -159,6 +159,14 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
       if (n && n === k.target && openNodeDocs(n.getAttribute('data-node'))) {
         k.preventDefault();
         k.stopPropagation();
+        return;
+      }
+      const row = closest(k.target, 'data-doc-attr');
+      const t = row && row === k.target ? docTarget(row) : null;
+      if (t) {
+        k.preventDefault();
+        k.stopPropagation();
+        opts.onOpenDocs?.(t[0], t[1]);
       }
       return;
     }

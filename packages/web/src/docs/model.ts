@@ -6,12 +6,13 @@ import { summaryLabel } from '@machines/render';
  * of the run, which the log's sites refer to.
  */
 export function docRequest(
-  t: { module: string | null; name: string },
+  t: { module: string | null; name: string; attr?: boolean },
   runSource: string | null,
 ): DocTarget {
-  return t.module === '__main__' && runSource !== null
-    ? { module: t.module, name: t.name, source: runSource }
-    : { module: t.module, name: t.name };
+  const out: DocTarget = { module: t.module, name: t.name };
+  if (t.attr) out.attr = true;
+  if (t.module === '__main__' && runSource !== null) out.source = runSource;
+  return out;
 }
 
 /** pandas signatures can run to dozens of keyword arguments: collapse past `max` characters. */
@@ -79,6 +80,41 @@ export function passedParams(
     if (base !== undefined) out.set(base, out.has(base) ? `${out.get(base)}, ${text}` : text);
   }
   return out;
+}
+
+/**
+ * The current value of the attribute a docs target names, at the shown step: a constructor parameter shows the
+ * text the student wrote, a fitted attribute or data property its type and shape, an attribute-read box what
+ * the read gave. Null when the target is not an attribute or the value is not known yet at this step.
+ */
+export function attributeValue(
+  model: GraphModel,
+  log: EventLog,
+  state: StepState | null,
+  nodeId: string,
+  target: { name: string; attr?: boolean },
+): string | null {
+  if (!target.attr || !state) return null;
+  const node = model.nodes.find((n) => n.id === nodeId);
+  if (!node) return null;
+  const attr = target.name.slice(target.name.lastIndexOf('.') + 1);
+  if (node.kind === 'instance') {
+    const p = node.params.find((q) => q.name === attr);
+    if (p) return p.text;
+    const tok = state.activeVersion.get(nodeId);
+    const t = tok !== undefined ? log.values[tok]?.attrs?.[attr] : undefined;
+    if (t !== undefined) return summaryLabel(log.values[t]);
+    const s = tok !== undefined ? log.values[tok] : undefined;
+    if (attr === 'shape' && s?.shape) return `(${s.shape.join(', ')})`;
+    if (attr === 'dtype' && s?.dtype) return s.dtype;
+    if (attr === 'columns' && s?.columns) return s.columns.join(', ');
+    return null;
+  }
+  if (node.kind === 'expr') {
+    const out = state.activeExecution.get(nodeId)?.outputs['out:0'];
+    return out !== undefined ? summaryLabel(log.values[out]) : null;
+  }
+  return null;
 }
 
 /** Splits text into plain and `code` pieces (single backticks mark code). */

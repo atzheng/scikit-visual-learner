@@ -504,6 +504,11 @@ describe('docs', () => {
     expect(docKey({ ...lib, source: 'a' })).toBe(docKey({ ...lib, source: 'b' }));
   });
 
+  test('an attribute target is not the method of the same name', () => {
+    const m = { module: 'sklearn.linear_model', name: 'Ridge.fit' };
+    expect(docKey({ ...m, attr: true })).not.toBe(docKey(m));
+  });
+
   test('rejects when the worker restarts, and the next ask retries', async () => {
     const r = rig();
     ready(r.workers[0] as FakeWorker);

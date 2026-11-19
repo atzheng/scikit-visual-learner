@@ -39,6 +39,8 @@ export interface DocTarget {
   module: string | null;
   name: string;
   source?: string;
+  /** The last part of `name` is an attribute (constructor parameter, fitted attribute, property), not a method. */
+  attr?: boolean;
 }
 
 export interface DocEntry {
@@ -59,7 +61,7 @@ export type DocSection =
 export interface Doc {
   /** Public dotted path, e.g. `sklearn.linear_model.LinearRegression.fit`. */
   qualname: string;
-  kind: 'function' | 'class' | 'method';
+  kind: 'function' | 'class' | 'method' | 'attribute';
   signature: string | null;
   summary: string;
   description: string;
