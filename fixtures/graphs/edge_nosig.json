@@ -1,0 +1,965 @@
+{
+  "nodes": [
+    {
+      "id": "n:wcu5tk.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "read_csv",
+      "module": "pandas",
+      "parent": null,
+      "order": 800005,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v0.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:filepath_or_buffer",
+          "param": "filepath_or_buffer",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "filepath_or_buffer = \"listings.csv\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:wehbtt.0",
+      "kind": "call",
+      "mergeKey": "s1",
+      "name": "DataFrame.dropna",
+      "module": "pandas",
+      "parent": null,
+      "order": 800005,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {
+            "in:self": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": "v0.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "x:xdqf0v.0~2ruef4",
+      "kind": "expr",
+      "parent": null,
+      "order": 900007,
+      "text": "df[\"price\"]",
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:df": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:xdqf0v.0",
+      "kind": "call",
+      "mergeKey": "s3",
+      "name": "log",
+      "module": "numpy",
+      "parent": null,
+      "order": 900007,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {
+            "in:x": "v2.0"
+          },
+          "outputs": {
+            "out:0": "v3.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:x",
+          "param": "x",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": "logp"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "x:1fbvkub.0~2ruef4",
+      "kind": "expr",
+      "parent": null,
+      "order": 1000008,
+      "text": "df[\"beds\"]",
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:df": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v4.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "x:1fbvkub.0~31u043",
+      "kind": "expr",
+      "parent": null,
+      "order": 1000008,
+      "text": "df[\"baths\"]",
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {
+            "in:df": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v5.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:1fbvkub.0",
+      "kind": "call",
+      "mergeKey": "s5",
+      "name": "add",
+      "module": "numpy",
+      "parent": null,
+      "order": 1000008,
+      "executions": [
+        {
+          "i": 6,
+          "ret": 6,
+          "inputs": {
+            "in:x1": "v4.0",
+            "in:x2": "v5.0"
+          },
+          "outputs": {
+            "out:0": "v6.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:x1",
+          "param": "x1",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:x2",
+          "param": "x2",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": "total"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "x:doyqw5.0~2ruef4",
+      "kind": "expr",
+      "parent": null,
+      "order": 1100006,
+      "text": "df[\"sqft\"]",
+      "executions": [
+        {
+          "i": 7,
+          "ret": 7,
+          "inputs": {
+            "in:df": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v7.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:doyqw5.0",
+      "kind": "call",
+      "mergeKey": "s7",
+      "name": "maximum",
+      "module": "numpy",
+      "parent": null,
+      "order": 1100006,
+      "executions": [
+        {
+          "i": 8,
+          "ret": 8,
+          "inputs": {
+            "in:x1": "v7.0"
+          },
+          "outputs": {
+            "out:0": "v8.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:x1",
+          "param": "x1",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:x2",
+          "param": "x2",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "x2 = 1000"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": "big"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:1wi5bzt.0",
+      "kind": "call",
+      "mergeKey": "s9",
+      "name": "Series.round",
+      "module": "pandas",
+      "parent": null,
+      "order": 1200006,
+      "executions": [
+        {
+          "i": 9,
+          "ret": 9,
+          "inputs": {
+            "in:self": "v3.0"
+          },
+          "outputs": {
+            "out:0": "v9.0"
+          },
+          "count": 1,
+          "owner": "v3.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:decimals",
+          "param": "decimals",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "decimals = 3"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:bvzm8d.0",
+      "kind": "call",
+      "mergeKey": "s10",
+      "name": "Series.head",
+      "module": "pandas",
+      "parent": null,
+      "order": 1200006,
+      "executions": [
+        {
+          "i": 10,
+          "ret": 10,
+          "inputs": {
+            "in:self": "v9.0"
+          },
+          "outputs": {
+            "out:0": "v10.0"
+          },
+          "count": 1,
+          "owner": "v9.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:n",
+          "param": "n",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "n = 3"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:13qdgdv.0",
+      "kind": "call",
+      "mergeKey": "s11",
+      "name": "Series.tolist",
+      "module": "pandas",
+      "parent": null,
+      "order": 1200006,
+      "executions": [
+        {
+          "i": 11,
+          "ret": 11,
+          "inputs": {
+            "in:self": "v10.0"
+          },
+          "outputs": {
+            "out:0": "v11.0"
+          },
+          "count": 1,
+          "owner": "v10.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "list[3]",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:5z1edv.0",
+      "kind": "call",
+      "mergeKey": "s12",
+      "name": "Series.head",
+      "module": "pandas",
+      "parent": null,
+      "order": 1200038,
+      "executions": [
+        {
+          "i": 12,
+          "ret": 12,
+          "inputs": {
+            "in:self": "v6.0"
+          },
+          "outputs": {
+            "out:0": "v12.0"
+          },
+          "count": 1,
+          "owner": "v6.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:n",
+          "param": "n",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "n = 3"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:c47xlt.0",
+      "kind": "call",
+      "mergeKey": "s13",
+      "name": "Series.tolist",
+      "module": "pandas",
+      "parent": null,
+      "order": 1200038,
+      "executions": [
+        {
+          "i": 13,
+          "ret": 13,
+          "inputs": {
+            "in:self": "v12.0"
+          },
+          "outputs": {
+            "out:0": "v13.0"
+          },
+          "count": 1,
+          "owner": "v12.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "list[3]",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:tnmitf.0",
+      "kind": "call",
+      "mergeKey": "s14",
+      "name": "Series.head",
+      "module": "pandas",
+      "parent": null,
+      "order": 1200062,
+      "executions": [
+        {
+          "i": 14,
+          "ret": 14,
+          "inputs": {
+            "in:self": "v8.0"
+          },
+          "outputs": {
+            "out:0": "v14.0"
+          },
+          "count": 1,
+          "owner": "v8.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:n",
+          "param": "n",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "n = 3"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:hk3029.0",
+      "kind": "call",
+      "mergeKey": "s15",
+      "name": "Series.tolist",
+      "module": "pandas",
+      "parent": null,
+      "order": 1200062,
+      "executions": [
+        {
+          "i": 15,
+          "ret": 15,
+          "inputs": {
+            "in:self": "v14.0"
+          },
+          "outputs": {
+            "out:0": "v15.0"
+          },
+          "count": 1,
+          "owner": "v14.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "list[3]",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:wcu5tk.0.out:0>n:wehbtt.0.in:self",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:wehbtt.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:xdqf0v.0~2ruef4.>n:xdqf0v.0.in:x",
+      "from": {
+        "node": "x:xdqf0v.0~2ruef4",
+        "port": null
+      },
+      "to": {
+        "node": "n:xdqf0v.0",
+        "port": "in:x"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:1fbvkub.0~2ruef4.>n:1fbvkub.0.in:x1",
+      "from": {
+        "node": "x:1fbvkub.0~2ruef4",
+        "port": null
+      },
+      "to": {
+        "node": "n:1fbvkub.0",
+        "port": "in:x1"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:1fbvkub.0~31u043.>n:1fbvkub.0.in:x2",
+      "from": {
+        "node": "x:1fbvkub.0~31u043",
+        "port": null
+      },
+      "to": {
+        "node": "n:1fbvkub.0",
+        "port": "in:x2"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:doyqw5.0~2ruef4.>n:doyqw5.0.in:x1",
+      "from": {
+        "node": "x:doyqw5.0~2ruef4",
+        "port": null
+      },
+      "to": {
+        "node": "n:doyqw5.0",
+        "port": "in:x1"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 8,
+          "token": "v7.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:xdqf0v.0.out:0>n:1wi5bzt.0.in:self",
+      "from": {
+        "node": "n:xdqf0v.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:1wi5bzt.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 9,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": "logp"
+    },
+    {
+      "id": "e:n:1wi5bzt.0.out:0>n:bvzm8d.0.in:self",
+      "from": {
+        "node": "n:1wi5bzt.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:bvzm8d.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 10,
+          "token": "v9.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:bvzm8d.0.out:0>n:13qdgdv.0.in:self",
+      "from": {
+        "node": "n:bvzm8d.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:13qdgdv.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 11,
+          "token": "v10.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:1fbvkub.0.out:0>n:5z1edv.0.in:self",
+      "from": {
+        "node": "n:1fbvkub.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:5z1edv.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 12,
+          "token": "v6.0"
+        }
+      ],
+      "nameLabel": "total"
+    },
+    {
+      "id": "e:n:5z1edv.0.out:0>n:c47xlt.0.in:self",
+      "from": {
+        "node": "n:5z1edv.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:c47xlt.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 13,
+          "token": "v12.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:doyqw5.0.out:0>n:tnmitf.0.in:self",
+      "from": {
+        "node": "n:doyqw5.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:tnmitf.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 14,
+          "token": "v8.0"
+        }
+      ],
+      "nameLabel": "big"
+    },
+    {
+      "id": "e:n:tnmitf.0.out:0>n:hk3029.0.in:self",
+      "from": {
+        "node": "n:tnmitf.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:hk3029.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 15,
+          "token": "v14.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wehbtt.0.out:0>x:xdqf0v.0~2ruef4.",
+      "from": {
+        "node": "n:wehbtt.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:xdqf0v.0~2ruef4",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:wehbtt.0.out:0>x:1fbvkub.0~2ruef4.",
+      "from": {
+        "node": "n:wehbtt.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:1fbvkub.0~2ruef4",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:wehbtt.0.out:0>x:1fbvkub.0~31u043.",
+      "from": {
+        "node": "n:wehbtt.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:1fbvkub.0~31u043",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:wehbtt.0.out:0>x:doyqw5.0~2ruef4.",
+      "from": {
+        "node": "n:wehbtt.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:doyqw5.0~2ruef4",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "df"
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "nodes": [
+    {
+      "id": "n:hft6en.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "load",
+      "module": "__main__",
+      "parent": null,
+      "order": 2400011,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v0.0",
+            "out:1": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:path",
+          "param": "path",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "path = \"listings.csv\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "X"
+        },
+        {
+          "id": "out:1",
+          "param": "1",
+          "typeLabel": "Series",
+          "nameLabel": "y"
+        }
+      ],
+      "student": true
+    },
+    {
+      "id": "i:1t51mtq.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 2500011,
+      "className": "Pipeline",
+      "varName": "pipe",
+      "createdAt": 1,
+      "createdBy": null,
+      "params": [],
+      "versions": [
+        {
+          "i": 1,
+          "token": "v2.0"
+        }
+      ]
+    },
+    {
+      "id": "n:unof4y.0@i:1t51mtq.0",
+      "kind": "call",
+      "mergeKey": "s4",
+      "name": "Pipeline.run",
+      "module": "__main__",
+      "parent": "i:1t51mtq.0",
+      "order": 2600016,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:X": "v0.0",
+            "in:y": "v1.0"
+          },
+          "outputs": {
+            "out:0": "s0"
+          },
+          "count": 1,
+          "owner": "v2.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:X",
+          "param": "X",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:y",
+          "param": "y",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "float",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:hft6en.0.out:0>n:unof4y.0@i:1t51mtq.0.in:X",
+      "from": {
+        "node": "n:hft6en.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:unof4y.0@i:1t51mtq.0",
+        "port": "in:X"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "X"
+    },
+    {
+      "id": "e:n:hft6en.0.out:1>n:unof4y.0@i:1t51mtq.0.in:y",
+      "from": {
+        "node": "n:hft6en.0",
+        "port": "out:1"
+      },
+      "to": {
+        "node": "n:unof4y.0@i:1t51mtq.0",
+        "port": "in:y"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "y"
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2
+  ]
+}
