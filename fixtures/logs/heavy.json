@@ -1082,6 +1082,28 @@
         "verbose": "s25"
       },
       "machine": true,
+      "methods": [
+        {
+          "doc": "Run fit with all sets of parameters.",
+          "name": "fit"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Return the score on the given data, if the estimator has been refit.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        }
+      ],
       "type": "GridSearchCV"
     },
     "v11.1": {
@@ -1688,6 +1710,40 @@
         "warm_start": "s17"
       },
       "machine": true,
+      "methods": [
+        {
+          "doc": "Apply trees in the forest to X, return leaf indices.",
+          "name": "apply"
+        },
+        {
+          "doc": "Return the decision path in the forest.",
+          "name": "decision_path"
+        },
+        {
+          "doc": "Build a forest of trees from the training set (X, y).",
+          "name": "fit"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Predict regression target for X.",
+          "name": "predict"
+        },
+        {
+          "doc": "Return :ref:`coefficient of determination <r2_score>` on test data.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        }
+      ],
       "type": "RandomForestRegressor"
     }
   },

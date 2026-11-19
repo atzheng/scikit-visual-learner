@@ -951,6 +951,52 @@
         "warm_start": "s14"
       },
       "machine": true,
+      "methods": [
+        {
+          "doc": "Predict confidence scores for samples.",
+          "name": "decision_function"
+        },
+        {
+          "doc": "Convert coefficient matrix to dense array format.",
+          "name": "densify"
+        },
+        {
+          "doc": "Fit the model according to the given training data.",
+          "name": "fit"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Predict class labels for samples in X.",
+          "name": "predict"
+        },
+        {
+          "doc": "Predict logarithm of probability estimates.",
+          "name": "predict_log_proba"
+        },
+        {
+          "doc": "Probability estimates.",
+          "name": "predict_proba"
+        },
+        {
+          "doc": "Return :ref:`accuracy <accuracy_score>` on provided data and labels.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        },
+        {
+          "doc": "Convert coefficient matrix to sparse format.",
+          "name": "sparsify"
+        }
+      ],
       "type": "LogisticRegression"
     },
     "v5.1": {

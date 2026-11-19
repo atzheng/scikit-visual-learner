@@ -729,3 +729,79 @@ def test_timing_values_have_a_stable_repr(vt: ValueTable) -> None:
     assert d["mean_fit_time"] == [0.123456]  # the program's dict is untouched
     vt.summarize("v2.0", {"a": 1})
     assert vt.take_new_summaries()["v2.0"]["repr"] == "{'a': 1}"
+
+
+def test_methods_listed_once_per_class_and_deterministic() -> None:
+    def run() -> dict[str, dict[str, object]]:
+        vt = ValueTable()
+        a, b = LinearRegression(), LinearRegression()
+        for o in (a, b):
+            vt.summarize(vt.token(o), o)
+        return vt.values
+
+    v1, v2 = run(), run()
+    assert json.dumps(v1) == json.dumps(v2)
+    with_methods = [v for v in v1.values() if "methods" in v]
+    assert len(with_methods) == 1  # cached per class: the second instance has none
+    ms = with_methods[0]["methods"]
+    names = [m["name"] for m in ms]  # type: ignore[attr-defined]
+    assert names == sorted(names) and len(names) <= 40
+    assert {"fit", "predict", "score", "get_params", "set_params"} <= set(names)
+    docs = {m["name"]: m["doc"] for m in ms}  # type: ignore[attr-defined]
+    assert docs["fit"] and "\n" not in docs["fit"] and len(docs["fit"]) <= 80
+    assert not any(n.startswith("_") for n in names)
+
+
+def test_methods_run_no_student_code() -> None:
+    ns: dict[str, object] = {"__name__": "__main__"}
+    src = '''
+calls = []
+class D:
+    def __get__(self, o, t=None):
+        calls.append('get')
+        raise RuntimeError('boom')
+class M:
+    d = D()
+    @property
+    def p(self):
+        calls.append('prop')
+        raise RuntimeError('boom')
+    def __getattr__(self, n):
+        calls.append('getattr')
+        raise RuntimeError('boom')
+    def zed(self):
+        """
+           Last one.
+        more"""
+    def alpha(self): pass
+    @staticmethod
+    def st(): "Static."
+    @classmethod
+    def cm(cls): "Class."
+    def _private(self): pass
+class Sub(M):
+    def alpha(self): "Over."
+    p = 3
+'''
+    exec(src, ns)
+    vt = ValueTable()
+    obj = ns["Sub"]()  # type: ignore[operator]
+    vt.summarize(vt.token(obj), obj)
+    assert ns["calls"] == []
+    s = vt.values["v0.0"]
+    assert s["methods"] == [
+        {"name": "alpha", "doc": "Over."},
+        {"name": "cm", "doc": "Class."},
+        {"name": "st", "doc": "Static."},
+        {"name": "zed", "doc": "Last one."},
+    ]
+
+
+def test_methods_cap() -> None:
+    ns: dict[str, object] = {"__name__": "__main__"}
+    exec("class Big:\n" + "".join(f"    def m{i:03d}(self): pass\n" for i in range(100)), ns)
+    vt = ValueTable()
+    obj = ns["Big"]()  # type: ignore[operator]
+    vt.summarize(vt.token(obj), obj)
+    names = [m["name"] for m in vt.values["v0.0"]["methods"]]  # type: ignore[attr-defined]
+    assert len(names) == 40 and names == sorted(names)
