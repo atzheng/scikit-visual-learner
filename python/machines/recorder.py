@@ -1372,7 +1372,8 @@ class Recorder:
             if b.get("attr") is None:
                 continue
             obj = frame.f_globals.get(b["name"])
-            if type(obj) is types.ModuleType and obj.__dict__.get("__name__") == f"{b['module']}.{b['attr']}":
+            want = f"{b['module']}.{b['attr']}"
+            if type(obj) is types.ModuleType and obj.__dict__.get("__name__") == want:
                 out.append(b["name"])
         return out
 
