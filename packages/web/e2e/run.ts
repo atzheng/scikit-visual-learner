@@ -419,9 +419,45 @@ async function core(page: Page, view: View): Promise<void> {
     await gotoStep(page, m);
     await closeAttributes(page);
     await settle(page);
-    const row = page
-      .locator('g.md-node[data-kind="instance"]:not(.md-hidden) g[data-doc-attr]:not(.md-hidden)')
-      .first();
+    // a row that is on screen, so the mouse can reach it (the full diagram can be panned off a node)
+    const rows = page.locator(
+      'g.md-node[data-kind="instance"]:not(.md-hidden) g[data-doc-attr]:not(.md-hidden)',
+    );
+    const vp = page.viewportSize();
+    let row = rows.first();
+    for (let i = 0; i < (await rows.count()); i++) {
+      const b = await rows.nth(i).boundingBox();
+      const inside =
+        b && vp && b.x >= 0 && b.y >= 0 && b.x + b.width <= vp.width && b.y + b.height <= vp.height;
+      if (inside) {
+        row = rows.nth(i);
+        break;
+      }
+    }
+    // the question mark shows on hover only (svl-bc0): hidden at rest, visible on hover
+    const q = row.locator('[data-docs-row-btn]');
+    check(
+      (await q.evaluate((e) => getComputedStyle(e).opacity)) === '0',
+      'the row question mark is visible at rest',
+    );
+    await shot(page, `10-docs-rest-${view}`);
+    // move the mouse over the row (locator.hover would scroll the pane and time out here)
+    const box = await row.boundingBox();
+    if (!box) throw new Error('the row has no box');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(300);
+    check(
+      (await q.evaluate((e) => getComputedStyle(e).opacity)) === '1',
+      'the row question mark is hidden on hover',
+    );
+    await shot(page, `10-docs-hover-${view}`);
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.waitForTimeout(300);
+    await shot(page, `10-docs-hover-dark-${view}`);
+    await page.mouse.move(2, 2);
+    await page.waitForTimeout(300);
+    await shot(page, `10-docs-rest-dark-${view}`);
+    await page.emulateMedia({ colorScheme: 'light' });
     // the question mark is an aria-hidden glyph inside the row: click it without scrolling the pane
     await row.locator('[data-docs-row-btn]').dispatchEvent('click');
     const docs = page.getByRole('complementary', { name: 'Documentation' });
