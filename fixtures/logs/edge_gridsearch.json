@@ -555,7 +555,7 @@
       "type": "bool"
     },
     "s25": {
-      "repr": "<varies: wall-clock timings>",
+      "repr": "<varies: wall-clock timing>",
       "type": "float"
     },
     "s26": {
@@ -966,7 +966,7 @@
       "type": "dict[1]"
     },
     "v9.0": {
-      "repr": "<varies: wall-clock timings>",
+      "repr": "{'mean_fit_time': <varies: wall-clock t…",
       "type": "dict[12]"
     }
   },

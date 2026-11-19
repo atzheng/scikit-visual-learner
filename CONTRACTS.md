@@ -324,6 +324,8 @@ class ValueTable:
 
 **Known limits.** Fingerprints hold no strong references (weakref per weakref-able item, id and type otherwise). Objects that cannot be weakly referenced (lists, dicts, tuples, sets) that were given a token are kept alive only while they are among the 256 most recently used (and within 16 MiB of estimated size), so a deleted container's `__del__` can run late by at most that window; an evicted object that is still alive is a missing wire, never a false one (it gets a fresh token on its next sighting). Named and returned containers that cannot be weakly referenced stay alive while they are among the recently used ones, and a container held by a name until that name is rebound, so their `__del__` can run late; recursion headroom is about 4 frames shorter per nested recorded call (each wrapped call adds the hook frames). Mutation of an object nested in an attribute (`est.coef_[0] = 1`) is invisible to the parent; the recorder checks tracked attributes itself.
 
+**Wall-clock timings.** Values that come from the wall clock get the fixed repr `<varies: wall-clock timing>` (`values.TIMING_REPR`), so logs are deterministic and the live view shows stable text: the `refit_time_` attribute of a machine, and the values of the keys `mean_fit_time`, `std_fit_time`, `mean_score_time` and `std_score_time` in any `dict` summary (`GridSearchCV.cv_results_`). Tokens, versions and the program's own objects are unaffected; only the summary `repr` changes.
+
 **Summaries.** Pre-format with `str()` of each cell, truncated to 40 characters. `NaN` shows as `NaN`. Count the preview budget in UTF-8 bytes of the JSON-encoded preview.
 
 ## 6. Runtime (`runtime.py`, `tracebacks.py`, `mpl.py`)

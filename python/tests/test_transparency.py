@@ -34,7 +34,7 @@ PARAMS = [
     pytest.param(n, marks=[] if n.startswith("golden") else [pytest.mark.slow], id=n) for n in NAMES
 ]
 INPUT_DIFFERS = {"edge_input"}
-TIMING_ATTRS = gf.TIMING_ATTRS
+TIMING_ATTRS = frozenset({"refit_time_", "cv_results_"})  # final values: skip wall clock
 
 
 @pytest.fixture(scope="module")
