@@ -675,8 +675,15 @@ class _Instrument(ast.NodeTransformer):
         k = self.import_index.get(id(node))
         if k is None:
             return node
-        const = ast.Constant(-1)
-        self.import_hooks.append((k, const))
-        return [node, self._hook_stmt("__imp__", const, like=node)]
+        # A hook before it only marks where the statement's output starts, so that output printed
+        # while the import runs can be tagged with the import's own step (svl-wqe).
+        pre, post = ast.Constant(-1), ast.Constant(-1)
+        self.import_hooks.append((k, pre))
+        self.import_hooks.append((k, post))
+        return [
+            self._hook_stmt("__imp__", pre, ast.Constant(True), like=node),
+            node,
+            self._hook_stmt("__imp__", post, like=node),
+        ]
 
     visit_ImportFrom = visit_Import  # type: ignore[assignment]

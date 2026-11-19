@@ -140,8 +140,40 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
     const node = closest(ev.target, 'data-node');
     if (node) opts.onSelectNode(node.getAttribute('data-node')!);
   };
+  /** The row last focused in each box (by its attribute name), so ArrowDown re-enters where you left. */
+  const lastRow = new Map<string, string>();
+  const visibleRows = (box: Element): Element[] =>
+    [...box.querySelectorAll('[data-doc-attr]')].filter((r) => !r.classList.contains('md-hidden'));
+  /** Arrow keys on a box or one of its attribute rows (roving focus; one tab stop per box). */
+  const onRowArrow = (k: KeyboardEvent): boolean => {
+    if (k.ctrlKey || k.metaKey || k.altKey || k.shiftKey) return false;
+    const box = closest(k.target, 'data-node');
+    if (!box) return false;
+    const id = box.getAttribute('data-node')!;
+    const rows = visibleRows(box);
+    if (rows.length === 0) return false;
+    const onRow = k.target !== box ? closest(k.target, 'data-doc-attr') : null;
+    const cur = onRow ? rows.indexOf(onRow) : -1;
+    if (k.target !== box && cur < 0) return false;
+    let to: Element;
+    if (k.key === 'ArrowDown') {
+      if (cur < 0) {
+        const mem = lastRow.get(id);
+        to = rows.find((r) => r.getAttribute('data-doc-name') === mem) ?? rows[0]!;
+      } else to = rows[Math.min(cur + 1, rows.length - 1)]!;
+    } else if (k.key === 'ArrowUp') {
+      if (cur < 0) return false;
+      to = cur === 0 ? box : rows[cur - 1]!;
+    } else if (k.key === 'Escape' && cur >= 0) to = box;
+    else return false;
+    k.preventDefault();
+    k.stopPropagation();
+    (to as SVGElement).focus();
+    return true;
+  };
   const onKeyDown = (ev: Event): void => {
     const k = ev as KeyboardEvent;
+    if (onRowArrow(k)) return;
     if (k.key === 'Escape') {
       // inside an open list: close it and give focus back to its control
       const wrap = closest(k.target, 'data-more-for');
@@ -208,6 +240,10 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
     setHoverEdge(null, point(m.clientX, m.clientY));
   };
   const onFocusIn = (ev: Event): void => {
+    const row = closest(ev.target, 'data-doc-attr');
+    const owner = row && closest(row, 'data-node');
+    if (row && owner && row === ev.target)
+      lastRow.set(owner.getAttribute('data-node')!, row.getAttribute('data-doc-name') ?? '');
     const edge = closest(ev.target, 'data-edge');
     if (!edge || !(ev.target instanceof Element) || !ev.target.classList.contains('md-edge-label'))
       return;
