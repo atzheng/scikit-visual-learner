@@ -595,3 +595,36 @@ def test_store_index_operands_and_expr_calls() -> None:
     assert "calls" not in b["value"]
     (b,) = kind("m = [x > f(1), g(2) or h(3)]", "bind")
     assert b["value"]["calls"] == [0, 1]
+
+
+def _volatile_binds(src: str) -> set[str]:
+    out: set[str] = set()
+    for site in instrument(src).sites:
+        if site["kind"] == "bind" and site.get("volatile"):
+            out.update(site["targets"])
+    return out
+
+
+@pytest.mark.parametrize(
+    ("src", "expected"),
+    [
+        ("a = 1\nb = a\n", set()),
+        ("a = 1\nb = a\ndel b\n", {"b"}),
+        ("k = 1\ndef g():\n    global k\n    k = 2\n", {"k"}),
+        ("b = 1\nif (b := 2):\n    pass\n", {"b"}),
+        ("a = 1\nimport os as a\n", {"a"}),
+        ("a = 1\nb = 2\nglobals()\n", {"a", "b"}),
+        ("a = 1\nexec('a = 2')\n", {"a"}),
+        ("a = 1\nfrom m import *\n", {"a"}),
+        ("import sys\nk1 = 1\nsys.modules[__name__].k1 = 2\n", {"k1"}),
+        ("k2 = 1\nsetattr(object(), 'k2', 2)\n", {"k2"}),
+        ("import sys\nk3 = 1\nsys.modules['__main__'].__dict__['k3'] = 2\n", {"k3"}),
+        ("import __main__\nk4 = 1\n__main__.k4 = 2\n", {"k4"}),
+        ("from importlib import import_module\nk5 = 1\n", {"k5"}),
+        ("k6 = 1\nx = k6.__dict__\n", {"k6", "x"}),
+        ("k7 = 1\ndelattr(object(), 'k7')\n", {"k7"}),
+    ],
+)
+def test_volatile_bind_sites(src: str, expected: set[str]) -> None:
+    # svl-35d: a bind site is volatile when its name can be rebound or unbound unseen
+    assert _volatile_binds(src) == expected

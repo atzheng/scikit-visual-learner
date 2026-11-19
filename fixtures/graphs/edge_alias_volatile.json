@@ -1,0 +1,219 @@
+{
+  "nodes": [
+    {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 400000,
+      "name": "pd",
+      "source": "pandas",
+      "site": 9,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:1kp0hxq.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "DataFrame",
+      "module": "pandas",
+      "parent": null,
+      "order": 600005,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:data",
+          "param": "data",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "data = {\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]}"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false,
+      "importedFrom": "pandas"
+    },
+    {
+      "id": "i:1kp0hxq.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 600005,
+      "className": "DF",
+      "varName": "df",
+      "createdAt": 1,
+      "createdBy": "n:1kp0hxq.0",
+      "params": [
+        {
+          "name": "data",
+          "text": "{\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]}"
+        }
+      ],
+      "versions": [
+        {
+          "i": 1,
+          "token": "v1.0",
+          "kind": "new"
+        }
+      ],
+      "aliases": [
+        {
+          "name": "df2",
+          "object": "v1",
+          "from": 1,
+          "until": null
+        }
+      ]
+    },
+    {
+      "id": "n:mxn2k39@i:1kp0hxq.0",
+      "kind": "call",
+      "mergeKey": "s4",
+      "name": "DataFrame.copy",
+      "module": "pandas",
+      "parent": "i:1kp0hxq.0",
+      "order": 1000008,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "other"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "i:1x9xhnv.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1000008,
+      "className": "DF",
+      "varName": "other",
+      "createdAt": 2,
+      "createdBy": "n:mxn2k39@i:1kp0hxq.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 2,
+          "token": "v2.0",
+          "kind": "new"
+        }
+      ]
+    },
+    {
+      "id": "n:bvjtp7.0",
+      "kind": "call",
+      "mergeKey": "s7",
+      "name": "g",
+      "module": "__main__",
+      "parent": null,
+      "order": 1900000,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [],
+      "student": true
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:1kp0hxq.0.out:0>i:1kp0hxq.0.",
+      "from": {
+        "node": "n:1kp0hxq.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1kp0hxq.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:mxn2k39@i:1kp0hxq.0.out:0>i:1x9xhnv.0.",
+      "from": {
+        "node": "n:mxn2k39@i:1kp0hxq.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1x9xhnv.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3
+  ]
+}

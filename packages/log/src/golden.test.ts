@@ -76,8 +76,8 @@ function checkChip(log: EventLog, g: GraphModel, ed: GEdge): void {
 }
 
 describe('fixtures', () => {
-  it('has the 28 programs', () => {
-    expect(names.length).toBe(28);
+  it('has the 32 programs', () => {
+    expect(names.length).toBe(32);
   });
 
   describe.each(names)('%s', (n) => {
@@ -217,6 +217,23 @@ describe('fixtures', () => {
         }
       },
     );
+
+    it('aliases: every alias name is bound to an object of its box, over a non-empty interval', () => {
+      const log = readLog(n);
+      const g = buildGraph(log);
+      const binds = log.scopes[0]!.bindings;
+      for (const b of g.nodes.filter((x): x is InstanceNode => x.kind === 'instance')) {
+        const objs = new Set(b.versions.map((v) => keyOf(v.token)));
+        for (const a of b.aliases ?? []) {
+          expect(a.until === null || a.until > a.from, `${b.id} ${a.name}`).toBe(true);
+          expect(
+            binds.some(([at, name, t]) => name === a.name && at === a.from && objs.has(keyOf(t))),
+            `${b.id} alias ${a.name} starts at a binding of the box`,
+          ).toBe(true);
+          expect(a.name, b.id).not.toBe(b.varName?.replace(/[′″‴]+$/, ''));
+        }
+      }
+    });
 
     it('is deterministic and does not mutate the log', () => {
       const log = readLog(n);
@@ -557,5 +574,120 @@ describe('edge cases on real logs', () => {
       expect(g.nodes).toEqual([]);
       expect(g.steps).toEqual([]);
     }
+  });
+});
+
+// ---- alias names and loop-carried creation wires (svl-35d)
+
+const aliasBox = (g: GraphModel, name: string): InstanceNode =>
+  only(instances(g).filter((x) => x.varName === name));
+/** The alias names the box shows at the step of event `i`. */
+const aliasesAt = (log: EventLog, g: GraphModel, box: InstanceNode, i: number): string[] =>
+  stateAt(g, log, stepOfEvent(g, i) ?? 0).aliases.get(box.id) ?? [];
+/** The events that make a new object in the box (one per pass). */
+const passes = (box: InstanceNode): number[] =>
+  box.versions.filter((v) => v.kind === 'new').map((v) => v.i);
+
+describe('edge_alias', () => {
+  const log = readLog('edge_alias');
+  const g = buildGraph(log, { fold: false });
+  const box = (name: string): InstanceNode => aliasBox(g, name);
+
+  it('a second name is an alias of the box, per interval of events, and never the box own name', () => {
+    expect(box('m').aliases).toEqual([{ name: 'r', object: 'v3', from: 7, until: null }]);
+    // df2 = df is dropped when df2 is rebound to `other`, which then carries it
+    expect(box('df').aliases?.map((a) => [a.name, a.until !== null])).toEqual([
+      ['df2', true],
+      ['prev', true],
+    ]);
+    expect(box('other').aliases).toEqual([{ name: 'df2', object: 'v2', from: 3, until: null }]);
+    // `prev = cur` rebinds to the next object of the same box: one interval per object
+    expect(box('cur').aliases?.map((a) => [a.name, a.object])).toEqual([
+      ['prev', 'v9'],
+      ['prev', 'v10'],
+      ['prev', 'v11'],
+    ]);
+  });
+
+  it('stateAt shows an alias from its bind step and drops it when the name is rebound', () => {
+    const df = box('df');
+    const other = box('other');
+    expect(aliasesAt(log, g, df, 2)).toEqual(['df2']);
+    expect(aliasesAt(log, g, df, 3)).toEqual([]);
+    expect(aliasesAt(log, g, other, 3)).toEqual(['df2']);
+    expect(aliasesAt(log, g, df, 9)).toEqual([]); // prev moved on to the cur box
+    const end = stateAt(g, log, g.steps.length);
+    expect(end.aliases.get(box('cur').id)).toEqual(['prev']);
+    expect(end.aliases.get(box('m').id)).toEqual(['r']);
+    expect(end.aliases.get(df.id)).toBeUndefined();
+  });
+
+  it('at each pass of the loop box, prev shows only for the object it is bound to', () => {
+    const cur = box('cur');
+    for (const i of passes(cur))
+      expect(aliasesAt(log, g, cur, i), `pass at ${i}`).toEqual(['prev']);
+    // between the passes the box still holds the earlier object, and `prev` is bound to that object
+    const v = cur.versions;
+    expect(v).toHaveLength(3);
+  });
+
+  it('a loop-carried box gets a creation wire for each pass from the call that made that pass object', () => {
+    const cur = box('cur');
+    const news = cur.versions.filter((v) => v.kind === 'new');
+    expect(news).toHaveLength(3);
+    for (const v of news) {
+      const wires = edgesInto(g, cur).filter((e) => e.uses.some((u) => u.token === v.token));
+      expect(wires, v.token).toHaveLength(1);
+      expect(upstream(g, wires[0]!).kind).toBe('call');
+    }
+  });
+});
+
+describe('edge_alias_loop', () => {
+  const log = readLog('edge_alias_loop');
+  const g = buildGraph(log, { fold: false });
+  const cur = aliasBox(g, 'cur');
+
+  it('prev and alias show on each pass for that pass object; keep only on the pass it was bound', () => {
+    const [p1, p2, p3] = passes(cur) as [number, number, number];
+    expect(aliasesAt(log, g, cur, p1).sort()).toEqual(['alias', 'keep', 'prev']);
+    expect(aliasesAt(log, g, cur, p2).sort()).toEqual(['alias', 'prev']);
+    expect(aliasesAt(log, g, cur, p3).sort()).toEqual(['alias', 'prev']);
+    // at the end the box shows the last object: keep is bound to the first one
+    expect(stateAt(g, log, g.steps.length).aliases.get(cur.id)?.sort()).toEqual(['alias', 'prev']);
+  });
+
+  it('first is an alias of the df box and prev is not left on it after pass 1', () => {
+    const df = aliasBox(g, 'df');
+    const at = aliasesAt(log, g, df, df.versions[0]!.i);
+    expect(at.sort()).toEqual(['first', 'prev']);
+    expect(aliasesAt(log, g, df, passes(cur)[0]!)).toEqual(['first']);
+  });
+});
+
+describe('edge_alias_volatile', () => {
+  const log = readLog('edge_alias_volatile');
+  const g = buildGraph(log, { fold: false });
+  const df = aliasBox(g, 'df');
+
+  it('a deleted name and a global-rebound name are never aliases; a plain one is', () => {
+    const names = new Set((df.aliases ?? []).map((a) => a.name));
+    expect(names.has('df2')).toBe(true);
+    expect(names.has('df4')).toBe(false);
+    expect(names.has('keep')).toBe(false);
+    for (const b of instances(g))
+      for (const a of b.aliases ?? []) expect(['df4', 'keep']).not.toContain(a.name);
+    expect(stateAt(g, log, g.steps.length).aliases.get(df.id)).toEqual(['df2']);
+  });
+});
+
+describe('edge_alias_reflect', () => {
+  const log = readLog('edge_alias_reflect');
+  const g = buildGraph(log, { fold: false });
+
+  it('reflective rebinding of module globals: no alias is ever shown', () => {
+    expect(log.scopes[0]!.bindings.some(([, name]) => name === 'k1')).toBe(true);
+    for (const b of instances(g)) expect(b.aliases, b.id).toBeUndefined();
+    expect(stateAt(g, log, g.steps.length).aliases.size).toBe(0);
   });
 });

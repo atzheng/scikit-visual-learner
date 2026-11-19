@@ -14,7 +14,7 @@ import type {
   Token,
   ValueSummary,
 } from '@machines/log';
-import { M, callModules, instanceTitle, typeText } from './layout';
+import { M, aliasText, callModules, instanceTitle, instanceTitleWith, typeText } from './layout';
 import type { Laid, LaidNode } from './layout';
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -608,6 +608,8 @@ export interface NodeHandle {
   /** Characters per line of the message under the box (its width). */
   msgChars?: number;
   rows?: AttrRowDom[];
+  /** Instances: the title text, which shows the names the object is also bound to at the step (svl-35d). */
+  title?: SVGTextElement;
   /** Call boxes: one group per port, so a port can be re-texted and dimmed per execution. */
   ports?: Map<string, PortDom>;
   /** Instances with a "more methods" list. */
@@ -822,13 +824,13 @@ export function buildSvg(
             { x: ln.x + 6, y: ln.y + 4, width: ln.w - 12, height: 22, rx: 11 },
             'md-pill',
           ),
-          s(
+          (h.title = s(
             doc,
             'text',
             { x: ln.x + ln.w / 2, y: ln.y + 19, 'text-anchor': 'middle' },
             'md-pill-text',
             instanceTitle(n),
-          ),
+          )),
         );
         const cap = Math.round((ln.attrsH ?? 0) / M.instRowH);
         h.rows = [];
@@ -1278,10 +1280,16 @@ export function applyState(
         if (h.more.panel) h.more.wrap.append(h.more.panel);
       }
     }
+    // the title and the aria label come from the same names
+    const aliasShown =
+      h.node.kind === 'instance' ? aliasText(h.node, state.aliases.get(h.id) ?? []) : null;
+    if (h.title && h.node.kind === 'instance')
+      setText(h.title, instanceTitleWith(h.node, state.aliases.get(h.id) ?? []));
     let aria =
       h.label +
       (uncalled ? ', not called yet' : '') +
       (b ? `, run ${b.k} of ${b.n}` : '') +
+      (aliasShown !== null ? `, also named ${aliasShown}` : '') +
       (status ? `, ${status.text.replace(/^(⚠|⏹) /, '')}` : '') +
       (isCurrent ? ', current step' : '');
 

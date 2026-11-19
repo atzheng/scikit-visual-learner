@@ -31,6 +31,7 @@ class Instrumented:
 def instrument(source: str) -> Instrumented:
     """Parse and rewrite `source`. A SyntaxError from `ast.parse` propagates unchanged."""
     tree = ast.parse(source)
+    volatile = _volatile_names(tree)  # analysed on the original tree
     transformer = _Instrument(source)
     imports = _import_sites(tree, transformer.src)  # analysed on the original tree
     transformer.import_index = {id(stmt): k for k, (stmt, _) in enumerate(imports)}
@@ -42,6 +43,11 @@ def instrument(source: str) -> Instrumented:
         const.value = first + k
     assert isinstance(new_tree, ast.Module)
     ast.fix_missing_locations(new_tree)
+    for site in transformer.sites:
+        if site["kind"] == "bind" and (
+            volatile is None or any(t in volatile for t in site.get("targets", []))
+        ):
+            site["volatile"] = True
     return Instrumented(new_tree, transformer.sites)
 
 
@@ -215,6 +221,67 @@ def _class_scope_names(node: ast.ClassDef) -> frozenset[str]:
 
     for stmt in node.body:
         walk(stmt)
+    return frozenset(out)
+
+
+_DYNAMIC_NAMESPACE = frozenset(
+    {
+        "globals",
+        "vars",
+        "locals",
+        "exec",
+        "eval",
+        "setattr",
+        "delattr",
+        "sys",
+        "__main__",
+        "importlib",
+        "inspect",
+    }
+)
+
+
+def _volatile_names(tree: ast.Module) -> frozenset[str] | None:
+    """Names whose binding the recorder cannot follow (CONTRACTS section 3, "Volatile names"), or
+    None when every name is volatile.
+
+    A name is volatile when something other than a recorded assignment can rebind or unbind it:
+    `del`, `global`, `nonlocal`, `:=`, an import, a `def` or `class`, `except ... as`, a match
+    capture. Every name is volatile when the module reaches the namespace dynamically (`globals`,
+    `vars`, `locals`, `exec`, `eval`) or has `from m import *`. The graph never shows a volatile
+    name as an alias, since the log cannot say that it still refers to the object it was bound to.
+    """
+    out: set[str] = set()
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Name):
+            if n.id in _DYNAMIC_NAMESPACE:
+                return None
+            if isinstance(n.ctx, ast.Del):
+                out.add(n.id)
+        elif isinstance(n, ast.Attribute) and n.attr == "__dict__":
+            return None
+        elif isinstance(n, (ast.Global, ast.Nonlocal)):
+            out.update(n.names)
+        elif isinstance(n, ast.NamedExpr) and isinstance(n.target, ast.Name):
+            out.add(n.target.id)
+        elif isinstance(n, (ast.Import, ast.ImportFrom)):
+            for a in n.names:
+                if a.name == "*" or a.name.split(".")[0] in _DYNAMIC_NAMESPACE:
+                    return None
+                out.add(a.asname or a.name.split(".")[0])
+            if (
+                isinstance(n, ast.ImportFrom)
+                and (n.module or "").split(".")[0] in _DYNAMIC_NAMESPACE
+            ):
+                return None
+        elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            out.add(n.name)
+        elif isinstance(n, ast.ExceptHandler) and n.name:
+            out.add(n.name)
+        elif isinstance(n, (ast.MatchAs, ast.MatchStar)) and n.name:
+            out.add(n.name)
+        elif isinstance(n, ast.MatchMapping) and n.rest:
+            out.add(n.rest)
     return frozenset(out)
 
 

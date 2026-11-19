@@ -15,6 +15,10 @@ import {
   buildElkGraph,
   layout,
   longEdgeLoad,
+  instanceTitleWith,
+  aliasText,
+  instanceWidestTitle,
+  M,
   tierFor,
   LABEL_MAX_DIST,
   ROOT_OPTIONS,
@@ -762,4 +766,51 @@ describe('label distance and dense graphs', () => {
     expect(JSON.stringify(b)).toBe(JSON.stringify(a));
     checkDense(m, a);
   }, 60000);
+});
+
+describe('alias names and loop-carried boxes (svl-35d)', () => {
+  const aliased = (): GraphModel => {
+    const m = linregModel();
+    const box = m.nodes.find((x) => x.id === 'i:m') as InstanceNode;
+    box.aliases = [
+      { name: 'r', object: 'v3', from: 3, until: null },
+      { name: 'estimator_alias', object: 'v3', from: 4, until: 9 },
+    ];
+    return m;
+  };
+
+  test('the box is wide enough for every name it shows over the run, so a step never moves it', async () => {
+    const plain = await layout(linregModel(), { measure });
+    const withAliases = await layout(aliased(), { measure });
+    const widest = instanceWidestTitle(aliased().nodes.find((x) => x.id === 'i:m') as InstanceNode);
+    expect(widest).toBe('model (also estimator_alias, r): LinearRegression');
+    expect(N(withAliases, 'i:m').w).toBeGreaterThanOrEqual(measure(widest) + 2 * M.boxPadX - 1);
+    expect(N(withAliases, 'i:m').w).toBeGreaterThanOrEqual(N(plain, 'i:m').w);
+    // alone, the aliases are what sets the width
+    const lone = inst('i:d', 1, 'DF', 'df');
+    const before = await layout(model([lone], []), { measure });
+    lone.aliases = [{ name: 'a_rather_long_alias_name', object: 'v1', from: 1, until: 2 }];
+    const after = await layout(model([lone], []), { measure });
+    expect(N(after, 'i:d').w).toBeGreaterThan(N(before, 'i:d').w);
+  });
+
+  test('instanceTitleWith: no names is the plain title; more than three end in an ellipsis', () => {
+    const b = inst('i:d', 1, 'DF', 'df');
+    expect(instanceTitleWith(b, [])).toBe('df: DF');
+    expect(instanceTitleWith(b, ['a'])).toBe('df (also a): DF');
+    expect(instanceTitleWith(b, ['a', 'b', 'c', 'd'])).toBe('df (also a, b, c, …): DF');
+    expect(instanceTitleWith(inst('i:x', 1, 'DF', null), ['a'])).toBe('DF');
+    // the aria label uses aliasText: none when the title shows no alias
+    expect(aliasText(b, [])).toBeNull();
+    expect(aliasText(inst('i:x', 1, 'DF', null), ['a'])).toBeNull();
+    expect(aliasText(b, ['a', 'b', 'c', 'd'])).toBe('a, b, c, …');
+  });
+
+  test('a wire from a method box inside a box to that same box lays out (a loop-carried creation wire)', async () => {
+    const m = linregModel();
+    m.edges.push(edge('loop', ['n:pred@i:m', 'out:0'], ['i:m', null]));
+    const laid = await layout(m, { measure });
+    checkGeometry(m, laid);
+    expect(E(laid, 'loop').length).toBeGreaterThanOrEqual(2);
+  });
 });
