@@ -102,9 +102,16 @@ type Origin =
   | { origin: 'expr'; text: string; reads: string[] } // reads: bare names read, in source order, deduplicated
   | { origin: 'unknown' }; // at or after a starred argument
 
+interface ImportBinding {
+  name: string; // the bound name: `pd` for `import pandas as pd`, `numpy` for `import numpy.linalg`, `LinearRegression` for `from sklearn.linear_model import LinearRegression`
+  module: string; // `import m` / `import m as x` / `from m import a`: m (`import a.b` binds `a`: module `a`)
+  attr: string | null; // `from m import a [as b]`: a; null for `import m`
+  sole: boolean; // the name is bound exactly once in the whole module (no other import, assignment, loop or with target, `def`, `class`, parameter, `except … as`, `del`, `:=`, comprehension target, in any scope) and the module has no `from m import *`
+}
+
 interface Site {
   id: number; // index into sites
-  kind: 'call' | 'bind' | 'store' | 'ret';
+  kind: 'call' | 'bind' | 'store' | 'ret' | 'import';
   line: number;
   col: number;
   end_line: number;
@@ -120,6 +127,8 @@ interface Site {
   targets?: string[]; // Name targets in order; for a tuple target, the flattened names
   value?: Origin; // RHS origin for Assign/AugAssign/AnnAssign; absent for for/with targets and for destructuring targets (section 3)
   where?: 'local' | 'global' | 'nonlocal'; // M1–3: always 'local' (module)
+  // kind 'import' (svl-b4w): one per module-level `import` / `from … import` statement; the statement is not rewritten and not hooked, the site is the whole record
+  imports?: ImportBinding[]; // the names the statement binds, in order
   // kind 'store'
   root?: string; // the root Name of the target (df in df.loc[m, "c"])
   value?: Origin; // RHS origin; only when the target is the whole left-hand side of Assign/AnnAssign and no target is a tuple, list or starred (section 3)
@@ -230,6 +239,7 @@ Rules for M1–3 (SPEC "Transformer rules", narrowed):
 - Decorator expressions are visited like any other code (so `@lru_cache(maxsize=None)` records a call); the decorated `def` body is not.
 - Assignment statements (`Assign`, `AugAssign`, `AnnAssign` with a value), `for` targets and `with … as` targets at module level → a `__bind__(site, {name: value, …})` statement after the assignment, or as the first statement of the body for `for`/`with`. Nested tuple and starred targets flatten to their Names. Subscript and attribute targets whose root is a `Name` → `__store__(site, <root name>)` after the statement. Statements directly in a class body get neither.
 - `NamedExpr`, `import`, `del`, `except … as`, `match` captures, `global` and class/def names are not bound (resolution falls back as in section 5).
+- **Imports** (svl-b4w). Each module-level `import` / `from … import` statement (not inside `if`, `try`, `def`, `class`, a loop or a `with`; not relative, not `__future__`; star imports bind nothing) adds one `import` site. Import statements are left exactly as written (no hook, so transparency is untouched: side effects, `__import__`, conditional and repeated imports all run as in plain Python). The `import` sites are appended after all other sites, so every other site id is unchanged. The transformer computes `sole` for each bound name by walking the whole original tree (rule in `ImportBinding`). This is a static, stricter form of "the name was not rebound between the import and the call": a `sole` name is never rebound at all, in any scope. Not caught: rebinding through `globals()[...]`, `setattr(module, …)` or `exec`.
 - Origins: `Constant` and unary minus on a numeric constant → `const`. Tuples, lists, sets and dicts whose elements are all `const` → `const` with the source text. `Name` → `name`. A `Call` that is itself wrapped → `call` with its site id. Everything else → `expr`, with `reads` the `Name` loads inside it, excluding names under nested lambdas and comprehension targets.
 - Bind and store sites take the span and text of the whole statement (`for`: the target; `with`: `expr as target`). `for` and `with` targets give no `__store__`. Annotations and function bodies are not visited; defaults are. Site ids are assigned in post-order (inner calls first).
 - For `AugAssign` the bind `value` is an `expr` origin (text: the whole statement, reads: the target names then the RHS reads), not the RHS origin: `x += f(y)` must not wire f's output to x.
@@ -491,7 +501,7 @@ interface GraphModel {
   tooMany?: number;
 }
 
-type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode;
+type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode | ImportNode;
 interface NodeBase {
   id: string;
   parent: string | null;
@@ -541,6 +551,12 @@ interface SourceNode extends NodeBase {
   label: string;
   token: Token;
 }
+interface ImportNode extends NodeBase {
+  kind: 'import'; // svl-b4w
+  name: string; // the bound name (`pd`, `LinearRegression`)
+  source: string | null; // gray text under it: `pandas`, `sklearn.linear_model`, `sklearn.linear_model.Ridge` for `from … import Ridge as R`; null when it equals `name` (`import numpy`)
+  site: number; // the `import` site
+}
 interface Port {
   id: string;
   param: string;
@@ -558,6 +574,7 @@ interface GEdge {
   to: { node: string; port: string | null }; // null: same
   dashed: boolean; // into or out of an expr node
   uses: { i: number; token: Token }[]; // per consumer execution: which value travelled
+  callee?: true; // svl-b4w: an import node to a call box. Carries no value: `uses[].token` is '' and `nameLabel` null. Not a value wire (no producer, no type label)
   nameLabel: string | null; // the bound name of the latest token in the drawn scope; each new value bound to a name gets one more prime in time order (`X`, `X′`, `X″`, capped at `‴`)
 }
 ```
@@ -574,6 +591,8 @@ Construction follows SPEC "Graph construction" with these decisions:
 - Expr nodes whose output reaches no call/store/instance node are dropped, transitively. An expr whose output is an object creates that object's instance (`createdBy` = the expr node id, creating edge from `port: null`, dashed), so it is kept; an expr that returns an object which already has a box adds no box and no edge.
 - More than 300 nodes after merging: return only the first 300 by `order`, and set `tooMany` to the total.
 - Port and node ids are stable across re-runs of the same source, so the layout stays put. Ids are `n:<h>` (call), `i:<h>` (instance), `x:<h>` (expr), `t:<h>` (store), `src:<consumer id>:<param>` (source), with `<h>` = hash of the site's kind and text plus the occurrence number among sites with equal text. They use no site ids or tokens, so editing an unrelated line (even adding one) keeps them. Port ids: `in:<param>`, `out:<k>` (k = index in `outputs`), `out:mut:<param>` (changed in place).
+
+**Import nodes** (svl-b4w). A call node (not a method slot inside an instance) whose site `func_text` is a bare dotted name (`pd.read_csv`, `LinearRegression`, `np.random.seed`; not `pd.read_csv(x).head` or `a[0].f`) with root name `r` gets a **callee edge** from the import node for `r`, when a `sole` binding of `r` exists (section 3) and the call site lies textually after the import statement (a call before it saw another binding, for instance a builtin the import later shadows). Nothing is guessed: no `sole` binding, no node, no edge. An import node exists only when at least one recorded call resolves through it (unused imports are hidden, so the diagram stays small). The edge goes `from {node: import, port: null}` to `{node: call, port: null}`, for a constructor too: the import wires into the constructor box, and the constructor's out-port wires to the instance as before, never import to instance. One `use` per call execution `{ i, token: '' }`. An import node is wired to at most `MAX_CALLEE_WIRES` = 5 call boxes, the earliest by first execution (a name used by 30 calls would otherwise clutter the diagram); later boxes get no wire, a missing wire being acceptable. Id: `m:<h of the import site>.<h of the name>`; `order` is the import site's order less 0.25, so imports lead in source order. The timeline treats an import node like a source node: it is shown when one of its wires is, and a wire is shown from the step of the call it feeds (`at` = the call's `i`). The no-false-wires check skips callee edges (no value travels). A separate check (`golden.test.ts`) asserts that for every callee edge the import node's name is the root of each use's call `func_text`, the binding is `sole`, and the call follows the import.
 
 Decisions made while building `graph.ts` (SPEC was silent):
 

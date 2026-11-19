@@ -61,6 +61,7 @@ describe('fixtures', () => {
       const execsOf = (x: GNode | undefined): Execution[] =>
         x && (x.kind === 'call' || x.kind === 'expr' || x.kind === 'store') ? x.executions : [];
       for (const ed of g.edges) {
+        if (ed.callee) continue; // callee wires carry no value: checked below
         const from = byId.get(ed.from.node);
         const to = byId.get(ed.to.node);
         expect(from, ed.id).toBeDefined();
@@ -91,6 +92,34 @@ describe('fixtures', () => {
               `${ed.id} instance holds ${u.token}`,
             ).toBe(true);
           }
+        }
+      }
+    });
+
+    it('callee wires: the import binds the call root name, and nothing rebound it', () => {
+      const log = readLog(n);
+      const g = buildGraph(log);
+      const byId = new Map(g.nodes.map((x) => [x.id, x]));
+      const evOf = new Map(log.events.map((e) => [e.i, e]));
+      for (const ed of g.edges) {
+        const imp = byId.get(ed.from.node);
+        // an import node has callee wires only, and no value wire touches it
+        if (imp?.kind === 'import') expect(ed.callee, ed.id).toBe(true);
+        expect(byId.get(ed.to.node)?.kind, ed.id).not.toBe('import');
+        if (!ed.callee) continue;
+        expect(imp?.kind, ed.id).toBe('import');
+        if (imp?.kind !== 'import') continue;
+        const site = log.sites[imp.site]!;
+        const b = site.imports?.find((x) => x.name === imp.name);
+        expect(site.kind).toBe('import');
+        expect(b?.sole, `${imp.name} is bound once in the whole module`).toBe(true);
+        expect(ed.uses.length).toBeGreaterThan(0);
+        for (const u of ed.uses) {
+          const call = log.sites[evOf.get(u.i)!.site]!;
+          expect(call.func_text?.split('.')[0], ed.id).toBe(imp.name);
+          expect([call.line, call.col], 'the call follows the import').toSatisfy(
+            ([l, c]: number[]) => l! > site.end_line || (l === site.end_line && c! >= site.end_col),
+          );
         }
       }
     });

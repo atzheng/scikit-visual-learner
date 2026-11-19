@@ -25,7 +25,7 @@ export type Origin =
 
 export interface Site {
   id: number;
-  kind: 'call' | 'bind' | 'store' | 'ret';
+  kind: 'call' | 'bind' | 'store' | 'ret' | 'import';
   line: number;
   col: number;
   end_line: number;
@@ -40,6 +40,19 @@ export interface Site {
   value?: Origin;
   where?: 'local' | 'global' | 'nonlocal';
   root?: string;
+  /** `import` sites: the names one module-level import statement binds. */
+  imports?: ImportBinding[];
+}
+
+export interface ImportBinding {
+  /** The name the statement binds (`pd`, `LinearRegression`). */
+  name: string;
+  /** `import m` -> m; `import m as x` -> m; `from m import a` -> m. */
+  module: string;
+  /** `from m import a [as b]` -> a; null for `import m`. */
+  attr: string | null;
+  /** Bound exactly once in the whole module and no star import: nothing can have rebound it. */
+  sole: boolean;
 }
 
 export interface Scope {

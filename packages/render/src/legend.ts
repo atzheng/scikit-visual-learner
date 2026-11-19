@@ -64,6 +64,16 @@ export const LEGEND_ITEMS: LegendItem[] = [
     draw: (mk) => [wire(mk, true)],
   },
   {
+    id: 'import',
+    covers: ['import', 'edge-callee'],
+    label: 'Import: a name from a module; a dotted wire leads to the calls that use it',
+    cls: 'md-node md-import',
+    draw: (mk) => [
+      mk('rect', { x: 2, y: 5, width: 18, height: 14, rx: 7 }, 'md-box'),
+      mk('path', { d: 'M22 12H40', 'marker-end': 'url(#md-arrow-legend-0)' }, 'md-wire md-callee'),
+    ],
+  },
+  {
     id: 'expr',
     covers: ['expr'],
     label: 'Expression: italic text, no box',

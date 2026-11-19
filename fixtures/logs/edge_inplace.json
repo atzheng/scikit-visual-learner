@@ -303,6 +303,23 @@
       "kind": "call",
       "line": 10,
       "text": "print(before, len(df), df[\"price\"].iloc[0])"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 8,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",

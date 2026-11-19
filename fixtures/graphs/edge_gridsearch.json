@@ -1,6 +1,33 @@
 {
   "nodes": [
     {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 399999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 13
+    },
+    {
+      "id": "m:onprdx.0.1rcg1zk",
+      "kind": "import",
+      "parent": null,
+      "order": 499999.75,
+      "name": "Ridge",
+      "source": "sklearn.linear_model",
+      "site": 14
+    },
+    {
+      "id": "m:v971fw.0.1g14w5w",
+      "kind": "import",
+      "parent": null,
+      "order": 599999.75,
+      "name": "GridSearchCV",
+      "source": "sklearn.model_selection",
+      "site": 15
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -381,6 +408,66 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:onprdx.0.1rcg1zk.>n:8h82rt.0.",
+      "from": {
+        "node": "m:onprdx.0.1rcg1zk",
+        "port": null
+      },
+      "to": {
+        "node": "n:8h82rt.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:v971fw.0.1g14w5w.>n:6qo9to.0.",
+      "from": {
+        "node": "m:v971fw.0.1g14w5w",
+        "port": null
+      },
+      "to": {
+        "node": "n:6qo9to.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:8h82rt.0.>n:6qo9to.0.in:estimator",
       "from": {

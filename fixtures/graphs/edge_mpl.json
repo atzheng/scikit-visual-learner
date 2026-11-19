@@ -1,6 +1,24 @@
 {
   "nodes": [
     {
+      "id": "m:1wv9z81.0.sn3znb",
+      "kind": "import",
+      "parent": null,
+      "order": 399999.75,
+      "name": "plt",
+      "source": "matplotlib.pyplot",
+      "site": 9
+    },
+    {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 499999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 10
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -480,6 +498,66 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:1wv9z81.0.sn3znb.>n:1pzpqvs.0.",
+      "from": {
+        "node": "m:1wv9z81.0.sn3znb",
+        "port": null
+      },
+      "to": {
+        "node": "n:1pzpqvs.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 8,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:1wv9z81.0.sn3znb.>n:1yyah0b.0.",
+      "from": {
+        "node": "m:1wv9z81.0.sn3znb",
+        "port": null
+      },
+      "to": {
+        "node": "n:1yyah0b.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 9,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:182wzar.0.>n:1pzpqvs.0.in:args[0]",
       "from": {

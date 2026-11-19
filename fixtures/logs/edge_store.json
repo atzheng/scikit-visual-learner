@@ -385,6 +385,23 @@
       "kind": "call",
       "line": 9,
       "text": "print(df[\"price_per_sqft\"].round(3).head())"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 3,
+      "id": 9,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 3,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",

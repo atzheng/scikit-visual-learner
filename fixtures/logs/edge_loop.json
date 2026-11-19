@@ -3125,6 +3125,57 @@
       "kind": "call",
       "line": 17,
       "text": "print(round(max(scores), 4))"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 18,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 38,
+      "end_line": 5,
+      "id": 19,
+      "imports": [
+        {
+          "attr": "Ridge",
+          "module": "sklearn.linear_model",
+          "name": "Ridge",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "from sklearn.linear_model import Ridge"
+    },
+    {
+      "col": 0,
+      "end_col": 52,
+      "end_line": 6,
+      "id": 20,
+      "imports": [
+        {
+          "attr": "train_test_split",
+          "module": "sklearn.model_selection",
+          "name": "train_test_split",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "from sklearn.model_selection import train_test_split"
     }
   ],
   "status": "ok",

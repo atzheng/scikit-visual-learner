@@ -718,6 +718,63 @@
       "kind": "call",
       "line": 18,
       "text": "print(\"R^2:\", round(search.score(X_test, y_test), 3))"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 5,
+      "id": 18,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 50,
+      "end_line": 6,
+      "id": 19,
+      "imports": [
+        {
+          "attr": "RandomForestRegressor",
+          "module": "sklearn.ensemble",
+          "name": "RandomForestRegressor",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "from sklearn.ensemble import RandomForestRegressor"
+    },
+    {
+      "col": 0,
+      "end_col": 66,
+      "end_line": 7,
+      "id": 20,
+      "imports": [
+        {
+          "attr": "GridSearchCV",
+          "module": "sklearn.model_selection",
+          "name": "GridSearchCV",
+          "sole": true
+        },
+        {
+          "attr": "train_test_split",
+          "module": "sklearn.model_selection",
+          "name": "train_test_split",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 7,
+      "text": "from sklearn.model_selection import GridSearchCV, train_test_split"
     }
   ],
   "status": "ok",

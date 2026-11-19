@@ -384,6 +384,40 @@
       "kind": "call",
       "line": 12,
       "text": "print(X_train.shape, X_test.shape)"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 9,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 52,
+      "end_line": 5,
+      "id": 10,
+      "imports": [
+        {
+          "attr": "train_test_split",
+          "module": "sklearn.model_selection",
+          "name": "train_test_split",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "from sklearn.model_selection import train_test_split"
     }
   ],
   "status": "ok",

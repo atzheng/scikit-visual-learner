@@ -1,6 +1,24 @@
 {
   "nodes": [
     {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 399999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 14
+    },
+    {
+      "id": "m:14z9t3a.0.15b7d91",
+      "kind": "import",
+      "parent": null,
+      "order": 499999.75,
+      "name": "LinearRegression",
+      "source": "sklearn.linear_model",
+      "site": 15
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -459,6 +477,46 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:14z9t3a.0.15b7d91.>n:10epbgg.0.",
+      "from": {
+        "node": "m:14z9t3a.0.15b7d91",
+        "port": null
+      },
+      "to": {
+        "node": "n:10epbgg.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:f2rqav.0.>n:m1gsyoeo@i:10epbgg.0.in:X",
       "from": {

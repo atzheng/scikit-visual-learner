@@ -353,6 +353,40 @@
       "kind": "call",
       "line": 21,
       "text": "print(sizes, round(total, 2))"
+    },
+    {
+      "col": 0,
+      "end_col": 14,
+      "end_line": 3,
+      "id": 10,
+      "imports": [
+        {
+          "attr": null,
+          "module": "asyncio",
+          "name": "asyncio",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 3,
+      "text": "import asyncio"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 5,
+      "id": 11,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",

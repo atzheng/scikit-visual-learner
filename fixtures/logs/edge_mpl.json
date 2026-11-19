@@ -401,6 +401,40 @@
       "kind": "call",
       "line": 9,
       "text": "plt.show()"
+    },
+    {
+      "col": 0,
+      "end_col": 31,
+      "end_line": 4,
+      "id": 9,
+      "imports": [
+        {
+          "attr": null,
+          "module": "matplotlib.pyplot",
+          "name": "plt",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import matplotlib.pyplot as plt"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 5,
+      "id": 10,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "import pandas as pd"
     }
   ],
   "status": "ok",

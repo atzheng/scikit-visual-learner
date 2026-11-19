@@ -1,6 +1,24 @@
 {
   "nodes": [
     {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 599999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 13
+    },
+    {
+      "id": "m:122fznx.0.jttqxu",
+      "kind": "import",
+      "parent": null,
+      "order": 699999.75,
+      "name": "LogisticRegression",
+      "source": "sklearn.linear_model",
+      "site": 14
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s1",
@@ -370,6 +388,46 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:122fznx.0.jttqxu.>n:jnknup.0.",
+      "from": {
+        "node": "m:122fznx.0.jttqxu",
+        "port": null
+      },
+      "to": {
+        "node": "n:jnknup.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:amvtlp.0.>n:mpjmnwr@i:jnknup.0.in:X",
       "from": {

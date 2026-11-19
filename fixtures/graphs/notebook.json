@@ -1,6 +1,42 @@
 {
   "nodes": [
     {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 99999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 28
+    },
+    {
+      "id": "m:14z9t3a.0.15b7d91",
+      "kind": "import",
+      "parent": null,
+      "order": 199999.75,
+      "name": "LinearRegression",
+      "source": "sklearn.linear_model",
+      "site": 29
+    },
+    {
+      "id": "m:1vnkpvx.0.11i6nkl",
+      "kind": "import",
+      "parent": null,
+      "order": 299999.75,
+      "name": "train_test_split",
+      "source": "sklearn.model_selection",
+      "site": 30
+    },
+    {
+      "id": "m:k8ohks.0.cqq2h6",
+      "kind": "import",
+      "parent": null,
+      "order": 399999.75,
+      "name": "OneHotEncoder",
+      "source": "sklearn.preprocessing",
+      "site": 31
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -865,6 +901,86 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:1vnkpvx.0.11i6nkl.>n:15uvz5m.0.",
+      "from": {
+        "node": "m:1vnkpvx.0.11i6nkl",
+        "port": null
+      },
+      "to": {
+        "node": "n:15uvz5m.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:k8ohks.0.cqq2h6.>n:1yhezhd.0.",
+      "from": {
+        "node": "m:k8ohks.0.cqq2h6",
+        "port": null
+      },
+      "to": {
+        "node": "n:1yhezhd.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:14z9t3a.0.15b7d91.>n:10epbgg.0.",
+      "from": {
+        "node": "m:14z9t3a.0.15b7d91",
+        "port": null
+      },
+      "to": {
+        "node": "n:10epbgg.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 12,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:j7taqu.0.>n:15uvz5m.0.in:arrays[0]",
       "from": {

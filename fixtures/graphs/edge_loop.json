@@ -1,6 +1,33 @@
 {
   "nodes": [
     {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 399999.75,
+      "name": "pd",
+      "source": "pandas",
+      "site": 18
+    },
+    {
+      "id": "m:onprdx.0.1rcg1zk",
+      "kind": "import",
+      "parent": null,
+      "order": 499999.75,
+      "name": "Ridge",
+      "source": "sklearn.linear_model",
+      "site": 19
+    },
+    {
+      "id": "m:1vnkpvx.0.11i6nkl",
+      "kind": "import",
+      "parent": null,
+      "order": 599999.75,
+      "name": "train_test_split",
+      "source": "sklearn.model_selection",
+      "site": 20
+    },
+    {
       "id": "n:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -1810,6 +1837,146 @@
     }
   ],
   "edges": [
+    {
+      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
+      "from": {
+        "node": "m:6w14qy.0.lg6rbl",
+        "port": null
+      },
+      "to": {
+        "node": "n:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:1vnkpvx.0.11i6nkl.>n:15uvz5m.0.",
+      "from": {
+        "node": "m:1vnkpvx.0.11i6nkl",
+        "port": null
+      },
+      "to": {
+        "node": "n:15uvz5m.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
+    {
+      "id": "e:m:onprdx.0.1rcg1zk.>n:3xg8nf.0.",
+      "from": {
+        "node": "m:onprdx.0.1rcg1zk",
+        "port": null
+      },
+      "to": {
+        "node": "n:3xg8nf.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": ""
+        },
+        {
+          "i": 10,
+          "token": ""
+        },
+        {
+          "i": 14,
+          "token": ""
+        },
+        {
+          "i": 18,
+          "token": ""
+        },
+        {
+          "i": 22,
+          "token": ""
+        },
+        {
+          "i": 26,
+          "token": ""
+        },
+        {
+          "i": 30,
+          "token": ""
+        },
+        {
+          "i": 34,
+          "token": ""
+        },
+        {
+          "i": 38,
+          "token": ""
+        },
+        {
+          "i": 42,
+          "token": ""
+        },
+        {
+          "i": 46,
+          "token": ""
+        },
+        {
+          "i": 50,
+          "token": ""
+        },
+        {
+          "i": 54,
+          "token": ""
+        },
+        {
+          "i": 58,
+          "token": ""
+        },
+        {
+          "i": 62,
+          "token": ""
+        },
+        {
+          "i": 66,
+          "token": ""
+        },
+        {
+          "i": 70,
+          "token": ""
+        },
+        {
+          "i": 74,
+          "token": ""
+        },
+        {
+          "i": 78,
+          "token": ""
+        },
+        {
+          "i": 82,
+          "token": ""
+        },
+        {
+          "i": 122,
+          "token": ""
+        }
+      ],
+      "nameLabel": null,
+      "callee": true
+    },
     {
       "id": "e:i:amvtlp.0.>n:15uvz5m.0.in:arrays[0]",
       "from": {

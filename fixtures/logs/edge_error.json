@@ -326,6 +326,40 @@
       "kind": "call",
       "line": 12,
       "text": "print(\"never reached\")"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 8,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 49,
+      "end_line": 5,
+      "id": 9,
+      "imports": [
+        {
+          "attr": "LinearRegression",
+          "module": "sklearn.linear_model",
+          "name": "LinearRegression",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "from sklearn.linear_model import LinearRegression"
     }
   ],
   "status": "error",

@@ -234,6 +234,40 @@
       "kind": "call",
       "line": 26,
       "text": "print(round(pipe.run(X, y), 3))"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 5,
+      "id": 7,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 49,
+      "end_line": 6,
+      "id": 8,
+      "imports": [
+        {
+          "attr": "LinearRegression",
+          "module": "sklearn.linear_model",
+          "name": "LinearRegression",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "from sklearn.linear_model import LinearRegression"
     }
   ],
   "status": "ok",

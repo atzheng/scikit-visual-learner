@@ -262,6 +262,25 @@
   stroke: var(--md-wire-dashed);
   stroke-dasharray: 5 4;
 }
+.md-wire.md-callee {
+  stroke: var(--md-wire-dashed);
+  stroke-dasharray: 1.5 4;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+.md-import .md-box {
+  fill: transparent;
+  stroke: var(--md-wire-dashed);
+}
+.md-diagram .md-import-name {
+  font-weight: bold;
+  text-anchor: middle;
+}
+.md-diagram .md-import-src {
+  font-size: 10px;
+  fill: var(--md-text-muted);
+  text-anchor: middle;
+}
 .md-arrow {
   fill: var(--md-wire);
 }

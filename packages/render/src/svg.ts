@@ -582,6 +582,8 @@ function nodeLabel(n: GNode, ctors: Set<string>): string {
       return `store ${n.text}`;
     case 'source':
       return `value ${n.label}`;
+    case 'import':
+      return n.source === null ? `import ${n.name}` : `import ${n.name} from ${n.source}`;
   }
 }
 
@@ -692,7 +694,7 @@ export function buildSvg(
       `md-node md-${n.kind} md-hidden`,
     );
     const label = nodeLabel(n, ctors);
-    if (n.kind !== 'source') {
+    if (n.kind !== 'source' && n.kind !== 'import') {
       g.setAttribute('tabindex', '0');
       g.setAttribute('role', 'button');
     }
@@ -764,6 +766,23 @@ export function buildSvg(
           s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + ln.h / 2 + 4 }, 'md-store-text', n.text),
         );
         break;
+      case 'import': {
+        g.append(
+          s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h, rx: ln.h / 2 }, 'md-box'),
+          s(
+            doc,
+            'text',
+            { x: ln.x + ln.w / 2, y: ln.y + (n.source === null ? ln.h / 2 + 4 : 16) },
+            'md-import-name',
+            n.name,
+          ),
+        );
+        if (n.source !== null)
+          g.append(
+            s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + ln.h - 8 }, 'md-import-src', n.source),
+          );
+        break;
+      }
       case 'source':
         g.append(
           s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h }, 'md-hit'),
@@ -786,7 +805,7 @@ export function buildSvg(
       g.append(bg0);
       h.badge = { g: bg0, bg, text };
     }
-    if (n.kind !== 'source') {
+    if (n.kind !== 'source' && n.kind !== 'import') {
       const msg = s(
         doc,
         'text',
@@ -819,7 +838,7 @@ export function buildSvg(
         doc,
         'path',
         { d, 'marker-end': `url(#${ARROW_ID})` },
-        e.dashed ? 'md-wire md-dashed' : 'md-wire',
+        e.callee ? 'md-wire md-callee' : e.dashed ? 'md-wire md-dashed' : 'md-wire',
       ),
       s(doc, 'path', { d }, 'md-wire-hit'),
     );
