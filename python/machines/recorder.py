@@ -1288,7 +1288,10 @@ class Recorder:
             self.namespace = frame.f_globals
         try:
             self._tick()
-            alloc = self._alloc(f"s{site}")
+            key = f"s{site}"
+            if self._counts.get(key, 0) >= self.config.per_site:
+                return  # a loop's later runs: no event, no budget (as for hidden calls)
+            alloc = self._alloc(key)
             if alloc is None:
                 return
             i, count, slot = alloc

@@ -228,3 +228,14 @@ def test_imports_behave_like_plain_python_under_the_recorder(
     assert builtins._sidefx_count == plain_count  # type: ignore[attr-defined]
     assert describe_ns(r.ns) == describe_ns(p.ns)
     assert not r.log["diagnostics"]
+
+
+def test_import_in_a_long_loop_does_not_use_up_the_budget() -> None:
+    from test_recorder import plain, record
+
+    src = "import numpy as np\nfor k in range(5000):\n    import os\nx = np.zeros(2)\nprint(x)\n"
+    r = record(src, prelude=False)
+    assert r.log["status"] != "limit" and r.rec.limit_hit is False
+    assert [e["name"] for e in r.events if e["name"] == "zeros"] == ["zeros"]
+    assert len([e for e in r.events if e["name"] == "import os"]) == 20
+    assert r.stdout == plain(src, prelude=False).stdout and r.err is None
