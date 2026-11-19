@@ -17,6 +17,7 @@ python/machines/
   runtime.py              section 6: run()/record(): compile, namespace, output, warnings, input(), limits
   tracebacks.py           section 6: student-only traceback
   mpl.py                  section 6: matplotlib Agg setup, plt.show() -> figure output
+  docs.py                 section 12: numpydoc parser, public qualnames, versioned doc URLs
 python/tests/             pytest; test_transform.py, test_values.py, test_recorder.py, test_runtime.py,
                           test_golden.py, test_transparency.py
 fixtures/
@@ -363,7 +364,8 @@ def reset_between_runs() -> None       # close matplotlib figures, pd.reset_opti
 type ToWorker =
   | { type: 'init'; interruptBuffer?: SharedArrayBuffer; currentCall?: SharedArrayBuffer }
   | { type: 'run'; runId: number; source: string; config: RunConfig }
-  | { type: 'file'; name: string; bytes: ArrayBuffer }; // written to /home/pyodide/<name>
+  | { type: 'file'; name: string; bytes: ArrayBuffer } // written to /home/pyodide/<name>
+  | { type: 'docs'; reqId: number; target: DocTarget }; // section 12
 
 type FromWorker =
   | {
@@ -385,7 +387,8 @@ type FromWorker =
       diagnostics: string[];
     }
   | { type: 'done'; runId: number; status: RunStatus; error: RunError | null }
-  | { type: 'fileWritten'; name: string; rows?: number };
+  | { type: 'fileWritten'; name: string; rows?: number }
+  | { type: 'docs'; reqId: number; doc: Doc }; // section 12
 
 interface OpenEvent {
   i: number;
@@ -437,6 +440,7 @@ class RuntimeClient {
   run(source: string, config: RunConfig, onUpdate: (log: EventLog) => void): Promise<EventLog>; // onUpdate at most once per animation frame
   stop(): void; // interrupt; terminate + restart if no 'done' within 2 s or not isolated
   writeFile(name: string, bytes: ArrayBuffer): Promise<{ rows?: number }>;
+  docs(target: DocTarget): Promise<Doc>; // section 12
   restart(): Promise<void>; // "Restart Python"
 }
 ```
@@ -780,3 +784,29 @@ Generated fixtures are reviewed like code. A PR that changes them must say why i
 Everything, Pyodide and its wheels included, is served from the page's own origin (`/pyodide/`). There is no CDN at runtime. **Verified (svl-bwv.2, Chrome, built site with this exact CSP injected on every response):** `'wasm-unsafe-eval'` is enough. Pyodide 314.0.8 loads in the module worker, runs numpy/pandas/scikit-learn and the recorder with no CSP violations and no `'unsafe-eval'`. `worker-src 'self'` covers the bundled worker, and `connect-src 'self'` covers `/pyodide/` and `/datasets/`. `vite dev` is not CSP-compatible (inline HMR preamble, websocket), so check CSP against `vite build` + `vite preview`.
 
 **Service worker (svl-bwv.10).** `dist/sw.js` is hand-written (`src/sw.ts`, logic in `src/offline/core.ts`) and built after the Pyodide copy by `scripts/build-sw.ts`, which injects the precache manifest. Two caches: `machines-shell-<hash>` (app shell, assets, datasets; changes every build) and `machines-pyodide-<version>-<hash>` (everything under `/pyodide/`; unchanged builds reuse it, so an upgrade downloads only the shell). Same-origin GETs are served cache-first and the stored responses keep the host's COOP/COEP headers. A new build installs in the background and waits; the page shows "A new version is available" and activates it only on the user's click. No `_headers` change is needed: the SW script is same-origin (`worker-src 'self'`) and its fetches fall under `connect-src 'self'`. Production builds only: dev does not register it.
+
+## 12. Documentation source (svl-095)
+
+`python/machines/docs.py`, types in `packages/log/src/messages.ts`. Official documentation for any function, class or method, built from the docstrings installed in the interpreter (offline, exact to the running versions) plus a versioned link. Nothing is fetched.
+
+**Request.** `RuntimeClient.docs(target: DocTarget): Promise<Doc>`; worker messages `ToWorker {type:'docs', reqId, target}` and `FromWorker {type:'docs', reqId, doc}`. The worker handles it in its message chain: between runs and while idle, never during a run (a request made during a run waits for `done`). The client caches the `Doc` per target and shares in-flight requests; a restart rejects pending requests and failures are not cached. The worker always answers (an unresolvable target gives a `source: 'none'` doc).
+
+`DocTarget = { module: string | null; name: string; source?: string }`. Use an event's `module` and `name` as logged (`name` of a method event is `Owner.method`; a constructor event gives the class). `module: null` takes a full dotted name (`sklearn.linear_model.LinearRegression.fit`). Student definitions (module `__main__`) are read with `ast` from `source`, the program text of the run; student code is never executed. The cache key includes `source` only for student targets.
+
+**Resolution.** Import the event's module (or an ancestor of it), take the first part of `name` and walk the rest with `getattr` (so a method resolves through the owner's MRO, and a docstring defined on a base class is inherited via `inspect.getdoc`). A class with no docstring of its own uses its `__init__` docstring. The public qualname is the shortest ancestor of the defining module that re-exports the same object: `sklearn.linear_model._ridge.Ridge` becomes `sklearn.linear_model.Ridge`, `pandas.io.parsers.readers.read_csv` becomes `pandas.read_csv`, `matplotlib.axes._axes.Axes` becomes `matplotlib.axes.Axes`. Builtins are `builtins.<name>`.
+
+**`Doc`** (one JSON object): `qualname` (public), `kind` (`function`|`class`|`method`), `signature` (`name(args)` without `self`, or null), `summary` (first paragraph, one line), `description` (the rest before the first section, paragraphs separated by a blank line), `sections` (ordered list), `url` (string or null), `source` (`numpydoc` when a recognised section was found, `plain` for a docstring without sections, `none` for no docstring or an unresolvable target). Sections: `{title, kind:'entries', entries:[{name, type, desc}]}` for Parameters, Other Parameters, Attributes, Returns, Yields, Receives, Raises, Warns, Methods (a Returns/Raises entry that is only a type has `name: ''`); `{title:'See Also', kind:'seealso', items:[{name, desc}]}`; `{title:'Examples', kind:'examples', blocks:[{kind:'code'|'text', text}]}` (a code block is a doctest paragraph with its output lines); `{title, kind:'text', text}` for Notes, References, Warnings and unknown headings. Text is plain: reST roles are reduced to their text, double backticks become single, `versionadded`/`versionchanged` become a sentence, hard-wrapped paragraphs are joined, lists and indented blocks keep their lines.
+
+**URLs** (`doc_url(qualname, kind, versions)`, pure; `versions` come from the loaded packages, `None` for a dev/local version, a private path component or an unknown library):
+
+| Library | Pattern |
+| --- | --- |
+| scikit-learn | `https://scikit-learn.org/<major.minor>/modules/generated/<qualname>.html`; a method uses its class page and the anchor `#<qualname>` |
+| pandas | `https://pandas.pydata.org/pandas-docs/version/<x.y.z>/reference/api/<qualname>.html` (methods have their own page) |
+| numpy | `https://numpy.org/doc/<major.minor>/reference/generated/<qualname>.html` |
+| scipy | `https://docs.scipy.org/doc/scipy-<x.y.z>/reference/generated/<qualname>.html` |
+| matplotlib | `https://matplotlib.org/<x.y.z>/api/_as_gen/<qualname>.html` |
+| builtins | `https://docs.python.org/<major.minor>/library/functions.html#<name>` (`func-<name>` for list, dict, set, tuple, range, frozenset, memoryview), methods `library/stdtypes.html#<type>.<method>`, exceptions `library/exceptions.html#<name>` |
+| student code | null |
+
+The UI shows `url` only as a plain `<a target="_blank" rel="noopener noreferrer">` the student clicks; the page itself makes no request to those sites and CSP `connect-src` stays `'self'`.

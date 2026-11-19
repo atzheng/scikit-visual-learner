@@ -1,9 +1,10 @@
-import type { FromWorker, RunConfig, Site, ToWorker } from '@machines/log';
+import type { Doc, FromWorker, RunConfig, Site, ToWorker } from '@machines/log';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DEFAULT_RUN_CONFIG } from '../course';
 import {
   RuntimeClient,
   decodeCurrentCall,
+  docKey,
   planStop,
   statusAfterDone,
   type WorkerLike,
@@ -434,6 +435,85 @@ describe('writeFile', () => {
     const p = r.client.writeFile('a.csv', new ArrayBuffer(4));
     void r.client.restart();
     await expect(p).rejects.toThrow(/restarted/);
+  });
+});
+
+describe('docs', () => {
+  const doc = (qualname: string): Doc => ({
+    qualname,
+    kind: 'function',
+    signature: null,
+    summary: 'S',
+    description: '',
+    sections: [],
+    url: null,
+    source: 'plain',
+  });
+  const docRequests = (w: FakeWorker) =>
+    w.sent.filter((m) => m.type === 'docs') as Extract<ToWorker, { type: 'docs' }>[];
+
+  test('round trip, cached per target, in-flight requests shared', async () => {
+    const r = rig();
+    const w = r.workers[0] as FakeWorker;
+    ready(w);
+    const t = { module: 'numpy', name: 'mean' };
+    const a = r.client.docs(t);
+    const b = r.client.docs({ ...t });
+    expect(docRequests(w)).toHaveLength(1);
+    const req = docRequests(w)[0] as Extract<ToWorker, { type: 'docs' }>;
+    expect(req.target).toEqual(t);
+    w.emit({ type: 'docs', reqId: req.reqId, doc: doc('numpy.mean') });
+    await expect(a).resolves.toMatchObject({ qualname: 'numpy.mean' });
+    await expect(b).resolves.toMatchObject({ qualname: 'numpy.mean' });
+    await r.client.docs(t);
+    expect(docRequests(w)).toHaveLength(1); // cache hit
+    void r.client.docs({ module: 'numpy', name: 'sum' });
+    expect(docRequests(w)).toHaveLength(2);
+  });
+
+  test('answers match requests by id', async () => {
+    const r = rig();
+    const w = r.workers[0] as FakeWorker;
+    ready(w);
+    const a = r.client.docs({ module: 'numpy', name: 'a' });
+    const b = r.client.docs({ module: 'numpy', name: 'b' });
+    const ra = docRequests(w)[0] as { reqId: number };
+    const rb = docRequests(w)[1] as { reqId: number };
+    w.emit({ type: 'docs', reqId: rb.reqId, doc: doc('b') });
+    w.emit({ type: 'docs', reqId: ra.reqId, doc: doc('a') });
+    expect((await a).qualname).toBe('a');
+    expect((await b).qualname).toBe('b');
+  });
+
+  test('works while idle and does not disturb a run', async () => {
+    const r = rig();
+    const { w, p, runId, updates } = startRun(r);
+    const d = r.client.docs({ module: 'numpy', name: 'mean' });
+    w.emit({ type: 'docs', reqId: docRequests(w)[0]?.reqId ?? 0, doc: doc('numpy.mean') });
+    await d;
+    expect(r.client.state).toBe('running');
+    w.emit({ type: 'done', runId, status: 'ok', error: null });
+    await p;
+    expect(updates.length).toBeGreaterThan(0);
+  });
+
+  test('student targets are keyed by program text; library targets are not', () => {
+    const t = { module: '__main__', name: 'f' };
+    expect(docKey({ ...t, source: 'a' })).not.toBe(docKey({ ...t, source: 'b' }));
+    const lib = { module: 'numpy', name: 'mean' };
+    expect(docKey({ ...lib, source: 'a' })).toBe(docKey({ ...lib, source: 'b' }));
+  });
+
+  test('rejects when the worker restarts, and the next ask retries', async () => {
+    const r = rig();
+    ready(r.workers[0] as FakeWorker);
+    const p = r.client.docs({ module: 'numpy', name: 'mean' });
+    void r.client.restart();
+    await expect(p).rejects.toThrow(/restarted/);
+    const w2 = r.workers[1] as FakeWorker;
+    ready(w2);
+    void r.client.docs({ module: 'numpy', name: 'mean' });
+    expect(docRequests(w2)).toHaveLength(1);
   });
 });
 

@@ -4,7 +4,7 @@
  * Everything comes from this page's own origin (/pyodide/, /datasets/).
  */
 import type { PyodideInterface } from 'pyodide';
-import type { FromWorker, RunConfig, ToWorker } from '@machines/log';
+import type { Doc, FromWorker, RunConfig, ToWorker } from '@machines/log';
 import { DATASETS } from '../course';
 
 const scope = self as unknown as {
@@ -50,6 +50,11 @@ sys.meta_path.insert(0, _OfflineFinder)
 
 def _machines_worker_run(source, config, emit, on_enter, on_exit):
     _machines_runtime.run(source, config, emit, on_enter=on_enter, on_exit=on_exit)
+
+def _machines_docs(module, name, source):
+    import json
+    from machines.docs import docs
+    return json.dumps(docs(module, name, source))
 
 def _machines_versions():
     import numpy, pandas, sklearn
@@ -268,6 +273,30 @@ function writeFile(msg: Extract<ToWorker, { type: 'file' }>): void {
   post({ type: 'fileWritten', name: msg.name, rows: Math.max(0, lines - 1) });
 }
 
+/** Documentation lookups run between runs (the message chain is one at a time) and never touch student code. */
+function lookupDocs(msg: Extract<ToWorker, { type: 'docs' }>): void {
+  const { target } = msg;
+  const fn = pyodide.globals.get('_machines_docs') as (...a: unknown[]) => string;
+  let doc: Doc;
+  try {
+    doc = JSON.parse(
+      fn(target.module ?? undefined, target.name, target.source ?? undefined),
+    ) as Doc;
+  } catch {
+    doc = {
+      qualname: target.name,
+      kind: 'function',
+      signature: null,
+      summary: '',
+      description: '',
+      sections: [],
+      url: null,
+      source: 'none',
+    };
+  }
+  post({ type: 'docs', reqId: msg.reqId, doc });
+}
+
 // Messages are handled one at a time, in order, after `init` has finished.
 let chain: Promise<void> = Promise.resolve();
 scope.onmessage = (ev) => {
@@ -276,6 +305,10 @@ scope.onmessage = (ev) => {
     .then(() => {
       if (msg.type === 'init') return init(msg);
       if (msg.type === 'run') return run(msg);
+      if (msg.type === 'docs') {
+        lookupDocs(msg);
+        return undefined;
+      }
       writeFile(msg);
       return undefined;
     })
