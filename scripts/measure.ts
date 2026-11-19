@@ -351,7 +351,7 @@ async function uploadCsv(page: Page, name: string, file: string): Promise<void> 
 // ---- output ----------------------------------------------------------------------------------------
 
 const fmt = (ms: number): string =>
-  ms >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`;
+  Math.round(ms) >= 1000 ? `${(ms / 1000).toFixed(1)} s` : `${Math.round(ms)} ms`;
 const spread = (xs: number[]): string =>
   `${fmt(median(xs))} (min ${fmt(Math.min(...xs))}, max ${fmt(Math.max(...xs))}, n=${xs.length})`;
 
