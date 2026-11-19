@@ -60,6 +60,24 @@ _MATRIX = 5
 _MAX_COLUMNS = 50
 
 
+# Wall-clock values (GridSearchCV): their reprs vary run to run, so the log shows a fixed text.
+TIMING_REPR = "<varies: wall-clock timing>"
+TIMING_ATTRS = frozenset({"refit_time_"})
+TIMING_KEYS = frozenset({"mean_fit_time", "std_fit_time", "mean_score_time", "std_score_time"})
+
+
+class _Timing:
+    def __repr__(self) -> str:
+        return TIMING_REPR
+
+
+def _dict_repr(obj: dict[Any, Any]) -> str:
+    """`_repr` of a dict, with the values of known timing keys shown as TIMING_REPR."""
+    if TIMING_KEYS.intersection(obj):
+        obj = {k: _Timing() if k in TIMING_KEYS else v for k, v in obj.items()}
+    return _repr(obj)
+
+
 def _mod(name: str) -> Any:
     return sys.modules.get(name)
 
@@ -475,6 +493,8 @@ class ValueTable:
                 continue
             tok = self.fresh_scalar(v) if kind == "scalar" else self.token(v)
             self._summarize(tok, v, depth + 1)
+            if k in TIMING_ATTRS and tok in self.values:
+                self.values[tok]["repr"] = TIMING_REPR
             out[k] = tok
         return out
 
@@ -507,7 +527,9 @@ class ValueTable:
             except Exception:
                 pass
             return s
-        if t in (list, dict, tuple, set, frozenset):
+        if t is dict:
+            return {"type": f"{name}[{len(obj)}]", "repr": _dict_repr(obj)}
+        if t in (list, tuple, set, frozenset):
             return {"type": f"{name}[{len(obj)}]", "repr": _repr(obj)}
         if self.is_machine(obj):
             return {"type": name}

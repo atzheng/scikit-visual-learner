@@ -10,9 +10,9 @@ Flush timing is forced: `recorder._FLUSH_SECONDS` is set to 0 while generating, 
 flushes at every hook where something changed, whatever the machine's speed. The streams therefore
 contain many small batches and open-call stubs, which the assembler cross-check exercises.
 
-Files are pretty-printed with sorted keys. The only non-deterministic content is sklearn's
-wall-clock timings on GridSearchCV (`refit_time_`, `cv_results_`); `normalize_log` and
-`normalize_stream` replace their reprs with a fixed text.
+Files are pretty-printed with sorted keys. Wall-clock timings (GridSearchCV `refit_time_` and the
+`*_fit_time` / `*_score_time` entries of `cv_results_`) get a fixed repr in `values.py`, so the
+output is byte-identical between runs with no normalisation.
 """
 
 from __future__ import annotations
@@ -35,42 +35,6 @@ STREAMS = ROOT / "fixtures" / "streams"
 CONFIGS: dict[str, dict[str, Any]] = {
     "edge_mpl": {"draw_modules": ["sklearn", "pandas", "numpy", "matplotlib"]},
 }
-
-
-# Attributes whose values come from the wall clock (GridSearchCV): their reprs vary from run to run,
-# so they are replaced by a fixed text in fixtures. Student-visible logs keep the real values.
-TIMING_ATTRS = frozenset({"refit_time_", "cv_results_"})
-TIMING_REPR = "<varies: wall-clock timings>"
-
-
-def _timing_tokens(summaries: list[dict[str, Any]]) -> set[str]:
-    out: set[str] = set()
-    for summary in summaries:
-        for name, token in (summary.get("attrs") or {}).items():
-            if name in TIMING_ATTRS:
-                out.add(token)
-    return out
-
-
-def _scrub(values: dict[str, Any], tokens: set[str]) -> None:
-    for t in tokens:
-        if t in values:
-            values[t]["repr"] = TIMING_REPR
-
-
-def normalize_log(log: dict[str, Any]) -> dict[str, Any]:
-    """Replace wall-clock-dependent reprs (in place). See TIMING_ATTRS."""
-    _scrub(log["values"], _timing_tokens(list(log["values"].values())))
-    return log
-
-
-def normalize_stream(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """The same replacement over every batch of a stream (in place)."""
-    batches = [m for m in messages if m["type"] == "batch"]
-    tokens = _timing_tokens([s for m in batches for s in m["values"].values()])
-    for m in batches:
-        _scrub(m["values"], tokens)
-    return messages
 
 
 def program_names() -> list[str]:
@@ -119,14 +83,14 @@ def run_fixture(name: str) -> list[dict[str, Any]]:
         CONFIGS.get(name, {}),
         lambda m: messages.append(json.loads(json.dumps(m))),
     )
-    return normalize_stream(messages)
+    return messages
 
 
 def record_fixture(name: str) -> dict[str, Any]:
     """The `record()` log of the program. Call inside `fixture_env()`."""
     from machines import runtime
 
-    return normalize_log(runtime.record(source_of(name), CONFIGS.get(name, {})))
+    return runtime.record(source_of(name), CONFIGS.get(name, {}))
 
 
 def dumps_log(log: dict[str, Any]) -> str:
