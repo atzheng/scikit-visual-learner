@@ -303,7 +303,10 @@ def test_on_enter_on_exit_called() -> None:
 
 
 @pytest.mark.no_pyodide(
-    reason="Pyodide's matplotlib build warns (MatplotlibDeprecationWarning: float x/y in draw_text_image) for every drawn text, and the recorder reports the warnings as output"
+    reason=(
+        "Pyodide's matplotlib build warns (MatplotlibDeprecationWarning: float x/y in "
+        "draw_text_image) for every drawn text, and the recorder reports the warnings as output"
+    )
 )
 def test_figure_entry_for_edge_mpl(in_data: None) -> None:
     cfg = {"draw_modules": ["sklearn", "pandas", "numpy", "matplotlib"]}
@@ -320,7 +323,10 @@ def test_figure_entry_for_edge_mpl(in_data: None) -> None:
 
 
 @pytest.mark.no_pyodide(
-    reason="Pyodide's matplotlib build warns (MatplotlibDeprecationWarning: float x/y in draw_text_image) for every drawn text, and the recorder reports the warnings as output"
+    reason=(
+        "Pyodide's matplotlib build warns (MatplotlibDeprecationWarning: float x/y in "
+        "draw_text_image) for every drawn text, and the recorder reports the warnings as output"
+    )
 )
 def test_figures_closed_after_show() -> None:
     src = (

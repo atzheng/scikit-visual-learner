@@ -13,7 +13,7 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { localPyodide } from './fetch-pyodide.ts';
+import { localPyodide } from './fetch-pyodide.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '../../..');
