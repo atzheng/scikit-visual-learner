@@ -27,7 +27,10 @@ packages = ["python/machines"]
 testpaths = ["python/tests"]
 pythonpath = ["python"]
 addopts = "-m 'not slow'"
-markers = ["slow: runs every fixture program in a subprocess; run with `pnpm test:slow`"]
+markers = [
+  "slow: runs every fixture program in a subprocess; run with `pnpm test:slow`",
+  "no_pyodide(reason): skipped by `pnpm test:pyodide`; the reason says what cannot work there",
+]
 
 [tool.ruff]
 line-length = 100

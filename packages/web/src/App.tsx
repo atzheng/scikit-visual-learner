@@ -6,6 +6,8 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
+import { FileList, UploadButton, useDropUpload } from './files/FilesUI';
+import { AutosaveNotice } from './storage/notice';
 import { DiagramPane } from './diagram/DiagramPane';
 import { Editor } from './editor/Editor';
 import { OutputPane } from './output/OutputPane';
@@ -85,6 +87,7 @@ function Toolbar() {
           {elapsed}
         </span>
       )}
+      <UploadButton />
       <ShareButton />
       <div className="menu">
         <button
@@ -169,6 +172,7 @@ export function App() {
     return () => document.removeEventListener('keydown', onKey);
   }, []);
   useLoadShareLink();
+  useDropUpload();
   const focusEditor = useCallback(() => document.getElementById('pane-editor')?.focus(), []);
   return (
     <div className="app">
@@ -178,6 +182,8 @@ export function App() {
       <div className="top">
         <Toolbar />
         <LinkBanner />
+        <FileList />
+        <AutosaveNotice />
       </div>
       <main
         className="panes"

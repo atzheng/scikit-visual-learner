@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useFiles } from '../files/filesStore';
+import { sharableFiles } from '../files/upload';
 import { useStore } from '../store';
 import './share.css';
 import { encodeShare, linkUrl } from './link';
@@ -30,6 +32,7 @@ export function ShareButton() {
   const source = useStore((s) => s.source);
   const [notice, setNotice] = useState<Notice>(null);
   const [manual, setManual] = useState<string | null>(null);
+  const [canDrop, setCanDrop] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -39,15 +42,33 @@ export function ShareButton() {
     if (n?.kind === 'ok') timer.current = window.setTimeout(() => setNotice(null), 5000);
   };
 
-  const share = async () => {
+  const share = async (withData = true) => {
     setManual(null);
-    // Inline data files arrive with svl-bwv.9 (upload); until then links carry code only.
-    const r = await encodeShare({ code: source });
-    if (!r.ok) return show({ kind: 'error', text: r.error });
+    setCanDrop(false);
+    const data = withData
+      ? sharableFiles(useFiles.getState().files)
+      : { files: {}, tooLarge: [], skipped: [] };
+    if (data.tooLarge.length) {
+      setCanDrop(true);
+      return show({
+        kind: 'error',
+        text: `${data.tooLarge.join(', ')} ${data.tooLarge.length > 1 ? 'are' : 'is'} too large to put in a link. You can share the code without the data.`,
+      });
+    }
+    const r = await encodeShare({ code: source, files: data.files });
+    if (!r.ok) {
+      setCanDrop(r.withoutDataFits && withData);
+      return show({ kind: 'error', text: r.error });
+    }
     const url = linkUrl(location.href, r.fragment);
     try {
       await navigator.clipboard.writeText(url);
-      show({ kind: 'ok', text: 'Link copied to the clipboard.' });
+      show({
+        kind: 'ok',
+        text: withData
+          ? `Link copied to the clipboard${data.skipped.length ? `, without ${data.skipped.join(', ')} (not UTF-8 text)` : ''}.`
+          : 'Link copied to the clipboard, without the data files.',
+      });
     } catch {
       setManual(url);
       show({ kind: 'error', text: 'Could not copy automatically. Copy the link below.' });
@@ -57,11 +78,12 @@ export function ShareButton() {
   const dismiss = () => {
     setNotice(null);
     setManual(null);
+    setCanDrop(false);
   };
 
   return (
     <div className="share">
-      <button type="button" onClick={() => void share()}>
+      <button type="button" onClick={() => void share(true)}>
         Share
       </button>
       {notice && (
@@ -70,6 +92,11 @@ export function ShareButton() {
             <span aria-hidden="true">{notice.kind === 'ok' ? '✓' : '⚠'}</span> {notice.text}
           </span>
           {manual && <ManualLink url={manual} />}
+          {canDrop && (
+            <button type="button" onClick={() => void share(false)}>
+              Share without data
+            </button>
+          )}
           {notice.kind === 'error' && (
             <button type="button" onClick={dismiss}>
               Dismiss

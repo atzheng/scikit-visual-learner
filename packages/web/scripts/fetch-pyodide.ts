@@ -9,7 +9,8 @@
  *   GitHub release tarball, downloaded once and cached.
  *
  * Usage: tsx scripts/fetch-pyodide.ts [--copy-to <dir>]
- * Tests must not need this script.
+ * `pytest` is included for `pnpm test:pyodide` (pyodide-pytest.ts), which only reads this cache
+ * and never downloads. Vitest and pytest on CPython do not need this script.
  */
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
@@ -20,7 +21,7 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { fileURLToPath } from 'node:url';
 
-export const WHEEL_ROOTS = ['numpy', 'pandas', 'scipy', 'scikit-learn', 'matplotlib'];
+export const WHEEL_ROOTS = ['numpy', 'pandas', 'scipy', 'scikit-learn', 'matplotlib', 'pytest'];
 const CORE_FILES = [
   'pyodide.mjs',
   'pyodide.asm.mjs',
@@ -58,6 +59,29 @@ export function cacheDir(version: string): string {
   return path.join(webRoot, 'node_modules', '.cache', 'pyodide', version);
 }
 
+/** Marker contents: the version and the wheel roots, so a changed root list re-extracts. */
+function markerText(version: string): string {
+  return `${version} ${WHEEL_ROOTS.join(',')}\n`;
+}
+
+/**
+ * The assembled dist directory if it is complete, else null. Never touches the network.
+ */
+export async function localPyodide(): Promise<string | null> {
+  const require = createRequire(import.meta.url);
+  const npmDir = path.dirname(require.resolve('pyodide/package.json'));
+  const version = (
+    JSON.parse(await readFile(path.join(npmDir, 'package.json'), 'utf8')) as { version: string }
+  ).version;
+  const dist = path.join(cacheDir(version), 'dist');
+  try {
+    const m = await readFile(path.join(dist, '.complete'), 'utf8');
+    return m === markerText(version) ? dist : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function preparePyodide(): Promise<string> {
   const require = createRequire(import.meta.url);
   const npmDir = path.dirname(require.resolve('pyodide/package.json'));
@@ -67,7 +91,8 @@ export async function preparePyodide(): Promise<string> {
   const base = cacheDir(version);
   const dist = path.join(base, 'dist');
   const marker = path.join(dist, '.complete');
-  if (existsSync(marker)) return dist;
+  const done = await localPyodide();
+  if (done) return done;
 
   const lock = JSON.parse(await readFile(path.join(npmDir, 'pyodide-lock.json'), 'utf8')) as Lock;
   const wheels = closure(lock, WHEEL_ROOTS).map((n) => (lock.packages[n] as LockPackage).file_name);
@@ -100,7 +125,7 @@ export async function preparePyodide(): Promise<string> {
   for (const w of wheels) {
     if (!existsSync(path.join(dist, w))) throw new Error(`wheel missing after extraction: ${w}`);
   }
-  await writeFile(marker, `${version}\n`);
+  await writeFile(marker, markerText(version));
   return dist;
 }
 

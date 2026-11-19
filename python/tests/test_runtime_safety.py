@@ -138,6 +138,7 @@ def test_infinite_recursion_gives_small_log() -> None:
 
 
 @pytest.mark.parametrize("arg", ["'bye'", "3", "None"])
+@pytest.mark.no_pyodide(reason="spawns a subprocess; Pyodide has no processes")
 def test_sys_exit_stderr_matches_plain(arg: str) -> None:
     src = f"import sys\nprint('a')\nsys.exit({arg})\n"
     p = plain(src)

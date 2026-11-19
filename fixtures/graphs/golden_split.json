@@ -1,0 +1,321 @@
+{
+  "nodes": [
+    {
+      "id": "n:wcu5tk.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "read_csv",
+      "module": "pandas",
+      "parent": null,
+      "order": 700005,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v0.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:filepath_or_buffer",
+          "param": "filepath_or_buffer",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "filepath_or_buffer = \"listings.csv\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df′"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:1rjye1a.0",
+      "kind": "call",
+      "mergeKey": "s2",
+      "name": "DataFrame.dropna",
+      "module": "pandas",
+      "parent": null,
+      "order": 800005,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {
+            "in:self": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": "v0.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "x:amvtlp.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 900000,
+      "text": "df[[\"beds\", \"baths\", \"sqft\", \"year_built\"]]",
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:df": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "x:xaeoav.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 1000000,
+      "text": "df[\"price\"]",
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {
+            "in:df": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v3.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:15uvz5m.0",
+      "kind": "call",
+      "mergeKey": "s6",
+      "name": "train_test_split",
+      "module": "sklearn.model_selection._split",
+      "parent": null,
+      "order": 1100035,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:arrays[0]": "v2.0",
+            "in:arrays[1]": "v3.0"
+          },
+          "outputs": {
+            "out:0": "v4.0",
+            "out:1": "v5.0",
+            "out:2": "v6.0",
+            "out:3": "v7.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:arrays[0]",
+          "param": "arrays[0]",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:arrays[1]",
+          "param": "arrays[1]",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:test_size",
+          "param": "test_size",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "test_size = 0.2"
+        },
+        {
+          "id": "in:random_state",
+          "param": "random_state",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "random_state = 0"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "X_train"
+        },
+        {
+          "id": "out:1",
+          "param": "1",
+          "typeLabel": "DF",
+          "nameLabel": "X_test"
+        },
+        {
+          "id": "out:2",
+          "param": "2",
+          "typeLabel": "Series",
+          "nameLabel": "y_train"
+        },
+        {
+          "id": "out:3",
+          "param": "3",
+          "typeLabel": "Series",
+          "nameLabel": "y_test"
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:wcu5tk.0.out:0>n:1rjye1a.0.in:self",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:1rjye1a.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df′"
+    },
+    {
+      "id": "e:x:amvtlp.0.>n:15uvz5m.0.in:arrays[0]",
+      "from": {
+        "node": "x:amvtlp.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:15uvz5m.0",
+        "port": "in:arrays[0]"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": "X"
+    },
+    {
+      "id": "e:x:xaeoav.0.>n:15uvz5m.0.in:arrays[1]",
+      "from": {
+        "node": "x:xaeoav.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:15uvz5m.0",
+        "port": "in:arrays[1]"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": "y"
+    },
+    {
+      "id": "e:n:1rjye1a.0.out:0>x:amvtlp.0.",
+      "from": {
+        "node": "n:1rjye1a.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:amvtlp.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:1rjye1a.0.out:0>x:xaeoav.0.",
+      "from": {
+        "node": "n:1rjye1a.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:xaeoav.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "df"
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ]
+}
