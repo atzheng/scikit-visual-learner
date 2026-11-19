@@ -79,6 +79,14 @@ export interface Laid {
 }
 
 /** Fonts, shared with the SVG renderer so ELK and SVG agree on sizes. */
+/**
+ * The type signifier (svl-465): type text is drawn as a Python annotation, `: Type`, in the `--md-type-text`
+ * colour. The `: ` prefix is the cue that does not rely on colour, and layout measures the same string.
+ */
+export function typeText(t: string): string {
+  return t === '' ? '' : `: ${t}`;
+}
+
 export const FONT_MONO = '12px ui-monospace, SFMono-Regular, Menlo, monospace';
 export const FONT_WTYPE = '11px ui-monospace, SFMono-Regular, Menlo, monospace';
 export const FONT_WNAME = '10px ui-monospace, SFMono-Regular, Menlo, monospace';
@@ -205,8 +213,10 @@ function callPortWidths(n: CallNode, measure: Measure): PortSizes {
   const w = (lines: string[]): number =>
     Math.max(...lines.map((l) => measure(l, FONT_MONO)), 0) + M.portGap;
   return {
-    in: n.inPorts.map((p) => w(p.constText !== undefined ? [p.constText] : [p.typeLabel, p.param])),
-    out: n.outPorts.map((p) => w([p.typeLabel, p.nameLabel ?? p.param])),
+    in: n.inPorts.map((p) =>
+      w(p.constText !== undefined ? [p.constText] : [typeText(p.typeLabel), p.param]),
+    ),
+    out: n.outPorts.map((p) => w([typeText(p.typeLabel), p.nameLabel ?? p.param])),
   };
 }
 

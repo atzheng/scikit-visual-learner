@@ -11,6 +11,8 @@
   --md-inst-stroke: #4f81b8;
   --md-inst-pill: #2f5f94;
   --md-inst-pill-text: #ffffff;
+  --md-type-text: #1f5a8f;
+  --md-type-fill: #e8f0f8;
   --md-wire: #2b3138;
   --md-text: #1c2026;
   --md-text-muted: #4d5663;
@@ -32,6 +34,8 @@
     --md-inst-stroke: #7fb0e6;
     --md-inst-pill: #3d78b8;
     --md-inst-pill-text: #ffffff;
+    --md-type-text: #8cc0f0;
+    --md-type-fill: #243449;
     --md-wire: #d3d9e1;
     --md-text: #e6e9ee;
     --md-text-muted: #aab3bf;
@@ -51,6 +55,8 @@
   --md-inst-stroke: #7fb0e6;
   --md-inst-pill: #3d78b8;
   --md-inst-pill-text: #ffffff;
+  --md-type-text: #8cc0f0;
+  --md-type-fill: #243449;
   --md-wire: #d3d9e1;
   --md-text: #e6e9ee;
   --md-text-muted: #aab3bf;
@@ -77,9 +83,19 @@
   fill: var(--md-text);
   font-family: var(--md-font-mono);
 }
-.md-diagram .md-pname,
-.md-diagram .md-atype {
+.md-diagram .md-pname {
   fill: var(--md-text-muted);
+}
+/* the type signifier (svl-465): `: Type` in --md-type-text; the ': ' prefix is the cue that is not colour.
+   Names stay muted, values and const args plain. */
+.md-diagram .md-ptype,
+.md-diagram .md-atype,
+.md-diagram .md-wtype {
+  fill: var(--md-type-text);
+}
+.md-diagram .md-pconst,
+.md-diagram .md-aval {
+  fill: var(--md-text);
 }
 .md-diagram .md-halo {
   paint-order: stroke;
@@ -93,6 +109,7 @@
   text-anchor: middle;
 }
 .md-diagram .md-ptype,
+.md-diagram .md-pconst,
 .md-diagram .md-pname {
   text-anchor: middle;
 }
@@ -319,9 +336,6 @@
 .md-diagram .md-attr.md-data .md-aname {
   fill: var(--md-text-muted);
 }
-.md-diagram .md-attr.md-data .md-atype {
-  fill: var(--md-text);
-}
 
 /* "more methods" control and list */
 .md-more-ctl {
@@ -463,4 +477,20 @@
 }
 .md-docs-btn:hover text {
   fill: var(--md-bg);
+}
+
+/* Type signifier for HTML (docs panel, and any panel that shows a type): a pill with a ': ' prefix. */
+.md-type-tag {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: var(--md-type-fill);
+  color: var(--md-type-text);
+  font-family: var(--md-font-mono);
+  font-size: 0.9em;
+  font-weight: normal;
+  overflow-wrap: anywhere;
+}
+.md-type-tag::before {
+  content: ': ';
 }

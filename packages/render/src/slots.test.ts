@@ -108,6 +108,18 @@ describe('uncalled method slots', () => {
   });
 });
 
+describe('method on a temporary', () => {
+  test('an unparented method call is labelled as a method, not a function', async () => {
+    const { model, laid } = await prepare('golden_linreg');
+    const c = setup();
+    c.setGraph(model, laid);
+    const dropna = callNode(model, 'DataFrame.dropna');
+    expect(dropna.parent).toBeNull();
+    expect(el(dropna.id).getAttribute('aria-label')).toMatch(/^method DataFrame.dropna/);
+    expect(el(dropna.id).textContent).toContain('DataFrame.dropna');
+  });
+});
+
 describe('constructor box', () => {
   test('is an ordinary function box (svl-1x4) and its wire into the instance shows at its step', async () => {
     const { log, model, laid } = await prepare('golden_linreg');
@@ -444,6 +456,32 @@ describe('docs on boxes (svl-3ms)', () => {
 });
 
 describe('attribute docs (svl-3du)', () => {
+  test('data boxes map their summary type to the real class (svl-8e9)', async () => {
+    const { model } = await prepare('golden_linreg');
+    const arr = instOf(model, 'array');
+    expect(attrDocTarget(model, arr, 'shape')).toEqual({
+      module: 'numpy',
+      name: 'ndarray.shape',
+      attr: true,
+    });
+    expect(attrDocTarget(model, arr, 'dtype').name).toBe('ndarray.dtype');
+    expect(nodeDocTarget(model, arr)).toEqual({ module: 'numpy', name: 'ndarray' });
+    const fake = { ...arr, className: 'DF' } as InstanceNode;
+    expect(attrDocTarget(model, fake, 'shape')).toEqual({
+      module: 'pandas',
+      name: 'DataFrame.shape',
+      attr: true,
+    });
+    expect(attrDocTarget(model, { ...arr, className: 'Series' }, 'dtype').name).toBe(
+      'Series.dtype',
+    );
+    expect(attrDocTarget(model, { ...arr, className: 'sparse' }, 'nnz')).toEqual({
+      module: 'scipy.sparse',
+      name: 'spmatrix.nnz',
+      attr: true,
+    });
+  });
+
   test('an attribute-read box documents that attribute of its owner class', async () => {
     const { log, model, laid } = await prepare('edge_expr');
     const read = model.nodes.find((n) => n.kind === 'expr' && n.text === 'model.coef_')!;
