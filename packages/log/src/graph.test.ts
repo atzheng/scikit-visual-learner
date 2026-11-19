@@ -675,6 +675,16 @@ describe('limits, determinism, stability', () => {
     expect(build(splitLog()).truncated).toBeUndefined();
   });
 
+  test('the truncation line of a source node at column 0 is its own line', () => {
+    const b = new B();
+    b.val('s0', 'int', { repr: '1' });
+    const s = b.site('f(x)', 7);
+    b.ev(s, 'function', 'f', { inputs: [wired('x', 's0')] });
+    const m = buildGraph(b.log(), { maxNodes: 1 });
+    expect(m.nodes[0]!.kind).toBe('source');
+    expect(m.truncated).toEqual({ shown: 1, total: 2, line: 7 });
+  });
+
   test('deterministic', () => {
     expect(JSON.stringify(build(splitLog()))).toBe(JSON.stringify(build(splitLog())));
   });

@@ -76,7 +76,7 @@ export const useStore = create<AppState>()((set, get) => ({
   expanded: new Set(),
   showAllObjects: false,
   setShowAllObjects: (on) => {
-    set({ showAllObjects: on });
+    set({ showAllObjects: on, unfolded: new Set() });
     rebuild();
   },
   unfolded: new Set(),
@@ -92,6 +92,7 @@ export const useStore = create<AppState>()((set, get) => ({
       running: true,
       elapsedMs: 0,
       runSeq: s.runSeq + 1,
+      unfolded: new Set(),
       runSource: s.source,
       // Nothing of the previous run may be linked against the new source text.
       log: null,

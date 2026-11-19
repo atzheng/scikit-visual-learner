@@ -59,9 +59,16 @@
   border-left-color: var(--bad);
 }
 
+.diagram-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
 .diagram-viewport {
   position: relative;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
   touch-action: none;

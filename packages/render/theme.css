@@ -463,3 +463,25 @@
   font-family: var(--md-font-mono);
   font-size: 11px;
 }
+
+/* The "?" docs button on a box corner (svl-3ms). Drawn only when the host handles onOpenDocs. */
+.md-docs-btn {
+  cursor: pointer;
+}
+.md-docs-btn circle {
+  fill: var(--md-bg);
+  stroke: var(--md-text);
+  stroke-width: 1.5px;
+}
+.md-docs-btn text {
+  font-size: 12px;
+  font-weight: bold;
+  fill: var(--md-text);
+  pointer-events: none;
+}
+.md-docs-btn:hover circle {
+  fill: var(--md-text);
+}
+.md-docs-btn:hover text {
+  fill: var(--md-bg);
+}

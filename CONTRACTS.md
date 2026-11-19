@@ -715,6 +715,7 @@ function dataRowModels(s: ValueSummary | undefined): AttrRow[]; // rows of a dat
 function moreMethodsFor(model: GraphModel, log: EventLog): Record<string, number>; // pass as layout's moreMethods and re-layout when it changes (the web app includes it in `layoutSignature`)
 function hiddenMethods(model: GraphModel, log: EventLog, inst: InstanceNode): { name: string; doc: string }[]; // the class's `values.methods` (found via any value of the same type) minus the method boxes the instance has; [] unless the instance is a machine (`machine: true`): a data class's list is a capped alphabetical slice, not "other methods"
 function methodDocTarget(model: GraphModel, inst: InstanceNode, method: string): { module: string | null; name: string }; // module of the constructor box (else of a method box), name `Class.method`
+function nodeDocTarget(model: GraphModel, node: GNode): { module: string | null; name: string } | null; // call box: module and name as logged; instance box: its class (module of its constructor box); null for expr/store/source. With onOpenDocs set, each such box gets a `?` button (`g.md-docs-btn`, `data-docs-btn=<node id>`, mouse only, aria-hidden) and `aria-keyshortcuts="?"`; `?` on the focused box opens its docs (svl-3ms)
 function portViews(model, node: CallNode, exec: Execution | undefined, log): { in: Record<string, PortView>; out: Record<string, PortView> }; // what a call box's ports show for one execution
 function wireTypeLabel(token: Token, values): string; // wire type text: scalars only ('' for an object token)
 ```

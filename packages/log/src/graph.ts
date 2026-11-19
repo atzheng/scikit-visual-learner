@@ -840,7 +840,8 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
     truncated = {
       shown: nodes.length,
       total: tooMany,
-      line: Math.floor((nodes[nodes.length - 1]?.order ?? 0) / 100000),
+      // sources and imports sort a fraction before their site: round the half up, not down a line
+      line: Math.floor(((nodes[nodes.length - 1]?.order ?? 0) + 0.5) / 100000),
     };
     const kept = new Set(nodes.map((n) => n.id));
     for (const n of nodes) if (n.parent !== null && !kept.has(n.parent)) n.parent = null;
