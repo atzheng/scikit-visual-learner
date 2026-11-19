@@ -27,8 +27,8 @@ export interface RuntimeClientOptions {
   onProgress(p: ProgressMessage): void;
   onReady(versions: Record<string, string>): void;
   onState?(state: RuntimeState): void;
-  /** The worker failed while loading (the client stays in `loading`; `restart()` tries again). */
-  onError?(message: string): void;
+  /** `load`: the worker failed while loading (the client stays in `loading`; `restart()` tries again). `crash`: it died later and is being replaced. */
+  onError?(message: string, kind: 'load' | 'crash'): void;
   /** Test seams. */
   createWorker?(url: URL): WorkerLike;
   isolated?: boolean;
@@ -68,6 +68,8 @@ interface ActiveRun {
   config: RunConfig;
   onUpdate(log: EventLog): void;
   resolve(log: EventLog): void;
+  /** The worker has sent `started`: only then is it safe to raise KeyboardInterrupt (before, Pyodide may be installing packages). */
+  started?: boolean;
   reason?: 'stopped' | 'timeout';
   wallTimer?: ReturnType<typeof setTimeout>;
   killTimer?: ReturnType<typeof setTimeout>;
@@ -214,8 +216,11 @@ export class RuntimeClient {
     a.asm.push(msg);
     if (msg.type === 'started') {
       // The wall clock starts when the student's code does.
+      a.started = true;
       clearTimeout(a.wallTimer);
-      if (!a.reason) {
+      if (a.reason) {
+        this.interruptNow(); // a stop requested before `started` is applied now; its 2 s timer is already running
+      } else {
         a.wallTimer = setTimeout(() => this.requestStop(a, 'timeout'), a.config.wall_ms);
       }
       this.scheduleUpdate(a);
@@ -249,15 +254,21 @@ export class RuntimeClient {
     if (this.active !== a || a.reason) return;
     a.reason = reason;
     clearTimeout(a.wallTimer);
-    if (planStop(this.isolated) === 'interrupt' && this.interrupt) {
-      Atomics.store(this.interrupt, 0, 2); // SIGINT: KeyboardInterrupt in the student's code
-      a.killTimer = setTimeout(
-        () => this.active === a && this.killWorker(reason),
-        this.opts.stopGraceMs ?? STOP_GRACE_MS,
-      );
-    } else {
+    if (planStop(this.isolated) === 'terminate' || !this.interrupt) {
       this.killWorker(reason);
+      return;
     }
+    // The interrupt is held until `started`: raised earlier it can land inside Pyodide's package
+    // installer and leave the worker unusable. The terminate timer runs from the request either way.
+    if (a.started) this.interruptNow();
+    a.killTimer = setTimeout(
+      () => this.active === a && this.killWorker(reason),
+      this.opts.stopGraceMs ?? STOP_GRACE_MS,
+    );
+  }
+
+  private interruptNow(): void {
+    if (this.interrupt) Atomics.store(this.interrupt, 0, 2); // SIGINT: KeyboardInterrupt in the student's code
   }
 
   /** Terminate the worker, finish any run from what has streamed so far, and start a new worker. */
@@ -273,6 +284,7 @@ export class RuntimeClient {
 
   private onCrash(message: string): void {
     const a = this.active;
+    message = message.replace(/^Uncaught (?:\w+: )?/, ''); // the browser's ErrorEvent prefix
     this.worker.terminate();
     this.rejectFiles(message);
     if (a) {
@@ -285,10 +297,11 @@ export class RuntimeClient {
     if (this.state === 'loading' || this.state === 'restarting') {
       // Failed while loading: don't loop. `restart()` tries again.
       this.setState('loading');
-      this.opts.onError?.(message);
+      this.opts.onError?.(message, 'load');
       for (const w of this.readyWaiters.splice(0)) w.reject(new Error(message));
       return;
     }
+    this.opts.onError?.(message, 'crash'); // idle or mid-run: tell the user, then recover
     this.setState('restarting');
     this.spawn();
   }

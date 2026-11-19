@@ -119,6 +119,9 @@ function Toolbar() {
   );
 }
 
+const ISOLATION_HELP =
+  'This page is not cross-origin isolated, so Stop and the time limit cannot interrupt Python in place. They restart Python instead, which takes several seconds, and a program that is stopped shows no unfinished call.';
+
 function StatusLine() {
   const { state, progress } = useStore((s) => s.runtime);
   const isolated = typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated;
@@ -127,9 +130,21 @@ function StatusLine() {
       <span>
         {state}: {progress}
       </span>
-      {import.meta.env.DEV && (
-        <span className={isolated ? 'ok' : 'bad'} data-testid="isolation">
-          {isolated ? '✓ crossOriginIsolated' : '✗ NOT crossOriginIsolated'}
+      {isolated ? (
+        import.meta.env.DEV && (
+          <span className="ok" data-testid="isolation">
+            ✓ crossOriginIsolated
+          </span>
+        )
+      ) : (
+        <span
+          className="bad"
+          data-testid="isolation"
+          tabIndex={0}
+          title={ISOLATION_HELP}
+          aria-description={ISOLATION_HELP}
+        >
+          ⚠ Stop restarts Python (page not isolated)
         </span>
       )}
     </footer>

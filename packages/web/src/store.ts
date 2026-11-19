@@ -45,11 +45,13 @@ export const useStore = create<AppState>()((set, get) => ({
     const t0 = performance.now();
     set({ running: true, elapsedMs: 0 });
     const tick = setInterval(() => set({ elapsedMs: performance.now() - t0 }), ELAPSED_TICK_MS);
-    // The model is rebuilt on every streamed update (at most once per animation frame).
+    // The model is rebuilt on every streamed update (at most once per animation frame) and once
+    // for the final log, which `run` delivers through `onUpdate` before it resolves.
+    // Note for bwv.4: `snapshot()` is O(n) per update; fine at 5000 events, not measured beyond.
     const show = (log: EventLog): void =>
       set({ log, model: buildGraph(log, { expanded: get().expanded }) });
     try {
-      show(await rt.run(get().source, DEFAULT_RUN_CONFIG, show));
+      await rt.run(get().source, DEFAULT_RUN_CONFIG, show);
     } catch {
       // The runtime wasn't ready; nothing ran.
     } finally {
@@ -70,6 +72,7 @@ export const useStore = create<AppState>()((set, get) => ({
 /** Starts the worker (once) and mirrors its state into the store. Call from the app root. */
 export function startRuntime(): void {
   const set = useStore.setState;
+  let crashNote: string | null = null; // shown while the replacement worker loads
   const rt = getRuntime({
     onProgress: (p) => set((s) => ({ runtime: { ...s.runtime, progress: progressText(p) } })),
     onReady: (versions) =>
@@ -81,16 +84,24 @@ export function startRuntime(): void {
           state === 'running'
             ? 'Running…'
             : state === 'restarting'
-              ? 'Restarting Python…'
+              ? crashNote
+                ? `Python crashed (${crashNote}). Restarting…`
+                : 'Restarting Python…'
               : state === 'ready' && v
                 ? versionsText(v)
                 : s.runtime.progress;
+        if (state === 'ready') crashNote = null;
         return { runtime: { ...s.runtime, state, progress } };
       }),
-    onError: (message) =>
+    onError: (message, kind) => {
+      if (kind === 'crash') {
+        crashNote = message.length > 140 ? `${message.slice(0, 139)}…` : message;
+        return; // the following 'restarting' state carries the note
+      }
       set((s) => ({
         runtime: { ...s.runtime, state: 'loading', progress: `Python failed to load: ${message}` },
-      })),
+      }));
+    },
   });
   set((s) => ({ runtime: { ...s.runtime, state: rt.state } }));
 }

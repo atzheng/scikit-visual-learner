@@ -64,7 +64,7 @@ function rig(opts: { isolated?: boolean } = {}): Rig {
     onProgress: () => {},
     onReady: () => void ready++,
     onState: (s) => states.push(s),
-    onError: (m) => errors.push(m),
+    onError: (m, kind) => errors.push(`${kind}:${m}`),
     createWorker: () => {
       const w = new FakeWorker();
       workers.push(w);
@@ -250,6 +250,67 @@ describe('stop', () => {
   });
 });
 
+describe('stop before `started`', () => {
+  const flag = (w: FakeWorker): number =>
+    Atomics.load(new Int32Array(w.init.interruptBuffer as SharedArrayBuffer), 0);
+  const begin = (r: Rig) => {
+    const w = last(r.workers);
+    ready(w);
+    const p = r.client.run('import matplotlib', cfg(), () => {});
+    return { w, p, runId: last(w.runs).runId };
+  };
+
+  test('the interrupt is held until `started`, then applied at once', async () => {
+    const r = rig();
+    const { w, p, runId } = begin(r);
+    r.client.stop();
+    expect(flag(w)).toBe(0); // the worker may be inside Pyodide's package installer
+    vi.advanceTimersByTime(500);
+    expect(flag(w)).toBe(0);
+    w.emit({ type: 'started', runId, sites: [site] });
+    expect(flag(w)).toBe(2);
+    w.emit({ type: 'done', runId, status: 'stopped', error: null });
+    expect((await p).status).toBe('stopped');
+    expect(w.terminated).toBe(false);
+  });
+
+  test('the 2 s terminate timer runs from the stop request, not from `started`', async () => {
+    const r = rig();
+    const { w, p, runId } = begin(r);
+    r.client.stop();
+    vi.advanceTimersByTime(1500);
+    w.emit({ type: 'started', runId, sites: [site] });
+    expect(flag(w)).toBe(2);
+    vi.advanceTimersByTime(499);
+    expect(w.terminated).toBe(false);
+    vi.advanceTimersByTime(2);
+    expect(w.terminated).toBe(true);
+    expect((await p).status).toBe('stopped');
+  });
+
+  test('no `started` within 2 s terminates, never setting the flag', async () => {
+    const r = rig();
+    const { w, p } = begin(r);
+    r.client.stop();
+    vi.advanceTimersByTime(2001);
+    expect(flag(w)).toBe(0);
+    expect(w.terminated).toBe(true);
+    expect((await p).status).toBe('stopped');
+    expect(r.workers).toHaveLength(2);
+  });
+
+  test('a stop before `started` is not applied to the next run', async () => {
+    const r = rig();
+    const { w, p, runId } = begin(r);
+    r.client.stop();
+    w.emit({ type: 'started', runId, sites: [site] });
+    w.emit({ type: 'done', runId, status: 'stopped', error: null });
+    await p;
+    w.emit({ type: 'started', runId, sites: [site] }); // stale
+    expect(r.client.state).toBe('ready');
+  });
+});
+
 describe('timeout', () => {
   test('wall clock starts at `started` and interrupts, finishing as timeout', async () => {
     const r = rig();
@@ -328,6 +389,16 @@ describe('restart and crashes', () => {
     const log = await p;
     expect(log.status).toBe('error');
     expect(log.error?.message).toBe('boom');
+    expect(r.errors).toEqual(['crash:boom']);
+    expect(r.workers).toHaveLength(2);
+    expect(r.client.state).toBe('restarting');
+  });
+
+  test('a crash while idle reports it (prefix stripped) and respawns', () => {
+    const r = rig();
+    ready(r.workers[0] as FakeWorker);
+    r.workers[0]?.onerror?.({ message: 'Uncaught Error: Python crashed' });
+    expect(r.errors).toEqual(['crash:Python crashed']);
     expect(r.workers).toHaveLength(2);
     expect(r.client.state).toBe('restarting');
   });
@@ -335,7 +406,7 @@ describe('restart and crashes', () => {
   test('a crash while loading reports the error and does not loop; restart retries', async () => {
     const r = rig();
     (r.workers[0] as FakeWorker).onerror?.({ message: 'no wasm' });
-    expect(r.errors).toEqual(['no wasm']);
+    expect(r.errors).toEqual(['load:no wasm']);
     expect(r.workers).toHaveLength(1);
     expect(r.client.state).toBe('loading');
     const p = r.client.restart();

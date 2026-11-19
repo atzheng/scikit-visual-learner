@@ -33,6 +33,21 @@ import machines
 import machines.runtime as _machines_runtime
 machines.install_hooks()
 
+_machines_offline = set()
+
+class _OfflineFinder:
+    """Imports of packages that failed to load raise a clear error instead of 'No module named'."""
+    @staticmethod
+    def find_spec(name, path=None, target=None):
+        if name.split(".")[0] in _machines_offline:
+            raise ModuleNotFoundError(
+                f"{name!r} is not available offline in this tool (only numpy, pandas, scipy, scikit-learn and matplotlib are included)",
+                name=name,
+            )
+        return None
+
+sys.meta_path.insert(0, _OfflineFinder)
+
 def _machines_worker_run(source, config, emit, on_enter, on_exit):
     _machines_runtime.run(source, config, emit, on_enter=on_enter, on_exit=on_exit)
 
@@ -144,6 +159,39 @@ function isFatal(e: unknown): boolean {
   return /fatal|Maximum call stack|memory access out of bounds/i.test(m);
 }
 
+/**
+ * Loads the packages `source` imports (matplotlib arrives this way). Packages the lock file lists but the site
+ * doesn't ship fail to fetch; those names get an ImportError that says so, instead of a raw fetch error.
+ */
+async function loadImports(source: string): Promise<void> {
+  const offline = pyodide.globals.get('_machines_offline') as {
+    clear(): void;
+    update(x: unknown): void;
+  };
+  offline.clear();
+  // A failed fetch may be thrown or only reported through `errorCallback`, so watch both.
+  const tryLoad = async (code: string): Promise<boolean> => {
+    let failed = false;
+    try {
+      await pyodide.loadPackagesFromImports(code, { errorCallback: () => (failed = true) });
+    } catch {
+      failed = true;
+    }
+    return !failed;
+  };
+  if (await tryLoad(source)) return;
+  // Find out which imports are the problem, one at a time.
+  const names = pyodide.runPython(
+    'import json\nfrom pyodide.code import find_imports\njson.dumps(find_imports(_machines_source))',
+    { globals: pyodide.toPy({ _machines_source: source }) },
+  ) as string;
+  const missing: string[] = [];
+  for (const name of JSON.parse(names) as string[]) {
+    if (!(await tryLoad(`import ${name}`))) missing.push(name);
+  }
+  offline.update(pyodide.toPy(missing));
+}
+
 function isInterrupt(e: unknown): boolean {
   return e instanceof Error && e.message.includes('KeyboardInterrupt');
 }
@@ -166,9 +214,10 @@ async function run(msg: Extract<ToWorker, { type: 'run' }>): Promise<void> {
     send(clean(m) as Record<string, unknown>);
   };
   try {
+    // The client raises the interrupt only after `started`, so a flag still set here is stale.
     if (interrupt) Atomics.store(interrupt, 0, 0);
     if (currentCall) Atomics.store(currentCall, 0, 0);
-    await pyodide.loadPackagesFromImports(source);
+    await loadImports(source);
     const { onEnter, onExit } = makeHooks();
     const cfg = pyodide.toPy(config satisfies RunConfig);
     const fn = pyodide.globals.get('_machines_worker_run') as (...a: unknown[]) => void;

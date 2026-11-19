@@ -75,7 +75,7 @@ Skeleton beads create placeholder files at these paths so that later beads fill 
 Version 2 of the schema in SPEC.md "Event log schema", made exact. Line numbers are 1-based and columns 0-based (as in `ast`), measured in UTF-8 code points of the source (`ast` gives byte offsets: `transform.py` converts them). All preview cells and scalar texts are pre-formatted strings.
 
 ```ts
-type Token = string;            // reference values: "v<obj>.<version>", e.g. "v12.0"; scalars: "s<n>", e.g. "s7"
+type Token = string; // reference values: "v<obj>.<version>", e.g. "v12.0"; scalars: "s<n>", e.g. "s7"
 type RunStatus = 'ok' | 'error' | 'timeout' | 'stopped' | 'limit';
 
 interface EventLog {
@@ -83,104 +83,113 @@ interface EventLog {
   status: RunStatus;
   error: RunError | null;
   sites: Site[];
-  scopes: Scope[];              // M1–3: exactly one, the module (id 0)
+  scopes: Scope[]; // M1–3: exactly one, the module (id 0)
   values: Record<Token, ValueSummary>;
-  events: Event[];              // sorted by i; i is unique but not contiguous (section 4, caps)
+  events: Event[]; // sorted by i; i is unique but not contiguous (section 4, caps)
   output: OutputEntry[];
-  diagnostics: string[];        // recorder-internal problems (section 4, "Degrade"); never student errors
+  diagnostics: string[]; // recorder-internal problems (section 4, "Degrade"); never student errors
 }
 
 type Origin =
   | { origin: 'const'; text: string }
   | { origin: 'name'; name: string }
   | { origin: 'call'; site: number }
-  | { origin: 'expr'; text: string; reads: string[] }   // reads: bare names read, in source order, deduplicated
-  | { origin: 'unknown' };                               // at or after a starred argument
+  | { origin: 'expr'; text: string; reads: string[] } // reads: bare names read, in source order, deduplicated
+  | { origin: 'unknown' }; // at or after a starred argument
 
 interface Site {
-  id: number;                   // index into sites
+  id: number; // index into sites
   kind: 'call' | 'bind' | 'store' | 'ret';
-  line: number; col: number; end_line: number; end_col: number;
-  text: string;                 // exact source text of the node
+  line: number;
+  col: number;
+  end_line: number;
+  end_col: number;
+  text: string; // exact source text of the node
   // kind 'call'
-  func_text?: string;           // source text of the callee expression ("model.fit", "pd.read_csv")
-  func_line?: number;           // the line CPython reports for the call (end line of the callee expression), only when it differs from `line`
+  func_text?: string; // source text of the callee expression ("model.fit", "pd.read_csv")
+  func_line?: number; // the line CPython reports for the call (end line of the callee expression), only when it differs from `line`
   args?: Origin[];
-  keywords?: Record<string, Origin>;   // "**" for a double-starred argument: { origin: 'unknown' }
-  unpack?: number;              // the call is the RHS of a tuple-unpacking assignment with this many Name targets
+  keywords?: Record<string, Origin>; // "**" for a double-starred argument: { origin: 'unknown' }
+  unpack?: number; // the call is the RHS of a tuple-unpacking assignment with this many Name targets
   // kind 'bind'
-  targets?: string[];           // Name targets in order; for a tuple target, the flattened names
-  value?: Origin;               // RHS origin for Assign/AugAssign/AnnAssign; absent for for/with targets and for destructuring targets (section 3)
-  where?: 'local' | 'global' | 'nonlocal';   // M1–3: always 'local' (module)
+  targets?: string[]; // Name targets in order; for a tuple target, the flattened names
+  value?: Origin; // RHS origin for Assign/AugAssign/AnnAssign; absent for for/with targets and for destructuring targets (section 3)
+  where?: 'local' | 'global' | 'nonlocal'; // M1–3: always 'local' (module)
   // kind 'store'
-  root?: string;                // the root Name of the target (df in df.loc[m, "c"])
-  value?: Origin;               // RHS origin; only when the target is the whole left-hand side of Assign/AnnAssign and no target is a tuple, list or starred (section 3)
+  root?: string; // the root Name of the target (df in df.loc[m, "c"])
+  value?: Origin; // RHS origin; only when the target is the whole left-hand side of Assign/AnnAssign and no target is a tuple, list or starred (section 3)
 }
 
 interface Scope {
   id: number;
-  name: string;                 // "<module>"
+  name: string; // "<module>"
   parent_event: number | null;
   lexical_parent: number | null;
-  bindings: [event: number, name: string, token: Token][];  // event = index of the latest event started before the bind, -1 if none
+  bindings: [event: number, name: string, token: Token][]; // event = index of the latest event started before the bind, -1 if none
 }
 
 interface ValueSummary {
-  type: string;                 // DF, Series, array, sparse, int, float, complex, str, bytes, bool, None,
-                                // list[n], dict[n], tuple[n], set[n], or the class name (numpy scalars: the class name, e.g. float64, int64)
+  type: string; // DF, Series, array, sparse, int, float, complex, str, bytes, bool, None,
+  // list[n], dict[n], tuple[n], set[n], or the class name (numpy scalars: the class name, e.g. float64, int64)
   shape?: number[];
-  dtype?: string;               // Series/array: dtype; DF: omitted (see dtypes)
-  dtypes?: string[];            // DF: one per column in columns
-  columns?: string[];           // DF: first 50 column names
-  preview?: Preview;            // omitted once the 1 MB preview budget is spent
-  repr?: string;                // scalars and other objects: reprlib.repr, max 40 chars
-  attrs?: Record<string, Token>;// machines only (section 5)
-  machine?: boolean;            // true for machines (estimators, student class instances, configured classes)
+  dtype?: string; // Series/array: dtype; DF: omitted (see dtypes)
+  dtypes?: string[]; // DF: one per column in columns
+  columns?: string[]; // DF: first 50 column names
+  preview?: Preview; // omitted once the 1 MB preview budget is spent
+  repr?: string; // scalars and other objects: reprlib.repr, max 40 chars
+  attrs?: Record<string, Token>; // machines only (section 5)
+  machine?: boolean; // true for machines (estimators, student class instances, configured classes)
 }
 
 type Preview =
-  | { kind: 'table'; columns: string[]; index: string[]; rows: string[][] }  // DF: 5 rows x 8 cols; Series: one column
-  | { kind: 'matrix'; rows: string[][] };                                     // array / sparse: first 5 x 5 (1-D: one row)
+  | { kind: 'table'; columns: string[]; index: string[]; rows: string[][] } // DF: 5 rows x 8 cols; Series: one column
+  | { kind: 'matrix'; rows: string[][] }; // array / sparse: first 5 x 5 (1-D: one row)
 
 type EventKind = 'function' | 'method' | 'constructor' | 'student_function' | 'expr' | 'store';
 
 interface Input {
-  param: string;                // signature name, "arrays[0]" for varargs, "arg0".. when binding fails, "self" for the owner of a data method
+  param: string; // signature name, "arrays[0]" for varargs, "arg0".. when binding fails, "self" for the owner of a data method
   origin: Origin['origin'];
-  value?: Token;                // absent when the input is drawn on the port instead of wired
-  text?: string;                // port text: const literal text, or a label value's text (section 5)
+  value?: Token; // absent when the input is drawn on the port instead of wired
+  text?: string; // port text: const literal text, or a label value's text (section 5)
 }
 
 interface Event {
   i: number;
-  ret: number;                  // index of the last event that started before this one returned (== i when none started inside it)
+  ret: number; // index of the last event that started before this one returned (== i when none started inside it)
   site: number;
   scope: number;
   kind: EventKind;
-  name: string;                 // callee __qualname__ ("train_test_split", "LinearRegression.fit"); expr/store: site text
-  module: string | null;        // callee __module__ ("sklearn.model_selection"); null for expr/store
-  owner: Token | null;          // method events: the bound instance
+  name: string; // callee __qualname__ ("train_test_split", "LinearRegression.fit"); expr/store: site text
+  module: string | null; // callee __module__ ("sklearn.model_selection"); null for expr/store
+  owner: Token | null; // method events: the bound instance
   inputs: Input[];
-  outputs: Token[];             // tuple split per SPEC "Tuple returns"; None returns omitted; omitted when returns_self
+  outputs: Token[]; // tuple split per SPEC "Tuple returns"; None returns omitted; omitted when returns_self
   returns_self: boolean;
   mutates: [before: Token, after: Token][];
-  count: number;                // executions of this merge key so far, including this one
-  slot?: true;                  // this is the replaceable "latest" record for its merge key (section 4)
-  merge_key: string;            // M1–3: "s<site>" (module scope only); M4 extends it per SPEC "Merge keys"
+  count: number; // executions of this merge key so far, including this one
+  slot?: true; // this is the replaceable "latest" record for its merge key (section 4)
+  merge_key: string; // M1–3: "s<site>" (module scope only); M4 extends it per SPEC "Merge keys"
   error: EventError | null;
-  interrupted?: true;           // the call was running when the run was stopped or timed out
+  interrupted?: true; // the call was running when the run was stopped or timed out
 }
 
-interface EventError { type: string; message: string; handled: boolean; propagated?: true }
+interface EventError {
+  type: string;
+  message: string;
+  handled: boolean;
+  propagated?: true;
+}
 
 interface RunError {
-  type: string; message: string;
-  line: number | null;          // student line where it surfaced
-  traceback: TracebackFrame[];  // student frames, library frames folded
+  type: string;
+  message: string;
+  line: number | null; // student line where it surfaced
+  traceback: TracebackFrame[]; // student frames, library frames folded
 }
 type TracebackFrame =
-  | { kind: 'student'; line: number; text: string; name: string; repeat?: number }  // repeat: further identical consecutive frames (recursion), as CPython's "[Previous line repeated N more times]"
-  | { kind: 'library'; count: number; modules: string[] };   // n consecutive library frames folded into one
+  | { kind: 'student'; line: number; text: string; name: string; repeat?: number } // repeat: further identical consecutive frames (recursion), as CPython's "[Previous line repeated N more times]"
+  | { kind: 'library'; count: number; modules: string[] }; // n consecutive library frames folded into one
 
 type OutputEntry =
   | { i: number; stream: 'stdout' | 'stderr' | 'warning'; text: string }
@@ -189,6 +198,7 @@ type OutputEntry =
 ```
 
 Rules:
+
 - Every token in `events`, `scopes`, `attrs` and `mutates` has an entry in `values`.
 - `events[*].i` increases with start time. Steps (section 8) follow `i`.
 - The log for a given program and config is byte-identical across runs on CPython and Pyodide (with `random_state` fixed), except `output` texts that print timings and figures' PNG bytes. `id()` never appears.
@@ -207,6 +217,7 @@ UNWRAPPED_CALLS = frozenset({"super", "locals", "globals", "vars", "dir", "eval"
 ```
 
 Rules for M1–3 (SPEC "Transformer rules", narrowed):
+
 - Instrument the module body, class bodies at any depth reached without entering a function, and comprehensions and generator expressions there.
 - **Do not instrument function or lambda bodies at all in M1–3.** No hooks inside `def`, `async def` or `lambda`, and no `__scope__`. Student functions and methods are recorded only where they are called from instrumented code, as opaque `student_function` / `method` events. M4 adds `__scope__`, `__ret__` and interior instrumentation.
 - `Call` → `__rec__(site, func, *args, **kwargs)`, children first, keeping argument order and starred forms. A call whose `func` is a bare `Name` in `UNWRAPPED_CALLS` is not wrapped, but its arguments are still visited.
@@ -219,7 +230,7 @@ Rules for M1–3 (SPEC "Transformer rules", narrowed):
 - `unpack` is set on a call site when it is the whole RHS of an assignment whose single target is a tuple or list of n plain `Name`s (no starred, no nesting).
 - **No `value` on destructuring.** A bind or store site carries `value` only when no target of the statement is a tuple, list or starred target, or in the one `unpack` case (single tuple/list target of plain Names whose RHS is a wrapped call). Omitted for `a, *b = f(x)`, `a, b = c = f(1)`, `x[0], y = f(1)`, `a, b = c` and `(a, b), c = f(1), 2`: the names hold parts of the value, so an origin would be a false wire. A missing wire is acceptable.
 - **Shadowed names.** A bare Name inside a comprehension that refers to one of that comprehension's own targets, or inside a class body that the class body itself binds, does not get a `name` origin: it is `{origin: 'expr', text: <name>, reads: []}`. Such names are also dropped from `reads` of other `expr` origins. (`n = 5; [f(n) for n in xs]` must not wire the outer `n` to `f`.)
-- **Frame-sensitive callees.** The recorder makes each call from a `<student>` eval frame that shares the caller's globals and locals (section 4), so `sys._getframe(1)`, `locals()`/`eval`/`exec` aliases (`e = eval; e("x")`), pandas' `df.query("a > @t")` / `pd.eval` and `warnings.warn(stacklevel=...)` see the student's namespace, at the call's reported line, as in plain Python. Known limit: stack *listings* made by student code (`traceback.format_exc()`, `traceback.extract_stack()`, `inspect.stack()`) show the recorder's frames (`_rec_hook`, `_rec`, `_call`) and the extra `<student>` frame; svl-a8j.4's `student_traceback` cleans only the tracebacks the runtime formats itself.
+- **Frame-sensitive callees.** The recorder makes each call from a `<student>` eval frame that shares the caller's globals and locals (section 4), so `sys._getframe(1)`, `locals()`/`eval`/`exec` aliases (`e = eval; e("x")`), pandas' `df.query("a > @t")` / `pd.eval` and `warnings.warn(stacklevel=...)` see the student's namespace, at the call's reported line, as in plain Python. Known limit: stack _listings_ made by student code (`traceback.format_exc()`, `traceback.extract_stack()`, `inspect.stack()`) show the recorder's frames (`_rec_hook`, `_rec`, `_call`) and the extra `<student>` frame; svl-a8j.4's `student_traceback` cleans only the tracebacks the runtime formats itself.
 
 ## 4. Recorder (`recorder.py`)
 
@@ -265,7 +276,7 @@ Hook signatures, all positional-only in their leading parameters: `__rec__(site,
 
 **Mutation.** After every recorded call, check the owner, every input, and every tracked estimator reachable from them through `get_params(deep=True)`. Record each changed one in `mutates`. A version change found when an object is read as an input with no event to blame gives a new version with no producer (drawn as a source node, section 8).
 
-**Expression events.** When an input has origin `expr` and its value has no token yet or is a scalar, record an event `kind: 'expr'` *before* the consuming event: inputs are the tokens currently held by `reads` (section 5), outputs the value's new token. Do the same for a `call` origin whose inner site produced no recorded event for that object (it was hidden): it becomes an `expr` event with the inner site's text, `site` the inner site, `merge_key` `s<inner>`, and it does not count against `max_events`. The same rule applies to the value of a `__bind__` (the site is the bind site, `merge_key` `s<site>`). Other expr events are recorded for an argument at position `k` / keyword `name` of a call at site `S` with `site: S` and `merge_key: "s<S>.a<k>"` / `"s<S>.k<name>"`; for the owner of a method on data (`df["price"].mean()`), `"s<S>.self"`, where the owner expression is the callee text minus the method name and its `reads` come from parsing that text. An expr event's `name` is its expression text. `inputs` of an expr event: one `{param: <name>, origin: 'name', value}` per name read. For an assignment that rebinds a name the expression reads (`w = w * 2`, `a += 1`), the read resolves to the name's *previous* binding. An augmented assignment that changes a tracked object in place gives an expr event with `mutates` and no outputs.
+**Expression events.** When an input has origin `expr` and its value has no token yet or is a scalar, record an event `kind: 'expr'` _before_ the consuming event: inputs are the tokens currently held by `reads` (section 5), outputs the value's new token. Do the same for a `call` origin whose inner site produced no recorded event for that object (it was hidden): it becomes an `expr` event with the inner site's text, `site` the inner site, `merge_key` `s<inner>`, and it does not count against `max_events`. The same rule applies to the value of a `__bind__` (the site is the bind site, `merge_key` `s<site>`). Other expr events are recorded for an argument at position `k` / keyword `name` of a call at site `S` with `site: S` and `merge_key: "s<S>.a<k>"` / `"s<S>.k<name>"`; for the owner of a method on data (`df["price"].mean()`), `"s<S>.self"`, where the owner expression is the callee text minus the method name and its `reads` come from parsing that text. An expr event's `name` is its expression text. `inputs` of an expr event: one `{param: <name>, origin: 'name', value}` per name read. For an assignment that rebinds a name the expression reads (`w = w * 2`, `a += 1`), the read resolves to the name's _previous_ binding. An augmented assignment that changes a tracked object in place gives an expr event with `mutates` and no outputs.
 
 **Store events.** `__store__` records `kind: 'store'`: inputs are the root's previous version (`param: 'target'`) and the RHS. `__store__` receives only the root, not the RHS object, so the RHS input depends on its origin: `const` gives `{param: 'value', text}`, `name` the named value, `call` the recorded output of that call (omitted when the call was hidden), and `expr` one input per name the expression reads, `param: 'value[<name>]'`, `origin: 'expr'` (the value itself has no token). The output is a **forced** new version of the root, even if the fingerprint did not change.
 
@@ -294,13 +305,14 @@ class ValueTable:
 ```
 
 **Classification** (decided here, extending SPEC "Value model"):
+
 - `scalar`: `int`, `float`, `complex`, `bool`, `str`, `bytes`, `None`, every `numpy.generic` (`np.int64`, `np.bool_`, `np.float64`…), pandas scalars (`pd.NA`, `pd.NaT`, `Timestamp`, `Timedelta`, `Period`), `Ellipsis`, and tuples and frozensets whose items are all scalars (recursively). These never match by identity.
 - `label`: functions, builtins, methods, classes, modules. Drawn as text on the port (`func = np.log1p`), never wired: `Input.text` is the qualname, and `value` is absent.
 - `reference`: everything else.
 
 **Name resolution for scalars.** `__bind__` stores, for each name, `(token, obj)`. A `name` origin whose value is a scalar resolves to the bound token only when `bound_obj is value` (identity guard). Otherwise it gets a fresh token with no producer (a source node labelled with the name). This guard prevents false wires when a name was rebound by something the recorder doesn't see (`:=`, `import`, `global` writes from uninstrumented functions).
 
-**Reads of `expr` origins.** Each name in `reads` resolves to its latest module binding: references go to the *current* version of the bound object, scalars to the bound token. A name with no binding contributes nothing.
+**Reads of `expr` origins.** Each name in `reads` resolves to its latest module binding: references go to the _current_ version of the bound object, scalars to the bound token. A name with no binding contributes nothing.
 
 **Fingerprints.** Use the SPEC "Versions" fingerprint: shape, columns, dtypes; an estimator's attribute names and the identity of their values; a container's length and item identities. Add a content hash for tables and arrays at or under `hash_cells` (`pd.util.hash_pandas_object`, or `hashlib` over `ndarray.tobytes()`). Fall back to structural only when hashing raises (unhashable cells).
 
@@ -327,7 +339,7 @@ def reset_between_runs() -> None       # close matplotlib figures, pd.reset_opti
 # re-applies them to `machines.runtime.after_reset_hooks`. numpy, rcParams, os.environ and random state are not reset (SPEC "Between runs").
 ```
 
-- Compile with filename `<student>` and register the *original* source in `linecache`.
+- Compile with filename `<student>` and register the _original_ source in `linecache`.
 - Run in the `__dict__` of a fresh module named `__main__`, which is also `sys.modules["__main__"]` during the run (so student classes, dataclasses and `inspect` find their module), with `__builtins__` and `__file__ = "<student>"` set. Everything the run changes (streams, `input`, recursion limit, `__main__`, warning filters and hook, `MPLBACKEND`) is restored before `done`. Each restore is registered before its change and run independently, so an interrupt or error anywhere in setup or teardown restores everything and `done` is still emitted (a late `KeyboardInterrupt` gives `stopped`). `SystemExit` is not an error: `exit()` ends the program with status `ok`, and a non-int argument is written to stderr as plain Python does. `KeyboardInterrupt` gives status `stopped` and `error: null`.
 - Redirect `sys.stdout` and `sys.stderr` to writers that append `OutputEntry` tagged with `recorder.current_event`. Merge consecutive writes with the same tag and stream; the pending entry is committed when the tag or stream changes, when a recorded call starts, and at the end of the run (so the log does not depend on timing). Warning and figure entries are never merged.
 - Warnings: override `warnings.showwarning` to emit `stream: 'warning'` entries formatted as `"<line>: <Category>: <message>"`. The line is the student line of the innermost open recorded call (or the warning's own line if it is `<student>`). Do not change warning filters.
@@ -345,28 +357,55 @@ def reset_between_runs() -> None       # close matplotlib figures, pd.reset_opti
 type ToWorker =
   | { type: 'init'; interruptBuffer?: SharedArrayBuffer; currentCall?: SharedArrayBuffer }
   | { type: 'run'; runId: number; source: string; config: RunConfig }
-  | { type: 'file'; name: string; bytes: ArrayBuffer };       // written to /home/pyodide/<name>
+  | { type: 'file'; name: string; bytes: ArrayBuffer }; // written to /home/pyodide/<name>
 
 type FromWorker =
-  | { type: 'progress'; phase: 'pyodide' | 'packages' | 'recorder' | 'datasets'; done: number; total: number }
-  | { type: 'ready'; versions: Record<string, string> }        // pyodide, python, numpy, pandas, sklearn
+  | {
+      type: 'progress';
+      phase: 'pyodide' | 'packages' | 'recorder' | 'datasets';
+      done: number;
+      total: number;
+    }
+  | { type: 'ready'; versions: Record<string, string> } // pyodide, python, numpy, pandas, sklearn
   | { type: 'started'; runId: number; sites: Site[] }
-  | { type: 'batch'; runId: number; events: Event[]; open: OpenEvent[]; values: Record<Token, ValueSummary>;
-      bindings: [scope: number, event: number, name: string, token: Token, slot_key?: string][]; output: OutputEntry[];
-      diagnostics: string[] }
+  | {
+      type: 'batch';
+      runId: number;
+      events: Event[];
+      open: OpenEvent[];
+      values: Record<Token, ValueSummary>;
+      bindings: [scope: number, event: number, name: string, token: Token, slot_key?: string][];
+      output: OutputEntry[];
+      diagnostics: string[];
+    }
   | { type: 'done'; runId: number; status: RunStatus; error: RunError | null }
   | { type: 'fileWritten'; name: string; rows?: number };
 
-interface OpenEvent { i: number; site: number; kind: EventKind; name: string; module: string | null }
-interface RunConfig { draw_modules: string[]; draw_builtins: boolean; draw_container_methods: boolean;
-  machine_classes: string[]; wall_ms: number; max_events: number; per_site: number;
-  preview_bytes: number; hash_cells: number }
+interface OpenEvent {
+  i: number;
+  site: number;
+  kind: EventKind;
+  name: string;
+  module: string | null;
+}
+interface RunConfig {
+  draw_modules: string[];
+  draw_builtins: boolean;
+  draw_container_methods: boolean;
+  machine_classes: string[];
+  wall_ms: number;
+  max_events: number;
+  per_site: number;
+  preview_bytes: number;
+  hash_cells: number;
+}
 ```
 
 - An event is sent once it has finished (or in its slot form). `open` is the full stack of started, unfinished recorded calls at flush time, outermost first.
 - `currentCall` (only when `crossOriginIsolated`): an `Int32Array(2)` = `[i + 1, site]` of the innermost open recorded call, `0` when none, written by `on_enter`/`on_exit`.
 
 **Assembler** (`assemble.ts`): `createAssembler(runId?: number) → { push(msg: FromWorker): void; finish(status?: RunStatus, currentCall?: { i: number; site: number } | null): EventLog; snapshot(): EventLog }`. `finish`'s `status` overrides the one from `done`; `currentCall` is the decoded buffer (`i = buffer[0] - 1`), passed by the client when it kills the worker.
+
 - Messages with a `runId` other than the current one are ignored. `started` with a `runId` <= the current one is ignored; a higher one resets the assembler. When `createAssembler(runId)` is given a `runId`, only that run is accepted, including the first `started`.
 - Each batch's `open` replaces the stub map (it is the full stack at flush time), minus events already finished. A slot event whose `i` is lower than the existing slot for its merge key is dropped. A binding with a `slot_key` replaces any earlier binding in the same scope with that key, unless the earlier one has a higher event; `Scope.bindings` stay 3-tuples, sorted by event. An interrupted event's `count` is the largest `count` seen for its merge key plus one. `done` with `ok`, `error` or `limit` drops any remaining open stubs. `snapshot()` has status `ok` and `error: null` until `done`, then the done status and error, and leaves out open stubs. Scopes other than 0 seen in `bindings` get a placeholder scope (`<scope n>`) until M4 sends real ones. Interrupted events from stubs take `kind`, `name` and `module` from the stub; the one from `currentCall` is `kind: 'function'`, `name` the site's `func_text`, `module: null`; both have `scope: 0` and `merge_key: 's<site>'`.
 - The `currentCall` path recovers only the innermost call (kind `function`, name = `func_text`, no owner). Without `crossOriginIsolated` there is no buffer, so a hang yields no interrupted event (an M1 limitation). If the worker crashes, the client calls `finish('error')` and supplies the `RunError` itself.
@@ -380,13 +419,19 @@ interface RunConfig { draw_modules: string[]; draw_builtins: boolean; draw_conta
 
 ```ts
 class RuntimeClient {
-  constructor(opts: { onProgress(p): void; onReady(v): void; onState?(s): void; onError?(msg: string): void;
-                      workerUrl?: URL; createWorker?(url: URL): WorkerLike });  // the page passes createWorker with a literal `new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })` (Vite only bundles that form); tests pass a fake
+  constructor(opts: {
+    onProgress(p): void;
+    onReady(v): void;
+    onState?(s): void;
+    onError?(msg: string): void;
+    workerUrl?: URL;
+    createWorker?(url: URL): WorkerLike;
+  }); // the page passes createWorker with a literal `new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })` (Vite only bundles that form); tests pass a fake
   state: 'loading' | 'ready' | 'running' | 'restarting';
-  run(source: string, config: RunConfig, onUpdate: (log: EventLog) => void): Promise<EventLog>;  // onUpdate at most once per animation frame
-  stop(): void;                 // interrupt; terminate + restart if no 'done' within 2 s or not isolated
+  run(source: string, config: RunConfig, onUpdate: (log: EventLog) => void): Promise<EventLog>; // onUpdate at most once per animation frame
+  stop(): void; // interrupt; terminate + restart if no 'done' within 2 s or not isolated
   writeFile(name: string, bytes: ArrayBuffer): Promise<{ rows?: number }>;
-  restart(): Promise<void>;     // "Restart Python"
+  restart(): Promise<void>; // "Restart Python"
 }
 ```
 
@@ -399,14 +444,20 @@ The wall clock (`config.wall_ms`) is enforced by the client and goes through the
 ```ts
 interface AppState {
   runtime: { state: RuntimeClient['state']; progress: string; versions?: Record<string, string> };
-  source: string; setSource(s: string): void;
+  source: string;
+  setSource(s: string): void;
   origin: 'starter' | 'autosave' | 'link' | 'edited'; // see section 10.14: link code is never auto-run and never autosaved until edited or run
-  log: EventLog | null; model: GraphModel | null;
-  running: boolean; elapsedMs: number;
-  step: number; setStep(n: number): void;        // 0..steps.length (section 8)
+  log: EventLog | null;
+  model: GraphModel | null;
+  running: boolean;
+  elapsedMs: number;
+  step: number;
+  setStep(n: number): void; // 0..steps.length (section 8)
   selection: { node?: string; edge?: string; pinned?: boolean };
-  expanded: Set<string>;                         // M4; empty in M1–3
-  run(): Promise<void>; stop(): void; restart(): Promise<void>;   // restart: "Restart Python" (svl-bwv.2)
+  expanded: Set<string>; // M4; empty in M1–3
+  run(): Promise<void>;
+  stop(): void;
+  restart(): Promise<void>; // restart: "Restart Python" (svl-bwv.2)
 }
 ```
 
@@ -415,40 +466,86 @@ interface AppState {
 `graph.ts`: `buildGraph(log: EventLog, opts: { expanded: Set<string> }): GraphModel`. Pure and deterministic.
 
 ```ts
-interface GraphModel { nodes: GNode[]; edges: GEdge[]; steps: number[] /* event i's, sorted */; tooMany?: number }
+interface GraphModel {
+  nodes: GNode[];
+  edges: GEdge[];
+  steps: number[] /* event i's, sorted */;
+  tooMany?: number;
+}
 
 type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode;
-interface NodeBase { id: string; parent: string | null; order: number /* source order: site line, col */ }
+interface NodeBase {
+  id: string;
+  parent: string | null;
+  order: number; /* source order: site line, col */
+}
 interface CallNode extends NodeBase {
-  kind: 'call'; mergeKey: string; name: string; module: string | null;
-  executions: Execution[];      // every recorded execution, sorted by i
-  inPorts: Port[]; outPorts: Port[];
-  student: boolean;             // student_function: collapsible in M4
+  kind: 'call';
+  mergeKey: string;
+  name: string;
+  module: string | null;
+  executions: Execution[]; // every recorded execution, sorted by i
+  inPorts: Port[];
+  outPorts: Port[];
+  student: boolean; // student_function: collapsible in M4
 }
-interface Execution { i: number; ret: number; inputs: Record<string /*port id*/, Token>; outputs: Record<string, Token>;
-                      count: number; owner: Token | null; error: EventError | null; interrupted: boolean }
+interface Execution {
+  i: number;
+  ret: number;
+  inputs: Record<string /*port id*/, Token>;
+  outputs: Record<string, Token>;
+  count: number;
+  owner: Token | null;
+  error: EventError | null;
+  interrupted: boolean;
+}
 interface InstanceNode extends NodeBase {
-  kind: 'instance'; className: string; varName: string | null;   // "model: LinearRegression"
-  createdAt: number;            // i of the creating event (constructor or a function returning it)
-  createdBy: string | null;     // node id when created by a function (make_pipeline) rather than a constructor
-  params: { name: string; text: string }[];   // constructor const/label args
-  versions: { i: number; token: Token }[];   // the instance's versions with the event that made each
+  kind: 'instance';
+  className: string;
+  varName: string | null; // "model: LinearRegression"
+  createdAt: number; // i of the creating event (constructor or a function returning it)
+  createdBy: string | null; // node id when created by a function (make_pipeline) rather than a constructor
+  params: { name: string; text: string }[]; // constructor const/label args
+  versions: { i: number; token: Token }[]; // the instance's versions with the event that made each
 }
-interface ExprNode extends NodeBase { kind: 'expr'; text: string; executions: Execution[] }
-interface StoreNode extends NodeBase { kind: 'store'; text: string; executions: Execution[] }
-interface SourceNode extends NodeBase { kind: 'source'; label: string; token: Token }
-interface Port { id: string; param: string; typeLabel: string; nameLabel: string | null;
-                 constText?: string; changedInPlace?: boolean }
+interface ExprNode extends NodeBase {
+  kind: 'expr';
+  text: string;
+  executions: Execution[];
+}
+interface StoreNode extends NodeBase {
+  kind: 'store';
+  text: string;
+  executions: Execution[];
+}
+interface SourceNode extends NodeBase {
+  kind: 'source';
+  label: string;
+  token: Token;
+}
+interface Port {
+  id: string;
+  param: string;
+  typeLabel: string;
+  nameLabel: string | null;
+  constText?: string;
+  changedInPlace?: boolean;
+}
 interface GEdge {
-  id: string; from: { node: string; port: string | null /* null: node without ports (instance, expr, store, source) */ };
-  to: { node: string; port: string | null };   // null: same
-  dashed: boolean;              // into or out of an expr node
-  uses: { i: number; token: Token }[];    // per consumer execution: which value travelled
-  nameLabel: string | null;     // the bound name of the latest token in the drawn scope; superseded names get "′"
+  id: string;
+  from: {
+    node: string;
+    port: string | null; /* null: node without ports (instance, expr, store, source) */
+  };
+  to: { node: string; port: string | null }; // null: same
+  dashed: boolean; // into or out of an expr node
+  uses: { i: number; token: Token }[]; // per consumer execution: which value travelled
+  nameLabel: string | null; // the bound name of the latest token in the drawn scope; superseded names get "′"
 }
 ```
 
 Construction follows SPEC "Graph construction" with these decisions:
+
 - Method boxes are one per (call site, owner instance) inside that instance (decided): `for m in models: m.fit(X, y)` gives one `fit` box in each model's instance, and `models["rf"].fit(...)` is drawn on the right instance. Node id is `n:<h>@<instance id>`; `count` and the x-n badge are per box. `Execution.owner` is the owner token (null for non-methods).
 - `make_pipeline(...)` is a function box whose output creates an instance node (`createdBy`). Step instances wire into it. There are no nested step boxes in M1–3 (decided).
 - A `method` event whose owner is data is a call node with a `self` in-port. A method event on a machine is a call node with `parent` set to the instance node, owner input not drawn as a port.
@@ -459,6 +556,7 @@ Construction follows SPEC "Graph construction" with these decisions:
 - Port and node ids are stable across re-runs of the same source, so the layout stays put. Ids are `n:<h>` (call), `i:<h>` (instance), `x:<h>` (expr), `t:<h>` (store), `src:<consumer id>:<param>` (source), with `<h>` = hash of the site's kind and text plus the occurrence number among sites with equal text. They use no site ids or tokens, so editing an unrelated line (even adding one) keeps them. Port ids: `in:<param>`, `out:<k>` (k = index in `outputs`), `out:mut:<param>` (changed in place).
 
 Decisions made while building `graph.ts` (SPEC was silent):
+
 - Edges are keyed by endpoints (one edge per from/to pair); `uses` has one entry per consumer execution. Ports exist only on call nodes. Edges into and out of expr, store, source and instance nodes use `port: null`; `to.port` is nullable for that reason (contract change). An edge is `dashed` when either end is an expr node.
 - A machine is a value with `values[t].machine`. Its tokens map to an instance by object number (`v12.*`), so any version resolves to the same instance. Instances merge by creating merge key (and output index). A machine with no producing event gets a lazy instance (`createdAt` = first event that mentions it).
 - A function that returns a machine has an out-port for it, and an edge from that port to the instance border (`createdBy`), so layout can place the instance below the function box. A failed machine constructor is a plain call node with the error.
@@ -476,21 +574,25 @@ Decisions made while building `graph.ts` (SPEC was silent):
 
 ```ts
 interface StepState {
-  current: number | null;       // event i at this step (steps[step-1]); null at step 0
-  visibleNodes: Set<string>;    // node with any execution i <= current (instances: createdAt <= current)
-  visibleEdges: Set<string>;    // edge with a use whose consumer has started (use.i <= current) and whose producer has returned (producer ret <= current)
-  activeExecution: Map<string, Execution>;   // per node: latest execution with i <= current
-  activeToken: Map<string, Token>;           // per edge
-  activeVersion: Map<string, Token>;         // per visible instance node: its latest version token with version.i <= current (draw attrs from log.values[token].attrs)
-  currentNode: string | null;                // node of the current event: the call/expr/store box that executed, or the instance created or mutated by it; null at step 0
-  attrsBefore?: Record<string, Token>; attrsAfter?: Record<string, Token>;   // when current is a method on an instance
-  output: OutputEntry[];        // entries with i <= current
-  badge: Map<string, { k: number; n: number }>;   // merged boxes only (n > 1): k = count of the active execution, n = count of the last one
+  current: number | null; // event i at this step (steps[step-1]); null at step 0
+  visibleNodes: Set<string>; // node with any execution i <= current (instances: createdAt <= current)
+  visibleEdges: Set<string>; // edge with a use whose consumer has started (use.i <= current) and whose producer has returned (producer ret <= current)
+  activeExecution: Map<string, Execution>; // per node: latest execution with i <= current
+  activeToken: Map<string, Token>; // per edge
+  activeVersion: Map<string, Token>; // per visible instance node: its latest version token with version.i <= current (draw attrs from log.values[token].attrs)
+  currentNode: string | null; // node of the current event: the call/expr/store box that executed, or the instance created or mutated by it; null at step 0
+  attrsBefore?: Record<string, Token>;
+  attrsAfter?: Record<string, Token>; // when current is a method on an instance
+  output: OutputEntry[]; // entries with i <= current
+  badge: Map<string, { k: number; n: number }>; // merged boxes only (n > 1): k = count of the active execution, n = count of the last one
 }
-function stepOfEvent(model: GraphModel, i: number): number | null;   // execution i -> step index for stateAt (click a box); null if i is not a step
-function attrsAround(model: GraphModel, log: EventLog, executionI: number):
-  { before?: Record<string, Token>; after?: Record<string, Token> } | null;   // owner attrs around a chosen machine-method execution (inspect panel); null if not one
-function eventLabel(log: EventLog, i: number): string;   // "line 10: train_test_split(X, y, test_size=0.2)" for the event list
+function stepOfEvent(model: GraphModel, i: number): number | null; // execution i -> step index for stateAt (click a box); null if i is not a step
+function attrsAround(
+  model: GraphModel,
+  log: EventLog,
+  executionI: number,
+): { before?: Record<string, Token>; after?: Record<string, Token> } | null; // owner attrs around a chosen machine-method execution (inspect panel); null if not one
+function eventLabel(log: EventLog, i: number): string; // "line 10: train_test_split(X, y, test_size=0.2)" for the event list
 ```
 
 Step `steps.length` (the end) shows everything, including wires ready after the last drawn step. `step` 0 shows nothing (unless no step is drawn, when step 0 is also the end and shows everything) except `output` entries with `i = -1`. Out-of-range steps are clamped; NaN is step 0. An out-wire of a merged box lags the box: on iteration 3 of a loop the badge says 3 of n, but a wire to a later consumer keeps carrying iteration 2's token until that consumer's own iteration 3 starts (no false wires). A source node is visible when any of its edges is. `activeToken` is per visible edge: the token of its latest use with `i <= current` and producer `ret <= current`. `activeExecution` has call, expr and store nodes only. `attrsBefore/After` come from the `mutates` entry on the owner (or the owner's own attrs for both when the method does not mutate it). `eventLabel` appends ` (error: T)`, ` (handled T)` or ` (stopped here)` for events with an error or `interrupted`, collapses whitespace and cuts the source text at 80 characters. `stateAt` caches an index per (model, log) object pair, so reuse the same objects while scrubbing.
@@ -498,32 +600,65 @@ Step `steps.length` (the end) shows everything, including wires ready after the 
 **Renderer** (`@machines/render`):
 
 ```ts
-function layout(model: GraphModel, opts?: { expanded?: Set<string>; measure?: (text: string, font: string) => number;
-  attrRows?: Record<string, string[]> /* instance id -> attribute row texts to reserve; default one row per ctor param */;
-  edgeLabels?: Record<string, string> /* type text to reserve per wire label (edgeLabelsFor(model, log)); default a placeholder */,
-  elk?: ELK /* createElk({ workerUrl }): elkjs worker build; default: elk.bundled.js, lazily imported, in-thread (Node, tests) */ }): Promise<Laid>;   // expanded ignored until M4
-interface Laid { width: number; height: number;
-  nodes: Record<string, { x: number; y: number; w: number; h: number;
-    ports: Record<string, { x: number; y: number; w: number /* label width, centred on x */ }>;
-    headerH?: number; attrsH?: number /* instances: name pill and attribute list heights, at the top of the box */ }>;
+function layout(
+  model: GraphModel,
+  opts?: {
+    expanded?: Set<string>;
+    measure?: (text: string, font: string) => number;
+    attrRows?: Record<
+      string,
+      string[]
+    > /* instance id -> attribute row texts to reserve; default one row per ctor param */;
+    edgeLabels?: Record<
+      string,
+      string
+    > /* type text to reserve per wire label (edgeLabelsFor(model, log)); default a placeholder */;
+    elk?: ELK; /* createElk({ workerUrl }): elkjs worker build; default: elk.bundled.js, lazily imported, in-thread (Node, tests) */
+  },
+): Promise<Laid>; // expanded ignored until M4
+interface Laid {
+  width: number;
+  height: number;
+  nodes: Record<
+    string,
+    {
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      ports: Record<string, { x: number; y: number; w: number /* label width, centred on x */ }>;
+      headerH?: number;
+      attrsH?: number; /* instances: name pill and attribute list heights, at the top of the box */
+    }
+  >;
   edges: Record<string, { points: [number, number][] }>;
-  labels: Record<string, { x: number; y: number; w: number; h: number }>   /* wire label rectangle per edge id, placed clear of boxes, instance header/attribute rows, wires and other labels */
-  dropped: number /* edges left out for naming a missing node or port */ }   // all coordinates absolute (root origin)
-function mount(el: HTMLElement, opts: { onSelectNode(id: string): void; onHoverEdge(id: string | null, at: DOMPoint /* viewport coords */): void;
-  onClickEdge(id: string): void }): DiagramController;
+  labels: Record<
+    string,
+    { x: number; y: number; w: number; h: number }
+  >; /* wire label rectangle per edge id, placed clear of boxes, instance header/attribute rows, wires and other labels */
+  dropped: number; /* edges left out for naming a missing node or port */
+} // all coordinates absolute (root origin)
+function mount(
+  el: HTMLElement,
+  opts: {
+    onSelectNode(id: string): void;
+    onHoverEdge(id: string | null, at: DOMPoint /* viewport coords */): void;
+    onClickEdge(id: string): void;
+  },
+): DiagramController;
 interface DiagramController {
-  setGraph(model: GraphModel, laid: Laid): void;   // builds the SVG once. Re-applies the last state only if every node/edge id in it exists in the new model (a streamed re-layout of the same run keeps its step); otherwise the state is dropped. Callers should call setState right after setGraph. Calls onHoverEdge(null) if a hover was active. After destroy() it is a no-op
-  setState(state: StepState, log?: EventLog): void;   // reveal, highlight current, badges, active tokens; no re-layout. `log` supplies value types (wire labels) and attributes
-  focusNode(id: string): void;                // scroll into view (keyboard focus is not moved)
-  hoverNode(id: string | null): void;         // hover style (editor cursor sync)
-  setSelectedNode(id: string | null): void;   // selected style
-  nodeBounds(id: string): { x: number; y: number; w: number; h: number } | null;   // diagram coordinates
-  readonly svg: SVGSVGElement | null;         // width/height = layout size in px; the caller pans and zooms it
+  setGraph(model: GraphModel, laid: Laid): void; // builds the SVG once. Re-applies the last state only if every node/edge id in it exists in the new model (a streamed re-layout of the same run keeps its step); otherwise the state is dropped. Callers should call setState right after setGraph. Calls onHoverEdge(null) if a hover was active. After destroy() it is a no-op
+  setState(state: StepState, log?: EventLog): void; // reveal, highlight current, badges, active tokens; no re-layout. `log` supplies value types (wire labels) and attributes
+  focusNode(id: string): void; // scroll into view (keyboard focus is not moved)
+  hoverNode(id: string | null): void; // hover style (editor cursor sync)
+  setSelectedNode(id: string | null): void; // selected style
+  nodeBounds(id: string): { x: number; y: number; w: number; h: number } | null; // diagram coordinates
+  readonly svg: SVGSVGElement | null; // width/height = layout size in px; the caller pans and zooms it
   destroy(): void;
 }
-function edgeLabelsFor(model: GraphModel, log: EventLog): Record<string, string>;   // pass as layout's edgeLabels: longest type text per wire over the run
-function createLegend(doc?: Document, open?: boolean): HTMLElement;   // collapsible legend, needs theme.css
-function attrRowsFor(model: GraphModel, log: EventLog): Record<string, string[]>;   // pass as layout's attrRows so instance boxes never resize
+function edgeLabelsFor(model: GraphModel, log: EventLog): Record<string, string>; // pass as layout's edgeLabels: longest type text per wire over the run
+function createLegend(doc?: Document, open?: boolean): HTMLElement; // collapsible legend, needs theme.css
+function attrRowsFor(model: GraphModel, log: EventLog): Record<string, string[]>; // pass as layout's attrRows so instance boxes never resize
 ```
 
 ELK options exactly as in SPEC "Layout": `elk.algorithm: layered`, `elk.direction: DOWN`, `elk.portConstraints: FIXED_ORDER` with inputs `NORTH`, outputs `SOUTH` and `elk.port.index` set, `elk.layered.considerModelOrder.strategy: NODES_AND_EDGES` with children sorted by `order`, `elk.hierarchyHandling: INCLUDE_CHILDREN` on the root. Wires entering a method box from outside go through a hierarchical port on the instance's west border below the attribute rows (spaced `laneGap`), so they never cross the header or rows. Wire labels are placed after ELK by `placeLabels` (greedy, deterministic). Node sizes come from measured label text (canvas `measureText` with the theme font) so ELK and SVG agree.
@@ -534,34 +669,34 @@ ELK options exactly as in SPEC "Layout": `elk.algorithm: layered`, `elk.directio
 
 Fixture programs (`fixtures/programs/`). Each one is a short runnable script, using `fixtures/data/listings.csv` (synthetic: 500 rows; columns `beds, baths, sqft, neighbourhood, room_type, year_built, price`, a few NaNs) or an inline DataFrame, with `random_state` fixed:
 
-| File | Exercises |
-| --- | --- |
-| `golden_split.py` | `read_csv` → `X`, `y` → `train_test_split(X, y, test_size=0.2)` |
-| `golden_onehot.py` | `OneHotEncoder` construct, `fit`, `transform` on train and test (sparse output) |
-| `golden_linreg.py` | `LinearRegression` construct, `fit`, `predict`, `score` |
-| `edge_fit_chain.py` | `model.fit(X, y).predict(Z)` |
-| `edge_df_chain.py` | `df.dropna().reset_index()` |
-| `edge_nested.py` | `f(g(x))` with library calls |
-| `edge_expr.py` | `df["price"]`, `X_train - mean`, `model.coef_` |
-| `edge_store.py` | `df["c"] = v`, `df.loc[m, "c"] = 0` |
-| `edge_loop.py` | a 30-iteration loop calling `fit` and `score` (per-site cap and slot) |
-| `edge_literals.py` | equal literals, small ints, numpy bool results, constant tuples: never wired to each other |
-| `edge_dict_models.py` | `models["rf"].fit(X, y)` |
-| `edge_gridsearch.py` | `GridSearchCV` (original stays unfitted), `n_jobs=2` |
-| `edge_reserved.py` | keyword args named `site` and `fn`; `locals()`; `super()` in a class; shadowed `print` |
-| `edge_repr.py` | a student class with a `__repr__` and a property that call pandas |
-| `edge_generator.py` | a generator function and an `async def` |
-| `edge_nosig.py` | callables whose signature can't be read (numpy ufuncs) |
-| `edge_inplace.py` | `df.dropna(inplace=True)`, `df.sort_values(..., inplace=True)` |
-| `edge_student_fn.py` | a student function and a student class used as opaque boxes; `if __name__ == "__main__":` |
-| `edge_input.py` | `input()` |
-| `edge_error.py` | an unhandled `ValueError` from sklearn |
-| `edge_handled.py` | a caught exception, then the run continues |
-| `edge_warning.py` | a pandas `FutureWarning`/sklearn `ConvergenceWarning` |
-| `edge_syntax.py` | a syntax error |
-| `edge_mpl.py` | `plt.plot`, `plt.show()` |
-| `notebook.py` | a 20-line notebook-style script: load, clean, encode, split, fit, evaluate, print |
-| `heavy.py` | the heaviest plausible course example: `RandomForestRegressor` + `GridSearchCV` on 10,000 rows |
+| File                  | Exercises                                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| `golden_split.py`     | `read_csv` → `X`, `y` → `train_test_split(X, y, test_size=0.2)`                                |
+| `golden_onehot.py`    | `OneHotEncoder` construct, `fit`, `transform` on train and test (sparse output)                |
+| `golden_linreg.py`    | `LinearRegression` construct, `fit`, `predict`, `score`                                        |
+| `edge_fit_chain.py`   | `model.fit(X, y).predict(Z)`                                                                   |
+| `edge_df_chain.py`    | `df.dropna().reset_index()`                                                                    |
+| `edge_nested.py`      | `f(g(x))` with library calls                                                                   |
+| `edge_expr.py`        | `df["price"]`, `X_train - mean`, `model.coef_`                                                 |
+| `edge_store.py`       | `df["c"] = v`, `df.loc[m, "c"] = 0`                                                            |
+| `edge_loop.py`        | a 30-iteration loop calling `fit` and `score` (per-site cap and slot)                          |
+| `edge_literals.py`    | equal literals, small ints, numpy bool results, constant tuples: never wired to each other     |
+| `edge_dict_models.py` | `models["rf"].fit(X, y)`                                                                       |
+| `edge_gridsearch.py`  | `GridSearchCV` (original stays unfitted), `n_jobs=2`                                           |
+| `edge_reserved.py`    | keyword args named `site` and `fn`; `locals()`; `super()` in a class; shadowed `print`         |
+| `edge_repr.py`        | a student class with a `__repr__` and a property that call pandas                              |
+| `edge_generator.py`   | a generator function and an `async def`                                                        |
+| `edge_nosig.py`       | callables whose signature can't be read (numpy ufuncs)                                         |
+| `edge_inplace.py`     | `df.dropna(inplace=True)`, `df.sort_values(..., inplace=True)`                                 |
+| `edge_student_fn.py`  | a student function and a student class used as opaque boxes; `if __name__ == "__main__":`      |
+| `edge_input.py`       | `input()`                                                                                      |
+| `edge_error.py`       | an unhandled `ValueError` from sklearn                                                         |
+| `edge_handled.py`     | a caught exception, then the run continues                                                     |
+| `edge_warning.py`     | a pandas `FutureWarning`/sklearn `ConvergenceWarning`                                          |
+| `edge_syntax.py`      | a syntax error                                                                                 |
+| `edge_mpl.py`         | `plt.plot`, `plt.show()`                                                                       |
+| `notebook.py`         | a 20-line notebook-style script: load, clean, encode, split, fit, evaluate, print              |
+| `heavy.py`            | the heaviest plausible course example: `RandomForestRegressor` + `GridSearchCV` on 10,000 rows |
 
 Root commands (exist once the scaffold bead closes):
 
@@ -619,7 +754,7 @@ Generated fixtures are reviewed like code. A PR that changes them must say why i
 /*
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: require-corp
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
 ```
