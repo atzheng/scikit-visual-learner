@@ -1,9 +1,9 @@
-import { describeStep, eventLabel, summaryText } from '@machines/log';
+import { describeStep, eventLabel, stateAt, summaryText } from '@machines/log';
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import { useStore } from '../store';
 import { EventList } from './EventList';
 import { SummaryText } from './SummaryText';
-import { clampStep, stepForKey } from './steps';
+import { clampStep, endCue, hasLaterOutput, stepForKey } from './steps';
 import './timeline.css';
 
 const ANNOUNCE_DELAY_MS = 300;
@@ -34,6 +34,18 @@ export function Timeline() {
     const h = setTimeout(() => setAnnounced(spoken), ANNOUNCE_DELAY_MS);
     return () => clearTimeout(h);
   }, [spoken, running]);
+  const status = useStore((s) => s.log?.status ?? 'ok');
+  const cue = endCue(status, running, max);
+  const moreOutput = useMemo(
+    () =>
+      model && log && !running
+        ? hasLaterOutput(
+            stateAt(model, log, cur).output.length,
+            stateAt(model, log, max).output.length,
+          )
+        : false,
+    [model, log, running, cur, max],
+  );
   const text = `Step ${cur} of ${max}`;
   const onKeyDown = (e: KeyboardEvent) => {
     const next = stepForKey(e.nativeEvent, cur, max, { vertical: true });
@@ -87,6 +99,23 @@ export function Timeline() {
           {listOpen ? 'Hide event list' : 'Event list'}
         </button>
       </div>
+      {(cue || moreOutput) && (
+        <p className="run-cue" data-testid="run-cue">
+          {cue && (
+            <>
+              <span aria-hidden="true">⚠ </span>
+              <span data-testid="run-cue-end">The run {cue}.</span>{' '}
+              {cur < max && (
+                <button type="button" className="cue-jump" onClick={() => setStep(max)}>
+                  Jump to step {max}
+                </button>
+              )}
+            </>
+          )}
+          {cue && moreOutput && ' '}
+          {moreOutput && <span data-testid="more-output">More output at later steps.</span>}
+        </p>
+      )}
       <p className="current-event" data-testid="current-event">
         {event ?? (max > 0 ? 'Before the first step' : 'No steps yet')}
       </p>
