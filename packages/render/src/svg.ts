@@ -824,7 +824,12 @@ export function buildSvg(
     }
 
     // ×n badge above the top-right corner (merged boxes only; an instance's counts objects, not runs)
-    if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store' || n.kind === 'instance') {
+    if (
+      n.kind === 'call' ||
+      n.kind === 'expr' ||
+      n.kind === 'store' ||
+      (n.kind === 'instance' && n.versions.filter((v) => v.kind === 'new').length > 1)
+    ) {
       const bg = s(
         doc,
         'rect',
