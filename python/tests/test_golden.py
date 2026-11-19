@@ -66,12 +66,20 @@ def marks(name: str) -> list[Any]:
 
 
 PARAMS = [pytest.param(n, marks=marks(n), id=n) for n in NAMES]
+FLOAT_NOISE = pytest.mark.no_pyodide(
+    reason="LAPACK in the wasm build differs from native in the last digits of fitted floats"
+)
+# for the two tests that compare printed floats byte for byte
+EXACT_PARAMS = [
+    pytest.param(n, marks=[*marks(n), *([FLOAT_NOISE] if n == "golden_linreg" else [])], id=n)
+    for n in NAMES
+]
 
 
 # -- the checked-in files are what the recorder produces -------------------------------------------
 
 
-@pytest.mark.parametrize("name", PARAMS)
+@pytest.mark.parametrize("name", EXACT_PARAMS)
 def test_log_matches_golden(name: str, env: None) -> None:
     log, _ = recorded(name)
     expected = (gf.LOGS / f"{name}.json").read_text()
@@ -81,7 +89,7 @@ def test_log_matches_golden(name: str, env: None) -> None:
     )
 
 
-@pytest.mark.parametrize("name", PARAMS)
+@pytest.mark.parametrize("name", EXACT_PARAMS)
 def test_stream_matches_golden(name: str, env: None) -> None:
     _, stream = recorded(name)
     expected = (gf.STREAMS / f"{name}.jsonl").read_text()
@@ -403,7 +411,8 @@ def test_edge_input_is_an_error() -> None:
     assert log["status"] == "error" and log["events"] == []
     assert log["error"]["type"] == "RuntimeError"
     assert log["error"]["message"] == "input() is not supported here"
-    assert log["error"]["line"] == 4 and log["output"] == []
+    assert log["error"]["line"] == 4
+    assert [(o["stream"], o["text"]) for o in log["output"]] == [("stdout", "Your name? ")]
 
 
 def test_edge_error_fit_raises() -> None:
@@ -482,10 +491,12 @@ def test_heavy_only_students_own_calls_are_boxes() -> None:
     assert log["status"] == "ok"
 
 
-def test_timing_normalisation_covers_the_only_nondeterminism() -> None:
+def test_timing_reprs_are_stable_in_fixtures() -> None:
+    from machines.values import TIMING_REPR
+
     for name in ("edge_gridsearch", "heavy"):
         reprs = [v["repr"] for v in checked_in_log(name)["values"].values() if "repr" in v]
-        assert gf.TIMING_REPR in reprs
+        assert TIMING_REPR in reprs
 
 
 def test_caught_error_is_corrected_in_the_stream(env: None) -> None:

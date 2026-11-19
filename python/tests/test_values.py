@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gc
 import json
+import struct
 import subprocess
 import sys
 import weakref
@@ -100,7 +101,8 @@ def test_keep_is_an_lru_and_eviction_drops_the_number(vt: ValueTable) -> None:
 def test_keep_has_a_byte_budget_and_always_holds_the_newest(vt: ValueTable) -> None:
     from machines import values
 
-    big = [0] * (values._KEEP_BYTES // (8 + values._KEY_BYTES) + 10)
+    # sys.getsizeof counts one pointer per item: 8 bytes on 64-bit, 4 on wasm32 (Pyodide)
+    big = [0] * (values._KEEP_BYTES // (struct.calcsize("P") + values._KEY_BYTES) + 10)
     vt.token(big)
     assert len(vt._keep) == 1  # alone over the budget, still kept: its number must stay valid
     small = [1]
@@ -544,6 +546,7 @@ def test_determinism() -> None:
     assert build_and_summarize() == build_and_summarize()
 
 
+@pytest.mark.no_pyodide(reason="spawns a subprocess; Pyodide has no processes")
 def test_no_heavy_imports_on_bare_interpreter() -> None:
     root = str(Path(machines.values.__file__).parent.parent)
     code = (
@@ -645,7 +648,9 @@ def test_machine_attrs_one_level_and_long_chain() -> None:
     def run() -> dict[str, dict[str, object]]:
         vt = ValueTable()
         head = None
-        for _ in range(3000):
+        # Pyodide's wasm stack overflows when CPython frees a nested chain of about 3000 plain
+        # objects, with no recorder involved, so the chain is shorter there.
+        for _ in range(800 if sys.platform == "emscripten" else 3000):
             head = node(head)
         t = vt.token(head)
         vt.summarize(t, head)
@@ -711,3 +716,16 @@ def test_seen_reports_whether_an_object_has_a_token(vt: ValueTable) -> None:
     vt.token(a)
     assert vt.seen(a)
     assert not vt.seen([1, 2])
+
+
+def test_timing_values_have_a_stable_repr(vt: ValueTable) -> None:
+    from machines.values import TIMING_REPR
+
+    d = {"mean_fit_time": [0.123456]}
+    vt.summarize("v1.0", d)
+    r = vt.take_new_summaries()["v1.0"]["repr"]  # clipped to 40 characters
+    assert r.startswith("{'mean_fit_time': <varies") and "0.123456" not in r
+    assert TIMING_REPR.startswith("<varies")
+    assert d["mean_fit_time"] == [0.123456]  # the program's dict is untouched
+    vt.summarize("v2.0", {"a": 1})
+    assert vt.take_new_summaries()["v2.0"]["repr"] == "{'a': 1}"

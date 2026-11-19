@@ -94,6 +94,7 @@ def test_process_state_restored() -> None:
     assert sys.modules["__main__"] is main
 
 
+@pytest.mark.no_pyodide(reason="spawns a subprocess; Pyodide has no processes")
 def test_student_stream_behaves_like_text_stream() -> None:
     src = (
         "import sys\n"
@@ -157,7 +158,7 @@ def test_input_error() -> None:
     assert log["error"]["type"] == "RuntimeError"
     assert log["error"]["message"] == "input() is not supported here"
     assert log["error"]["line"] == 1
-    assert log["output"] == []
+    assert [(o["stream"], o["text"]) for o in log["output"]] == [("stdout", "Name? ")]
 
 
 def test_traceback_edge_error_only_student_frames_and_one_library(in_data: None) -> None:
@@ -230,6 +231,7 @@ def test_limit_status() -> None:
     assert record(src, {"max_events": 3})["status"] == "limit"
 
 
+@pytest.mark.no_pyodide(reason="spawns a subprocess; Pyodide has no processes")
 def test_main_module_and_name() -> None:
     src = (
         "import sys\nclass A:\n    pass\n"
@@ -246,6 +248,7 @@ def test_system_exit_is_ok() -> None:
     assert [o["text"] for o in log["output"]] == ["a\n"]
 
 
+@pytest.mark.no_pyodide(reason="spawns a subprocess; Pyodide has no processes")
 def test_recursion_depth_400_works_when_plain_works() -> None:
     src = "def f(n):\n    return 0 if n == 0 else 1 + f(n - 1)\nprint(f(400))\n"
     assert plain(src).stdout == "400\n"
@@ -253,6 +256,7 @@ def test_recursion_depth_400_works_when_plain_works() -> None:
     assert log["status"] == "ok" and log["output"][0]["text"] == "400\n"
 
 
+@pytest.mark.no_pyodide(reason="spawns a subprocess; Pyodide has no processes")
 def test_recursion_limit_still_applies() -> None:
     src = "def f(n):\n    return f(n + 1)\nf(0)\n"
     assert record(src)["error"]["type"] == "RecursionError"
@@ -298,6 +302,12 @@ def test_on_enter_on_exit_called() -> None:
     assert seen == [("in", 0), ("out", 0)]
 
 
+@pytest.mark.no_pyodide(
+    reason=(
+        "Pyodide's matplotlib build warns (MatplotlibDeprecationWarning: float x/y in "
+        "draw_text_image) for every drawn text, and the recorder reports the warnings as output"
+    )
+)
 def test_figure_entry_for_edge_mpl(in_data: None) -> None:
     cfg = {"draw_modules": ["sklearn", "pandas", "numpy", "matplotlib"]}
     log = record(program("edge_mpl"), cfg)
@@ -312,6 +322,12 @@ def test_figure_entry_for_edge_mpl(in_data: None) -> None:
     assert "show" in names and "plot" in names
 
 
+@pytest.mark.no_pyodide(
+    reason=(
+        "Pyodide's matplotlib build warns (MatplotlibDeprecationWarning: float x/y in "
+        "draw_text_image) for every drawn text, and the recorder reports the warnings as output"
+    )
+)
 def test_figures_closed_after_show() -> None:
     src = (
         "import matplotlib.pyplot as plt\n"

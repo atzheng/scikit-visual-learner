@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { STARTER_EXAMPLE } from '../course';
+import { addLinkFiles } from '../files/filesStore';
+import { getLocalStorage, readAutosave } from '../storage/autosave';
 import { useStore } from '../store';
 import { decodeShare, fragmentPayload } from './link';
 import { hasUnsavedWork, nextOrigin } from './origin';
@@ -21,6 +23,11 @@ export const useShare = create<ShareState>()((set) => ({
 /** Source the editor held at the last load (page start, link, back to my code). */
 let baseline = useStore.getState().source;
 let loadSeq = 0;
+
+/** Called when the initial source changes (autosave restore) so it does not count as unsaved work. */
+export function setBaseline(source: string): void {
+  baseline = source;
+}
 
 /** origin: 'link' -> 'edited' on the first edit or Run. */
 useStore.subscribe((s) => {
@@ -69,18 +76,17 @@ export async function loadFromHash(
   baseline = r.payload.code;
   useShare.setState({ linkSource: r.payload.code, loadError: null });
   useStore.setState({ source: r.payload.code, origin: 'link' });
-  // r.payload.files: svl-bwv.9 (upload plumbing) will write these into the runtime FS.
+  if (r.payload.files) await addLinkFiles(r.payload.files);
 }
 
-/**
- * Leave link code. svl-bwv.9 replaces the target with the autosaved code once autosave exists;
- * until then the starter example is the reader's own code.
- */
+/** Leave link code and go back to the reader's own code: the autosave, else the starter example. */
 export function backToMyCode(): void {
   loadSeq++;
-  baseline = STARTER_EXAMPLE;
+  const saved = readAutosave(getLocalStorage());
+  const source = saved ?? STARTER_EXAMPLE;
+  baseline = source;
   useShare.setState({ linkSource: null });
-  useStore.setState({ source: STARTER_EXAMPLE, origin: 'starter' });
+  useStore.setState({ source, origin: saved === null ? 'starter' : 'autosave' });
   clearHash();
   const ed = document.querySelector<HTMLElement>('#pane-editor .cm-content');
   (ed ?? document.getElementById('pane-editor'))?.focus();
