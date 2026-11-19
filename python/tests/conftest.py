@@ -5,6 +5,7 @@ from __future__ import annotations
 import builtins
 import contextlib
 import io
+import sys
 from collections.abc import Callable, Iterator
 from typing import Any
 
@@ -69,3 +70,13 @@ def run_source(source: str | Instrumented) -> tuple[dict[str, Any], str, str | N
         except Exception as e:  # noqa: BLE001
             err = f"{type(e).__name__}: {e}"
     return ns, buf.getvalue(), err
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Skip tests marked `no_pyodide(reason=...)` inside Pyodide (`pnpm test:pyodide`)."""
+    if sys.platform != "emscripten":
+        return
+    for item in items:
+        mark = item.get_closest_marker("no_pyodide")
+        if mark:
+            item.add_marker(pytest.mark.skip(reason=f"no_pyodide: {mark.kwargs['reason']}"))

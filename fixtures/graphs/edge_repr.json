@@ -1,0 +1,92 @@
+{
+  "nodes": [
+    {
+      "id": "n:wcu5tk.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "read_csv",
+      "module": "pandas",
+      "parent": null,
+      "order": 1900005,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v0.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:filepath_or_buffer",
+          "param": "filepath_or_buffer",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "filepath_or_buffer = \"listings.csv\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "i:g9r6uw.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 2000004,
+      "className": "Table",
+      "varName": "t",
+      "createdAt": 1,
+      "createdBy": null,
+      "params": [
+        {
+          "name": "df",
+          "text": "DF"
+        }
+      ],
+      "versions": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:wcu5tk.0.out:0>i:g9r6uw.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:g9r6uw.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df"
+    }
+  ],
+  "steps": [
+    0,
+    1
+  ]
+}

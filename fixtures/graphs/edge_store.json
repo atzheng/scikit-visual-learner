@@ -1,0 +1,420 @@
+{
+  "nodes": [
+    {
+      "id": "n:wcu5tk.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "read_csv",
+      "module": "pandas",
+      "parent": null,
+      "order": 500005,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v0.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:filepath_or_buffer",
+          "param": "filepath_or_buffer",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "filepath_or_buffer = \"listings.csv\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "t:1cu04t5.0",
+      "kind": "store",
+      "parent": null,
+      "order": 600000,
+      "text": "df[\"price_per_sqft\"] = df[\"price\"] / df[\"sqft\"]",
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {
+            "in:target": "v0.0",
+            "in:value[df]": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v0.1"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "x:1daqhqx.0~u7kfkb",
+      "kind": "expr",
+      "parent": null,
+      "order": 700007,
+      "text": "df[\"sqft\"]",
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:df": "v0.1"
+          },
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:1daqhqx.0",
+      "kind": "call",
+      "mergeKey": "s3",
+      "name": "Series.isna",
+      "module": "pandas",
+      "parent": null,
+      "order": 700007,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {
+            "in:self": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": "mask"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "t:19um76j.0",
+      "kind": "store",
+      "parent": null,
+      "order": 800000,
+      "text": "df.loc[mask, \"price_per_sqft\"] = 0",
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:target": "v0.1"
+          },
+          "outputs": {
+            "out:0": "v0.2"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "x:81hs4t.0~u7kfkb",
+      "kind": "expr",
+      "parent": null,
+      "order": 900006,
+      "text": "df[\"price_per_sqft\"]",
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {
+            "in:df": "v0.2"
+          },
+          "outputs": {
+            "out:0": "v3.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:81hs4t.0",
+      "kind": "call",
+      "mergeKey": "s6",
+      "name": "Series.round",
+      "module": "pandas",
+      "parent": null,
+      "order": 900006,
+      "executions": [
+        {
+          "i": 6,
+          "ret": 6,
+          "inputs": {
+            "in:self": "v3.0"
+          },
+          "outputs": {
+            "out:0": "v4.0"
+          },
+          "count": 1,
+          "owner": "v3.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:decimals",
+          "param": "decimals",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "decimals = 3"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:8b0erw.0",
+      "kind": "call",
+      "mergeKey": "s7",
+      "name": "Series.head",
+      "module": "pandas",
+      "parent": null,
+      "order": 900006,
+      "executions": [
+        {
+          "i": 7,
+          "ret": 7,
+          "inputs": {
+            "in:self": "v4.0"
+          },
+          "outputs": {
+            "out:0": "v5.0"
+          },
+          "count": 1,
+          "owner": "v4.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:x:1daqhqx.0~u7kfkb.>n:1daqhqx.0.in:self",
+      "from": {
+        "node": "x:1daqhqx.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:1daqhqx.0",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:81hs4t.0~u7kfkb.>n:81hs4t.0.in:self",
+      "from": {
+        "node": "x:81hs4t.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:81hs4t.0",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:81hs4t.0.out:0>n:8b0erw.0.in:self",
+      "from": {
+        "node": "n:81hs4t.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:8b0erw.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>t:1cu04t5.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "t:1cu04t5.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        },
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:t:1cu04t5.0.>x:1daqhqx.0~u7kfkb.",
+      "from": {
+        "node": "t:1cu04t5.0",
+        "port": null
+      },
+      "to": {
+        "node": "x:1daqhqx.0~u7kfkb",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v0.1"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:t:1cu04t5.0.>t:19um76j.0.",
+      "from": {
+        "node": "t:1cu04t5.0",
+        "port": null
+      },
+      "to": {
+        "node": "t:19um76j.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v0.1"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:t:19um76j.0.>x:81hs4t.0~u7kfkb.",
+      "from": {
+        "node": "t:19um76j.0",
+        "port": null
+      },
+      "to": {
+        "node": "x:81hs4t.0~u7kfkb",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v0.2"
+        }
+      ],
+      "nameLabel": "df"
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}
