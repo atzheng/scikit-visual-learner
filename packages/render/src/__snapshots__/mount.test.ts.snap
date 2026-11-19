@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`snapshots > linreg, error 1`] = `
-"<svg width="1043" height="596" viewBox="0 0 1043 596" role="group" aria-label="Diagram of the program" class="md-diagram">
+"<svg width="1067" height="596" viewBox="0 0 1067 596" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
 <marker id="md-arrow-17" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
@@ -9,84 +9,84 @@ exports[`snapshots > linreg, error 1`] = `
 </marker>
 </defs>
 <g class="md-layer-bg">
-<rect x="12" y="284" width="206" height="76" rx="10" data-node="i:88c6wt.0" class="md-inst-box">
+<rect x="12" y="284" width="218" height="76" rx="10" data-node="i:88c6wt.0" class="md-inst-box">
 </rect>
-<rect x="35.8" y="12" width="206" height="76" rx="10" data-node="i:88c6wt.0!v1" class="md-inst-box">
+<rect x="35.8" y="12" width="218" height="76" rx="10" data-node="i:88c6wt.0!v1" class="md-inst-box">
 </rect>
-<rect x="269.8" y="30" width="101" height="58" rx="10" data-node="i:88c6wt.0!v2" class="md-inst-box">
+<rect x="281.8" y="30" width="113" height="58" rx="10" data-node="i:88c6wt.0!v2" class="md-inst-box">
 </rect>
-<rect x="246" y="284" width="206" height="76" rx="10" data-node="i:88c6wt.0#1" class="md-inst-box">
+<rect x="258" y="284" width="218" height="76" rx="10" data-node="i:88c6wt.0#1" class="md-inst-box">
 </rect>
-<rect x="480" y="293" width="129" height="58" rx="10" data-node="i:88c6wt.0#2" class="md-inst-box">
+<rect x="504" y="293" width="129" height="58" rx="10" data-node="i:88c6wt.0#2" class="md-inst-box">
 </rect>
-<rect x="637" y="284" width="122" height="58" rx="10" data-node="i:88c6wt.0#3" class="md-inst-box">
+<rect x="661" y="284" width="122" height="58" rx="10" data-node="i:88c6wt.0#3" class="md-inst-box">
 </rect>
-<rect x="843" y="416" width="188" height="168" rx="10" data-node="i:czvr3a.0" class="md-inst-box">
+<rect x="867" y="416" width="188" height="168" rx="10" data-node="i:czvr3a.0" class="md-inst-box">
 </rect>
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:i:88c6wt.0!v1.>n:88c6wt.0.in:arrays[0]" class="md-edge">
-<path d="M138.8 88L138.8 144" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M144.8 88L144.8 144" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M138.8 88L138.8 144" class="md-wire-hit">
+<path d="M144.8 88L144.8 144" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:88c6wt.0!v2.>n:88c6wt.0.in:arrays[1]" class="md-edge">
-<path d="M320.3 88L320.3 93Q320.3 98 315.3 98L265.8 98Q257.8 98 257.8 106L257.8 144" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M338.3 88L338.3 93Q338.3 98 333.3 98L271.8 98Q263.8 98 263.8 106L263.8 144" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M320.3 88L320.3 93Q320.3 98 315.3 98L265.8 98Q257.8 98 257.8 106L257.8 144" class="md-wire-hit">
+<path d="M338.3 88L338.3 93Q338.3 98 333.3 98L271.8 98Q263.8 98 263.8 106L263.8 144" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:88c6wt.0.>n:m1gsyoeo@i:czvr3a.0.in:X" class="md-edge">
-<path d="M115 360L115 474Q115 482 123 482L835 482Q843 482 851 482L901.67 482Q909.67 482 909.67 490L909.67 512" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M121 360L121 474Q121 482 129 482L859 482Q867 482 875 482L925.67 482Q933.67 482 933.67 490L933.67 512" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M115 360L115 474Q115 482 123 482L835 482Q843 482 851 482L901.67 482Q909.67 482 909.67 490L909.67 512" class="md-wire-hit">
+<path d="M121 360L121 474Q121 482 129 482L859 482Q867 482 875 482L925.67 482Q933.67 482 933.67 490L933.67 512" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:88c6wt.0#2.>n:m1gsyoeo@i:czvr3a.0.in:y" class="md-edge">
-<path d="M544.5 351L544.5 464Q544.5 472 552.5 472L835 472Q843 472 851 472L956.33 472Q964.33 472 964.33 480L964.33 512" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M568.5 351L568.5 464Q568.5 472 576.5 472L859 472Q867 472 875 472L980.33 472Q988.33 472 988.33 480L988.33 512" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M544.5 351L544.5 464Q544.5 472 552.5 472L835 472Q843 472 851 472L956.33 472Q964.33 472 964.33 480L964.33 512" class="md-wire-hit">
+<path d="M568.5 351L568.5 464Q568.5 472 576.5 472L859 472Q867 472 875 472L980.33 472Q988.33 472 988.33 480L988.33 512" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:0>i:88c6wt.0." class="md-edge">
-<path d="M115 228L115 284" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M121 228L121 284" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M115 228L115 284" class="md-wire-hit">
+<path d="M121 228L121 284" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:1>i:88c6wt.0#1." class="md-edge">
-<path d="M210.2 228L210.2 250Q210.2 258 218.2 258L341 258Q349 258 349 266L349 284" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M216.2 228L216.2 250Q216.2 258 224.2 258L359 258Q367 258 367 266L367 284" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M210.2 228L210.2 250Q210.2 258 218.2 258L341 258Q349 258 349 266L349 284" class="md-wire-hit">
+<path d="M216.2 228L216.2 250Q216.2 258 224.2 258L359 258Q367 258 367 266L367 284" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:2>i:88c6wt.0#2." class="md-edge">
-<path d="M305.4 228L305.4 240Q305.4 248 313.4 248L536.5 248Q544.5 248 544.5 256L544.5 293" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M311.4 228L311.4 240Q311.4 248 319.4 248L560.5 248Q568.5 248 568.5 256L568.5 293" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M305.4 228L305.4 240Q305.4 248 313.4 248L536.5 248Q544.5 248 544.5 256L544.5 293" class="md-wire-hit">
+<path d="M311.4 228L311.4 240Q311.4 248 319.4 248L560.5 248Q568.5 248 568.5 256L568.5 293" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:88c6wt.0.out:3>i:88c6wt.0#3." class="md-edge">
-<path d="M400.6 228L400.6 233Q400.6 238 405.6 238L690 238Q698 238 698 246L698 284" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M406.6 228L406.6 233Q406.6 238 411.6 238L714 238Q722 238 722 246L722 284" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M400.6 228L400.6 233Q400.6 238 405.6 238L690 238Q698 238 698 246L698 284" class="md-wire-hit">
+<path d="M406.6 228L406.6 233Q406.6 238 411.6 238L714 238Q722 238 722 246L722 284" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:czvr3a.0.out:0>i:czvr3a.0." class="md-edge">
-<path d="M855 360L855 416" marker-end="url(#md-arrow-17)" class="md-wire">
+<path d="M879 360L879 416" marker-end="url(#md-arrow-17)" class="md-wire">
 </path>
-<path d="M855 360L855 416" class="md-wire-hit">
+<path d="M879 360L879 416" class="md-wire-hit">
 </path>
 </g>
 </g>
 <g class="md-layer-nodes">
 <g data-node="i:88c6wt.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object X_train: DataFrame">
-<rect x="18" y="288" width="194" height="22" rx="11" class="md-pill">
+<rect x="18" y="288" width="206" height="22" rx="11" class="md-pill">
 </rect>
-<text x="115" y="303" text-anchor="middle" class="md-pill-text">X_train: DataFrame</text>
+<text x="121" y="303" text-anchor="middle" class="md-pill-text">X_train: DataFrame</text>
 <g class="md-attr md-data">
-<rect x="15" y="312" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="15" y="312" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
 <text x="16" y="325" class="md-bullet md-hidden">●</text>
 <text x="24" y="325">
@@ -95,7 +95,7 @@ exports[`snapshots > linreg, error 1`] = `
 </text>
 </g>
 <g class="md-attr md-data">
-<rect x="15" y="330" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="15" y="330" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
 <text x="16" y="343" class="md-bullet md-hidden">●</text>
 <text x="24" y="343">
@@ -103,17 +103,17 @@ exports[`snapshots > linreg, error 1`] = `
 <tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
-<text x="115" y="375" class="md-msg md-halo md-hidden">
+<text x="121" y="375" class="md-msg md-halo md-hidden">
 </text>
-<rect x="9" y="281" width="212" height="82" rx="11" class="md-focus-ring">
+<rect x="9" y="281" width="224" height="82" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:88c6wt.0!v1" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object X: DataFrame">
-<rect x="41.8" y="16" width="194" height="22" rx="11" class="md-pill">
+<rect x="41.8" y="16" width="206" height="22" rx="11" class="md-pill">
 </rect>
-<text x="138.8" y="31" text-anchor="middle" class="md-pill-text">X: DataFrame</text>
+<text x="144.8" y="31" text-anchor="middle" class="md-pill-text">X: DataFrame</text>
 <g class="md-attr md-data">
-<rect x="38.8" y="40" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="38.8" y="40" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
 <text x="39.8" y="53" class="md-bullet md-hidden">●</text>
 <text x="47.8" y="53">
@@ -122,7 +122,7 @@ exports[`snapshots > linreg, error 1`] = `
 </text>
 </g>
 <g class="md-attr md-data">
-<rect x="38.8" y="58" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="38.8" y="58" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
 <text x="39.8" y="71" class="md-bullet md-hidden">●</text>
 <text x="47.8" y="71">
@@ -130,221 +130,221 @@ exports[`snapshots > linreg, error 1`] = `
 <tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
-<text x="138.8" y="103" class="md-msg md-halo md-hidden">
+<text x="144.8" y="103" class="md-msg md-halo md-hidden">
 </text>
-<rect x="32.8" y="9" width="212" height="82" rx="11" class="md-focus-ring">
+<rect x="32.8" y="9" width="224" height="82" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:88c6wt.0!v2" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object y: Series">
-<rect x="275.8" y="34" width="89" height="22" rx="11" class="md-pill">
+<rect x="287.8" y="34" width="101" height="22" rx="11" class="md-pill">
 </rect>
-<text x="320.3" y="49" text-anchor="middle" class="md-pill-text">y: Series</text>
+<text x="338.3" y="49" text-anchor="middle" class="md-pill-text">y: Series</text>
 <g class="md-attr md-data">
-<rect x="272.8" y="58" width="95" height="18" rx="4" class="md-flash-bg">
+<rect x="284.8" y="58" width="107" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="273.8" y="71" class="md-bullet md-hidden">●</text>
-<text x="281.8" y="71">
+<text x="285.8" y="71" class="md-bullet md-hidden">●</text>
+<text x="293.8" y="71">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(506)</tspan>
 </text>
 </g>
-<text x="320.3" y="103" class="md-msg md-halo md-hidden">
+<text x="338.3" y="103" class="md-msg md-halo md-hidden">
 </text>
-<rect x="266.8" y="27" width="107" height="64" rx="11" class="md-focus-ring">
+<rect x="278.8" y="27" width="119" height="64" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:88c6wt.0#1" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object X_test: DataFrame">
-<rect x="252" y="288" width="194" height="22" rx="11" class="md-pill">
+<rect x="264" y="288" width="206" height="22" rx="11" class="md-pill">
 </rect>
-<text x="349" y="303" text-anchor="middle" class="md-pill-text">X_test: DataFrame</text>
+<text x="367" y="303" text-anchor="middle" class="md-pill-text">X_test: DataFrame</text>
 <g class="md-attr md-data">
-<rect x="249" y="312" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="261" y="312" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="250" y="325" class="md-bullet md-hidden">●</text>
-<text x="258" y="325">
+<text x="262" y="325" class="md-bullet md-hidden">●</text>
+<text x="270" y="325">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(102, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
-<rect x="249" y="330" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="261" y="330" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="250" y="343" class="md-bullet md-hidden">●</text>
-<text x="258" y="343">
+<text x="262" y="343" class="md-bullet md-hidden">●</text>
+<text x="270" y="343">
 <tspan class="md-aname">columns</tspan>
 <tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
-<text x="349" y="375" class="md-msg md-halo md-hidden">
+<text x="367" y="375" class="md-msg md-halo md-hidden">
 </text>
-<rect x="243" y="281" width="212" height="82" rx="11" class="md-focus-ring">
+<rect x="255" y="281" width="224" height="82" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:88c6wt.0#2" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object y_train: Series">
-<rect x="486" y="297" width="117" height="22" rx="11" class="md-pill">
+<rect x="510" y="297" width="117" height="22" rx="11" class="md-pill">
 </rect>
-<text x="544.5" y="312" text-anchor="middle" class="md-pill-text">y_train: Series</text>
+<text x="568.5" y="312" text-anchor="middle" class="md-pill-text">y_train: Series</text>
 <g class="md-attr md-data">
-<rect x="483" y="321" width="123" height="18" rx="4" class="md-flash-bg">
+<rect x="507" y="321" width="123" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="484" y="334" class="md-bullet md-hidden">●</text>
-<text x="492" y="334">
+<text x="508" y="334" class="md-bullet md-hidden">●</text>
+<text x="516" y="334">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(404)</tspan>
 </text>
 </g>
-<text x="544.5" y="366" class="md-msg md-halo md-hidden">
+<text x="568.5" y="366" class="md-msg md-halo md-hidden">
 </text>
-<rect x="477" y="290" width="135" height="64" rx="11" class="md-focus-ring">
+<rect x="501" y="290" width="135" height="64" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:88c6wt.0#3" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object y_test: Series">
-<rect x="643" y="288" width="110" height="22" rx="11" class="md-pill">
+<rect x="667" y="288" width="110" height="22" rx="11" class="md-pill">
 </rect>
-<text x="698" y="303" text-anchor="middle" class="md-pill-text">y_test: Series</text>
+<text x="722" y="303" text-anchor="middle" class="md-pill-text">y_test: Series</text>
 <g class="md-attr md-data">
-<rect x="640" y="312" width="116" height="18" rx="4" class="md-flash-bg">
+<rect x="664" y="312" width="116" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="641" y="325" class="md-bullet md-hidden">●</text>
-<text x="649" y="325">
+<text x="665" y="325" class="md-bullet md-hidden">●</text>
+<text x="673" y="325">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(102)</tspan>
 </text>
 </g>
-<text x="698" y="357" class="md-msg md-halo md-hidden">
+<text x="722" y="357" class="md-msg md-halo md-hidden">
 </text>
-<rect x="634" y="281" width="128" height="64" rx="11" class="md-focus-ring">
+<rect x="658" y="281" width="128" height="64" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:88c6wt.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="function train_test_split">
-<rect x="19.799999999999997" y="144" width="476" height="84" rx="9" class="md-box">
+<rect x="25.799999999999997" y="144" width="476" height="84" rx="9" class="md-box">
 </rect>
-<text x="257.8" y="190" class="md-name">train_test_split</text>
-<text x="257.8" y="201" class="md-uncalled-cue">not called yet</text>
+<text x="263.8" y="190" class="md-name">train_test_split</text>
+<text x="263.8" y="201" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:arrays[0]" class="md-port-g">
-<circle cx="138.8" cy="144" r="3" class="md-port">
+<circle cx="144.8" cy="144" r="3" class="md-port">
 </circle>
-<text x="138.8" y="157" class="md-ptype">
+<text x="144.8" y="157" class="md-ptype">
 </text>
-<text x="138.8" y="169" class="md-pname">arrays[0]</text>
+<text x="144.8" y="169" class="md-pname">arrays[0]</text>
 </g>
 <g data-port="in:arrays[1]" class="md-port-g">
-<circle cx="257.8" cy="144" r="3" class="md-port">
+<circle cx="263.8" cy="144" r="3" class="md-port">
 </circle>
-<text x="257.8" y="157" class="md-ptype">
+<text x="263.8" y="157" class="md-ptype">
 </text>
-<text x="257.8" y="169" class="md-pname">arrays[1]</text>
+<text x="263.8" y="169" class="md-pname">arrays[1]</text>
 </g>
 <g data-port="in:test_size" class="md-port-g">
-<text x="376.8" y="162" class="md-pconst">test_size = 0.2</text>
+<text x="382.8" y="162" class="md-pconst">test_size = 0.2</text>
 </g>
 <g data-port="out:0" class="md-port-g">
-<circle cx="115" cy="228" r="3" class="md-port">
+<circle cx="121" cy="228" r="3" class="md-port">
 </circle>
-<text x="115" y="211" class="md-ptype">
+<text x="121" y="211" class="md-ptype">
 </text>
-<text x="115" y="223" class="md-pname">X_train</text>
+<text x="121" y="223" class="md-pname">X_train</text>
 </g>
 <g data-port="out:1" class="md-port-g">
-<circle cx="210.2" cy="228" r="3" class="md-port">
+<circle cx="216.2" cy="228" r="3" class="md-port">
 </circle>
-<text x="210.2" y="211" class="md-ptype">
+<text x="216.2" y="211" class="md-ptype">
 </text>
-<text x="210.2" y="223" class="md-pname">X_test</text>
+<text x="216.2" y="223" class="md-pname">X_test</text>
 </g>
 <g data-port="out:2" class="md-port-g">
-<circle cx="305.40000000000003" cy="228" r="3" class="md-port">
+<circle cx="311.40000000000003" cy="228" r="3" class="md-port">
 </circle>
-<text x="305.40000000000003" y="211" class="md-ptype">
+<text x="311.40000000000003" y="211" class="md-ptype">
 </text>
-<text x="305.40000000000003" y="223" class="md-pname">y_train</text>
+<text x="311.40000000000003" y="223" class="md-pname">y_train</text>
 </g>
 <g data-port="out:3" class="md-port-g">
-<circle cx="400.6" cy="228" r="3" class="md-port">
+<circle cx="406.6" cy="228" r="3" class="md-port">
 </circle>
-<text x="400.6" y="211" class="md-ptype">
+<text x="406.6" y="211" class="md-ptype">
 </text>
-<text x="400.6" y="223" class="md-pname">y_test</text>
+<text x="406.6" y="223" class="md-pname">y_test</text>
 </g>
 <g class="md-badge md-hidden">
-<rect x="465.8" y="125" width="30" height="16" rx="8" class="md-badge-bg">
+<rect x="471.8" y="125" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="480.8" y="137" class="md-badge-text">
+<text x="486.8" y="137" class="md-badge-text">
 </text>
 </g>
-<text x="257.8" y="243" class="md-msg md-halo md-hidden">
+<text x="263.8" y="243" class="md-msg md-halo md-hidden">
 </text>
-<rect x="16.799999999999997" y="141" width="482" height="90" rx="11" class="md-focus-ring">
+<rect x="22.799999999999997" y="141" width="482" height="90" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:czvr3a.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object model: LinearRegression">
-<rect x="849" y="420" width="176" height="22" rx="11" class="md-pill">
+<rect x="873" y="420" width="176" height="22" rx="11" class="md-pill">
 </rect>
-<text x="937" y="435" text-anchor="middle" class="md-pill-text">model: LinearRegression</text>
-<text x="937" y="599" class="md-msg md-halo md-hidden">
+<text x="961" y="435" text-anchor="middle" class="md-pill-text">model: LinearRegression</text>
+<text x="961" y="599" class="md-msg md-halo md-hidden">
 </text>
-<rect x="840" y="413" width="194" height="174" rx="11" class="md-focus-ring">
+<rect x="864" y="413" width="194" height="174" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:czvr3a.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="function LinearRegression">
-<rect x="787" y="300" width="136" height="60" rx="9" class="md-box">
+<rect x="811" y="300" width="136" height="60" rx="9" class="md-box">
 </rect>
-<text x="855" y="322" class="md-name">LinearRegression</text>
-<text x="855" y="333" class="md-uncalled-cue">not called yet</text>
+<text x="879" y="322" class="md-name">LinearRegression</text>
+<text x="879" y="333" class="md-uncalled-cue">not called yet</text>
 <g data-port="out:0" class="md-port-g">
-<circle cx="855" cy="360" r="3" class="md-port">
+<circle cx="879" cy="360" r="3" class="md-port">
 </circle>
-<text x="855" y="343" class="md-ptype">
+<text x="879" y="343" class="md-ptype">
 </text>
-<text x="855" y="355" class="md-pname">model</text>
+<text x="879" y="355" class="md-pname">model</text>
 </g>
 <g class="md-badge md-hidden">
-<rect x="893" y="281" width="30" height="16" rx="8" class="md-badge-bg">
+<rect x="917" y="281" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="908" y="293" class="md-badge-text">
+<text x="932" y="293" class="md-badge-text">
 </text>
 </g>
-<text x="855" y="375" class="md-msg md-halo md-hidden">
+<text x="879" y="375" class="md-msg md-halo md-hidden">
 </text>
-<rect x="784" y="297" width="142" height="66" rx="11" class="md-focus-ring">
+<rect x="808" y="297" width="142" height="66" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:m1gsyoeo@i:czvr3a.0" data-kind="call" class="md-node md-call md-current md-error" tabindex="0" role="button" aria-label="method LinearRegression.fit, ValueError: Input X contains NaN., current step" aria-current="step">
-<rect x="855" y="512" width="164" height="60" rx="9" class="md-box">
+<rect x="879" y="512" width="164" height="60" rx="9" class="md-box">
 </rect>
-<text x="937" y="558" class="md-name">LinearRegression.fit</text>
-<text x="937" y="569" class="md-uncalled-cue">not called yet</text>
+<text x="961" y="558" class="md-name">LinearRegression.fit</text>
+<text x="961" y="569" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:X" class="md-port-g">
-<circle cx="909.6666666666666" cy="512" r="3" class="md-port">
+<circle cx="933.6666666666666" cy="512" r="3" class="md-port">
 </circle>
-<text x="909.6666666666666" y="525" class="md-ptype">
+<text x="933.6666666666666" y="525" class="md-ptype">
 </text>
-<text x="909.6666666666666" y="537" class="md-pname">X</text>
+<text x="933.6666666666666" y="537" class="md-pname">X</text>
 </g>
 <g data-port="in:y" class="md-port-g">
-<circle cx="964.3333333333334" cy="512" r="3" class="md-port">
+<circle cx="988.3333333333334" cy="512" r="3" class="md-port">
 </circle>
-<text x="964.3333333333334" y="525" class="md-ptype">
+<text x="988.3333333333334" y="525" class="md-ptype">
 </text>
-<text x="964.3333333333334" y="537" class="md-pname">y</text>
+<text x="988.3333333333334" y="537" class="md-pname">y</text>
 </g>
 <g class="md-badge md-hidden">
-<rect x="989" y="493" width="30" height="16" rx="8" class="md-badge-bg">
+<rect x="1013" y="493" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="1004" y="505" class="md-badge-text">
+<text x="1028" y="505" class="md-badge-text">
 </text>
 </g>
-<text x="937" y="587" class="md-msg md-halo">
-<tspan x="937" dy="0">⚠ ValueError: Input X</tspan>
-<tspan x="937" dy="13">contains NaN.</tspan>
+<text x="961" y="587" class="md-msg md-halo">
+<tspan x="961" dy="0">⚠ ValueError: Input X</tspan>
+<tspan x="961" dy="13">contains NaN.</tspan>
 </text>
-<rect x="852" y="509" width="170" height="66" rx="11" class="md-focus-ring">
+<rect x="876" y="509" width="170" height="66" rx="11" class="md-focus-ring">
 </rect>
 </g>
 </g>
 <g class="md-layer-labels">
 <g data-edge="e:i:88c6wt.0!v1.>n:88c6wt.0.in:arrays[0]" tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="3.8000000000000114" y="120" text-anchor="start" class="md-halo">
+<text x="9.800000000000011" y="120" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -354,7 +354,7 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:i:88c6wt.0!v2.>n:88c6wt.0.in:arrays[1]" tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="225.05" y="113" text-anchor="start" class="md-halo">
+<text x="237.05" y="113" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -364,7 +364,7 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:i:88c6wt.0.>n:m1gsyoeo@i:czvr3a.0.in:X" tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="415" y="497" text-anchor="start" class="md-halo">
+<text x="430" y="475" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -374,7 +374,7 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:i:88c6wt.0#2.>n:m1gsyoeo@i:czvr3a.0.in:y" tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="629.75" y="465" text-anchor="start" class="md-halo">
+<text x="653.75" y="465" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -384,7 +384,7 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:88c6wt.0.out:0>i:88c6wt.0." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="122" y="271.4" text-anchor="start" class="md-halo">
+<text x="128" y="271.4" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -394,7 +394,7 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:88c6wt.0.out:1>i:88c6wt.0#1." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="356" y="275" text-anchor="start" class="md-halo">
+<text x="374" y="275" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -404,7 +404,7 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:88c6wt.0.out:2>i:88c6wt.0#2." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="551.5" y="274.5" text-anchor="start" class="md-halo">
+<text x="575.5" y="274.5" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -414,7 +414,7 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:88c6wt.0.out:3>i:88c6wt.0#3." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="534.32" y="231" text-anchor="start" class="md-halo">
+<text x="554.72" y="231" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -424,7 +424,7 @@ exports[`snapshots > linreg, error 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:czvr3a.0.out:0>i:czvr3a.0." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="862" y="392" text-anchor="start" class="md-halo">
+<text x="886" y="392" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -440,7 +440,7 @@ exports[`snapshots > linreg, error 1`] = `
 `;
 
 exports[`snapshots > loop, step 2 1`] = `
-"<svg width="589" height="342" viewBox="0 0 589 342" role="group" aria-label="Diagram of the program" class="md-diagram">
+"<svg width="613" height="342" viewBox="0 0 613 342" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
 <marker id="md-arrow-18" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
@@ -448,81 +448,81 @@ exports[`snapshots > loop, step 2 1`] = `
 </marker>
 </defs>
 <g class="md-layer-bg">
-<rect x="361" y="144" width="216" height="186" rx="10" data-node="i:vwx6qg.0" class="md-inst-box">
+<rect x="385" y="144" width="216" height="186" rx="10" data-node="i:vwx6qg.0" class="md-inst-box">
 </rect>
-<rect x="12" y="12" width="150" height="76" rx="10" data-node="i:12u9exh.0!v1" class="md-inst-box">
+<rect x="12" y="12" width="162" height="76" rx="10" data-node="i:12u9exh.0!v1" class="md-inst-box">
 </rect>
-<rect x="190" y="30" width="101" height="58" rx="10" data-node="i:12u9exh.0!v2" class="md-inst-box">
+<rect x="202" y="30" width="113" height="58" rx="10" data-node="i:12u9exh.0!v2" class="md-inst-box">
 </rect>
 </g>
 <g class="md-layer-edges">
 <g data-edge="e:i:12u9exh.0!v1.>n:mp8npak@i:vwx6qg.0.in:X" class="md-edge">
-<path d="M87 88L87 220Q87 228 95 228L353 228Q361 228 369 228L429 228Q437 228 437 236L437 258" marker-end="url(#md-arrow-18)" class="md-wire">
+<path d="M93 88L93 220Q93 228 101 228L377 228Q385 228 393 228L453 228Q461 228 461 236L461 258" marker-end="url(#md-arrow-18)" class="md-wire">
 </path>
-<path d="M87 88L87 220Q87 228 95 228L353 228Q361 228 369 228L429 228Q437 228 437 236L437 258" class="md-wire-hit">
+<path d="M93 88L93 220Q93 228 101 228L377 228Q385 228 393 228L453 228Q461 228 461 236L461 258" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:i:12u9exh.0!v2.>n:mp8npak@i:vwx6qg.0.in:y" class="md-edge">
-<path d="M240.5 88L240.5 210Q240.5 218 248.5 218L353 218Q361 218 369 218L493 218Q501 218 501 226L501 258" marker-end="url(#md-arrow-18)" class="md-wire">
+<path d="M258.5 88L258.5 210Q258.5 218 266.5 218L377 218Q385 218 393 218L517 218Q525 218 525 226L525 258" marker-end="url(#md-arrow-18)" class="md-wire">
 </path>
-<path d="M240.5 88L240.5 210Q240.5 218 248.5 218L353 218Q361 218 369 218L493 218Q501 218 501 226L501 258" class="md-wire-hit">
+<path d="M258.5 88L258.5 210Q258.5 218 266.5 218L377 218Q385 218 393 218L517 218Q525 218 525 226L525 258" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:vwx6qg.0.out:0>i:vwx6qg.0." class="md-edge">
-<path d="M373 88L373 144" marker-end="url(#md-arrow-18)" class="md-wire">
+<path d="M397 88L397 144" marker-end="url(#md-arrow-18)" class="md-wire">
 </path>
-<path d="M373 88L373 144" class="md-wire-hit">
+<path d="M397 88L397 144" class="md-wire-hit">
 </path>
 </g>
 </g>
 <g class="md-layer-nodes">
 <g data-node="i:vwx6qg.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object model: SGDRegressor, changed: n_iter_">
-<rect x="367" y="148" width="204" height="22" rx="11" class="md-pill">
+<rect x="391" y="148" width="204" height="22" rx="11" class="md-pill">
 </rect>
-<text x="469" y="163" text-anchor="middle" class="md-pill-text">model: SGDRegressor</text>
+<text x="493" y="163" text-anchor="middle" class="md-pill-text">model: SGDRegressor</text>
 <g class="md-attr md-changed md-flash">
-<rect x="364" y="172" width="210" height="18" rx="4" class="md-flash-bg">
+<rect x="388" y="172" width="210" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="365" y="185" class="md-bullet">●</text>
-<text x="373" y="185">
+<text x="389" y="185" class="md-bullet">●</text>
+<text x="397" y="185">
 <tspan class="md-aname">n_iter_</tspan>
 <tspan dx="6" class="md-atype">: int</tspan>
 </text>
 </g>
-<text x="469" y="345" class="md-msg md-halo md-hidden">
+<text x="493" y="345" class="md-msg md-halo md-hidden">
 </text>
-<rect x="358" y="141" width="222" height="192" rx="11" class="md-focus-ring">
+<rect x="382" y="141" width="222" height="192" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:vwx6qg.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="function SGDRegressor">
-<rect x="319" y="28" width="108" height="60" rx="9" class="md-box">
+<rect x="343" y="28" width="108" height="60" rx="9" class="md-box">
 </rect>
-<text x="373" y="50" class="md-name">SGDRegressor</text>
-<text x="373" y="61" class="md-uncalled-cue">not called yet</text>
+<text x="397" y="50" class="md-name">SGDRegressor</text>
+<text x="397" y="61" class="md-uncalled-cue">not called yet</text>
 <g data-port="out:0" class="md-port-g">
-<circle cx="373" cy="88" r="3" class="md-port">
+<circle cx="397" cy="88" r="3" class="md-port">
 </circle>
-<text x="373" y="71" class="md-ptype">
+<text x="397" y="71" class="md-ptype">
 </text>
-<text x="373" y="83" class="md-pname">model</text>
+<text x="397" y="83" class="md-pname">model</text>
 </g>
 <g class="md-badge md-hidden">
-<rect x="397" y="9" width="30" height="16" rx="8" class="md-badge-bg">
+<rect x="421" y="9" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="412" y="21" class="md-badge-text">
+<text x="436" y="21" class="md-badge-text">
 </text>
 </g>
-<text x="373" y="103" class="md-msg md-halo md-hidden">
+<text x="397" y="103" class="md-msg md-halo md-hidden">
 </text>
-<rect x="316" y="25" width="114" height="66" rx="11" class="md-focus-ring">
+<rect x="340" y="25" width="114" height="66" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:12u9exh.0!v1" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object X: DataFrame">
-<rect x="18" y="16" width="138" height="22" rx="11" class="md-pill">
+<rect x="18" y="16" width="150" height="22" rx="11" class="md-pill">
 </rect>
-<text x="87" y="31" text-anchor="middle" class="md-pill-text">X: DataFrame</text>
+<text x="93" y="31" text-anchor="middle" class="md-pill-text">X: DataFrame</text>
 <g class="md-attr md-data">
-<rect x="15" y="40" width="144" height="18" rx="4" class="md-flash-bg">
+<rect x="15" y="40" width="156" height="18" rx="4" class="md-flash-bg">
 </rect>
 <text x="16" y="53" class="md-bullet md-hidden">●</text>
 <text x="24" y="53">
@@ -531,7 +531,7 @@ exports[`snapshots > loop, step 2 1`] = `
 </text>
 </g>
 <g class="md-attr md-data">
-<rect x="15" y="58" width="144" height="18" rx="4" class="md-flash-bg">
+<rect x="15" y="58" width="156" height="18" rx="4" class="md-flash-bg">
 </rect>
 <text x="16" y="71" class="md-bullet md-hidden">●</text>
 <text x="24" y="71">
@@ -539,62 +539,62 @@ exports[`snapshots > loop, step 2 1`] = `
 <tspan dx="6" class="md-aval">c0, c1, c2</tspan>
 </text>
 </g>
-<text x="87" y="103" class="md-msg md-halo md-hidden">
+<text x="93" y="103" class="md-msg md-halo md-hidden">
 </text>
-<rect x="9" y="9" width="156" height="82" rx="11" class="md-focus-ring">
+<rect x="9" y="9" width="168" height="82" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:12u9exh.0!v2" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object y: Series">
-<rect x="196" y="34" width="89" height="22" rx="11" class="md-pill">
+<rect x="208" y="34" width="101" height="22" rx="11" class="md-pill">
 </rect>
-<text x="240.5" y="49" text-anchor="middle" class="md-pill-text">y: Series</text>
+<text x="258.5" y="49" text-anchor="middle" class="md-pill-text">y: Series</text>
 <g class="md-attr md-data">
-<rect x="193" y="58" width="95" height="18" rx="4" class="md-flash-bg">
+<rect x="205" y="58" width="107" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="194" y="71" class="md-bullet md-hidden">●</text>
-<text x="202" y="71">
+<text x="206" y="71" class="md-bullet md-hidden">●</text>
+<text x="214" y="71">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(100)</tspan>
 </text>
 </g>
-<text x="240.5" y="103" class="md-msg md-halo md-hidden">
+<text x="258.5" y="103" class="md-msg md-halo md-hidden">
 </text>
-<rect x="187" y="27" width="107" height="64" rx="11" class="md-focus-ring">
+<rect x="199" y="27" width="119" height="64" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:mp8npak@i:vwx6qg.0" data-kind="call" class="md-node md-call md-current" tabindex="0" role="button" aria-label="method SGDRegressor.partial_fit, run 1 of 3, current step" aria-current="step">
-<rect x="373" y="258" width="192" height="60" rx="9" class="md-box">
+<rect x="397" y="258" width="192" height="60" rx="9" class="md-box">
 </rect>
-<text x="469" y="304" class="md-name">SGDRegressor.partial_fit</text>
-<text x="469" y="315" class="md-uncalled-cue">not called yet</text>
+<text x="493" y="304" class="md-name">SGDRegressor.partial_fit</text>
+<text x="493" y="315" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:X" class="md-port-g">
-<circle cx="437" cy="258" r="3" class="md-port">
+<circle cx="461" cy="258" r="3" class="md-port">
 </circle>
-<text x="437" y="271" class="md-ptype">
+<text x="461" y="271" class="md-ptype">
 </text>
-<text x="437" y="283" class="md-pname">X</text>
+<text x="461" y="283" class="md-pname">X</text>
 </g>
 <g data-port="in:y" class="md-port-g">
-<circle cx="501" cy="258" r="3" class="md-port">
+<circle cx="525" cy="258" r="3" class="md-port">
 </circle>
-<text x="501" y="271" class="md-ptype">
+<text x="525" y="271" class="md-ptype">
 </text>
-<text x="501" y="283" class="md-pname">y</text>
+<text x="525" y="283" class="md-pname">y</text>
 </g>
 <g class="md-badge">
-<rect x="512.2" y="239" width="52.8" height="16" rx="8" class="md-badge-bg">
+<rect x="536.2" y="239" width="52.8" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="538.6" y="251" class="md-badge-text">1 of 3</text>
+<text x="562.6" y="251" class="md-badge-text">1 of 3</text>
 </g>
-<text x="469" y="333" class="md-msg md-halo md-hidden">
+<text x="493" y="333" class="md-msg md-halo md-hidden">
 </text>
-<rect x="370" y="255" width="198" height="66" rx="11" class="md-focus-ring">
+<rect x="394" y="255" width="198" height="66" rx="11" class="md-focus-ring">
 </rect>
 </g>
 </g>
 <g class="md-layer-labels">
 <g data-edge="e:i:12u9exh.0!v1.>n:mp8npak@i:vwx6qg.0.in:X" tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="160" y="243" text-anchor="start" class="md-halo">
+<text x="175" y="243" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -604,7 +604,7 @@ exports[`snapshots > loop, step 2 1`] = `
 </rect>
 </g>
 <g data-edge="e:i:12u9exh.0!v2.>n:mp8npak@i:vwx6qg.0.in:y" tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="367" y="211" text-anchor="start" class="md-halo">
+<text x="391" y="211" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -614,7 +614,7 @@ exports[`snapshots > loop, step 2 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:vwx6qg.0.out:0>i:vwx6qg.0." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="380" y="120" text-anchor="start" class="md-halo">
+<text x="404" y="120" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -630,7 +630,7 @@ exports[`snapshots > loop, step 2 1`] = `
 `;
 
 exports[`snapshots > split, end 1`] = `
-"<svg width="1025" height="760" viewBox="0 0 1025 760" role="group" aria-label="Diagram of the program" class="md-diagram">
+"<svg width="1031" height="760" viewBox="0 0 1031 760" role="group" aria-label="Diagram of the program" class="md-diagram">
 <defs>
 <marker id="md-arrow-16" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto" markerUnits="userSpaceOnUse">
 <path d="M0 1L10 5L0 9z" class="md-arrow">
@@ -640,17 +640,17 @@ exports[`snapshots > split, end 1`] = `
 <g class="md-layer-bg">
 <rect x="182" y="152" width="290" height="192" rx="10" data-node="i:im9bq3.0" class="md-inst-box">
 </rect>
-<rect x="374" y="400" width="206" height="76" rx="10" data-node="i:vx1anp.0" class="md-inst-box">
+<rect x="368" y="400" width="218" height="76" rx="10" data-node="i:vx1anp.0" class="md-inst-box">
 </rect>
-<rect x="608" y="409" width="101" height="58" rx="10" data-node="i:12opl3.0" class="md-inst-box">
+<rect x="614" y="409" width="113" height="58" rx="10" data-node="i:12opl3.0" class="md-inst-box">
 </rect>
-<rect x="266" y="672" width="206" height="76" rx="10" data-node="i:sn2g45.0" class="md-inst-box">
+<rect x="248" y="672" width="218" height="76" rx="10" data-node="i:sn2g45.0" class="md-inst-box">
 </rect>
-<rect x="500" y="672" width="206" height="76" rx="10" data-node="i:sn2g45.0#1" class="md-inst-box">
+<rect x="494" y="672" width="218" height="76" rx="10" data-node="i:sn2g45.0#1" class="md-inst-box">
 </rect>
-<rect x="734" y="672" width="129" height="58" rx="10" data-node="i:sn2g45.0#2" class="md-inst-box">
+<rect x="740" y="672" width="129" height="58" rx="10" data-node="i:sn2g45.0#2" class="md-inst-box">
 </rect>
-<rect x="891" y="672" width="122" height="58" rx="10" data-node="i:sn2g45.0#3" class="md-inst-box">
+<rect x="897" y="672" width="122" height="58" rx="10" data-node="i:sn2g45.0#3" class="md-inst-box">
 </rect>
 </g>
 <g class="md-layer-edges">
@@ -661,9 +661,9 @@ exports[`snapshots > split, end 1`] = `
 </path>
 </g>
 <g data-edge="e:i:12opl3.0.>n:sn2g45.0.in:arrays[1]" class="md-edge">
-<path d="M658.5 467L658.5 478Q658.5 486 650.5 486L611 486Q603 486 603 494L603 532" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M670.5 467L670.5 478Q670.5 486 662.5 486L611 486Q603 486 603 494L603 532" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
-<path d="M658.5 467L658.5 478Q658.5 486 650.5 486L611 486Q603 486 603 494L603 532" class="md-wire-hit">
+<path d="M670.5 467L670.5 478Q670.5 486 662.5 486L611 486Q603 486 603 494L603 532" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:im9bq3.0.out:0>i:im9bq3.0." class="md-edge">
@@ -679,15 +679,15 @@ exports[`snapshots > split, end 1`] = `
 </path>
 </g>
 <g data-edge="e:x:12opl3.0.>i:12opl3.0." class="md-edge">
-<path d="M658.5 344L658.5 409" marker-end="url(#md-arrow-16)" class="md-wire md-dashed">
+<path d="M670.5 344L670.5 409" marker-end="url(#md-arrow-16)" class="md-wire md-dashed">
 </path>
-<path d="M658.5 344L658.5 409" class="md-wire-hit">
+<path d="M670.5 344L670.5 409" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:sn2g45.0.out:0>i:sn2g45.0." class="md-edge">
-<path d="M477 616L477 621Q477 626 472 626L377 626Q369 626 369 634L369 672" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M477 616L477 621Q477 626 472 626L365 626Q357 626 357 634L357 672" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
-<path d="M477 616L477 621Q477 626 472 626L377 626Q369 626 369 634L369 672" class="md-wire-hit">
+<path d="M477 616L477 621Q477 626 472 626L365 626Q357 626 357 634L357 672" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:sn2g45.0.out:1>i:sn2g45.0#1." class="md-edge">
@@ -697,15 +697,15 @@ exports[`snapshots > split, end 1`] = `
 </path>
 </g>
 <g data-edge="e:n:sn2g45.0.out:2>i:sn2g45.0#2." class="md-edge">
-<path d="M729 616L729 621Q729 626 734 626L790.5 626Q798.5 626 798.5 634L798.5 672" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M729 616L729 621Q729 626 734 626L796.5 626Q804.5 626 804.5 634L804.5 672" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
-<path d="M729 616L729 621Q729 626 734 626L790.5 626Q798.5 626 798.5 634L798.5 672" class="md-wire-hit">
+<path d="M729 616L729 621Q729 626 734 626L796.5 626Q804.5 626 804.5 634L804.5 672" class="md-wire-hit">
 </path>
 </g>
 <g data-edge="e:n:sn2g45.0.out:3>i:sn2g45.0#3." class="md-edge">
-<path d="M855 616L855 621Q855 626 860 626L944 626Q952 626 952 634L952 672" marker-end="url(#md-arrow-16)" class="md-wire">
+<path d="M855 616L855 621Q855 626 860 626L950 626Q958 626 958 634L958 672" marker-end="url(#md-arrow-16)" class="md-wire">
 </path>
-<path d="M855 616L855 621Q855 626 860 626L944 626Q952 626 952 634L952 672" class="md-wire-hit">
+<path d="M855 616L855 621Q855 626 860 626L950 626Q958 626 958 634L958 672" class="md-wire-hit">
 </path>
 </g>
 </g>
@@ -764,30 +764,30 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-node="i:vx1anp.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object X: DataFrame">
-<rect x="380" y="404" width="194" height="22" rx="11" class="md-pill">
+<rect x="374" y="404" width="206" height="22" rx="11" class="md-pill">
 </rect>
 <text x="477" y="419" text-anchor="middle" class="md-pill-text">X: DataFrame</text>
 <g class="md-attr md-data">
-<rect x="377" y="428" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="371" y="428" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="378" y="441" class="md-bullet md-hidden">●</text>
-<text x="386" y="441">
+<text x="372" y="441" class="md-bullet md-hidden">●</text>
+<text x="380" y="441">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(506, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
-<rect x="377" y="446" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="371" y="446" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="378" y="459" class="md-bullet md-hidden">●</text>
-<text x="386" y="459">
+<text x="372" y="459" class="md-bullet md-hidden">●</text>
+<text x="380" y="459">
 <tspan class="md-aname">columns</tspan>
 <tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
 <text x="477" y="491" class="md-msg md-halo md-hidden">
 </text>
-<rect x="371" y="397" width="212" height="82" rx="11" class="md-focus-ring">
+<rect x="365" y="397" width="224" height="82" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:m1d0m7dh@i:im9bq3.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="method DataFrame.drop">
@@ -817,126 +817,126 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-node="i:12opl3.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object y: Series">
-<rect x="614" y="413" width="89" height="22" rx="11" class="md-pill">
+<rect x="620" y="413" width="101" height="22" rx="11" class="md-pill">
 </rect>
-<text x="658.5" y="428" text-anchor="middle" class="md-pill-text">y: Series</text>
+<text x="670.5" y="428" text-anchor="middle" class="md-pill-text">y: Series</text>
 <g class="md-attr md-data">
-<rect x="611" y="437" width="95" height="18" rx="4" class="md-flash-bg">
+<rect x="617" y="437" width="107" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="612" y="450" class="md-bullet md-hidden">●</text>
-<text x="620" y="450">
+<text x="618" y="450" class="md-bullet md-hidden">●</text>
+<text x="626" y="450">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(506)</tspan>
 </text>
 </g>
-<text x="658.5" y="482" class="md-msg md-halo md-hidden">
+<text x="670.5" y="482" class="md-msg md-halo md-hidden">
 </text>
-<rect x="605" y="406" width="107" height="64" rx="11" class="md-focus-ring">
+<rect x="611" y="406" width="119" height="64" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="x:12opl3.0" data-kind="expr" class="md-node md-expr" tabindex="0" role="button" aria-label="expression getitem">
-<rect x="626" y="322" width="65" height="22" class="md-hit">
+<rect x="638" y="322" width="65" height="22" class="md-hit">
 </rect>
-<text x="658.5" y="337" class="md-expr-text">getitem</text>
+<text x="670.5" y="337" class="md-expr-text">getitem</text>
 <g class="md-badge md-hidden">
-<rect x="661" y="303" width="30" height="16" rx="8" class="md-badge-bg">
+<rect x="673" y="303" width="30" height="16" rx="8" class="md-badge-bg">
 </rect>
-<text x="676" y="315" class="md-badge-text">
+<text x="688" y="315" class="md-badge-text">
 </text>
 </g>
-<text x="658.5" y="359" class="md-msg md-halo md-hidden">
+<text x="670.5" y="359" class="md-msg md-halo md-hidden">
 </text>
-<rect x="623" y="319" width="71" height="28" rx="11" class="md-focus-ring">
+<rect x="635" y="319" width="71" height="28" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:sn2g45.0" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object X_train: DataFrame">
-<rect x="272" y="676" width="194" height="22" rx="11" class="md-pill">
+<rect x="254" y="676" width="206" height="22" rx="11" class="md-pill">
 </rect>
-<text x="369" y="691" text-anchor="middle" class="md-pill-text">X_train: DataFrame</text>
+<text x="357" y="691" text-anchor="middle" class="md-pill-text">X_train: DataFrame</text>
 <g class="md-attr md-data">
-<rect x="269" y="700" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="251" y="700" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="270" y="713" class="md-bullet md-hidden">●</text>
-<text x="278" y="713">
+<text x="252" y="713" class="md-bullet md-hidden">●</text>
+<text x="260" y="713">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(404, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
-<rect x="269" y="718" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="251" y="718" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="270" y="731" class="md-bullet md-hidden">●</text>
-<text x="278" y="731">
+<text x="252" y="731" class="md-bullet md-hidden">●</text>
+<text x="260" y="731">
 <tspan class="md-aname">columns</tspan>
 <tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
-<text x="369" y="763" class="md-msg md-halo md-hidden">
+<text x="357" y="763" class="md-msg md-halo md-hidden">
 </text>
-<rect x="263" y="669" width="212" height="82" rx="11" class="md-focus-ring">
+<rect x="245" y="669" width="224" height="82" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:sn2g45.0#1" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object X_test: DataFrame">
-<rect x="506" y="676" width="194" height="22" rx="11" class="md-pill">
+<rect x="500" y="676" width="206" height="22" rx="11" class="md-pill">
 </rect>
 <text x="603" y="691" text-anchor="middle" class="md-pill-text">X_test: DataFrame</text>
 <g class="md-attr md-data">
-<rect x="503" y="700" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="497" y="700" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="504" y="713" class="md-bullet md-hidden">●</text>
-<text x="512" y="713">
+<text x="498" y="713" class="md-bullet md-hidden">●</text>
+<text x="506" y="713">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(102, 5)</tspan>
 </text>
 </g>
 <g class="md-attr md-data">
-<rect x="503" y="718" width="200" height="18" rx="4" class="md-flash-bg">
+<rect x="497" y="718" width="212" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="504" y="731" class="md-bullet md-hidden">●</text>
-<text x="512" y="731">
+<text x="498" y="731" class="md-bullet md-hidden">●</text>
+<text x="506" y="731">
 <tspan class="md-aname">columns</tspan>
 <tspan dx="6" class="md-aval">c0, c1, c2, c3, c4</tspan>
 </text>
 </g>
 <text x="603" y="763" class="md-msg md-halo md-hidden">
 </text>
-<rect x="497" y="669" width="212" height="82" rx="11" class="md-focus-ring">
+<rect x="491" y="669" width="224" height="82" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:sn2g45.0#2" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object y_train: Series">
-<rect x="740" y="676" width="117" height="22" rx="11" class="md-pill">
+<rect x="746" y="676" width="117" height="22" rx="11" class="md-pill">
 </rect>
-<text x="798.5" y="691" text-anchor="middle" class="md-pill-text">y_train: Series</text>
+<text x="804.5" y="691" text-anchor="middle" class="md-pill-text">y_train: Series</text>
 <g class="md-attr md-data">
-<rect x="737" y="700" width="123" height="18" rx="4" class="md-flash-bg">
+<rect x="743" y="700" width="123" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="738" y="713" class="md-bullet md-hidden">●</text>
-<text x="746" y="713">
+<text x="744" y="713" class="md-bullet md-hidden">●</text>
+<text x="752" y="713">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(404)</tspan>
 </text>
 </g>
-<text x="798.5" y="745" class="md-msg md-halo md-hidden">
+<text x="804.5" y="745" class="md-msg md-halo md-hidden">
 </text>
-<rect x="731" y="669" width="135" height="64" rx="11" class="md-focus-ring">
+<rect x="737" y="669" width="135" height="64" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="i:sn2g45.0#3" data-kind="instance" class="md-node md-instance" tabindex="0" role="button" aria-label="object y_test: Series">
-<rect x="897" y="676" width="110" height="22" rx="11" class="md-pill">
+<rect x="903" y="676" width="110" height="22" rx="11" class="md-pill">
 </rect>
-<text x="952" y="691" text-anchor="middle" class="md-pill-text">y_test: Series</text>
+<text x="958" y="691" text-anchor="middle" class="md-pill-text">y_test: Series</text>
 <g class="md-attr md-data">
-<rect x="894" y="700" width="116" height="18" rx="4" class="md-flash-bg">
+<rect x="900" y="700" width="116" height="18" rx="4" class="md-flash-bg">
 </rect>
-<text x="895" y="713" class="md-bullet md-hidden">●</text>
-<text x="903" y="713">
+<text x="901" y="713" class="md-bullet md-hidden">●</text>
+<text x="909" y="713">
 <tspan class="md-aname">shape</tspan>
 <tspan dx="6" class="md-aval">(102)</tspan>
 </text>
 </g>
-<text x="952" y="745" class="md-msg md-halo md-hidden">
+<text x="958" y="745" class="md-msg md-halo md-hidden">
 </text>
-<rect x="888" y="669" width="128" height="64" rx="11" class="md-focus-ring">
+<rect x="894" y="669" width="128" height="64" rx="11" class="md-focus-ring">
 </rect>
 </g>
 <g data-node="n:sn2g45.0" data-kind="call" class="md-node md-call md-current" tabindex="0" role="button" aria-label="function train_test_split, current step" aria-current="step">
@@ -1016,7 +1016,7 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-edge="e:i:12opl3.0.>n:sn2g45.0.in:arrays[1]" tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="566.75" y="501" text-anchor="start" class="md-halo">
+<text x="572.75" y="501" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -1046,7 +1046,7 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-edge="e:x:12opl3.0.>i:12opl3.0." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="665.5" y="380.5" text-anchor="start" class="md-halo">
+<text x="677.5" y="380.5" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -1056,7 +1056,7 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:sn2g45.0.out:0>i:sn2g45.0." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="359" y="641" text-anchor="start" class="md-halo">
+<text x="353" y="641" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -1076,7 +1076,7 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:sn2g45.0.out:2>i:sn2g45.0#2." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="805.5" y="653" text-anchor="start" class="md-halo">
+<text x="811.5" y="653" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">
@@ -1086,7 +1086,7 @@ exports[`snapshots > split, end 1`] = `
 </rect>
 </g>
 <g data-edge="e:n:sn2g45.0.out:3>i:sn2g45.0#3." tabindex="0" role="button" class="md-edge-label md-hidden">
-<text x="959" y="653" text-anchor="start" class="md-halo">
+<text x="965" y="653" text-anchor="start" class="md-halo">
 <tspan class="md-wtype">
 </tspan>
 <tspan dx="0" dy="3" class="md-wname">

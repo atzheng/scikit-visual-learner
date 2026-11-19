@@ -4,7 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { currentRuntime } from '../runtime/instance';
 import { clampStep } from '../timeline/steps';
 import './docs.css';
-import { entryNames, inlinePieces, paragraphs, passedParams, shortSignature } from './model';
+import {
+  attributeValue,
+  entryNames,
+  inlinePieces,
+  paragraphs,
+  passedParams,
+  shortSignature,
+} from './model';
 
 function Inline({ text }: { text: string }) {
   return (
@@ -27,7 +34,7 @@ function Paragraphs({ text }: { text: string }) {
   );
 }
 
-const OPEN_BY_DEFAULT = new Set(['Parameters', 'Returns', 'Yields']);
+const OPEN_BY_DEFAULT = new Set(['Parameters', 'Returns', 'Yields', 'Type']);
 
 function Section({ sec, passed }: { sec: DocSection; passed: Map<string, string> }) {
   const isParams = sec.title === 'Parameters';
@@ -155,6 +162,12 @@ export function DocsPanel({ target, nodeId, model, log, step, onClose }: DocsPan
     return passedParams(model, log, st, nodeId, target);
   }, [model, log, step, nodeId, target]);
 
+  const value = useMemo(() => {
+    if (!model || !log || !target.attr) return null;
+    const st = stateAt(model, log, clampStep(step, model.steps.length));
+    return attributeValue(model, log, st, nodeId, target);
+  }, [model, log, step, nodeId, target]);
+
   const doc = load.state === 'ready' ? load.doc : null;
   const sig = doc ? shortSignature(doc.signature) : null;
   return (
@@ -209,6 +222,12 @@ export function DocsPanel({ target, nodeId, model, log, step, onClose }: DocsPan
               <pre className="doc-sig" title={sig.cut ? (doc.signature ?? undefined) : undefined}>
                 {sig.text}
               </pre>
+            )}
+            {target.attr && (
+              <p className="doc-value">
+                Value at this step:{' '}
+                {value !== null ? <code>{value}</code> : <span className="muted">not set yet</span>}
+              </p>
             )}
             {doc.source === 'none' ? (
               <p className="muted">No documentation was found for {target.name}.</p>

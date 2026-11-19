@@ -281,7 +281,8 @@ function leafSize(n: GNode, measure: Measure, o: SizeOpts): { w: number; h: numb
       const rows = instanceRows(n, o.attrRows);
       const w = Math.max(
         measure(instanceTitle(n), FONT_NAME) + 2 * M.boxPadX,
-        ...rows.map((r) => measure(r, FONT_MONO) + 2 * M.instPad),
+        // 2 * instPad plus room for the row's "?" button (svl-3du)
+        ...rows.map((r) => measure(r, FONT_MONO) + 2 * M.instPad + 12),
         moreRow(n, o)
           ? measure(`▸ more methods (${o.moreMethods![n.id]})`, FONT_MONO) + 2 * M.instPad
           : 0,

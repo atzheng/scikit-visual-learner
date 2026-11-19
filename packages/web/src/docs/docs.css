@@ -121,3 +121,7 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+.doc-value {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}

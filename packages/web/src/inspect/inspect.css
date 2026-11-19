@@ -191,6 +191,33 @@
   white-space: nowrap;
   overflow-wrap: normal;
 }
+.inspect-namerow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.inspect-namerow .inspect-name {
+  flex: 1;
+  min-width: 0;
+}
+.inspect-docs {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1.5px solid var(--text);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.inspect-docs:hover {
+  background: var(--text);
+  color: var(--surface);
+}
 .inspect-flag {
   display: block;
   white-space: nowrap;

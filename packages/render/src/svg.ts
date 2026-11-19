@@ -5,6 +5,7 @@ import type {
   CallNode,
   EventLog,
   Execution,
+  ExprNode,
   GEdge,
   GNode,
   GraphModel,
@@ -255,6 +256,8 @@ export interface MethodDocTarget {
   module: string | null;
   /** `Class.method`, as an event of a method call names it. */
   name: string;
+  /** The last part of `name` is an attribute (a parameter, a fitted attribute or a property), not a method (svl-3du). */
+  attr?: boolean;
 }
 
 const objKey = (t: Token): string => {
@@ -356,6 +359,37 @@ export function nodeDocTarget(model: GraphModel, node: GNode): MethodDocTarget |
   if (node.kind === 'instance') {
     const t = methodDocTarget(model, node, '');
     return { module: t.module, name: node.className };
+  }
+  if (node.kind === 'expr') return attrReadDocTarget(model, node);
+  return null;
+}
+
+/** Target for the docs of attribute `attr` of an instance's class (a row of its box). */
+export function attrDocTarget(
+  model: GraphModel,
+  inst: InstanceNode,
+  attr: string,
+): MethodDocTarget {
+  const t = methodDocTarget(model, inst, attr);
+  return { module: t.module, name: t.name, attr: true };
+}
+
+const ATTR_READ = /^([A-Za-z_]\w*)\.([A-Za-z_]\w*)$/;
+
+/**
+ * An attribute-read expression box (`model.coef_`) documents that attribute of its owner's class. The owner
+ * is the instance whose object the read name held; null when the text is not `name.attr` or the owner has
+ * no box.
+ */
+export function attrReadDocTarget(model: GraphModel, node: ExprNode): MethodDocTarget | null {
+  const m = ATTR_READ.exec(node.text);
+  const [root, attr] = [m?.[1], m?.[2]];
+  if (root === undefined || attr === undefined) return null;
+  const ix = modelIndex(model);
+  for (const ex of node.executions) {
+    const tok = ex.inputs[`in:${root}`];
+    const inst = tok !== undefined ? ix.instByObj.get(objKey(tok)) : undefined;
+    if (inst) return attrDocTarget(model, inst, attr);
   }
   return null;
 }
@@ -790,6 +824,27 @@ export function buildSvg(
           const detail = s(doc, 'tspan', { dx: 6 }, 'md-aval');
           text.append(name, detail);
           rg.append(flash, bullet, text);
+          if (opts.docs) {
+            // The row's "?" (svl-3du): mouse only; a focused row opens the same docs with Enter or "?"
+            const rb = s(
+              doc,
+              'g',
+              { 'data-docs-row-btn': '', 'aria-hidden': 'true' },
+              'md-docs-btn',
+            );
+            rb.append(
+              s(doc, 'title', {}, '', 'Show documentation'),
+              s(doc, 'circle', { cx: ln.x + ln.w - 9, cy: ry + M.instRowH / 2, r: 6.5 }),
+              s(
+                doc,
+                'text',
+                { x: ln.x + ln.w - 9, y: ry + M.instRowH / 2 + 3, 'text-anchor': 'middle' },
+                'md-row-q',
+                '?',
+              ),
+            );
+            rg.append(rb);
+          }
           g.append(rg);
           h.rows.push({ g: rg, flash, bullet, text, name, detail });
         }
@@ -1220,6 +1275,18 @@ export function applyState(
         setText(r.name, row.name);
         setText(r.detail, row.detail);
         setAttr(r.detail, 'class', row.typed ? 'md-atype' : 'md-aval');
+        if (dom.docs) {
+          const t = attrDocTarget(ctx.model, h.node as InstanceNode, row.name);
+          setAttr(r.g, 'data-doc-name', t.name);
+          if (t.module !== null) setAttr(r.g, 'data-doc-module', t.module);
+          else r.g.removeAttribute('data-doc-module');
+          setAttr(r.g, 'data-doc-node', h.id);
+          setAttr(r.g, 'data-doc-attr', '1');
+          setAttr(r.g, 'role', 'button');
+          setAttr(r.g, 'tabindex', '0');
+          setAttr(r.g, 'aria-keyshortcuts', '?');
+          setAttr(r.g, 'aria-label', `${row.name}, press question mark for documentation`);
+        }
         toggle(r.g, 'md-data', row.data === true);
         const isChanged = ownsCurrent && !row.param && changed.has(row.name);
         toggle(r.g, 'md-changed', isChanged);

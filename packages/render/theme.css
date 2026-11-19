@@ -469,6 +469,9 @@
   fill: var(--md-text);
   pointer-events: none;
 }
+.md-docs-btn .md-row-q {
+  font-size: 9px;
+}
 .md-docs-btn:hover circle {
   fill: var(--md-text);
 }
