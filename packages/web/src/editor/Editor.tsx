@@ -44,6 +44,8 @@ export interface EditorController {
   markErrorLine(line: number | null): void;
   /** Move the cursor to the start of a site and focus the editor. */
   revealSite(site: SpanSite): void;
+  /** Move the cursor to the start of a 1-based line, mark it as the error line and focus the editor. */
+  revealLine(line: number): void;
 }
 
 export interface EditorProps {
@@ -322,6 +324,16 @@ export function Editor({ sites, runSource, onSiteAtCursor, controllerRef }: Edit
         const range = siteRange(doc, site);
         if (!range) return;
         view.dispatch({ selection: { anchor: range.from }, scrollIntoView: true });
+        view.focus();
+      },
+      revealLine(line) {
+        if (line < 1 || line > view.state.doc.lines) return;
+        const from = view.state.doc.line(line).from;
+        view.dispatch({
+          selection: { anchor: from },
+          effects: setErrorLine.of(line),
+          scrollIntoView: true,
+        });
         view.focus();
       },
     };

@@ -217,7 +217,7 @@ export function App() {
             containerRef={leftRef}
           />
           <div className="pane">
-            <OutputPane />
+            <OutputPane editor={editorRef} />
           </div>
         </section>
         <Splitter
