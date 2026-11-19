@@ -19,6 +19,8 @@
   --syn-comment: #5b6573;
   --syn-func: #1f5fbf;
   --hl-site: rgba(31, 95, 191, 0.22);
+  --hl-span: rgba(31, 95, 191, 0.4);
+  --hl-line: rgba(31, 95, 191, 0.12);
   --selection: rgba(255, 196, 0, 0.35);
   --hl-error: rgba(180, 35, 24, 0.14);
 }
@@ -41,6 +43,8 @@
     --syn-comment: #a0a9b6;
     --syn-func: #8dbbff;
     --hl-site: rgba(106, 163, 245, 0.32);
+    --hl-span: rgba(106, 163, 245, 0.55);
+    --hl-line: rgba(106, 163, 245, 0.16);
     --selection: rgba(255, 180, 84, 0.38);
     --hl-error: rgba(255, 128, 119, 0.18);
   }
@@ -64,6 +68,8 @@
   --syn-comment: #a0a9b6;
   --syn-func: #8dbbff;
   --hl-site: rgba(106, 163, 245, 0.32);
+  --hl-span: rgba(106, 163, 245, 0.55);
+  --hl-line: rgba(106, 163, 245, 0.16);
   --selection: rgba(255, 180, 84, 0.38);
   --hl-error: rgba(255, 128, 119, 0.18);
 }
@@ -76,6 +82,8 @@
   --syn-comment: #5b6573;
   --syn-func: #1f5fbf;
   --hl-site: rgba(31, 95, 191, 0.22);
+  --hl-span: rgba(31, 95, 191, 0.4);
+  --hl-line: rgba(31, 95, 191, 0.12);
   --selection: rgba(255, 196, 0, 0.35);
   --hl-error: rgba(180, 35, 24, 0.14);
 }
