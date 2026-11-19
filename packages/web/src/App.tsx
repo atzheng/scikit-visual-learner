@@ -158,12 +158,10 @@ function StatusLine() {
 }
 
 export function App() {
-  const [cols, setCols] = useState(50);
+  const [cols, setCols] = useState(40);
   const [leftRows, setLeftRows] = useState(65);
-  const [rightRows, setRightRows] = useState(78);
   const mainRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLElement>(null);
-  const rightRef = useRef<HTMLElement>(null);
   const editorRef = useRef<EditorController | null>(null);
   const [cursorSite, setCursorSite] = useState<number | null>(null);
   const edgeInspect = useEdgeInspect();
@@ -202,8 +200,11 @@ export function App() {
         <section
           className="column"
           ref={leftRef}
-          style={{ gridTemplateRows: `${leftRows}fr 6px ${100 - leftRows}fr` }}
+          style={{ gridTemplateRows: `auto ${leftRows}fr 6px ${100 - leftRows}fr` }}
         >
+          <div className="pane pane-timeline">
+            <Timeline />
+          </div>
           <div id="pane-editor" className="pane" tabIndex={-1} aria-label="Code editor">
             <Editor
               sites={sites}
@@ -230,11 +231,7 @@ export function App() {
           onChange={setCols}
           containerRef={mainRef}
         />
-        <section
-          className="column"
-          ref={rightRef}
-          style={{ gridTemplateRows: `${rightRows}fr 6px ${100 - rightRows}fr` }}
-        >
+        <section className="column" style={{ gridTemplateRows: 'minmax(0, 1fr)' }}>
           <div className="pane">
             <DiagramPane
               cursorSite={cursorSite}
@@ -244,16 +241,6 @@ export function App() {
               <InstanceDiff />
             </DiagramPane>
             {edgeInspect.popover}
-          </div>
-          <Splitter
-            orientation="horizontal"
-            label="Resize diagram and timeline"
-            value={rightRows}
-            onChange={setRightRows}
-            containerRef={rightRef}
-          />
-          <div className="pane">
-            <Timeline />
           </div>
         </section>
       </main>

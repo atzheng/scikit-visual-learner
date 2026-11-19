@@ -135,7 +135,10 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
     const overhead =
       ctl.stageEl.getBoundingClientRect().top - sec.getBoundingClientRect().top + sec.scrollTop + 9;
     const kW = (sec.clientWidth - 18) / (w || 1);
-    const kH = (root.clientHeight - STAGE_RESERVE - overhead - 2) / (h || 1);
+    // stacked: the shelf keeps room under the stage; side by side the stage has the whole pane height
+    const sideBySide = getComputedStyle(root).flexDirection === 'row';
+    const reserve = sideBySide ? 0 : STAGE_RESERVE;
+    const kH = (root.clientHeight - reserve - overhead - 2) / (h || 1);
     const k = w > 0 ? Math.max(MIN_STAGE_SCALE, Math.min(1, kW, kH)) : 1;
     // CSS zoom, not a transform: the layout box shrinks with it, so the stage's height and scroll area follow
     ctl.stageEl.style.zoom = k < 1 ? String(k) : '';

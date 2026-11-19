@@ -125,13 +125,11 @@ export const useStore = create<AppState>()((set, get) => ({
     // The model is rebuilt on every streamed update (at most once per animation frame) and once
     // for the final log, which `run` delivers through `onUpdate` before it resolves.
     // Note for bwv.4: `snapshot()` is O(n) per update; fine at 5000 events, not measured beyond.
-    // The slider follows the newest step unless the student stepped back (nextStep).
-    let first = true;
+    // The slider starts at step 1 and stays at the student's step (nextStep); it never follows the stream.
     const show = (log: EventLog): void => {
       const model = graphFor(log);
       const prev = get();
-      const step = nextStep(prev.step, prev.model?.steps.length ?? 0, model.steps.length, first);
-      first = false;
+      const step = nextStep(prev.step, prev.model?.steps.length ?? 0, model.steps.length);
       set({ log, model, step, stepSingle: false });
     };
     try {

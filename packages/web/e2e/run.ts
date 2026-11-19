@@ -177,6 +177,12 @@ async function shotBothThemes(page: Page, name: string): Promise<void> {
   await page.emulateMedia({ colorScheme: 'light' });
 }
 
+/** Runs, then steps to the last step: a run starts at step 1, and output and errors show at their own step. */
+async function runToEnd(page: Page): Promise<void> {
+  await runAndWait(page);
+  await gotoStep(page, (await stepCount(page)).m);
+}
+
 /** A point on a wire path in page coordinates (the middle of the path). */
 async function pointOnEdge(
   page: Page,
@@ -242,10 +248,18 @@ async function core(page: Page, view: View): Promise<void> {
       .waitFor({ state: 'attached', timeout: 15_000 })
       .catch(() => undefined);
     check((await page.locator('g.md-node[data-node]').count()) > 0, 'no boxes in the diagram');
-    check((await visibleNodes(page).count()) > 0, 'no visible boxes at the end of the run');
     const { n, m } = await stepCount(page);
     check(m > 0, 'no steps');
-    check(n === m, `expected to be at the last step after a run, got ${n} of ${m}`);
+    check(n === 1, `expected to start at step 1 after a run, got ${n} of ${m}`);
+    // the timeline heads the left column, above the editor
+    const tl = await page.locator('.timeline').boundingBox();
+    const ed = await page.locator('#pane-editor').boundingBox();
+    check(tl && ed && tl.y + tl.height <= ed.y + 1, 'the timeline is not above the editor');
+    await slider(page).focus();
+    await page.keyboard.press('ArrowRight');
+    check((await stepCount(page)).n === 2, '→ after a run did not go to step 2');
+    await gotoStep(page, m);
+    check((await visibleNodes(page).count()) > 0, 'no visible boxes at the last step');
     check(
       (await page.locator('g.md-node[data-kind="instance"]').count()) > 0,
       'no instance box (LinearRegression)',
@@ -552,7 +566,7 @@ async function main(): Promise<void> {
 
     await step('edge_error.py: error box and traceback', async () => {
       await setSource(page, program('edge_error.py'));
-      await runAndWait(page);
+      await runToEnd(page);
       const err = page.getByTestId('run-error');
       await err.waitFor({ timeout: 5000 });
       check(/ValueError/.test((await err.textContent()) ?? ''), 'error box lacks ValueError');
@@ -615,7 +629,7 @@ async function main(): Promise<void> {
       await page.locator('details.files summary').click();
       await page.getByText('3 rows, yours').waitFor({ timeout: 5000 });
       await setSource(page, 'import pandas as pd\nprint("rows", len(pd.read_csv("mini.csv")))\n');
-      await runAndWait(page);
+      await runToEnd(page);
       check(
         /rows 3/.test((await page.getByRole('region', { name: 'Output' }).textContent()) ?? ''),
         'the uploaded file was not read',
@@ -670,7 +684,7 @@ async function main(): Promise<void> {
         });
       })()`);
       await setSource(p, program('edge_mpl.py'));
-      await runAndWait(p);
+      await runToEnd(p);
       await p.locator('.out-figure img').first().waitFor({ timeout: 10_000 });
       const alt = await p.locator('.out-figure img').first().getAttribute('alt');
       check(/Figure 1/.test(alt ?? ''), `figure alt is "${alt}"`);

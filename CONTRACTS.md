@@ -500,7 +500,7 @@ interface AppState {
 }
 ```
 
-`run()` clears `log`, `model` and `selection` and sets `step` 0 at once, so nothing of the previous run is linked against the new `runSource`. The slider then follows the newest step while streaming (a new run starts at its end; a student who stepped back stays put) and the run ends with it at the last step.
+`run()` clears `log`, `model` and `selection` and sets `step` 0 at once, so nothing of the previous run is linked against the new `runSource`. The first streamed update that has a step moves `step` to 1 (the first line); after that the slider keeps the student's step and never follows the stream, and a run ends with it wherever the student left it (svl-hyr; `nextStep(prevStep, prevMax, newMax)`). Step 0 stays reachable with Back. The timeline sits above the editor in the left column, and the two-pane view puts the stage and the shelf side by side from 800 px of pane width.
 
 ## 8. Graph model, timeline and renderer
 
