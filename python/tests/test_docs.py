@@ -351,3 +351,137 @@ def test_every_result_is_json_serialisable() -> None:
         ("builtins", "len"),
     ]:
         json.dumps(docs(module, name))
+
+
+# -- attributes (svl-3du) --------------------------------------------------------------------
+
+
+def test_attribute_url_builder() -> None:
+    q = "sklearn.linear_model.LinearRegression.coef_"
+    assert (
+        doc_url(q, "attribute", V)
+        == "https://scikit-learn.org/1.8/modules/generated/sklearn.linear_model.LinearRegression.html"
+    )
+    assert (
+        doc_url("pandas.DataFrame.shape", "attribute", V)
+        == "https://pandas.pydata.org/pandas-docs/version/3.0.2/reference/api/pandas.DataFrame.shape.html"
+    )
+    assert (
+        doc_url("numpy.ndarray.shape", "attribute", V)
+        == "https://numpy.org/doc/2.4/reference/generated/numpy.ndarray.shape.html"
+    )
+    assert (
+        doc_url("scipy.sparse.csr_matrix.nnz", "attribute", V)
+        == "https://docs.scipy.org/doc/scipy-1.18.0/reference/generated/scipy.sparse.csr_matrix.html"
+    )
+    assert doc_url("sklearn.linear_model.Ridge._private", "attribute", V) is None
+    assert doc_url("somelib.Thing.x", "attribute", V) is None
+    assert doc_url(q, "attribute", {**V, "sklearn": "1.9.dev0"}) is None
+
+
+def test_fitted_attributes_resolve_to_their_attributes_entries() -> None:
+    d = docs("sklearn.linear_model._base", "LinearRegression.coef_", None, True)
+    assert d["qualname"] == "sklearn.linear_model.LinearRegression.coef_"
+    assert d["kind"] == "attribute" and d["signature"] is None and d["source"] == "numpydoc"
+    assert d["summary"].startswith("Estimated coefficients for the linear regression problem.")
+    assert section(d, "Type")["text"].startswith("array of shape (n_features, )")
+    assert d["url"].endswith("/sklearn.linear_model.LinearRegression.html")
+    i = docs("sklearn.linear_model._base", "LinearRegression.intercept_", None, True)
+    assert i["summary"].startswith("Independent term in the linear model.")
+    f = docs("sklearn.linear_model._base", "LinearRegression.feature_names_in_", None, True)
+    assert f["source"] == "numpydoc" and "feature" in f["summary"].lower()
+
+
+def test_constructor_parameter_resolves_to_its_parameters_entry() -> None:
+    d = docs("sklearn.linear_model._ridge", "Ridge.alpha", None, True)
+    assert d["qualname"] == "sklearn.linear_model.Ridge.alpha"
+    assert d["summary"].startswith("Constant that multiplies the L2 term")
+    assert d["url"].endswith("/sklearn.linear_model.Ridge.html")
+
+
+def test_property_resolves_to_its_own_docstring() -> None:
+    d = docs("pandas.core.frame", "DataFrame.shape", None, True)
+    assert d["qualname"] == "pandas.DataFrame.shape" and d["kind"] == "attribute"
+    assert d["summary"] == "Return a tuple representing the dimensionality of the DataFrame."
+    assert d["url"].endswith("/reference/api/pandas.DataFrame.shape.html")
+
+
+def test_unknown_attribute_is_none() -> None:
+    for module, name in [
+        ("sklearn.linear_model", "LinearRegression.no_such_attr_"),
+        ("sklearn.linear_model", "NoSuchClass.coef_"),
+        ("nosuchmodule", "A.b"),
+    ]:
+        d = docs(module, name, None, True)
+        json.dumps(d)
+        assert d["source"] == "none" and d["url"] is None and d["kind"] == "attribute"
+
+
+def test_resolution_runs_no_property_or_getattr() -> None:
+    import sys
+    import types
+
+    ran: list[str] = []
+
+    class Trap:
+        """A class.
+
+        Attributes
+        ----------
+        documented_ : int
+            Listed here.
+        """
+
+        @property
+        def boom(self) -> int:
+            """Explodes when read."""
+            ran.append("property")
+            raise RuntimeError("property ran")
+
+        def __getattr__(self, name: str) -> int:
+            ran.append(name)
+            raise RuntimeError("__getattr__ ran")
+
+    mod = types.ModuleType("svl_trap")
+    Trap.__module__ = "svl_trap"
+    mod.Trap = Trap  # type: ignore[attr-defined]
+    sys.modules["svl_trap"] = mod
+    try:
+        assert docs("svl_trap", "Trap.boom", None, True)["summary"] == "Explodes when read."
+        assert docs("svl_trap", "Trap.documented_", None, True)["summary"] == "Listed here."
+        assert docs("svl_trap", "Trap.missing", None, True)["source"] == "none"
+    finally:
+        del sys.modules["svl_trap"]
+    assert ran == []
+
+
+STUDENT_ATTRS = '''
+class Model:
+    """A model.
+
+    Parameters
+    ----------
+    lr : float
+        Learning rate.
+
+    Attributes
+    ----------
+    weights_ : list
+        The learned weights.
+    """
+    def __init__(self, lr):
+        self.lr = lr
+
+class Bare:
+    """No sections."""
+'''
+
+
+def test_student_class_attributes() -> None:
+    d = docs("__main__", "Model.weights_", STUDENT_ATTRS, True)
+    assert d["kind"] == "attribute" and d["url"] is None and d["source"] == "numpydoc"
+    assert d["summary"] == "The learned weights." and section(d, "Type")["text"] == "list"
+    assert docs("__main__", "Model.lr", STUDENT_ATTRS, True)["summary"] == "Learning rate."
+    assert docs("__main__", "Bare.weights_", STUDENT_ATTRS, True)["source"] == "none"
+    assert docs("__main__", "Model.nope_", STUDENT_ATTRS, True)["source"] == "none"
+    assert docs("__main__", "Ghost.x", STUDENT_ATTRS, True)["source"] == "none"

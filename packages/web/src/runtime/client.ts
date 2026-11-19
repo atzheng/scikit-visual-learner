@@ -86,7 +86,7 @@ interface Waiter {
 /** Cache key for a docs target. The program text only matters for student definitions. */
 export function docKey(t: DocTarget): string {
   const student = t.module === '__main__' || t.module === '<student>';
-  return `${t.module ?? ''}\0${t.name}${student ? `\0${t.source ?? ''}` : ''}`;
+  return `${t.module ?? ''}\0${t.name}${t.attr ? '\0attr' : ''}${student ? `\0${t.source ?? ''}` : ''}`;
 }
 
 const defaultSchedule = (cb: () => void): (() => void) => {

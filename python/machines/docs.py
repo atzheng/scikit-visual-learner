@@ -7,7 +7,7 @@ running versions. Student code is never executed: student definitions are read f
 
 ``docs(module, name, source=None)`` returns a JSON-able dict (the ``Doc`` type in ``@machines/log``)::
 
-    {qualname, kind: 'function'|'class'|'method', signature: str|None, summary, description,
+    {qualname, kind: 'function'|'class'|'method'|'attribute', signature: str|None, summary, description,
      sections: [{title, kind: 'entries'|'seealso'|'text'|'examples', ...}], url: str|None,
      source: 'numpydoc'|'plain'|'none'}
 """
@@ -222,13 +222,22 @@ def _short(version: str, parts: int) -> str | None:
 def doc_url(qualname: str, kind: str, versions: dict[str, str]) -> str | None:
     """The official docs URL for a public ``qualname`` (pure; ``versions`` from the running packages).
 
-    ``kind`` is 'function', 'class' or 'method'. ``versions`` has keys ``python``, ``sklearn``, ``pandas``,
+    ``kind`` is 'function', 'class', 'method' or 'attribute' (an attribute's ``qualname`` is ``<class>.<attr>``).
+    ``versions`` has keys ``python``, ``sklearn``, ``pandas``,
     ``numpy``, ``scipy``, ``matplotlib``. Returns None for anything not covered (private names, other libraries).
     """
     parts = qualname.split(".")
     if not qualname or any(p.startswith("_") for p in parts):
         return None
     root = parts[0]
+    if kind == "attribute":
+        # pandas and numpy have a page per attribute (DataFrame.shape, ndarray.shape); elsewhere the class page
+        if len(parts) < 3 and root != "builtins":
+            return None
+        if root in ("pandas", "numpy"):
+            kind = "function"
+        else:
+            return doc_url(".".join(parts[:-1]), "class", versions)
     if root == "builtins":
         return _builtin_url(parts[1:], kind, versions.get("python", ""))
     v = versions.get(root if root != "sklearn" else "sklearn", "")
@@ -405,6 +414,100 @@ def _library_doc(module: str | None, name: str) -> dict[str, Any] | None:
     }
 
 
+def _entry_for(doc: str, attr: str) -> dict[str, str] | None:
+    """The numpydoc entry for ``attr``: Attributes first for a trailing-underscore (fitted) name, else Parameters first."""
+    if not doc.strip():
+        return None
+    fitted = attr.endswith("_") and not attr.endswith("__")
+    order = ("Attributes", "Parameters") if fitted else ("Parameters", "Attributes")
+    secs = parse_numpydoc(doc)["sections"]
+    for title in order:
+        for sec in secs:
+            if sec["title"] == title and sec["kind"] == "entries":
+                for e in sec["entries"]:
+                    if attr in [n.strip().lstrip("*") for n in e["name"].split(",")]:
+                        return e
+    return None
+
+
+def _descriptor_doc(owner: type, attr: str) -> str:
+    """A property's or descriptor's own docstring, read from the class ``__dict__``; it is never invoked."""
+    try:
+        raw = inspect.getattr_static(owner, attr)
+    except AttributeError:
+        return ""
+    if isinstance(raw, property):
+        d = raw.fget.__doc__ if raw.fget is not None else raw.__doc__
+    elif hasattr(type(raw), "__get__") and not inspect.isroutine(raw):
+        d = getattr(raw, "__doc__", None)
+        if d == getattr(type(raw), "__doc__", None):
+            d = None
+    else:
+        d = None
+    return d if isinstance(d, str) else ""
+
+
+def _library_attr_doc(module: str | None, name: str) -> dict[str, Any] | None:
+    found = _find_root(module, name)
+    if found is None:
+        return None
+    root_obj, found_in, first, rest = found
+    if not rest:
+        return None
+    owner: Any = root_obj
+    for part in rest[:-1]:
+        try:
+            owner = inspect.getattr_static(owner, part) if isinstance(owner, type) else None
+        except AttributeError:
+            return None
+    if not isinstance(owner, type):
+        return None
+    attr = rest[-1]
+    if found_in == "builtins":
+        public = "builtins." + ".".join([first, *rest])
+    else:
+        public = ".".join([_public_owner(root_obj, found_in, first), *rest])
+    entry: dict[str, str] | None = None
+    for cls in owner.__mro__:
+        if cls is object:
+            continue
+        d = cls.__dict__.get("__doc__")
+        entry = _entry_for(d, attr) if isinstance(d, str) else None
+        if entry is not None:
+            break
+    return {
+        "qualname": public,
+        "kind": "attribute",
+        "signature": None,
+        "entry": entry,
+        "doc": "" if entry is not None else _descriptor_doc(owner, attr),
+    }
+
+
+def _student_attr_doc(name: str, source: str | None) -> dict[str, Any] | None:
+    if not source:
+        return None
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return None
+    node: ast.AST = tree
+    parts = name.split(".")
+    if len(parts) < 2:
+        return None
+    for part in parts[:-1]:
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, ast.ClassDef) and child.name == part:
+                node = child
+                break
+        else:
+            return None
+    if not isinstance(node, ast.ClassDef):
+        return None
+    entry = _entry_for(ast.get_docstring(node, clean=False) or "", parts[-1])
+    return {"qualname": name, "kind": "attribute", "signature": None, "entry": entry, "doc": ""}
+
+
 def _student_doc(name: str, source: str | None) -> dict[str, Any] | None:
     if not source:
         return None
@@ -451,21 +554,27 @@ def _ast_sig(label: str, args: ast.arguments, drop_self: bool, returns: ast.expr
     return f"{text} -> {ast.unparse(returns)}" if returns is not None else text
 
 
-def docs(module: str | None, name: str, source: str | None = None) -> dict[str, Any]:
+def docs(
+    module: str | None, name: str, source: str | None = None, attr: bool = False
+) -> dict[str, Any]:
     """Documentation for the callee ``name`` defined in ``module`` (an event's ``module`` and ``name``).
 
-    ``module`` is None when ``name`` is a full dotted path. Student definitions (module ``__main__`` or
+    ``attr`` says the last part of ``name`` is an attribute (a constructor parameter, a fitted attribute or a
+    property of the class before it), not a method. ``module`` is None when ``name`` is a full dotted path. Student definitions (module ``__main__`` or
     ``<student>``) are read from ``source``. Never runs student code and never raises.
     """
     try:
         student = module in ("__main__", "<student>")
-        info = _student_doc(name, source) if student else _library_doc(module, name)
+        if attr:
+            info = _student_attr_doc(name, source) if student else _library_attr_doc(module, name)
+        else:
+            info = _student_doc(name, source) if student else _library_doc(module, name)
     except Exception:  # noqa: BLE001 - documentation must never break the page
         info = None
     if info is None:
         return {
             "qualname": name if module in (None, "__main__", "<student>") else f"{module}.{name}",
-            "kind": "function",
+            "kind": "attribute" if attr else "function",
             "signature": None,
             "summary": "",
             "description": "",
@@ -473,8 +582,24 @@ def docs(module: str | None, name: str, source: str | None = None) -> dict[str, 
             "url": None,
             "source": "none",
         }
-    parsed = parse_numpydoc(info["doc"])
-    url = None if student else doc_url(info["qualname"], info["kind"], library_versions())
+    entry = info.get("entry")
+    if entry is not None:
+        paras = [p for p in re.split(r"\n\s*\n", entry["desc"]) if p.strip()]
+        parsed: dict[str, Any] = {
+            "summary": " ".join(paras[0].split()) if paras else "",
+            "description": "\n\n".join(paras[1:]),
+            "sections": (
+                [{"title": "Type", "kind": "text", "text": entry["type"]}] if entry["type"] else []
+            ),
+            "source": "numpydoc",
+        }
+    else:
+        parsed = parse_numpydoc(info["doc"])
+    url = (
+        None
+        if student or (attr and parsed["source"] == "none")
+        else doc_url(info["qualname"], info["kind"], library_versions())
+    )
     return {
         "qualname": info["qualname"],
         "kind": info["kind"],
