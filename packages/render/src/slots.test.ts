@@ -102,14 +102,18 @@ describe('uncalled method slots', () => {
 });
 
 describe('constructor box', () => {
-  test('is labelled as a constructor and its wire into the instance shows at its step', async () => {
+  test('is an ordinary function box (svl-1x4) and its wire into the instance shows at its step', async () => {
     const { log, model, laid } = await prepare('golden_linreg');
     const c = setup();
     c.setGraph(model, laid);
     const ctor = callNode(model, 'LinearRegression');
     const inst = instOf(model, 'LinearRegression');
-    expect(el(ctor.id).getAttribute('aria-label')).toContain('constructor LinearRegression');
-    expect(el(ctor.id).classList.contains('md-ctor')).toBe(true);
+    expect(el(ctor.id).getAttribute('aria-label')).toContain('function LinearRegression');
+    expect(el(ctor.id).classList.contains('md-ctor')).toBe(false);
+    // the import shows as (module) in the box; no import node or callee wire is drawn
+    expect(el(ctor.id).textContent).toContain('(sklearn.linear_model)');
+    expect(host.querySelector('.md-import, .md-callee')).toBeNull();
+    expect(host.querySelector('[data-kind="import"]')?.children.length ?? 0).toBe(0);
     // above the instance
     expect(laid.nodes[ctor.id]!.y + laid.nodes[ctor.id]!.h).toBeLessThanOrEqual(
       laid.nodes[inst.id]!.y,

@@ -13,7 +13,7 @@ import type {
   Token,
   ValueSummary,
 } from '@machines/log';
-import { M, instanceTitle } from './layout';
+import { M, callModules, instanceTitle } from './layout';
 import type { Laid, LaidNode } from './layout';
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -601,11 +601,12 @@ export interface SvgDom {
   docs: boolean;
 }
 
-function nodeLabel(n: GNode, ctors: Set<string>): string {
+function nodeLabel(n: GNode, module?: string): string {
   switch (n.kind) {
     case 'call':
-      if (ctors.has(n.id)) return `constructor ${n.name}`;
-      return n.parent ? `method ${n.name}` : `function ${n.name}`;
+      // a constructor is an ordinary function call (svl-1x4)
+      if (n.parent) return `method ${n.name}`;
+      return module === undefined ? `function ${n.name}` : `function ${n.name} from ${module}`;
     case 'instance':
       return `object ${instanceTitle(n)}`;
     case 'expr':
@@ -624,11 +625,19 @@ function buildCall(
   n: Extract<GNode, { kind: 'call' }>,
   ln: LaidNode,
   g: SVGGElement,
+  module?: string,
 ): Map<string, PortDom> {
   const ports = new Map<string, PortDom>();
   g.append(s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h, rx: 9 }, 'md-box'));
   const top = n.inPorts.length ? M.portLabelH : M.emptyPortH;
-  g.append(s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + top + 16 }, 'md-name', n.name));
+  const title = s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + top + 16 }, 'md-name', n.name);
+  // an imported name carries its module in parentheses, lighter and not bold (svl-1x4)
+  if (module !== undefined) title.append(s(doc, 'tspan', {}, 'md-module', ` (${module})`));
+  g.append(title);
+  // text cue for a method not called yet (no different stroke); shown by CSS under `.md-uncalled`
+  g.append(
+    s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + top + 27 }, 'md-uncalled-cue', 'not called yet'),
+  );
   for (const p of n.inPorts) {
     const lp = ln.ports[p.id];
     if (!lp) continue;
@@ -710,7 +719,7 @@ export function buildSvg(
   const labelLayer = s(doc, 'g', {}, 'md-layer-labels');
   const moreLayer = s(doc, 'g', {}, 'md-layer-more');
   svg.append(bgLayer, edgeLayer, nodeLayer, labelLayer, moreLayer);
-  const ctors = modelIndex(model).ctors;
+  const modules = callModules(model);
 
   const nodes = new Map<string, NodeHandle>();
   const edges = new Map<string, EdgeHandle>();
@@ -725,7 +734,7 @@ export function buildSvg(
       { 'data-node': n.id, 'data-kind': n.kind },
       `md-node md-${n.kind} md-hidden`,
     );
-    const label = nodeLabel(n, ctors);
+    const label = nodeLabel(n, modules.get(n.id));
     if (n.kind !== 'source' && n.kind !== 'import') {
       g.setAttribute('tabindex', '0');
       g.setAttribute('role', 'button');
@@ -735,8 +744,7 @@ export function buildSvg(
 
     switch (n.kind) {
       case 'call':
-        h.ports = buildCall(doc, n, ln, g);
-        if (ctors.has(n.id)) g.classList.add('md-ctor');
+        h.ports = buildCall(doc, n, ln, g, modules.get(n.id));
         break;
       case 'instance': {
         const bg = s(
@@ -798,23 +806,8 @@ export function buildSvg(
           s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + ln.h / 2 + 4 }, 'md-store-text', n.text),
         );
         break;
-      case 'import': {
-        g.append(
-          s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h, rx: ln.h / 2 }, 'md-box'),
-          s(
-            doc,
-            'text',
-            { x: ln.x + ln.w / 2, y: ln.y + (n.source === null ? ln.h / 2 + 4 : 16) },
-            'md-import-name',
-            n.name,
-          ),
-        );
-        if (n.source !== null)
-          g.append(
-            s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + ln.h - 8 }, 'md-import-src', n.source),
-          );
-        break;
-      }
+      case 'import':
+        break; // not drawn (svl-1x4): the module shows inside the call box
       case 'source':
         g.append(
           s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h }, 'md-hit'),
@@ -887,7 +880,7 @@ export function buildSvg(
         doc,
         'path',
         { d, 'marker-end': `url(#${ARROW_ID})` },
-        e.callee ? 'md-wire md-callee' : e.dashed ? 'md-wire md-dashed' : 'md-wire',
+        e.dashed ? 'md-wire md-dashed' : 'md-wire',
       ),
       s(doc, 'path', { d }, 'md-wire-hit'),
     );

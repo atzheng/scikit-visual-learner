@@ -382,6 +382,7 @@ describe('legend', () => {
     const el = createLegend(document, true);
     expect(el.querySelectorAll('li').length).toBe(LEGEND_ITEMS.length);
     expect(el.textContent).toContain('⚠ Error');
+    expect(el.textContent).not.toMatch(/machine/i);
     expect(el.textContent).toContain('⏹ stopped here');
     expect(el.textContent).toContain('● Changed attribute');
   });
@@ -394,8 +395,9 @@ describe('legend', () => {
       expr: true,
       store: true,
       source: true,
-      import: true,
+      import: true, // kept in the model, not drawn (svl-1x4): no legend entry
     };
+    delete (nodeKinds as Partial<typeof nodeKinds>).import;
     const covered = new Set(LEGEND_ITEMS.flatMap((i) => i.covers));
     const wanted = [
       ...Object.keys(nodeKinds),
@@ -409,7 +411,6 @@ describe('legend', () => {
       'stopped',
       'changed',
       'badge',
-      'constructor',
       'uncalled',
       'more-methods',
       'unused-port',
@@ -420,10 +421,17 @@ describe('legend', () => {
     expect(new Set(LEGEND_ITEMS.map((i) => i.id)).size).toBe(LEGEND_ITEMS.length);
   });
 
-  test('createLegendList has one li per item and no toggle', () => {
-    const ul = createLegendList(document);
-    expect(ul.tagName).toBe('UL');
-    expect(ul.querySelectorAll('li').length).toBe(LEGEND_ITEMS.length);
+  test('first layer is two entries; the rest is behind a More expander', () => {
+    const body = createLegendList(document);
+    expect(body.querySelectorAll('li').length).toBe(LEGEND_ITEMS.length);
+    const first = body.querySelector(':scope > ul')!;
+    expect(first.querySelectorAll('li').length).toBe(2);
+    expect(first.textContent).toMatch(/instance/);
+    expect(first.textContent).toMatch(/Function or method call/);
+    const more = body.querySelector('details.md-legend-more')!;
+    expect(more.querySelector('summary')!.textContent).toBe('More');
+    expect(more.hasAttribute('open')).toBe(false);
+    expect(more.querySelectorAll('li').length).toBe(LEGEND_ITEMS.length - 2);
   });
 });
 

@@ -220,6 +220,7 @@ exports[`snapshots > linreg, error 1`] = `
 <rect x="19.799999999999997" y="144" width="476" height="84" rx="9" class="md-box">
 </rect>
 <text x="257.8" y="190" class="md-name">train_test_split</text>
+<text x="257.8" y="201" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:arrays[0]" class="md-port-g">
 <circle cx="138.8" cy="144" r="3" class="md-port">
 </circle>
@@ -285,10 +286,11 @@ exports[`snapshots > linreg, error 1`] = `
 <rect x="840" y="413" width="194" height="174" rx="11" class="md-focus-ring">
 </rect>
 </g>
-<g data-node="n:czvr3a.0" data-kind="call" class="md-node md-call md-ctor" tabindex="0" role="button" aria-label="constructor LinearRegression">
+<g data-node="n:czvr3a.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="function LinearRegression">
 <rect x="787" y="300" width="136" height="60" rx="9" class="md-box">
 </rect>
 <text x="855" y="322" class="md-name">LinearRegression</text>
+<text x="855" y="333" class="md-uncalled-cue">not called yet</text>
 <g data-port="out:0" class="md-port-g">
 <circle cx="855" cy="360" r="3" class="md-port">
 </circle>
@@ -311,6 +313,7 @@ exports[`snapshots > linreg, error 1`] = `
 <rect x="855" y="512" width="164" height="60" rx="9" class="md-box">
 </rect>
 <text x="937" y="558" class="md-name">LinearRegression.fit</text>
+<text x="937" y="569" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:X" class="md-port-g">
 <circle cx="909.6666666666666" cy="512" r="3" class="md-port">
 </circle>
@@ -491,10 +494,11 @@ exports[`snapshots > loop, step 2 1`] = `
 <rect x="358" y="141" width="222" height="192" rx="11" class="md-focus-ring">
 </rect>
 </g>
-<g data-node="n:vwx6qg.0" data-kind="call" class="md-node md-call md-ctor" tabindex="0" role="button" aria-label="constructor SGDRegressor">
+<g data-node="n:vwx6qg.0" data-kind="call" class="md-node md-call" tabindex="0" role="button" aria-label="function SGDRegressor">
 <rect x="319" y="28" width="108" height="60" rx="9" class="md-box">
 </rect>
 <text x="373" y="50" class="md-name">SGDRegressor</text>
+<text x="373" y="61" class="md-uncalled-cue">not called yet</text>
 <g data-port="out:0" class="md-port-g">
 <circle cx="373" cy="88" r="3" class="md-port">
 </circle>
@@ -562,6 +566,7 @@ exports[`snapshots > loop, step 2 1`] = `
 <rect x="373" y="258" width="192" height="60" rx="9" class="md-box">
 </rect>
 <text x="469" y="304" class="md-name">SGDRegressor.partial_fit</text>
+<text x="469" y="315" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:X" class="md-port-g">
 <circle cx="437" cy="258" r="3" class="md-port">
 </circle>
@@ -736,6 +741,7 @@ exports[`snapshots > split, end 1`] = `
 <rect x="12" y="12" width="364" height="84" rx="9" class="md-box">
 </rect>
 <text x="194" y="58" class="md-name">read_csv</text>
+<text x="194" y="69" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:filepath" class="md-port-g">
 <text x="194" y="30" class="md-ptype">filepath = "housing.csv"</text>
 </g>
@@ -788,6 +794,7 @@ exports[`snapshots > split, end 1`] = `
 <rect x="194" y="228" width="266" height="84" rx="9" class="md-box">
 </rect>
 <text x="327" y="274" class="md-name">DataFrame.drop</text>
+<text x="327" y="285" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:columns" class="md-port-g">
 <text x="327" y="246" class="md-ptype">columns = "price"</text>
 </g>
@@ -936,6 +943,7 @@ exports[`snapshots > split, end 1`] = `
 <rect x="351" y="532" width="630" height="84" rx="9" class="md-box">
 </rect>
 <text x="666" y="578" class="md-name">train_test_split</text>
+<text x="666" y="589" class="md-uncalled-cue">not called yet</text>
 <g data-port="in:arrays[0]" class="md-port-g">
 <circle cx="477" cy="532" r="3" class="md-port">
 </circle>
