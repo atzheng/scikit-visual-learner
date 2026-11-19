@@ -1550,3 +1550,38 @@ for f in [True, False]:
         if e["kind"] == "expr":
             assert not [i for i in e["inputs"] if i["origin"] == "call"], e["name"]
     assert repr(r.ns["out"]) == repr(p.ns["out"]) and repr(r.ns["v"]) == repr(p.ns["v"])
+
+
+REBIND_SRC = """
+mask = df["a"] > 2
+other = df["b"] > 2
+def f():
+    global mask
+    mask = other
+    return 0
+df.loc[mask, "y"] = f()
+w = df["a"] * 2
+def g():
+    global w
+    w = df["b"] * 3
+    return 0
+df["z"] = w + g()
+"""
+
+
+def test_store_names_rebound_during_the_statement_give_no_wire() -> None:
+    r = record(FRAME + REBIND_SRC)
+    assert r.err is None
+    s1, s2 = [e for e in r.events if e["kind"] == "store"]
+    assert not [i for i in s1["inputs"] if i["param"].startswith("index")]
+    assert not [i for i in s2["inputs"] if i["param"] == "value[w]"]
+    # and a normal store still wires
+    ok = record(FRAME + 'mask = df["a"] > 2\ndf.loc[mask, "y"] = 0\n')
+    assert any(i["param"] == "index[mask]" for e in ok.events for i in e["inputs"])
+
+
+def test_store_rebind_case_is_transparent() -> None:
+    a, b = record(FRAME + REBIND_SRC), plain(FRAME + REBIND_SRC)
+    assert a.err is None and b.err is None
+    assert a.ns["df"].equals(b.ns["df"])
+    assert a.ns["mask"].equals(b.ns["mask"])

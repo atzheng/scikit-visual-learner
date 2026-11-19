@@ -718,7 +718,9 @@ class Recorder:
         # hidden calls never count against the event cap (SPEC "Call filtering")
         return self._expr_event(inner, f"s{inner}", text, self._reads_of(text), value, (), False)
 
-    def _read_inputs(self, reads: list[str], rebound: Any) -> list[dict[str, Any]]:
+    def _read_inputs(
+        self, reads: list[str], rebound: Any, strict: bool = False
+    ) -> list[dict[str, Any]]:
         """Tokens currently held by the names an expression reads (CONTRACTS section 5).
 
         `rebound` are names the statement just assigned: their *previous* binding is what the
@@ -750,11 +752,24 @@ class Recorder:
                         continue
                     tok = rec[0]
                 else:
+                    if strict and (rec is None or rec[1]() is not obj):
+                        continue  # rebound since its last bind (a call in the statement did it)
                     self._check(obj)
                     tok = vt.token(obj)
                     vt.summarize(tok, obj)
             out.append({"param": name, "origin": "name", "value": tok})
         return out
+
+    def _rebound_unseen(self, name: str, ns: dict[str, Any]) -> bool:
+        """A reference name whose object is not the one its last `__bind__` recorded."""
+        rec = self._names.get(name)
+        obj = ns[name]
+        return (
+            rec is not None
+            and rec[2]
+            and rec[1]() is not obj
+            and self.vt.classify(obj) == "reference"
+        )
 
     def _call_inputs(
         self, calls: Sequence[int], have: list[dict[str, Any]], fmt: str = "{}"
@@ -766,6 +781,8 @@ class Recorder:
         output (hidden, failed, tuple result) gives nothing: a missing wire, never a false one.
         """
         out: list[dict[str, Any]] = []
+        # A second call with the same `func_text` (`[StandardScaler(), StandardScaler()]`) is
+        # dropped on purpose by the `param` check below: a missing wire, never a false one.
         for c in calls:
             outs = self._site_out.get(c)  # reset at the start of every execution of the site
             if not outs or len(outs) != 1 or outs[0][1] is None:
@@ -1196,7 +1213,7 @@ class Recorder:
             kind = o["origin"]
             if kind == "expr":
                 # the RHS object is not passed to the hook: wire the names it reads instead
-                for r in self._read_inputs(o["reads"], frozenset({root})):
+                for r in self._read_inputs(o["reads"], frozenset({root}), True):
                     inputs.append({**r, "param": f"value[{r['param']}]", "origin": "expr"})
                 inputs.extend(self._call_inputs(o.get("calls", ()), inputs, "value[{}]"))
             elif kind == "call":
@@ -1207,7 +1224,7 @@ class Recorder:
                     inputs.append({"param": "value", "origin": "call", "value": out[0][1]})
             else:
                 ns = self.namespace or {}
-                if kind == "name" and o["name"] in ns:
+                if kind == "name" and o["name"] in ns and not self._rebound_unseen(o["name"], ns):
                     inputs.append(self._input("value", o, ns[o["name"]], site, f"s{site}.value"))
                 elif kind == "const":
                     inputs.append({"param": "value", "origin": "const", "text": o["text"]})
@@ -1217,7 +1234,7 @@ class Recorder:
             kind = io["origin"]
             reads = [io["name"]] if kind == "name" else io.get("reads", [])
             have = {inp["param"] for inp in inputs}
-            for r in self._read_inputs([n for n in reads if n != root], frozenset()):
+            for r in self._read_inputs([n for n in reads if n != root], frozenset(), True):
                 param = f"index[{r['param']}]"
                 if param not in have:
                     inputs.append({**r, "param": param, "origin": kind})
