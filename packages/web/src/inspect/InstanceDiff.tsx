@@ -1,9 +1,9 @@
-import { stateAt } from '@machines/log';
-import { Fragment, useMemo, useState } from 'react';
+import { stateAt, type ValueSummary } from '@machines/log';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../store';
 import { clampStep } from '../timeline/steps';
 import './inspect.css';
-import { attrRows, inspectTarget, valueLine } from './model';
+import { attrRows, inspectTarget, valueLine, type AttrRow } from './model';
 import { ValueBody } from './Preview';
 
 /**
@@ -27,30 +27,25 @@ export function InstanceDiff() {
     () => (model && log && state ? inspectTarget(model, log, state, selected) : null),
     [model, log, state, selected],
   );
-  if (!target || !log) return null;
-  const key = `${target.node.id}@${state?.current ?? ''}`;
-  if (dismissed === key) return null;
+  const key = target ? `${target.node.id}@${state?.current ?? ''}` : null;
+  const visible = target !== null && dismissed !== key;
+  // Esc closes the panel too (a pinned preview takes the first Esc)
+  useEffect(() => {
+    if (!visible) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (useStore.getState().selection.edge) return;
+      setDismissed(key);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [visible, key]);
+  if (!target || !log || !visible) return null;
 
   const rows = attrRows(target.before, target.after, log.values);
   const title = target.node.varName ?? target.node.className;
   const changedCount = rows.filter((r) => r.changed).length;
   const toggle = (id: string) => setOpen(open === id ? null : id);
-
-  const cell = (name: string, side: 'before' | 'after', tok: string | null, changed: boolean) => {
-    if (tok === null) return <span className="pv-none">not set</span>;
-    const id = `${name}/${side}`;
-    return (
-      <button
-        type="button"
-        className={`pv-val${changed ? ' changed' : ''}`}
-        aria-expanded={open === id}
-        title="Show a preview of this value"
-        onClick={() => toggle(id)}
-      >
-        {valueLine(log.values[tok])}
-      </button>
-    );
-  };
 
   return (
     <aside className="inspect-panel" aria-label={`Attributes of ${title}`}>
@@ -82,34 +77,84 @@ export function InstanceDiff() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <Fragment key={r.name}>
-                <tr className={r.changed ? 'changed' : undefined}>
-                  <th scope="row">
-                    {r.changed && (
-                      <>
-                        <span aria-hidden="true">● </span>
-                        <span className="inspect-changed">changed</span>{' '}
-                      </>
-                    )}
-                    <code>{r.name}</code>
-                  </th>
-                  {target.call && <td>{cell(r.name, 'before', r.before, false)}</td>}
-                  <td>{cell(r.name, 'after', r.after, r.changed)}</td>
-                </tr>
-                {[`${r.name}/before`, `${r.name}/after`].includes(open ?? '') && (
-                  <tr className="inspect-preview">
-                    <td colSpan={target.call ? 3 : 2}>
-                      <ValueBody
-                        value={log.values[(open!.endsWith('/before') ? r.before : r.after) ?? '']}
-                      />
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
+              <AttrRowView
+                key={r.name}
+                row={r}
+                call={target.call}
+                values={log.values}
+                open={open}
+                onToggle={toggle}
+              />
             ))}
           </tbody>
         </table>
       )}
     </aside>
+  );
+}
+
+/**
+ * One attribute: its name (never broken mid-word: it is cut with an ellipsis and carries a title), the
+ * before and after values as buttons, and the inline preview of the value that is open.
+ */
+export function AttrRowView({
+  row,
+  call,
+  values,
+  open,
+  onToggle,
+}: {
+  row: AttrRow;
+  call: boolean;
+  values: Record<string, ValueSummary>;
+  open: string | null;
+  onToggle(id: string): void;
+}) {
+  const cell = (side: 'before' | 'after', tok: string | null, changed: boolean) => {
+    if (tok === null) return <span className="pv-none">not set</span>;
+    const id = `${row.name}/${side}`;
+    return (
+      <button
+        type="button"
+        className={`pv-val${changed ? ' changed' : ''}`}
+        aria-expanded={open === id}
+        title="Show a preview of this value"
+        onClick={() => onToggle(id)}
+      >
+        {valueLine(values[tok])}
+      </button>
+    );
+  };
+  const openSide =
+    open === `${row.name}/before`
+      ? row.before
+      : open === `${row.name}/after`
+        ? row.after
+        : undefined;
+  return (
+    <>
+      <tr className={row.changed ? 'changed' : undefined}>
+        <th scope="row">
+          {row.changed && (
+            <span className="inspect-flag">
+              <span aria-hidden="true">● </span>
+              <span className="inspect-changed">changed</span>
+            </span>
+          )}
+          <code className="inspect-name" title={row.name}>
+            {row.name}
+          </code>
+        </th>
+        {call && <td>{cell('before', row.before, false)}</td>}
+        <td>{cell('after', row.after, row.changed)}</td>
+      </tr>
+      {openSide !== undefined && (
+        <tr className="inspect-preview">
+          <td colSpan={call ? 3 : 2}>
+            <ValueBody value={openSide === null ? undefined : values[openSide]} />
+          </td>
+        </tr>
+      )}
+    </>
   );
 }

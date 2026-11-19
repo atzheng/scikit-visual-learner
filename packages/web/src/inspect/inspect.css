@@ -180,3 +180,34 @@
 .inspect-table tbody th {
   overflow-wrap: anywhere;
 }
+
+.inspect-table tbody th {
+  overflow: hidden;
+}
+.inspect-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.inspect-flag {
+  display: block;
+  white-space: nowrap;
+}
+.inspect-table th:first-child {
+  width: 40%;
+}
+.inspect-table th,
+.inspect-table td {
+  padding: 3px 8px;
+}
+
+@media (max-width: 900px) {
+  .inspect-panel {
+    flex-basis: min(440px, 88%);
+  }
+  .inspect-table th:first-child {
+    width: 36%;
+  }
+}

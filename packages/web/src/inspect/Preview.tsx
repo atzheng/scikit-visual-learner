@@ -150,7 +150,13 @@ export function useEdgeInspect(): EdgeInspect {
   );
   const shownId = pinnedId ?? hover?.id ?? null;
   const at = pinnedId ? (pinAt ?? hover?.at ?? null) : (hover?.at ?? null);
-  const token = model && shownId ? edgeToken(model, state, shownId) : null;
+  // a pinned wire that the current step does not show cannot keep a pin nobody can see
+  const pinHidden = pinnedId !== null && state !== null && !state.visibleEdges.has(pinnedId);
+  const token = model && shownId && !pinHidden ? edgeToken(model, state, shownId) : null;
+  const pinInvisible = pinnedId !== null && token === null;
+  useEffect(() => {
+    if (pinInvisible) unpin();
+  }, [pinInvisible, unpin]);
   const value = token !== null && log ? log.values[token] : undefined;
 
   const popover =

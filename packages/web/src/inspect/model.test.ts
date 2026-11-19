@@ -101,6 +101,20 @@ describe('attrRows', () => {
     expect(attrRows({ a: 's1' }, { a: 's2' }, values)[0]!.changed).toBe(false);
     expect(attrRows({ a: 's1' }, { a: 's3' }, values)[0]!.changed).toBe(true);
   });
+  test('truncated reprs never count as equal', () => {
+    const values = {
+      s1: { type: 'tuple[8]', repr: '(1, 2, 3, 4, 5, 6, ...)' },
+      s2: { type: 'tuple[8]', repr: '(1, 2, 3, 4, 5, 6, ...)' },
+      s3: { type: 'str', repr: "'aaaaaaaaaaaaaaaaaaaaaa...aaaaaaaaaaa'" },
+      s4: { type: 'str', repr: "'aaaaaaaaaaaaaaaaaaaaaa...aaaaaaaaaaa'" },
+      s5: { type: 'str', repr: 'x'.repeat(39) + '…' },
+      s6: { type: 'str', repr: 'x'.repeat(39) + '…' },
+    };
+    expect(attrRows({ a: 's1' }, { a: 's2' }, values)[0]!.changed).toBe(true);
+    expect(attrRows({ a: 's3' }, { a: 's4' }, values)[0]!.changed).toBe(true);
+    expect(attrRows({ a: 's5' }, { a: 's6' }, values)[0]!.changed).toBe(true);
+    expect(attrRows({ a: 's1' }, { a: 's1' }, values)[0]!.changed).toBe(false);
+  });
   test('missing sides count as empty', () => {
     expect(attrRows(undefined, undefined)).toEqual([]);
   });
