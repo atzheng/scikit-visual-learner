@@ -22,6 +22,11 @@ export interface LayoutOptions {
    */
   attrRows?: Record<string, string[]>;
   /**
+   * Number of methods in each instance's "more methods" list, by instance id (`moreMethodsFor`). An instance
+   * with a count above 0 reserves one control row at the bottom of its box. Default: none.
+   */
+  moreMethods?: Record<string, number>;
+  /**
    * The type text of each wire label (the part before the name), by edge id: `edgeLabelsFor` gives the
    * longest over the run. Default: a placeholder of the usual length. The edge's `nameLabel` follows it.
    */
@@ -58,6 +63,9 @@ export interface LaidNode {
   /** Instances: height of the name pill, and of the attribute list under it (both inside the box, at the top). */
   headerH?: number;
   attrsH?: number;
+  /** Instances with a "more methods" list: its method count, and the height of the control row at the bottom. */
+  moreN?: number;
+  moreH?: number;
 }
 export interface Laid {
   width: number;
@@ -91,6 +99,7 @@ export const M = {
   textPadX: 8,
   emptyPortH: 6,
   laneGap: 8, // spacing of wires entering an instance below its attribute rows
+  moreH: 22, // the "more methods (N)" control row at the bottom of an instance
 };
 
 export function estimateMeasure(text: string, font: string): number {
@@ -205,11 +214,14 @@ function callPortWidths(n: CallNode, measure: Measure): PortSizes {
 const byOrder = (a: GNode, b: GNode): number =>
   a.order - b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
-function leafSize(
-  n: GNode,
-  measure: Measure,
-  attrRows?: Record<string, string[]>,
-): { w: number; h: number } {
+interface SizeOpts {
+  attrRows?: Record<string, string[]>;
+  moreMethods?: Record<string, number>;
+}
+const moreRow = (n: InstanceNode, o: SizeOpts): number =>
+  (o.moreMethods?.[n.id] ?? 0) > 0 ? M.moreH : 0;
+
+function leafSize(n: GNode, measure: Measure, o: SizeOpts): { w: number; h: number } {
   switch (n.kind) {
     case 'call': {
       const pw = callPortWidths(n, measure);
@@ -228,13 +240,21 @@ function leafSize(
       return { w: Math.ceil(w), h };
     }
     case 'instance': {
-      const rows = instanceRows(n, attrRows);
+      const rows = instanceRows(n, o.attrRows);
       const w = Math.max(
         measure(instanceTitle(n), FONT_NAME) + 2 * M.boxPadX,
         ...rows.map((r) => measure(r, FONT_MONO) + 2 * M.instPad),
+        moreRow(n, o)
+          ? measure(`▸ more methods (${o.moreMethods![n.id]})`, FONT_MONO) + 2 * M.instPad
+          : 0,
         M.minBoxW,
       );
-      return { w: Math.ceil(w), h: M.instHeaderH + rows.length * M.instRowH + M.instPad };
+      // a title-only box (no attribute rows) needs no gap under the pill
+      const body = rows.length * M.instRowH + (rows.length > 0 ? M.instPad : 0);
+      return {
+        w: Math.ceil(w),
+        h: M.instHeaderH + body + moreRow(n, o) + (rows.length > 0 ? 0 : 6),
+      };
     }
     case 'expr':
       return { w: Math.ceil(measure(n.text, FONT_MONO) + 2 * M.textPadX), h: M.exprH };
@@ -256,7 +276,12 @@ function leafSize(
 /** Pure: GraphModel -> ELK input graph. */
 export function buildElkGraph(
   model: GraphModel,
-  opts: { measure?: Measure; attrRows?: Record<string, string[]>; minTier?: 0 | 1 | 2 } = {},
+  opts: {
+    measure?: Measure;
+    attrRows?: Record<string, string[]>;
+    moreMethods?: Record<string, number>;
+    minTier?: 0 | 1 | 2;
+  } = {},
 ): ElkNode {
   return buildElk(model, opts).graph;
 }
@@ -264,7 +289,12 @@ export function buildElkGraph(
 /** As `buildElkGraph`, also reporting how many edges were dropped for naming a missing node or port. */
 export function buildElk(
   model: GraphModel,
-  opts: { measure?: Measure; attrRows?: Record<string, string[]>; minTier?: 0 | 1 | 2 } = {},
+  opts: {
+    measure?: Measure;
+    attrRows?: Record<string, string[]>;
+    moreMethods?: Record<string, number>;
+    minTier?: 0 | 1 | 2;
+  } = {},
 ): { graph: ElkNode; dropped: number } {
   const measure = opts.measure ?? defaultMeasure;
   const ids = new Set(model.nodes.map((n) => n.id));
@@ -325,7 +355,7 @@ export function buildElk(
   const build = (n: GNode): ElkNode => {
     const e: ElkNode = { id: n.id };
     const children = kids.get(n.id);
-    const size = leafSize(n, measure, opts.attrRows);
+    const size = leafSize(n, measure, opts);
     if (n.kind === 'call') {
       e.width = size.w;
       e.height = size.h;
@@ -361,6 +391,7 @@ export function buildElk(
         rows.length * M.instRowH +
         M.instPad +
         (intoInst.get(n.id)?.length ?? 0) * M.laneGap;
+      const bottom = M.instPad + moreRow(n, opts);
       e.children = children.map(build);
       // Wires from outside enter through the west border below the attribute rows (hierarchical ports).
       const lanes = intoInst.get(n.id) ?? [];
@@ -374,9 +405,11 @@ export function buildElk(
       }));
       e.layoutOptions = {
         'elk.portConstraints': 'FIXED_POS',
-        'elk.padding': `[top=${top},left=${M.instPad},bottom=${M.instPad},right=${M.instPad}]`,
+        'elk.padding': `[top=${top},left=${M.instPad},bottom=${bottom},right=${M.instPad}]`,
         'elk.nodeSize.constraints': 'MINIMUM_SIZE',
-        'elk.nodeSize.minimum': `(${size.w},${size.h})`,
+        // ELK reads a compound's minimum as (height, width) under direction DOWN (it lays out sideways and
+        // rotates), so a (w, h) value would reserve w px of height: the empty band under a lone method box.
+        'elk.nodeSize.minimum': `(${size.h},${size.w})`,
       };
     } else {
       e.width = size.w;
@@ -422,6 +455,7 @@ export function toLaid(
   model: GraphModel,
   measure: Measure = defaultMeasure,
   attrRows?: Record<string, string[]>,
+  moreMethods?: Record<string, number>,
 ): Laid {
   const laid: Laid = {
     width: root.width ?? 0,
@@ -454,6 +488,11 @@ export function toLaid(
     } else if (g?.kind === 'instance') {
       ln.headerH = M.instHeaderH;
       ln.attrsH = instanceRows(g, attrRows).length * M.instRowH;
+      const more = moreMethods?.[g.id] ?? 0;
+      if (more > 0) {
+        ln.moreN = more;
+        ln.moreH = M.moreH;
+      }
     }
     if (!isRoot) laid.nodes[n.id] = ln;
     for (const c of n.children ?? []) walk(c, isRoot ? 0 : x, isRoot ? 0 : y, false);
@@ -484,6 +523,7 @@ export async function layout(model: GraphModel, opts: LayoutOptions = {}): Promi
   const { graph, dropped } = buildElk(model, {
     measure,
     attrRows: opts.attrRows,
+    moreMethods: opts.moreMethods,
     minTier: opts.minTier,
   });
   if (dropped > 0) console.warn(`layout: dropped ${dropped} edge(s) naming a missing node or port`);
@@ -497,7 +537,7 @@ export async function layout(model: GraphModel, opts: LayoutOptions = {}): Promi
       { cause: err },
     );
   }
-  const laid = toLaid(out, model, measure, opts.attrRows);
+  const laid = toLaid(out, model, measure, opts.attrRows, opts.moreMethods);
   laid.labels = placeLabels(model, laid, opts.edgeLabels ?? {}, measure);
   laid.dropped = dropped;
   return laid;

@@ -182,4 +182,16 @@ describe('import nodes', () => {
     // import nodes come first in source order
     expect(g.nodes[0]!.kind).toBe('import');
   });
+
+  test('one import used by many call sites is wired to the first five boxes only', () => {
+    const l = new L();
+    l.imp('import pandas as pd', 1, 'pd', 'pandas', null);
+    for (let k = 0; k < 8; k++) {
+      l.values[`v${k}.0`] = { type: 'DataFrame' };
+      l.call(`pd.read_csv("${k}")`, 3 + k, 'function', 'read_csv', { outputs: [`v${k}.0`] });
+    }
+    const wires = l.graph().edges.filter((e) => e.callee);
+    expect(wires).toHaveLength(5);
+    expect(wires.map((w) => w.uses[0]!.i).sort()).toEqual([0, 1, 2, 3, 4]);
+  });
 });

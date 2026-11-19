@@ -89,6 +89,8 @@ export interface GEdge {
 }
 
 export const MAX_NODES = 300;
+/** Most call boxes one import node is wired to. */
+export const MAX_CALLEE_WIRES = 5;
 
 /** `pd.read_csv`, `LinearRegression`: a bare dotted name. `pd.read_csv(x).head` and `a[0].f` do not match. */
 const CALLEE_ROOT = /^([\p{L}_][\p{L}\p{N}_]*)(?:\.[\p{L}\p{N}_]+)*$/u;
@@ -526,12 +528,18 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     }
     return { node: id, port: null };
   };
-  for (const info of calls.values()) {
+  const calleeBoxes = new Map<string, Set<string>>(); // import node -> call boxes already wired
+  for (const info of [...calls.values()].sort((a, b) => a.events[0]!.i - b.events[0]!.i)) {
     if (info.node.parent !== null) continue; // a method of a machine: its owner is the callee
     for (const e of info.events) {
       const ref = calleeRef(e);
-      if (ref)
-        addEdge(ref, { node: info.node.id, port: null }, { i: e.i, token: '' }, null, false, true);
+      if (!ref) continue;
+      // at most MAX_CALLEE_WIRES boxes per import node (the earliest), so `pd.` used 30 times stays readable
+      const boxes = calleeBoxes.get(ref.node) ?? new Set<string>();
+      calleeBoxes.set(ref.node, boxes);
+      if (!boxes.has(info.node.id) && boxes.size >= MAX_CALLEE_WIRES) continue;
+      boxes.add(info.node.id);
+      addEdge(ref, { node: info.node.id, port: null }, { i: e.i, token: '' }, null, false, true);
     }
   }
 

@@ -2,6 +2,7 @@
 // `applyState` then only toggles classes and text for a timeline step. It never re-lays-out.
 // The pure helpers (path building, label text, attribute rows, status) have no DOM dependency.
 import type {
+  CallNode,
   EventLog,
   Execution,
   GEdge,
@@ -154,6 +155,8 @@ export interface AttrRow {
   /** Gray text after the name: the type for attributes, the value for constructor params. */
   detail: string;
   param: boolean;
+  /** A data box's row (shape, dtype, columns): the value reads first, the label is muted. */
+  data?: boolean;
 }
 
 /** Rows of an instance box at a version: constructor params first, then the version's attributes. */
@@ -186,8 +189,8 @@ export function dataRowModels(s: ValueSummary | undefined): AttrRow[] {
   const rows: AttrRow[] = [];
   if (!s) return rows;
   if (s.shape && s.shape.length > 0)
-    rows.push({ name: 'shape', detail: `(${s.shape.join(', ')})`, param: false });
-  if (s.dtype) rows.push({ name: 'dtype', detail: s.dtype, param: false });
+    rows.push({ name: 'shape', detail: `(${s.shape.join(', ')})`, param: false, data: true });
+  if (s.dtype) rows.push({ name: 'dtype', detail: s.dtype, param: false, data: true });
   else if (s.columns && s.columns.length > 0) {
     let text = '';
     let k = 0;
@@ -198,7 +201,7 @@ export function dataRowModels(s: ValueSummary | undefined): AttrRow[] {
     }
     if (text.length > MAX_COLUMNS_TEXT) text = `${text.slice(0, MAX_COLUMNS_TEXT - 1)}…`;
     else if (k < s.columns.length) text += ', …';
-    rows.push({ name: 'columns', detail: text, param: false });
+    rows.push({ name: 'columns', detail: text, param: false, data: true });
   }
   return rows;
 }
@@ -220,6 +223,199 @@ export function attrRowsFor(model: GraphModel, log: EventLog): Record<string, st
     out[n.id] = [...rows.values()];
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------------------------
+// Method lists, ports of the active execution
+
+export interface MethodEntry {
+  name: string;
+  doc: string;
+}
+/** What the docs panel needs to open the docs of a method listed under "more methods" (svl-3ms). */
+export interface MethodDocTarget {
+  module: string | null;
+  /** `Class.method`, as an event of a method call names it. */
+  name: string;
+}
+
+const objKey = (t: Token): string => {
+  const k = t.indexOf('.');
+  return k < 0 ? t : t.slice(0, k);
+};
+const lastName = (n: string): string => n.slice(n.lastIndexOf('.') + 1);
+
+interface ModelIndex {
+  instByObj: Map<string, InstanceNode>;
+  kids: Map<string, CallNode[]>;
+  outEdges: Map<string, GEdge[]>;
+  ctors: Set<string>;
+}
+const modelIndexes = new WeakMap<GraphModel, ModelIndex>();
+function modelIndex(model: GraphModel): ModelIndex {
+  let ix = modelIndexes.get(model);
+  if (ix) return ix;
+  ix = { instByObj: new Map(), kids: new Map(), outEdges: new Map(), ctors: new Set() };
+  const byId = new Map(model.nodes.map((n) => [n.id, n]));
+  for (const n of model.nodes) {
+    if (n.kind === 'instance') {
+      for (const v of n.versions)
+        if (!ix.instByObj.has(objKey(v.token))) ix.instByObj.set(objKey(v.token), n);
+      const by = n.createdBy !== null ? byId.get(n.createdBy) : undefined;
+      if (by?.kind === 'call' && by.name === n.className) ix.ctors.add(by.id);
+    } else if (n.kind === 'call' && n.parent !== null) {
+      const l = ix.kids.get(n.parent);
+      if (l) l.push(n);
+      else ix.kids.set(n.parent, [n]);
+    }
+  }
+  for (const e of model.edges) {
+    if (e.from.port === null) continue;
+    const k = `${e.from.node}|${e.from.port}`;
+    const l = ix.outEdges.get(k);
+    if (l) l.push(e);
+    else ix.outEdges.set(k, [e]);
+  }
+  modelIndexes.set(model, ix);
+  return ix;
+}
+
+/**
+ * The public methods of an instance's class that its box does not draw: `values.methods` of the class
+ * (written once per run on any value of that type), minus the method boxes the instance has.
+ * Only machines get a list: a data class (DataFrame) lists its first 40 methods alphabetically, which is
+ * not a meaningful "other methods" list.
+ */
+export function hiddenMethods(model: GraphModel, log: EventLog, inst: InstanceNode): MethodEntry[] {
+  if (!inst.versions.some((v) => log.values[v.token]?.machine)) return [];
+  let all: MethodEntry[] | undefined;
+  for (const v of Object.values(log.values)) {
+    if (v.type === inst.className && v.methods) {
+      all = v.methods;
+      break;
+    }
+  }
+  if (!all) return [];
+  const drawn = new Set((modelIndex(model).kids.get(inst.id) ?? []).map((c) => lastName(c.name)));
+  return all.filter((m) => !drawn.has(m.name));
+}
+
+/** Instance id -> number of methods under "more methods" (only instances with at least one). Pass to `layout`. */
+export function moreMethodsFor(model: GraphModel, log: EventLog): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const n of model.nodes) {
+    if (n.kind !== 'instance') continue;
+    const k = hiddenMethods(model, log, n).length;
+    if (k > 0) out[n.id] = k;
+  }
+  return out;
+}
+
+/** Target for opening the docs of `method` of an instance's class. The module comes from the constructor box or a method box. */
+export function methodDocTarget(
+  model: GraphModel,
+  inst: InstanceNode,
+  method: string,
+): MethodDocTarget {
+  let module: string | null = null;
+  const creator = model.nodes.find((n) => n.id === inst.createdBy);
+  if (creator?.kind === 'call' && creator.name === inst.className) module = creator.module;
+  if (module === null)
+    module =
+      modelIndex(model)
+        .kids.get(inst.id)
+        ?.find((c) => c.module)?.module ?? null;
+  return { module, name: `${inst.className}.${method}` };
+}
+
+export interface PortView {
+  /** False when the active execution did not use this port: it is drawn dimmed. */
+  used: boolean;
+  typeLabel: string;
+  /** Gray name text (in-ports: the parameter, out-ports: the bound name). */
+  name: string;
+  /** Constant inputs: the whole `param = text` string. */
+  constText?: string;
+}
+
+function eventAt(log: EventLog, i: number): EventLog['events'][number] | undefined {
+  let lo = 0;
+  let hi = log.events.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const e = log.events[mid]!;
+    if (e.i === i) return e;
+    if (e.i < i) lo = mid + 1;
+    else hi = mid - 1;
+  }
+  return undefined;
+}
+
+/**
+ * What each port of a call box shows for one execution (CONTRACTS section 8): the const text, type and name
+ * come from that execution, and ports it did not use are marked `used: false`. Without an execution or a
+ * log (an uncalled box, or no log yet) every port shows the graph's own text and counts as used.
+ */
+export function portViews(
+  model: GraphModel,
+  node: CallNode,
+  exec: Execution | undefined,
+  log: EventLog | undefined,
+): { in: Record<string, PortView>; out: Record<string, PortView> } {
+  const inV: Record<string, PortView> = {};
+  const outV: Record<string, PortView> = {};
+  const ev = exec && log ? eventAt(log, exec.i) : undefined;
+  const live = exec !== undefined && log !== undefined && ev !== undefined;
+  for (const p of node.inPorts) {
+    const base: PortView = { used: true, typeLabel: p.typeLabel, name: p.param };
+    if (p.constText !== undefined) base.constText = p.constText;
+    inV[p.id] = base;
+    if (!live) continue;
+    const tok = exec.inputs[p.id];
+    if (tok !== undefined) {
+      inV[p.id] = {
+        used: true,
+        typeLabel: tok.startsWith('v') ? '' : (log.values[tok]?.type ?? p.typeLabel),
+        name: p.param,
+      };
+    } else if (p.constText !== undefined) {
+      const x = ev.inputs.find(
+        (i) => `in:${i.param}` === p.id && i.value === undefined && i.text !== undefined,
+      );
+      inV[p.id] = x
+        ? { used: true, typeLabel: '', name: p.param, constText: `${x.param} = ${x.text}` }
+        : { ...base, used: false };
+    } else inV[p.id] = { ...base, used: false };
+  }
+  const ix = modelIndex(model);
+  const lastExec = node.executions[node.executions.length - 1];
+  for (const p of node.outPorts) {
+    const base: PortView = { used: true, typeLabel: p.typeLabel, name: p.nameLabel ?? '' };
+    outV[p.id] = base;
+    if (!live) continue;
+    const tok = exec.outputs[p.id];
+    if (tok === undefined) {
+      outV[p.id] = { ...base, used: false };
+      continue;
+    }
+    if (tok.startsWith('v')) {
+      outV[p.id] = {
+        used: true,
+        typeLabel: '',
+        name: ix.instByObj.get(objKey(tok))?.varName ?? '',
+      };
+      continue;
+    }
+    const wire = (ix.outEdges.get(`${node.id}|${p.id}`) ?? []).find((e) =>
+      e.uses.some((u) => u.token === tok),
+    );
+    outV[p.id] = {
+      used: true,
+      typeLabel: log.values[tok]?.type ?? p.typeLabel,
+      name: wire ? (wire.nameLabel ?? '') : exec === lastExec ? (p.nameLabel ?? '') : '',
+    };
+  }
+  return { in: inV, out: outV };
 }
 
 /** Type text to reserve for each wire label in `layout`: the longest `summaryLabel` over the edge's uses. */
@@ -323,8 +519,33 @@ export interface NodeHandle {
   /** Characters per line of the message under the box (its width). */
   msgChars?: number;
   rows?: AttrRowDom[];
+  /** Call boxes: one group per port, so a port can be re-texted and dimmed per execution. */
+  ports?: Map<string, PortDom>;
+  /** Instances with a "more methods" list. */
+  more?: MoreDom;
   /** Label base for aria-label. */
   label: string;
+}
+export interface PortDom {
+  g: SVGGElement;
+  /** In-ports: the const text, or the type line. Out-ports: the type line. */
+  top: SVGTextElement;
+  /** The gray name line (not for const ports). */
+  name?: SVGTextElement;
+  isConst: boolean;
+  /** Out-ports: the box's bottom edge; the type line sits lower when there is no name line. */
+  bottom?: number;
+}
+export interface MoreDom {
+  /** Control and list, in one group so the list follows its control in tab order. */
+  wrap: SVGGElement;
+  ctl: SVGGElement;
+  label: SVGTextElement;
+  panel: SVGGElement | null;
+  /** The log the open list was built from. */
+  panelFor?: EventLog;
+  open: boolean;
+  n: number;
 }
 export interface EdgeHandle {
   id: string;
@@ -339,11 +560,19 @@ export interface SvgDom {
   svg: SVGSVGElement;
   nodes: Map<string, NodeHandle>;
   edges: Map<string, EdgeHandle>;
+  /** Layer above everything: the "more methods" controls and their lists. */
+  moreLayer: SVGGElement;
+  model: GraphModel;
+  /** The log of the last `applyState`, for lists built on demand. */
+  log?: EventLog;
+  /** True when the host handles `onOpenDocs`: list entries are then buttons. */
+  docs: boolean;
 }
 
-function nodeLabel(n: GNode): string {
+function nodeLabel(n: GNode, ctors: Set<string>): string {
   switch (n.kind) {
     case 'call':
+      if (ctors.has(n.id)) return `constructor ${n.name}`;
       return n.parent ? `method ${n.name}` : `function ${n.name}`;
     case 'instance':
       return `object ${instanceTitle(n)}`;
@@ -363,34 +592,58 @@ function buildCall(
   n: Extract<GNode, { kind: 'call' }>,
   ln: LaidNode,
   g: SVGGElement,
-): void {
+): Map<string, PortDom> {
+  const ports = new Map<string, PortDom>();
   g.append(s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h, rx: 9 }, 'md-box'));
   const top = n.inPorts.length ? M.portLabelH : M.emptyPortH;
   g.append(s(doc, 'text', { x: ln.x + ln.w / 2, y: ln.y + top + 16 }, 'md-name', n.name));
   for (const p of n.inPorts) {
     const lp = ln.ports[p.id];
     if (!lp) continue;
+    const pg = s(doc, 'g', { 'data-port': p.id }, 'md-port-g');
     if (p.constText !== undefined) {
-      g.append(s(doc, 'text', { x: lp.x, y: ln.y + 18 }, 'md-ptype', p.constText));
-      continue;
+      const t = s(doc, 'text', { x: lp.x, y: ln.y + 18 }, 'md-ptype', p.constText);
+      pg.append(t);
+      ports.set(p.id, { g: pg, top: t, isConst: true });
+    } else {
+      pg.append(s(doc, 'circle', { cx: lp.x, cy: lp.y, r: 3 }, 'md-port'));
+      const t = s(doc, 'text', { x: lp.x, y: ln.y + 13 }, 'md-ptype', p.typeLabel);
+      const nm = s(doc, 'text', { x: lp.x, y: ln.y + 25 }, 'md-pname', p.param);
+      pg.append(t, nm);
+      ports.set(p.id, { g: pg, top: t, name: nm, isConst: false });
     }
-    g.append(s(doc, 'circle', { cx: lp.x, cy: lp.y, r: 3 }, 'md-port'));
-    g.append(s(doc, 'text', { x: lp.x, y: ln.y + 13 }, 'md-ptype', p.typeLabel));
-    g.append(s(doc, 'text', { x: lp.x, y: ln.y + 25 }, 'md-pname', p.param));
+    g.append(pg);
   }
   for (const p of n.outPorts) {
     const lp = ln.ports[p.id];
     if (!lp) continue;
-    g.append(s(doc, 'circle', { cx: lp.x, cy: lp.y, r: 3 }, 'md-port'));
-    const name = p.nameLabel ?? '';
+    const pg = s(doc, 'g', { 'data-port': p.id }, 'md-port-g');
+    pg.append(s(doc, 'circle', { cx: lp.x, cy: lp.y, r: 3 }, 'md-port'));
     const bottom = ln.y + ln.h;
-    g.append(s(doc, 'text', { x: lp.x, y: bottom - (name ? 17 : 11) }, 'md-ptype', p.typeLabel));
-    if (name) g.append(s(doc, 'text', { x: lp.x, y: bottom - 5 }, 'md-pname', name));
+    // both lines exist so a port can gain or lose its name; the type line sits above the name line
+    const t = s(
+      doc,
+      'text',
+      { x: lp.x, y: bottom - (p.nameLabel ? 17 : 11) },
+      'md-ptype',
+      p.typeLabel,
+    );
+    const nm = s(doc, 'text', { x: lp.x, y: bottom - 5 }, 'md-pname', p.nameLabel ?? '');
+    pg.append(t, nm);
+    g.append(pg);
+    ports.set(p.id, { g: pg, top: t, name: nm, isConst: false, bottom });
   }
+  return ports;
 }
 
 /** `uid` makes the arrow marker id unique per diagram (several can share a page). */
-export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'): SvgDom {
+export function buildSvg(
+  doc: Document,
+  model: GraphModel,
+  laid: Laid,
+  uid = '0',
+  opts: { docs?: boolean } = {},
+): SvgDom {
   const ARROW_ID = `md-arrow-${uid}`;
   const svg = s(
     doc,
@@ -423,7 +676,9 @@ export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'
   const edgeLayer = s(doc, 'g', {}, 'md-layer-edges');
   const nodeLayer = s(doc, 'g', {}, 'md-layer-nodes');
   const labelLayer = s(doc, 'g', {}, 'md-layer-labels');
-  svg.append(bgLayer, edgeLayer, nodeLayer, labelLayer);
+  const moreLayer = s(doc, 'g', {}, 'md-layer-more');
+  svg.append(bgLayer, edgeLayer, nodeLayer, labelLayer, moreLayer);
+  const ctors = modelIndex(model).ctors;
 
   const nodes = new Map<string, NodeHandle>();
   const edges = new Map<string, EdgeHandle>();
@@ -438,7 +693,7 @@ export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'
       { 'data-node': n.id, 'data-kind': n.kind },
       `md-node md-${n.kind} md-hidden`,
     );
-    const label = nodeLabel(n);
+    const label = nodeLabel(n, ctors);
     if (n.kind !== 'source' && n.kind !== 'import') {
       g.setAttribute('tabindex', '0');
       g.setAttribute('role', 'button');
@@ -448,7 +703,8 @@ export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'
 
     switch (n.kind) {
       case 'call':
-        buildCall(doc, n, ln, g);
+        h.ports = buildCall(doc, n, ln, g);
+        if (ctors.has(n.id)) g.classList.add('md-ctor');
         break;
       case 'instance': {
         const bg = s(
@@ -495,6 +751,7 @@ export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'
           g.append(rg);
           h.rows.push({ g: rg, flash, bullet, text, name, detail });
         }
+        if (ln.moreN) h.more = buildMore(doc, n, ln, moreLayer);
         break;
       }
       case 'expr':
@@ -614,7 +871,142 @@ export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'
     labelLayer.append(label);
     edges.set(e.id, { id: e.id, edge: e, g, label, typeEl, nameEl, anchor });
   }
-  return { svg, nodes, edges };
+  return { svg, nodes, edges, moreLayer, model, docs: opts.docs === true };
+}
+
+// ---------------------------------------------------------------------------------------------
+// "More methods": a control row at the bottom of an instance, and a list under the box when open.
+
+const MORE_ROWS = 14; // rows per column of the list
+const MORE_ROW_H = 20;
+const MORE_DOC_CHARS = 46;
+
+function buildMore(doc: Document, n: InstanceNode, ln: LaidNode, layer: SVGGElement): MoreDom {
+  const count = ln.moreN ?? 0;
+  const wrap = s(doc, 'g', { 'data-more-for': n.id }, 'md-more md-hidden');
+  const y = ln.y + ln.h - M.moreH;
+  const ctl = s(
+    doc,
+    'g',
+    {
+      'data-more': n.id,
+      tabindex: 0,
+      role: 'button',
+      'aria-expanded': 'false',
+      'aria-label': `${instanceTitle(n)}: more methods (${count}), collapsed`,
+    },
+    'md-more-ctl',
+  );
+  ctl.append(
+    s(
+      doc,
+      'rect',
+      { x: ln.x + 6, y: y - 1, width: ln.w - 12, height: M.moreH - 3, rx: 5 },
+      'md-more-bg',
+    ),
+    s(doc, 'text', { x: ln.x + M.instPad, y: y + 12 }, 'md-more-text', `▸ more methods (${count})`),
+    s(
+      doc,
+      'rect',
+      { x: ln.x + 3, y: y - 3, width: ln.w - 6, height: M.moreH, rx: 6 },
+      'md-focus-ring',
+    ),
+  );
+  const label = ctl.querySelector('.md-more-text') as SVGTextElement;
+  wrap.append(ctl);
+  layer.append(wrap);
+  return { wrap, ctl, label, panel: null, open: false, n: count };
+}
+
+function buildMorePanel(dom: SvgDom, h: NodeHandle): SVGGElement | null {
+  const inst = h.node;
+  if (inst.kind !== 'instance' || !h.more) return null;
+  const doc = h.g.ownerDocument;
+  const list = dom.log ? hiddenMethods(dom.model, dom.log, inst) : [];
+  const ln = h.laid;
+  const cols = Math.max(1, Math.ceil(list.length / MORE_ROWS));
+  const per = Math.min(MORE_ROWS, Math.max(list.length, 1));
+  const nameW = Math.max(6, ...list.map((m) => m.name.length)) * 7.5 + 14;
+  const colW = Math.ceil(nameW + MORE_DOC_CHARS * 6.2 + 12);
+  const w = cols * colW + 12;
+  const panel = s(
+    doc,
+    'g',
+    { role: 'list', 'aria-label': `Other methods of ${inst.className}` },
+    'md-more-panel',
+  );
+  const x0 = ln.x;
+  const y0 = ln.y + ln.h + 4;
+  panel.append(
+    s(
+      doc,
+      'rect',
+      { x: x0, y: y0, width: w, height: per * MORE_ROW_H + 12, rx: 8 },
+      'md-more-panel-bg',
+    ),
+  );
+  list.forEach((m, k) => {
+    const col = Math.floor(k / MORE_ROWS);
+    const row = k % MORE_ROWS;
+    const x = x0 + 6 + col * colW;
+    const y = y0 + 6 + row * MORE_ROW_H;
+    const target = methodDocTarget(dom.model, inst, m.name);
+    const attrs: Attrs = {
+      'data-doc-name': target.name,
+      'data-doc-method': m.name,
+      'data-doc-node': inst.id,
+      role: dom.docs ? 'button' : 'listitem',
+      'aria-label': m.doc ? `${m.name}: ${m.doc}` : m.name,
+    };
+    if (target.module !== null) attrs['data-doc-module'] = target.module;
+    if (dom.docs) attrs.tabindex = 0;
+    const it = s(doc, 'g', attrs, dom.docs ? 'md-more-item md-more-doc' : 'md-more-item');
+    const doctext =
+      m.doc.length > MORE_DOC_CHARS ? `${m.doc.slice(0, MORE_DOC_CHARS - 1)}…` : m.doc;
+    const title = s(doc, 'title');
+    title.textContent = m.doc ? `${m.name}: ${m.doc}` : m.name;
+    it.append(
+      title,
+      s(doc, 'rect', { x, y, width: colW - 6, height: MORE_ROW_H, rx: 4 }, 'md-more-hit'),
+      s(doc, 'text', { x: x + 6, y: y + 14 }, 'md-more-name', m.name),
+      s(doc, 'text', { x: x + nameW, y: y + 14 }, 'md-more-doc-text', doctext),
+      s(
+        doc,
+        'rect',
+        { x: x - 1, y: y - 1, width: colW - 4, height: MORE_ROW_H + 2, rx: 5 },
+        'md-focus-ring',
+      ),
+    );
+    panel.append(it);
+  });
+  return panel;
+}
+
+/** Opens or closes the list of an instance's "more methods". Returns whether it changed. */
+export function setMoreOpen(dom: SvgDom, id: string, open: boolean): boolean {
+  const h = dom.nodes.get(id);
+  const m = h?.more;
+  if (!h || !m || m.open === open) return false;
+  m.open = open;
+  m.ctl.setAttribute('aria-expanded', String(open));
+  const title = h.node.kind === 'instance' ? instanceTitle(h.node) : id;
+  m.ctl.setAttribute(
+    'aria-label',
+    `${title}: more methods (${m.n}), ${open ? 'expanded' : 'collapsed'}`,
+  );
+  m.label.textContent = `${open ? '▾' : '▸'} more methods (${m.n})`;
+  if (open) {
+    // rebuilt each time so it reflects the latest log; brought to the front of the layer
+    m.panel?.remove();
+    m.panel = buildMorePanel(dom, h);
+    m.panelFor = dom.log;
+    if (m.panel) m.wrap.append(m.panel);
+    dom.moreLayer.append(m.wrap);
+  } else {
+    m.panel?.remove();
+    m.panel = null;
+  }
+  return true;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -646,13 +1038,37 @@ function fitLabelRing(h: EdgeHandle): void {
   setAttr(ring, 'height', '18');
 }
 
+/**
+ * The version of an instance to draw. At the step of its constructor the box shows the object that call
+ * returned: a constructor in a loop gives one box for many objects, and the latest version would still be
+ * the previous pass's fitted one.
+ */
+function displayVersion(inst: InstanceNode, state: StepState, ix: ModelIndex): Token | undefined {
+  const active = state.activeVersion.get(inst.id);
+  if (
+    inst.createdBy === null ||
+    state.currentNode !== inst.createdBy ||
+    !ix.ctors.has(inst.createdBy)
+  )
+    return active;
+  const exec = state.activeExecution.get(inst.createdBy);
+  const out = exec?.outputs['out:0'];
+  if (!exec || out === undefined) return active;
+  let pick: Token | undefined;
+  for (const v of inst.versions)
+    if (objKey(v.token) === objKey(out) && v.i <= exec.ret) pick = v.token;
+  return pick ?? active;
+}
+
 export function applyState(
   dom: SvgDom,
   state: StepState,
   log: EventLog | undefined,
   ctx: ApplyContext,
 ): void {
+  dom.log = log;
   const stepping = state.current !== ctx.prevCurrent;
+  const mi = modelIndex(ctx.model);
   const atEnd = ctx.lastStep === null || (state.current !== null && state.current >= ctx.lastStep);
   const changed =
     state.currentNode !== null
@@ -664,12 +1080,13 @@ export function applyState(
     const exec = state.activeExecution.get(h.id);
     const status = statusOf(exec);
     const isCurrent = visible && state.currentNode === h.id;
-    // the instance whose method (or creation/mutation) is the current event
+    // the instance whose method is the current event: only its attributes can be marked as changed
     const ownsCurrent =
-      isCurrent ||
-      (visible &&
-        state.currentNode !== null &&
-        dom.nodes.get(state.currentNode)?.node.parent === h.id);
+      visible &&
+      state.currentNode !== null &&
+      dom.nodes.get(state.currentNode)?.node.parent === h.id;
+    const uncalled = visible && state.uncalled.has(h.id);
+    toggle(h.g, 'md-uncalled', uncalled);
     for (const el of h.stateEls) {
       toggle(el, 'md-hidden', !visible);
       toggle(el, 'md-current', isCurrent);
@@ -696,14 +1113,35 @@ export function applyState(
         setAttr(h.badge.text, 'x', String(h.laid.x + h.laid.w - w / 2));
       }
     }
+    if (h.ports && h.node.kind === 'call') {
+      const pv = portViews(ctx.model, h.node, exec, log);
+      for (const [pid, pd] of h.ports) {
+        const v = pv.in[pid] ?? pv.out[pid];
+        if (!v) continue;
+        toggle(pd.g, 'md-port-unused', !v.used);
+        setText(pd.top, pd.isConst ? (v.constText ?? '') : v.typeLabel);
+        if (pd.name) setText(pd.name, v.name);
+        if (pd.bottom !== undefined) setAttr(pd.top, 'y', String(pd.bottom - (v.name ? 17 : 11)));
+      }
+    }
+    if (h.more) {
+      toggle(h.more.wrap, 'md-hidden', !visible);
+      if (h.more.open && h.more.panelFor !== log) {
+        h.more.panel?.remove();
+        h.more.panelFor = log;
+        h.more.panel = buildMorePanel(dom, h);
+        if (h.more.panel) h.more.wrap.append(h.more.panel);
+      }
+    }
     let aria =
       h.label +
+      (uncalled ? ', not called yet' : '') +
       (b ? `, run ${b.k} of ${b.n}` : '') +
       (status ? `, ${status.text.replace(/^(⚠|⏹) /, '')}` : '') +
       (isCurrent ? ', current step' : '');
 
     if (h.rows && h.node.kind === 'instance') {
-      const token = state.activeVersion.get(h.id);
+      const token = displayVersion(h.node, state, mi);
       const rows = instanceRowModels(h.node, token, log?.values);
       const cap = h.rows.length;
       const overflow = rows.length > cap;
@@ -720,9 +1158,14 @@ export function applyState(
           toggle(r.bullet, 'md-hidden', true);
           return;
         }
-        if (!row) return;
+        if (!row) {
+          toggle(r.g, 'md-changed', false);
+          toggle(r.bullet, 'md-hidden', true);
+          return;
+        }
         setText(r.name, row.name);
         setText(r.detail, row.detail);
+        toggle(r.g, 'md-data', row.data === true);
         const isChanged = ownsCurrent && !row.param && changed.has(row.name);
         toggle(r.g, 'md-changed', isChanged);
         toggle(r.bullet, 'md-hidden', !isChanged);
@@ -743,10 +1186,13 @@ export function applyState(
 
   for (const h of dom.edges.values()) {
     const visible = state.visibleEdges.has(h.id);
+    // a shared method box switches wires per execution: wires of other executions stay as faint history
+    const active = state.activeEdges.has(h.id);
     toggle(h.g, 'md-hidden', !visible);
+    toggle(h.g, 'md-inactive', visible && !active);
     const token = state.activeToken.get(h.id);
-    const type = visible && token !== undefined ? wireTypeLabel(token, log?.values) : '';
-    const name = visible ? (h.edge.nameLabel ?? '') : '';
+    const type = visible && active && token !== undefined ? wireTypeLabel(token, log?.values) : '';
+    const name = visible && active ? (h.edge.nameLabel ?? '') : '';
     setText(h.typeEl, type);
     setText(h.nameEl, name);
     setAttr(h.nameEl, 'dx', type && name ? '4' : '0');

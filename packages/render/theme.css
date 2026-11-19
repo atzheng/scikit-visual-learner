@@ -7,6 +7,7 @@
 :root {
   --md-fn-fill: #fbc9b8;
   --md-fn-stroke: #b9553a;
+  --md-uncalled-fill: #fdf0ea;
   --md-inst-fill: #dcebfa;
   --md-inst-stroke: #4f81b8;
   --md-inst-pill: #2f5f94;
@@ -31,6 +32,7 @@
   :root:not([data-theme='light']) {
     --md-fn-fill: #6a3a2d;
     --md-fn-stroke: #f0a38b;
+    --md-uncalled-fill: #33282a;
     --md-inst-fill: #1d3450;
     --md-inst-stroke: #7fb0e6;
     --md-inst-pill: #3d78b8;
@@ -53,6 +55,7 @@
 :root[data-theme='dark'] {
   --md-fn-fill: #6a3a2d;
   --md-fn-stroke: #f0a38b;
+  --md-uncalled-fill: #33282a;
   --md-inst-fill: #1d3450;
   --md-inst-stroke: #7fb0e6;
   --md-inst-pill: #3d78b8;
@@ -310,6 +313,85 @@
 }
 .md-edge-label.md-hover .md-wtype {
   font-weight: bold;
+}
+
+/* method slot not called yet: dashed outline, lighter fill, no ports (also "not called yet" in its aria-label) */
+.md-node.md-uncalled .md-box {
+  fill: var(--md-uncalled-fill);
+  stroke-dasharray: 5 3;
+}
+.md-diagram .md-node.md-uncalled .md-name {
+  font-weight: normal;
+  fill: var(--md-text-muted);
+}
+.md-node.md-uncalled .md-port-g {
+  display: none;
+}
+/* ports the active execution did not use */
+.md-port-g.md-port-unused {
+  opacity: 0.4;
+}
+/* wires of other executions of a shared method box: faint history, not the running call's wires */
+.md-edge.md-inactive {
+  opacity: 0.28;
+}
+
+/* data box rows: the value reads first, the label is muted */
+.md-diagram .md-attr.md-data .md-aname {
+  fill: var(--md-text-muted);
+}
+.md-diagram .md-attr.md-data .md-atype {
+  fill: var(--md-text);
+}
+
+/* "more methods" control and list */
+.md-more-ctl {
+  cursor: pointer;
+  outline: none;
+}
+.md-more-bg {
+  fill: var(--md-bg);
+  stroke: var(--md-inst-stroke);
+  stroke-width: 1px;
+}
+.md-more-ctl:hover .md-more-bg {
+  fill: var(--md-inst-fill);
+}
+.md-diagram .md-more-text {
+  font-size: 11px;
+  fill: var(--md-text-muted);
+}
+.md-more-ctl:focus-visible > .md-focus-ring,
+.md-more-item:focus-visible > .md-focus-ring {
+  stroke: var(--md-focus);
+  stroke-width: 2.5px;
+  stroke-dasharray: 5 3;
+}
+.md-more-panel-bg {
+  fill: var(--md-bg);
+  stroke: var(--md-inst-stroke);
+  stroke-width: 1.5px;
+}
+.md-more-hit {
+  fill: transparent;
+}
+.md-more-doc {
+  cursor: pointer;
+  outline: none;
+}
+.md-more-doc:hover .md-more-hit {
+  fill: var(--md-inst-fill);
+}
+.md-more-item {
+  outline: none;
+}
+.md-diagram .md-more-name {
+  font-size: 12px;
+  font-weight: bold;
+}
+.md-diagram .md-more-doc-text {
+  font-size: 11px;
+  fill: var(--md-text-muted);
 }
 
 @media (prefers-reduced-motion: no-preference) {
