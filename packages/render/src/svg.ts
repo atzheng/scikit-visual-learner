@@ -1296,6 +1296,25 @@ export function applyState(
         const row = shown[k];
         const more = overflow && k === cap - 1;
         toggle(r.g, 'md-hidden', !visible || (!row && !more));
+        if (more || !row) {
+          // not an attribute row now: no docs target, not focusable (svl-62w)
+          for (const a of [
+            'data-doc-name',
+            'data-doc-module',
+            'data-doc-node',
+            'data-doc-attr',
+            'role',
+            'tabindex',
+            'aria-keyshortcuts',
+            'aria-label',
+          ])
+            r.g.removeAttribute(a);
+        }
+        const active = h.g.ownerDocument.activeElement;
+        if (active && r.g.contains(active) && (more || !row || !visible)) {
+          // the focused row went away: keep focus in the box so arrow/step keys still work
+          (h.g as unknown as HTMLElement).focus();
+        }
         if (more) {
           setText(r.name, `… ${rows.length - shown.length} more`);
           setText(r.detail, '');
@@ -1333,6 +1352,10 @@ export function applyState(
           ctx.schedule(() => r.g.classList.remove('md-flash'));
         } else if (!isChanged) r.g.classList.remove('md-flash');
       });
+      if (dom.docs) {
+        if (visible && shown.length > 0) setAttr(h.g, 'aria-keyshortcuts', 'ArrowDown ?');
+        else setAttr(h.g, 'aria-keyshortcuts', '?');
+      }
       const attrLine = rows
         .filter((r) => ownsCurrent && !r.param && changed.has(r.name))
         .map((r) => r.name);

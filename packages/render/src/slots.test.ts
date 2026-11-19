@@ -609,6 +609,42 @@ describe('attribute docs (svl-3du)', () => {
     expect(document.activeElement).toBe(box);
   });
 
+  test('the "… N more" row has no docs target and is not reachable; a hidden focused row moves focus to its box (svl-62w)', async () => {
+    const log = loadLog('edge_expr');
+    const model = buildGraph(log, { expanded: new Set() });
+    const full = attrRowsFor(model, log);
+    const inst = instOf(model, 'LinearRegression');
+    const cut = { ...full, [inst.id]: full[inst.id]!.slice(0, 3) }; // cap of 3 rows
+    const laid = await layout(model, { measure, elk, attrRows: cut });
+    const c = setup();
+    c.setGraph(model, laid);
+    const last = stateAt(model, log, model.steps.length);
+    c.setState(last, log);
+    const box = host.querySelector(`g.md-node[data-node="${inst.id}"]`) as SVGElement;
+    const all = [...box.querySelectorAll('.md-attr')].filter(
+      (r) => !r.classList.contains('md-hidden'),
+    );
+    const more = all.at(-1)!;
+    expect(more.querySelector('.md-aname')!.textContent).toMatch(/more$/);
+    for (const a of ['data-doc-attr', 'data-doc-name', 'tabindex', 'role']) {
+      expect(more.hasAttribute(a)).toBe(false);
+    }
+    const real = all.slice(0, -1) as SVGElement[];
+    expect(real.every((r) => r.hasAttribute('data-doc-attr'))).toBe(true);
+    expect(box.getAttribute('aria-keyshortcuts')).toBe('ArrowDown ?');
+    // ArrowDown from the last real row does not enter the "more" row
+    real.at(-1)!.focus();
+    real
+      .at(-1)!
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+      );
+    expect(document.activeElement).toBe(real.at(-1));
+    // stepping back hides the focused row: focus falls back to the box, not <body>
+    c.setState(stateAt(model, log, 0), log);
+    expect(document.activeElement).toBe(box);
+  });
+
   test('without a docs handler rows have no button and are not focusable', async () => {
     const { log, model, laid } = await prepare('edge_expr');
     const c = setup(false);
