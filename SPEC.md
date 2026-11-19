@@ -44,6 +44,10 @@ The page has a code editor (CodeMirror 6) on the left, the diagram on the right 
 
 **Supported browsers.** Current desktop Chrome, Firefox and Safari. Tablets are best-effort; memory limits on iPadOS may rule out larger examples.
 
+## Documentation
+
+Any function, class or method in the diagram can show its official documentation in a friendly layout: summary, signature, parameters with types, returns, raises, see also and examples. The content comes from the docstrings installed in the browser's Python, so it works offline, matches the library versions the student is running, and sends nothing anywhere. A link to the full official page, pinned to those versions (scikit-learn, pandas, NumPy, SciPy, Matplotlib, Python), opens in a new tab when the student clicks it; the page itself never requests it. The student's own functions show their own docstrings and no link. Contract: CONTRACTS.md section 12.
+
 ## Architecture
 
 Everything runs in the student's browser; the only server is static file hosting.

@@ -3,6 +3,8 @@ import {
   createAssembler,
   type Assembler,
   type CurrentCall,
+  type Doc,
+  type DocTarget,
   type EventLog,
   type FromWorker,
   type RunConfig,
@@ -81,6 +83,12 @@ interface Waiter {
   reject(e: Error): void;
 }
 
+/** Cache key for a docs target. The program text only matters for student definitions. */
+export function docKey(t: DocTarget): string {
+  const student = t.module === '__main__' || t.module === '<student>';
+  return `${t.module ?? ''}\0${t.name}${student ? `\0${t.source ?? ''}` : ''}`;
+}
+
 const defaultSchedule = (cb: () => void): (() => void) => {
   if (typeof requestAnimationFrame === 'function') {
     const h = requestAnimationFrame(cb);
@@ -105,6 +113,10 @@ export class RuntimeClient {
   private active: ActiveRun | null = null;
   private readyWaiters: Waiter[] = [];
   private fileWaiters = new Map<string, Waiter[]>();
+  private nextDocId = 1;
+  private docWaiters = new Map<number, { resolve(d: Doc): void; reject(e: Error): void }>();
+  /** Docs by target; in-flight requests are shared. Failures are dropped so the next ask retries. */
+  private docCache = new Map<string, Promise<Doc>>();
 
   constructor(opts: RuntimeClientOptions) {
     this.opts = opts;
@@ -148,6 +160,26 @@ export class RuntimeClient {
       this.fileWaiters.set(name, list);
       this.worker.postMessage({ type: 'file', name, bytes }, [bytes]);
     });
+  }
+
+  /**
+   * Official documentation for a function, class or method. The worker answers between runs (a request made
+   * during a run waits for it) and the answer is cached per target. Rejects if the worker restarts first.
+   */
+  docs(target: DocTarget): Promise<Doc> {
+    const key = docKey(target);
+    const hit = this.docCache.get(key);
+    if (hit) return hit;
+    const reqId = this.nextDocId++;
+    const p = new Promise<Doc>((resolve, reject) => {
+      this.docWaiters.set(reqId, { resolve, reject });
+      this.worker.postMessage({ type: 'docs', reqId, target });
+    });
+    this.docCache.set(key, p);
+    p.catch(() => {
+      if (this.docCache.get(key) === p) this.docCache.delete(key);
+    });
+    return p;
   }
 
   /** "Restart Python": a new worker; resolves when it is ready. Also the retry after a failed load. */
@@ -203,6 +235,12 @@ export class RuntimeClient {
       case 'fileWritten': {
         const w = this.fileWaiters.get(msg.name)?.shift();
         w?.resolve(msg.rows === undefined ? {} : { rows: msg.rows });
+        return;
+      }
+      case 'docs': {
+        const w = this.docWaiters.get(msg.reqId);
+        this.docWaiters.delete(msg.reqId);
+        w?.resolve(msg.doc);
         return;
       }
       default:
@@ -307,6 +345,8 @@ export class RuntimeClient {
   }
 
   private rejectFiles(message: string): void {
+    for (const w of this.docWaiters.values()) w.reject(new Error(message));
+    this.docWaiters.clear();
     for (const list of this.fileWaiters.values())
       for (const w of list) w.reject(new Error(message));
     this.fileWaiters.clear();
