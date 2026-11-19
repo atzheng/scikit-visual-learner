@@ -58,7 +58,13 @@ export interface PlanWire {
   to: string;
   points: [number, number][];
   arrow: boolean;
-  label: { x: number; y: number; type: string; name: string; anchor: 'start' | 'middle' } | null;
+  label: {
+    x: number;
+    y: number;
+    type: string;
+    name: string;
+    anchor: 'start' | 'middle' | 'end';
+  } | null;
 }
 export interface StagePlan {
   width: number;
@@ -66,8 +72,18 @@ export interface StagePlan {
   box: Rect | null;
   items: PlanItem[];
   wires: PlanWire[];
-  /** Inline scalars and literals, one text line each, beside the call box. */
+  /** Inline scalars and literals, one text line each, beside the call box (nested: under the owner). */
   values: { x: number; y: number; w: number; lines: string[] } | null;
+  /**
+   * svl-a9e: true when the call is a method drawn inside its owner's card; `box` is then the method's box
+   * inside that card (canvas coordinates) and there is no separate call box.
+   */
+  nested?: true;
+}
+
+/** Where the current method's box sits inside its owner's card (svl-a9e): relative to the owner's box. */
+export interface NestedBox {
+  rect: Rect;
 }
 
 /** The key of a participant's card. */
@@ -121,7 +137,12 @@ export function planStage(
   box: BoxSize | null,
   mergedOf: (p: StageParticipant) => boolean,
   log?: EventLog,
+  nested?: NestedBox | null,
 ): StagePlan {
+  if (nested && !box) {
+    const own = stage.participants.find((p) => p.kind === 'instance' && p.role === 'owner');
+    if (own) return planNested(stage, size, own, nested, mergedOf, log);
+  }
   const items: PlanItem[] = [];
   const wires: PlanWire[] = [];
   const sz = new Map<StageParticipant, Size>();
@@ -341,6 +362,171 @@ export function planStage(
     items,
     wires,
     values: vals,
+  };
+}
+
+/**
+ * The stage of a method call (svl-a9e): the owner's card stands in the middle with the method's box inside
+ * it, as in the full diagram. The objects the call uses stand in a column to its left, each wired to a lane
+ * on the method box's left edge; the objects it makes stand in a column to the right, wired from lanes on
+ * its right edge. The wires are horizontal where they cross the owner's card, so they never run over the
+ * other method boxes, and the inline values sit under the card. There is no call box and no owner line.
+ */
+function planNested(
+  stage: StageModel,
+  size: (p: StageParticipant) => Size,
+  owner: StageParticipant,
+  nested: NestedBox,
+  mergedOf: (p: StageParticipant) => boolean,
+  log?: EventLog,
+): StagePlan {
+  const items: PlanItem[] = [];
+  const wires: PlanWire[] = [];
+  const sz = new Map<StageParticipant, Size>();
+  for (const p of stage.participants) sz.set(p, size(p));
+  const ins = stage.participants.filter((p) => p.role === 'input');
+  const outs = stage.participants.filter((p) => p.role === 'output' || p.role === 'created');
+  const so = sz.get(owner)!;
+  const colH = (ps: StageParticipant[]): number =>
+    ps.reduce((a, p) => a + sz.get(p)!.h, 0) + Math.max(0, ps.length - 1) * STAGE.colGap;
+  const leftW = Math.max(0, ...ins.map((p) => sz.get(p)!.w));
+  const ownerX = ins.length ? leftW + STAGE.sideGap : 0;
+  const rightX = ownerX + so.w + STAGE.sideGap;
+  const m: Rect = {
+    x: ownerX + nested.rect.x,
+    y: nested.rect.y,
+    w: nested.rect.w,
+    h: nested.rect.h,
+  };
+  const ym = m.y + m.h / 2;
+  const key = (p: StageParticipant): string => cardKey(p, mergedOf(p));
+  const typeOf = (p: StageParticipant): string =>
+    p.kind !== 'chip' && p.token ? wireTypeLabel(p.token, log?.values) : '';
+  // lanes on the method box's edge, spread over its height
+  const lane = (k: number, n: number): number =>
+    n === 1 ? ym : m.y + 4 + (k * (m.h - 8)) / (n - 1);
+
+  items.push({
+    key: key(owner),
+    participant: owner,
+    rect: { x: ownerX, y: 0, w: so.w, h: so.h },
+  });
+  let y = ym - colH(ins) / 2;
+  ins.forEach((p, k) => {
+    const s = sz.get(p)!;
+    items.push({ key: key(p), participant: p, rect: { x: leftW - s.w, y, w: s.w, h: s.h } });
+    const cy = y + s.h / 2;
+    y += s.h + STAGE.colGap;
+    const xv = leftW + (STAGE.sideGap * (k + 1)) / (ins.length + 1);
+    const ly = lane(k, ins.length);
+    wires.push({
+      edge: p.edge,
+      from: key(p),
+      to: 'box',
+      points:
+        cy === ly
+          ? [
+              [leftW, cy],
+              [m.x, ly],
+            ]
+          : [
+              [leftW, cy],
+              [xv, cy],
+              [xv, ly],
+              [m.x, ly],
+            ],
+      arrow: true,
+      label: {
+        x: leftW + 5,
+        y: cy - 5,
+        type: typeText(typeOf(p)),
+        name: p.kind === 'chip' ? '' : (p.param ?? ''),
+        anchor: 'start',
+      },
+    });
+  });
+  y = ym - colH(outs) / 2;
+  outs.forEach((p, k) => {
+    const s = sz.get(p)!;
+    items.push({ key: key(p), participant: p, rect: { x: rightX, y, w: s.w, h: s.h } });
+    const cy = y + s.h / 2;
+    y += s.h + STAGE.colGap;
+    const xv = ownerX + so.w + (STAGE.sideGap * (k + 1)) / (outs.length + 1);
+    const ly = lane(k, outs.length);
+    const mr = m.x + m.w;
+    wires.push({
+      edge: p.edge,
+      from: 'box',
+      to: key(p),
+      points:
+        cy === ly
+          ? [
+              [mr, ly],
+              [rightX, cy],
+            ]
+          : [
+              [mr, ly],
+              [xv, ly],
+              [xv, cy],
+              [rightX, cy],
+            ],
+      arrow: true,
+      label: {
+        x: rightX - 5,
+        y: cy - 5,
+        type: typeText(typeOf(p)),
+        name: p.kind === 'chip' ? '' : (p.param ?? ''),
+        anchor: 'end',
+      },
+    });
+  });
+
+  let vals: StagePlan['values'] = null;
+  if (stage.values.length) {
+    const lines = stage.values.map(valueLine);
+    const w =
+      Math.ceil(Math.min(VALUE_MAX_CHARS, Math.max(...lines.map((l) => l.length))) * 7.2) + 16;
+    vals = { x: ownerX, y: so.h + 8, w, lines };
+  }
+
+  // shift so nothing is above or left of the margin, then size the canvas
+  let minY = 0;
+  let maxX = ownerX + so.w;
+  let maxY = so.h;
+  for (const it of items) {
+    minY = Math.min(minY, it.rect.y);
+    maxX = Math.max(maxX, it.rect.x + it.rect.w);
+    maxY = Math.max(maxY, it.rect.y + it.rect.h);
+  }
+  if (vals) {
+    maxX = Math.max(maxX, vals.x + vals.w);
+    maxY = Math.max(maxY, vals.y + vals.lines.length * 18);
+  }
+  const dx = STAGE.margin;
+  const dy = STAGE.margin - minY;
+  for (const it of items) {
+    it.rect.x += dx;
+    it.rect.y += dy;
+  }
+  for (const w of wires) {
+    w.points = w.points.map(([a, b]) => [a + dx, b + dy] as [number, number]);
+    if (w.label) {
+      w.label.x += dx;
+      w.label.y += dy;
+    }
+  }
+  if (vals) {
+    vals.x += dx;
+    vals.y += dy;
+  }
+  return {
+    width: Math.ceil(maxX + dx + STAGE.margin),
+    height: Math.ceil(maxY + dy + STAGE.margin),
+    box: { x: m.x + dx, y: m.y + dy, w: m.w, h: m.h },
+    items,
+    wires,
+    values: vals,
+    nested: true,
   };
 }
 
@@ -685,6 +871,26 @@ export async function mountTwoPane(
   let onStage = new Map<string, { card: Card | null; item: PlanItem }>();
   let destroyed = false;
 
+  /**
+   * svl-a9e: a method call whose owner is an instance on the stage is drawn inside the owner's card (the
+   * method box is already there, as in the full diagram). Null for every other step: functions,
+   * constructors, a method on a temporary (a chip owner: the method is a top-level box with a `self` port) or
+   * on a scalar, and a call whose owner was cut from the graph. The method box keeps its shelf size and has no
+   * ports in the card (a port would change the card's size and break the shelf/stage FLIP); the wires end on
+   * its left and right edges and carry the parameter names.
+   */
+  const nestedFor = (stage: StageModel): NestedBox | null => {
+    const n = byId.get(stage.node);
+    if (stage.kind !== 'call' || !n || n.kind !== 'call' || n.parent === null) return null;
+    if (!instIds.has(n.parent)) return null;
+    const own = stage.participants.find(
+      (p) => p.kind === 'instance' && p.role === 'owner' && p.node === n.parent,
+    );
+    const m = laidCards.nodes[n.id];
+    const o = laidCards.nodes[n.parent];
+    if (!own || !m || !o) return null;
+    return { rect: { x: m.x - o.x, y: m.y - o.y, w: m.w, h: m.h } };
+  };
   const stageCardOf = (p: StageParticipant): Card | null => {
     if (p.kind === 'chip') return null;
     const e = entryOf.get(p.node);
@@ -810,17 +1016,22 @@ export async function mountTwoPane(
       const boxNode = stage.kind === 'call' || stage.kind === 'expr' || stage.kind === 'store';
       const merged = (p: StageParticipant): boolean =>
         p.kind !== 'chip' && (entryOf.get(p.node)?.objects ?? 0) > 1;
+      const inner = nestedFor(stage);
       plan = planStage(
         stage,
         (p) => (p.kind === 'chip' ? chipSize(p) : visualSize(p.node)),
-        boxNode && laid.nodes[stage.node] ? boxSize(stage.node) : null,
+        !inner && boxNode && laid.nodes[stage.node] ? boxSize(stage.node) : null,
         merged,
         log,
+        inner,
       );
       for (const it of plan.items)
         onStage.set(it.key, { card: stageCardOf(it.participant), item: it });
     }
-    const boxCard = plan?.box && stage ? makeCard(stage.node, stage.node, null) : null;
+    // a method drawn inside its owner's card has no card of its own
+    const boxCard =
+      plan?.box && !plan.nested && stage ? makeCard(stage.node, stage.node, null) : null;
+    canvas.classList.toggle('md-nested', plan?.nested === true);
     curBox = boxCard;
 
     // 2. put every element where it belongs
@@ -915,8 +1126,21 @@ export async function mountTwoPane(
         const base = g.getAttribute('aria-label') ?? '';
         g.setAttribute('aria-label', `${base}, ${suffix}`);
         // a method box names the instance it belongs to (two cards can both have a `fit`)
-        for (const m of innerMethods(c.wrap))
-          m.setAttribute('aria-label', `${m.getAttribute('aria-label') ?? ''}, in ${base}`);
+        for (const m of innerMethods(c.wrap)) {
+          let label = m.getAttribute('aria-label') ?? '';
+          if (plan?.nested && stageCard && m.getAttribute('data-node') === stage?.node) {
+            // the method of this line: what it was given, as the call box used to say
+            const given = [
+              ...stage.participants.filter((q) => q.role === 'input').map((q) => q.param),
+              ...stage.values.filter((v) => v.role === 'input').map((v) => v.param),
+            ].filter((x): x is string => !!x);
+            label =
+              label.replace(/, current step$/, '') +
+              ', current call' +
+              (given.length ? `, inputs ${given.join(', ')}` : '');
+          }
+          m.setAttribute('aria-label', `${label}, in ${base}`);
+        }
         // I selects the card (the app opens the attribute panel); Enter still dives into its rows
         const keys = (g.getAttribute('aria-keyshortcuts') ?? '').split(' ').filter(Boolean);
         if (!keys.includes('I')) g.setAttribute('aria-keyshortcuts', [...keys, 'I'].join(' '));

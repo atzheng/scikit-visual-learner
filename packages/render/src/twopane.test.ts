@@ -517,6 +517,130 @@ describe('instance cards hold their method boxes (svl-faf)', () => {
   });
 });
 
+describe('a method is drawn inside its owner (svl-a9e)', () => {
+  const stepOfCall = (model: GraphModel, log: EventLog, re: RegExp): number => {
+    for (let s = 1; s <= model.steps.length; s++) {
+      const n = model.nodes.find((x) => x.id === stageAt(model, log, s)?.node);
+      if (n?.kind === 'call' && re.test(n.name)) return s;
+    }
+    throw new Error(`no step for ${re}`);
+  };
+
+  test('planStage: owner in the middle, inputs left and outputs right, wires on the method edges', () => {
+    const log = readLog('golden_linreg');
+    const model = buildGraph(log, { expanded: new Set() });
+    for (const re of [/\.fit$/, /\.predict$/, /\.score$/]) {
+      const st = stageAt(model, log, stepOfCall(model, log, re))!;
+      const plan = planStage(
+        st,
+        () => ({ w: 200, h: 220 }),
+        null,
+        () => false,
+        log,
+        { rect: { x: 12, y: 150, w: 160, h: 36 } },
+      );
+      expect(plan.nested).toBe(true);
+      const owner = plan.items.find((i) => i.participant.role === 'owner')!;
+      const m = plan.box!;
+      // the method box lies inside the owner's box
+      expect(m.x).toBeGreaterThanOrEqual(owner.rect.x);
+      expect(m.x + m.w).toBeLessThanOrEqual(owner.rect.x + owner.rect.w);
+      expect(m.y).toBeGreaterThanOrEqual(owner.rect.y);
+      expect(m.y + m.h).toBeLessThanOrEqual(owner.rect.y + owner.rect.h);
+      // no owner line: every wire is a graph edge with an arrow
+      expect(plan.wires.every((w) => w.edge !== null && w.arrow)).toBe(true);
+      for (const w of plan.wires) {
+        const first = w.points[0]!;
+        const last = w.points[w.points.length - 1]!;
+        const [near, far] = w.to === 'box' ? [last, first] : [first, last];
+        expect(near[0] === m.x || near[0] === m.x + m.w).toBe(true);
+        expect(near[1]).toBeGreaterThanOrEqual(m.y);
+        expect(near[1]).toBeLessThanOrEqual(m.y + m.h);
+        expect(far[0] < m.x || far[0] > m.x + m.w).toBe(true);
+      }
+      for (const it of plan.items) {
+        const p = it.participant;
+        if (p.role === 'input') expect(it.rect.x + it.rect.w).toBeLessThanOrEqual(owner.rect.x);
+        if (p.role === 'output')
+          expect(it.rect.x).toBeGreaterThanOrEqual(owner.rect.x + owner.rect.w);
+        expect(it.rect.y).toBeGreaterThanOrEqual(0);
+        expect(it.rect.y + it.rect.h).toBeLessThanOrEqual(plan.height);
+      }
+    }
+  });
+
+  test('mount: fit and predict draw the method in the owner card, with no call card and no owner line', async () => {
+    const { model, log } = await open('golden_linreg');
+    for (const [re, ins, outs] of [
+      [/\.fit$/, 2, 0], // returns self: no output wire
+      [/\.predict$/, 1, 1],
+    ] as const) {
+      const s = stepOfCall(model, log, re);
+      tp!.setStep(s);
+      const st = stageAt(model, log, s)!;
+      const owner = st.participants.find((p) => p.role === 'owner')!;
+      expect(tp!.plan!.nested).toBe(true);
+      expect(tp!.card(st.node)).toBeNull(); // no card of its own for the method
+      expect(host.querySelectorAll('.md-owner-line')).toHaveLength(0);
+      expect(host.querySelectorAll('.md-stage-wires [data-edge]')).toHaveLength(ins + outs);
+      const card = tp!.card(owner.node)!;
+      expect(card.parentElement).toBe(tp!.stageEl);
+      const inner = card.querySelector(`.md-node[data-node="${st.node}"]`)!;
+      expect(inner.classList.contains('md-current')).toBe(true);
+      const label = inner.getAttribute('aria-label')!;
+      expect(label).toMatch(/current call, inputs /);
+      expect(label).toMatch(/, in object model: LinearRegression/);
+      // the owner keeps its changed-attribute highlight
+      if (st.participants.some((p) => p.changed && p.role === 'owner'))
+        expect(card.querySelector('.md-changed')).not.toBeNull();
+      // the stage's canvas raises the wires above the cards so they reach the method box
+      expect(tp!.stageEl.classList.contains('md-nested')).toBe(true);
+    }
+  });
+
+  test('constructors and functions keep their call box (and the calls line)', async () => {
+    const { model, log } = await open('golden_linreg');
+    const s = stepOfCall(model, log, /^LinearRegression$/);
+    tp!.setStep(s);
+    const st = stageAt(model, log, s)!;
+    expect(tp!.plan!.nested).toBeUndefined();
+    expect(tp!.card(st.node)).not.toBeNull();
+    expect(tp!.plan!.wires.some((w) => w.label?.name === 'calls')).toBe(true);
+    expect(tp!.stageEl.classList.contains('md-nested')).toBe(false);
+  });
+
+  test('a method of a student class is drawn the same way', async () => {
+    const { model, log } = await open('edge_student_fn');
+    const s = stepOfCall(model, log, /\.run$/);
+    tp!.setStep(s);
+    expect(tp!.plan!.nested).toBe(true);
+    expect(host.querySelectorAll('.md-owner-line')).toHaveLength(0);
+  });
+
+  test('a method on a temporary (a chip owner) keeps its own call box', async () => {
+    const { model, log } = await open('golden_linreg');
+    const s = stepOfCall(model, log, /^DataFrame\.dropna$/);
+    tp!.setStep(s);
+    expect(tp!.plan!.nested).toBeUndefined();
+    expect(tp!.plan!.box).not.toBeNull();
+    expect(tp!.card(stageAt(model, log, s)!.node)).not.toBeNull();
+  });
+
+  test('stepping onto and off a method step restores the owner card to its slot', async () => {
+    const { model, log } = await open('golden_linreg');
+    const s = stepOfCall(model, log, /\.fit$/);
+    const owner = stageAt(model, log, s)!.participants.find((p) => p.role === 'owner')!;
+    tp!.setStep(s);
+    expect(slot(owner.node).dataset.state).toBe('stage');
+    tp!.setStep(s + 1);
+    expect(slot(owner.node).dataset.state).toBe('stage'); // predict: the owner is on the stage again
+    tp!.setStep(1); // an import: the model does not exist yet
+    expect(slot(owner.node).dataset.state).toBe('hidden');
+    expect(tp!.card(owner.node)!.parentElement).toBe(slot(owner.node));
+    expect(tp!.card(owner.node)!.style.position).toBe('');
+  });
+});
+
 describe('planMoves (pure)', () => {
   const R = (x: number, y: number): Rect => ({ x, y, w: 50, h: 30 });
   test('step forward: shelf to stage; stepping back is the mirror', () => {

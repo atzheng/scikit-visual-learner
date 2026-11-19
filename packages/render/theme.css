@@ -632,3 +632,7 @@
   color: var(--md-type-text);
   white-space: nowrap;
 }
+/* svl-a9e: a method call is drawn inside its owner's card, so the wires end inside it: draw them above the cards */
+.md-stage-canvas.md-nested .md-stage-wires {
+  z-index: 2;
+}
