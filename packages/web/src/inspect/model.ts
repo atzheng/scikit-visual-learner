@@ -158,15 +158,10 @@ export function inspectTarget(
     if (n && n.kind !== 'instance' && n.parent) n = byId.get(n.parent);
     return n?.kind === 'instance' ? n : null;
   };
-  // A new object at this step (not a mutation of an earlier one): its attributes are not a change.
-  const version =
-    state.current === null
-      ? undefined
-      : ([...byId.values()].flatMap((n) =>
-          n.kind === 'instance' ? n.versions.filter((v) => v.i === state.current) : [],
-        )[0] as { kind?: string } | undefined);
-  const isNew = version?.kind === 'new';
   const stepped = state.attrsAfter !== undefined ? instanceOf(state.currentNode) : null;
+  // A new object at this step (not a mutation of an earlier one): its attributes are not a change.
+  const isNew =
+    stepped !== null && stepped.versions.some((v) => v.i === state.current && v.kind === 'new');
   const selected = instanceOf(selectedNode);
   if (stepped && state.attrsAfter && isNew) {
     return { node: stepped, call: false, before: state.attrsAfter, after: state.attrsAfter };

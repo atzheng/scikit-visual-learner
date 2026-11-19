@@ -1,4 +1,4 @@
-import { buildGraph, stateAt, type EventLog } from '@machines/log';
+import { buildGraph, stateAt, type EventLog, type GraphModel, type StepState } from '@machines/log';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -149,5 +149,29 @@ describe('golden_linreg: the fit step', () => {
     const st = stateAt(model, log, model.steps.length);
     for (const e of model.edges.filter((x) => !x.callee && st.visibleEdges.has(x.id)))
       expect(edgeToken(model, st, e.id)).not.toBeNull();
+  });
+});
+
+describe('inspectTarget across a new object', () => {
+  test('a call whose version is a new object is not shown as a change', () => {
+    const inst = {
+      id: 'i',
+      kind: 'instance',
+      parent: null,
+      className: 'M',
+      varName: 'm',
+      versions: [{ i: 3, token: 'v1.0', kind: 'new' }],
+    };
+    const model = { nodes: [inst], edges: [], steps: [3] } as unknown as GraphModel;
+    const state = {
+      current: 3,
+      currentNode: 'i',
+      attrsBefore: { a: 's1' },
+      attrsAfter: { a: 's2' },
+      activeVersion: new Map(),
+    } as unknown as StepState;
+    const t = inspectTarget(model, {} as EventLog, state, undefined);
+    expect(t?.call).toBe(false);
+    expect(t?.before).toEqual(t?.after);
   });
 });
