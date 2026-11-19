@@ -4,8 +4,12 @@ import { App } from './App';
 import './app.css';
 import { DEFAULT_RUN_CONFIG } from './course';
 import { UpdateNotice } from './offline/UpdateNotice';
+import { startFileReplay } from './files/filesStore';
+import { initPersistence } from './storage/persist';
 import { startRuntime, useStore } from './store';
 
+initPersistence();
+startFileReplay();
 startRuntime();
 
 const root = document.getElementById('root');

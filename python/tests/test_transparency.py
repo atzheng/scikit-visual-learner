@@ -34,7 +34,7 @@ PARAMS = [
     pytest.param(n, marks=[] if n.startswith("golden") else [pytest.mark.slow], id=n) for n in NAMES
 ]
 INPUT_DIFFERS = {"edge_input"}
-TIMING_ATTRS = gf.TIMING_ATTRS
+TIMING_ATTRS = frozenset({"refit_time_", "cv_results_"})  # final values: skip wall clock
 
 
 @pytest.fixture(scope="module")
@@ -169,13 +169,13 @@ def run_instrumented(source: str, config: dict[str, Any] | None = None) -> Outco
 def test_plain_and_instrumented_agree(name: str, env: None) -> None:
     source, config = gf.source_of(name), gf.CONFIGS.get(name, {})
     plain, inst = run_plain(source, config), run_instrumented(source, config)
+    assert inst.stdout == plain.stdout
     if name in INPUT_DIFFERS:
-        # plain input() writes its prompt before hitting EOF; the runtime raises without writing it
-        assert plain.stdout == "Your name? " and inst.stdout == ""
+        # the exception differs by contract: plain input() raises EOFError on closed stdin
+        assert plain.stdout == "Your name? "
         assert plain.err == ("EOFError", "EOF when reading a line")
         assert inst.err == ("RuntimeError", "input() is not supported here")
     else:
-        assert inst.stdout == plain.stdout
         assert inst.err == plain.err
     assert inst.stderr == plain.stderr
     if name == "edge_mpl":

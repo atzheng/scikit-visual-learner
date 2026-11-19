@@ -14,7 +14,13 @@
     "type": "RuntimeError"
   },
   "events": [],
-  "output": [],
+  "output": [
+    {
+      "i": -1,
+      "stream": "stdout",
+      "text": "Your name? "
+    }
+  ],
   "scopes": [
     {
       "bindings": [],

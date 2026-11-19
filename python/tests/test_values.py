@@ -716,3 +716,16 @@ def test_seen_reports_whether_an_object_has_a_token(vt: ValueTable) -> None:
     vt.token(a)
     assert vt.seen(a)
     assert not vt.seen([1, 2])
+
+
+def test_timing_values_have_a_stable_repr(vt: ValueTable) -> None:
+    from machines.values import TIMING_REPR
+
+    d = {"mean_fit_time": [0.123456]}
+    vt.summarize("v1.0", d)
+    r = vt.take_new_summaries()["v1.0"]["repr"]  # clipped to 40 characters
+    assert r.startswith("{'mean_fit_time': <varies") and "0.123456" not in r
+    assert TIMING_REPR.startswith("<varies")
+    assert d["mean_fit_time"] == [0.123456]  # the program's dict is untouched
+    vt.summarize("v2.0", {"a": 1})
+    assert vt.take_new_summaries()["v2.0"]["repr"] == "{'a': 1}"
