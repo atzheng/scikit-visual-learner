@@ -155,7 +155,7 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
     const onRow = k.target !== box ? closest(k.target, 'data-doc-attr') : null;
     const cur = onRow ? rows.indexOf(onRow) : -1;
     if (k.target !== box && cur < 0) return false;
-    let to: Element | null = null;
+    let to: Element;
     if (k.key === 'ArrowDown') {
       if (cur < 0) {
         const mem = lastRow.get(id);
