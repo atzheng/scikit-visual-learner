@@ -421,6 +421,13 @@
           "token": "v5.0",
           "kind": "new"
         }
+      ],
+      "aliases": [
+        {
+          "name": "c",
+          "from": 9,
+          "until": null
+        }
       ]
     }
   ],

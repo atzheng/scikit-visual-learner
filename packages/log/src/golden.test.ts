@@ -76,8 +76,8 @@ function checkChip(log: EventLog, g: GraphModel, ed: GEdge): void {
 }
 
 describe('fixtures', () => {
-  it('has the 28 programs', () => {
-    expect(names.length).toBe(28);
+  it('has the 29 programs', () => {
+    expect(names.length).toBe(29);
   });
 
   describe.each(names)('%s', (n) => {
@@ -217,6 +217,23 @@ describe('fixtures', () => {
         }
       },
     );
+
+    it('aliases: every alias name is bound to an object of its box, over a non-empty interval', () => {
+      const log = readLog(n);
+      const g = buildGraph(log);
+      const binds = log.scopes[0]!.bindings;
+      for (const b of g.nodes.filter((x): x is InstanceNode => x.kind === 'instance')) {
+        const objs = new Set(b.versions.map((v) => keyOf(v.token)));
+        for (const a of b.aliases ?? []) {
+          expect(a.until === null || a.until > a.from, `${b.id} ${a.name}`).toBe(true);
+          expect(
+            binds.some(([at, name, t]) => name === a.name && at === a.from && objs.has(keyOf(t))),
+            `${b.id} alias ${a.name} starts at a binding of the box`,
+          ).toBe(true);
+          expect(a.name, b.id).not.toBe(b.varName?.replace(/[′″‴]+$/, ''));
+        }
+      }
+    });
 
     it('is deterministic and does not mutate the log', () => {
       const log = readLog(n);
@@ -556,6 +573,51 @@ describe('edge cases on real logs', () => {
       const g = graphOf(n);
       expect(g.nodes).toEqual([]);
       expect(g.steps).toEqual([]);
+    }
+  });
+});
+
+// ---- alias names and loop-carried creation wires (svl-35d)
+
+describe('edge_alias', () => {
+  const log = readLog('edge_alias');
+  const g = buildGraph(log, { fold: false });
+  const box = (name: string): InstanceNode => only(instances(g).filter((x) => x.varName === name));
+
+  it('a second name is an alias of the box, per interval of events, and never the box own name', () => {
+    expect(box('m').aliases).toEqual([{ name: 'r', from: 7, until: null }]);
+    // df2 = df is dropped when df2 is rebound to `other`, which then carries it
+    expect(box('df').aliases?.map((a) => [a.name, a.until !== null])).toEqual([
+      ['df2', true],
+      ['prev', true],
+    ]);
+    expect(box('other').aliases).toEqual([{ name: 'df2', from: 3, until: null }]);
+    // `prev = cur` rebinds to another object of the same box: one open interval, not three
+    expect(box('cur').aliases).toEqual([{ name: 'prev', from: 9, until: null }]);
+  });
+
+  it('stateAt shows an alias from its bind step and drops it when the name is rebound', () => {
+    const df = box('df');
+    const other = box('other');
+    const at = (i: number): ReturnType<typeof stateAt> => stateAt(g, log, stepOfEvent(g, i));
+    expect(at(2).aliases.get(df.id)).toEqual(['df2']);
+    expect(at(3).aliases.get(df.id)).toBeUndefined();
+    expect(at(3).aliases.get(other.id)).toEqual(['df2']);
+    expect(at(9).aliases.get(df.id)).toBeUndefined(); // prev moved on to the cur box
+    const end = stateAt(g, log, g.steps.length);
+    expect(end.aliases.get(box('cur').id)).toEqual(['prev']);
+    expect(end.aliases.get(box('m').id)).toEqual(['r']);
+    expect(end.aliases.get(df.id)).toBeUndefined();
+  });
+
+  it('a loop-carried box gets a creation wire for each pass from the call that made that pass object', () => {
+    const cur = box('cur');
+    const news = cur.versions.filter((v) => v.kind === 'new');
+    expect(news).toHaveLength(3);
+    for (const v of news) {
+      const wires = edgesInto(g, cur).filter((e) => e.uses.some((u) => u.token === v.token));
+      expect(wires, v.token).toHaveLength(1);
+      expect(upstream(g, wires[0]!).kind).toBe('call');
     }
   });
 });

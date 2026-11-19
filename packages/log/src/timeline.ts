@@ -23,6 +23,12 @@ export interface StepState {
    * active object among them, n = how many objects the box holds in all (versions of kind `new`).
    */
   objectBadge: Map<string, { k: number; n: number }>;
+  /**
+   * Per visible instance that has any: the other names bound to its objects at this step (svl-35d). A name
+   * shows from the step of the event it was bound after and drops off when it is rebound to another object;
+   * at the end of the timeline it is what is bound at the end of the run.
+   */
+  aliases: Map<string, string[]>;
   /** Per visible instance: its latest version token at or before the current step. */
   activeVersion: Map<string, Token>;
   /**
@@ -273,8 +279,13 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
   }
   const activeVersion = new Map<string, Token>();
   const objectBadge = new Map<string, { k: number; n: number }>();
+  const aliases = new Map<string, string[]>();
   for (const n of ix.instances) {
     if (!visibleNodes.has(n.id)) continue;
+    const names = (n.aliases ?? [])
+      .filter((a) => a.from <= cur && (a.until === null || cur < a.until))
+      .map((a) => a.name);
+    if (names.length > 0) aliases.set(n.id, [...new Set(names)]);
     let tok = n.versions[0]?.token;
     let k = 0;
     let total = 0;
@@ -305,6 +316,7 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
     activeEdges,
     activeVersion,
     objectBadge,
+    aliases,
     currentNode: current === null ? null : (ix.nodeAt.get(current) ?? null),
   };
 

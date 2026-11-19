@@ -14,7 +14,7 @@ import type {
   Token,
   ValueSummary,
 } from '@machines/log';
-import { M, callModules, instanceTitle, typeText } from './layout';
+import { M, callModules, instanceTitle, instanceTitleWith, typeText } from './layout';
 import type { Laid, LaidNode } from './layout';
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -608,6 +608,8 @@ export interface NodeHandle {
   /** Characters per line of the message under the box (its width). */
   msgChars?: number;
   rows?: AttrRowDom[];
+  /** Instances: the title text, which shows the names the object is also bound to at the step (svl-35d). */
+  title?: SVGTextElement;
   /** Call boxes: one group per port, so a port can be re-texted and dimmed per execution. */
   ports?: Map<string, PortDom>;
   /** Instances with a "more methods" list. */
@@ -822,13 +824,13 @@ export function buildSvg(
             { x: ln.x + 6, y: ln.y + 4, width: ln.w - 12, height: 22, rx: 11 },
             'md-pill',
           ),
-          s(
+          (h.title = s(
             doc,
             'text',
             { x: ln.x + ln.w / 2, y: ln.y + 19, 'text-anchor': 'middle' },
             'md-pill-text',
             instanceTitle(n),
-          ),
+          )),
         );
         const cap = Math.round((ln.attrsH ?? 0) / M.instRowH);
         h.rows = [];
@@ -1282,9 +1284,12 @@ export function applyState(
       h.label +
       (uncalled ? ', not called yet' : '') +
       (b ? `, run ${b.k} of ${b.n}` : '') +
+      (isInst && state.aliases.has(h.id) ? `, also named ${state.aliases.get(h.id)!.join(', ')}` : '') +
       (status ? `, ${status.text.replace(/^(⚠|⏹) /, '')}` : '') +
       (isCurrent ? ', current step' : '');
 
+    if (h.title && h.node.kind === 'instance')
+      setText(h.title, instanceTitleWith(h.node, state.aliases.get(h.id) ?? []));
     if (h.rows && h.node.kind === 'instance') {
       const token = displayVersion(h.node, state, mi);
       const rows = instanceRowModels(h.node, token, log?.values);

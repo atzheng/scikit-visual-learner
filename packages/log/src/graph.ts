@@ -60,6 +60,16 @@ export interface InstanceNode extends NodeBase {
   createdBy: string | null;
   params: { name: string; text: string }[];
   versions: InstanceVersion[];
+  /**
+   * svl-35d: other names the box's objects are bound to, as intervals of event indexes: the name shows at the
+   * steps `from <= current < until` (`until` null: never rebound). Omitted when there are none.
+   */
+  aliases?: InstanceAlias[];
+}
+export interface InstanceAlias {
+  name: string;
+  from: number;
+  until: number | null;
 }
 /**
  * `new`: the first version of an object, so a box merged from a loop's objects gets one per pass;
@@ -152,6 +162,8 @@ interface InstInfo {
   ctorEvents: Event[]; // constructor events that created this instance (for `params`)
   /** Port of the creating node the creation wire leaves from (null for an expr node); undefined: no creator. */
   createdByPort: string | null | undefined;
+  /** Objects after the first that a different creator (node or port) made: a loop-carried box (svl-35d). */
+  laterCreators: { from: Ref; token: Token; i: number }[];
 }
 
 function hash(s: string): string {
@@ -346,7 +358,7 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
       params: [],
       versions: [],
     };
-    const info: InstInfo = { node, objs: [], ctorEvents: [], createdByPort };
+    const info: InstInfo = { node, objs: [], ctorEvents: [], createdByPort, laterCreators: [] };
     insts.set(key, info);
     nodeOrder.push(node);
     return info;
@@ -543,7 +555,13 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
       );
     } else ii.node.createdAt = Math.min(ii.node.createdAt, e.i);
     if (e.kind === 'constructor' && k === 0) ii.ctorEvents.push(e);
-    if (!instByObj.has(keyOf(t))) registerObj(ii, t, e.i);
+    if (!instByObj.has(keyOf(t))) {
+      registerObj(ii, t, e.i);
+      // A later object of a loop's box: the event certainly output this token, so it gets its own creation
+      // wire when its creator is not the one the box was first drawn from (svl-35d).
+      if (ii.objs.length > 1 && (creator !== ii.node.createdBy || port !== ii.createdByPort))
+        ii.laterCreators.push({ from: { node: creator, port }, token: t, i: e.i });
+    }
   }
 
   /** Inputs drawn as ports: a machine owner is not a port; a data method gets `self`. */
@@ -758,6 +776,15 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
           false,
         );
     }
+    if (!foldedBoxes.has(node.id))
+      for (const c of info.laterCreators)
+        addEdge(
+          c.from,
+          { node: node.id, port: null },
+          { i: retOf.get(c.i) ?? c.i, token: c.token },
+          null,
+          false,
+        );
     node.varName = null;
     for (const v of node.versions) {
       const n = nameOf(v.token); // a loop's objects share the box: it takes the first one's name
@@ -767,6 +794,41 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
       }
     }
     node.versions.sort((a, b) => a.i - b.i);
+  }
+
+  // ---- alias names (svl-35d): a name bound to an object that is in a box, other than the box's own name,
+  // for as long as it stays bound to an object of that box (rebinding to another object of the same box,
+  // as `prev = cur` does in a loop, keeps the interval open; rebinding to anything else closes it).
+  {
+    const scope0 = log.scopes.find((sc) => sc.id === 0);
+    const boundTo = new Map<string, InstInfo | null>();
+    const open = new Map<InstInfo, Map<string, number>>();
+    const close = (info: InstInfo, name: string, until: number | null): void => {
+      const from = open.get(info)?.get(name);
+      if (from === undefined) return;
+      open.get(info)!.delete(name);
+      if (until !== null && until <= from) return; // rebound before any step could show it
+      (info.node.aliases ??= []).push({ name, from, until });
+    };
+    for (const [at, name, token] of scope0?.bindings ?? []) {
+      const next = isObject(token) ? (instByObj.get(keyOf(token)) ?? null) : null;
+      const prev = boundTo.get(name) ?? null;
+      if (prev === next) continue;
+      if (prev) close(prev, name, at);
+      if (next) {
+        let m = open.get(next);
+        if (!m) open.set(next, (m = new Map()));
+        m.set(name, at);
+      }
+      boundTo.set(name, next);
+    }
+    for (const [info, m] of open) for (const name of [...m.keys()]) close(info, name, null);
+    for (const info of insts.values()) {
+      const own = info.node.varName === null ? null : info.node.varName.replace(/[′″‴]+$/, '');
+      const list = info.node.aliases?.filter((a) => a.name !== own);
+      if (!list || list.length === 0) delete info.node.aliases;
+      else info.node.aliases = list.sort((a, b) => a.from - b.from || (a.name < b.name ? -1 : 1));
+    }
   }
 
   // ---- ports for call nodes

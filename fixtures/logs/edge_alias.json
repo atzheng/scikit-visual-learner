@@ -1,0 +1,1316 @@
+{
+  "diagnostics": [],
+  "error": null,
+  "events": [
+    {
+      "count": 1,
+      "error": null,
+      "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s20",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 20
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s21",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.linear_model import LinearRegression",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 21
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [
+        {
+          "origin": "const",
+          "param": "data",
+          "text": "{\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]}"
+        }
+      ],
+      "kind": "constructor",
+      "merge_key": "s0",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame",
+      "outputs": [
+        "v1.0"
+      ],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 0
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "self",
+          "value": "v1.0"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s4",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.copy",
+      "outputs": [
+        "v2.0"
+      ],
+      "owner": "v1.0",
+      "ret": 3,
+      "returns_self": false,
+      "scope": 0,
+      "site": 4
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 4,
+      "inputs": [],
+      "kind": "constructor",
+      "merge_key": "s7",
+      "module": "sklearn.linear_model._base",
+      "mutates": [],
+      "name": "LinearRegression",
+      "outputs": [
+        "v3.0"
+      ],
+      "owner": null,
+      "ret": 4,
+      "returns_self": false,
+      "scope": 0,
+      "site": 7
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 5,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "df",
+          "value": "v1.0"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s9.a0",
+      "module": null,
+      "mutates": [],
+      "name": "df[[\"a\"]]",
+      "outputs": [
+        "v4.0"
+      ],
+      "owner": null,
+      "ret": 5,
+      "returns_self": false,
+      "scope": 0,
+      "site": 9
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 6,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "df",
+          "value": "v1.0"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s9.a1",
+      "module": null,
+      "mutates": [],
+      "name": "df[\"b\"]",
+      "outputs": [
+        "v5.0"
+      ],
+      "owner": null,
+      "ret": 6,
+      "returns_self": false,
+      "scope": 0,
+      "site": 9
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 7,
+      "inputs": [
+        {
+          "origin": "expr",
+          "param": "X",
+          "value": "v4.0"
+        },
+        {
+          "origin": "expr",
+          "param": "y",
+          "value": "v5.0"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s9",
+      "module": "sklearn.linear_model._base",
+      "mutates": [
+        [
+          "v3.0",
+          "v3.1"
+        ]
+      ],
+      "name": "LinearRegression.fit",
+      "outputs": [],
+      "owner": "v3.0",
+      "ret": 7,
+      "returns_self": true,
+      "scope": 0,
+      "site": 9
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 8,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "k",
+          "value": "s13"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s14",
+      "module": null,
+      "mutates": [],
+      "name": "bool(k % 2)",
+      "outputs": [
+        "s14"
+      ],
+      "owner": null,
+      "ret": 8,
+      "returns_self": false,
+      "scope": 0,
+      "site": 14
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 9,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "self",
+          "value": "v1.0"
+        },
+        {
+          "origin": "const",
+          "param": "by",
+          "text": "\"a\""
+        },
+        {
+          "origin": "call",
+          "param": "ascending",
+          "value": "s14"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s15",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.sort_values",
+      "outputs": [
+        "v9.0"
+      ],
+      "owner": "v1.0",
+      "ret": 9,
+      "returns_self": false,
+      "scope": 0,
+      "site": 15
+    },
+    {
+      "count": 2,
+      "error": null,
+      "i": 10,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "k",
+          "value": "s15"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s14",
+      "module": null,
+      "mutates": [],
+      "name": "bool(k % 2)",
+      "outputs": [
+        "s16"
+      ],
+      "owner": null,
+      "ret": 10,
+      "returns_self": false,
+      "scope": 0,
+      "site": 14
+    },
+    {
+      "count": 2,
+      "error": null,
+      "i": 11,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "self",
+          "value": "v9.0"
+        },
+        {
+          "origin": "const",
+          "param": "by",
+          "text": "\"a\""
+        },
+        {
+          "origin": "call",
+          "param": "ascending",
+          "value": "s16"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s15",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.sort_values",
+      "outputs": [
+        "v10.0"
+      ],
+      "owner": "v9.0",
+      "ret": 11,
+      "returns_self": false,
+      "scope": 0,
+      "site": 15
+    },
+    {
+      "count": 3,
+      "error": null,
+      "i": 12,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "k",
+          "value": "s17"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s14",
+      "module": null,
+      "mutates": [],
+      "name": "bool(k % 2)",
+      "outputs": [
+        "s18"
+      ],
+      "owner": null,
+      "ret": 12,
+      "returns_self": false,
+      "scope": 0,
+      "site": 14
+    },
+    {
+      "count": 3,
+      "error": null,
+      "i": 13,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "self",
+          "value": "v10.0"
+        },
+        {
+          "origin": "const",
+          "param": "by",
+          "text": "\"a\""
+        },
+        {
+          "origin": "call",
+          "param": "ascending",
+          "value": "s18"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s15",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.sort_values",
+      "outputs": [
+        "v11.0"
+      ],
+      "owner": "v10.0",
+      "ret": 13,
+      "returns_self": false,
+      "scope": 0,
+      "site": 15
+    }
+  ],
+  "output": [
+    {
+      "i": 2,
+      "stream": "stdout",
+      "text": "(3, 2)\n"
+    },
+    {
+      "i": 7,
+      "stream": "stdout",
+      "text": "[-0.5]\n"
+    },
+    {
+      "i": 13,
+      "stream": "stdout",
+      "text": "(3, 2)\n"
+    }
+  ],
+  "scopes": [
+    {
+      "bindings": [
+        [
+          2,
+          "df",
+          "v1.0"
+        ],
+        [
+          2,
+          "df2",
+          "v1.0"
+        ],
+        [
+          3,
+          "other",
+          "v2.0"
+        ],
+        [
+          3,
+          "df2",
+          "v2.0"
+        ],
+        [
+          4,
+          "m",
+          "v3.0"
+        ],
+        [
+          7,
+          "r",
+          "v3.1"
+        ],
+        [
+          7,
+          "prev",
+          "v1.0"
+        ],
+        [
+          7,
+          "k",
+          "s13"
+        ],
+        [
+          9,
+          "cur",
+          "v9.0"
+        ],
+        [
+          9,
+          "prev",
+          "v9.0"
+        ],
+        [
+          9,
+          "k",
+          "s15"
+        ],
+        [
+          11,
+          "cur",
+          "v10.0"
+        ],
+        [
+          11,
+          "prev",
+          "v10.0"
+        ],
+        [
+          11,
+          "k",
+          "s17"
+        ],
+        [
+          13,
+          "cur",
+          "v11.0"
+        ],
+        [
+          13,
+          "prev",
+          "v11.0"
+        ]
+      ],
+      "id": 0,
+      "lexical_parent": null,
+      "name": "<module>",
+      "parent_event": null
+    }
+  ],
+  "sites": [
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "{\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]}"
+        }
+      ],
+      "col": 5,
+      "end_col": 57,
+      "end_line": 8,
+      "func_text": "pd.DataFrame",
+      "id": 0,
+      "keywords": {},
+      "kind": "call",
+      "line": 8,
+      "text": "pd.DataFrame({\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]})"
+    },
+    {
+      "col": 0,
+      "end_col": 57,
+      "end_line": 8,
+      "id": 1,
+      "kind": "bind",
+      "line": 8,
+      "targets": [
+        "df"
+      ],
+      "text": "df = pd.DataFrame({\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]})",
+      "value": {
+        "origin": "call",
+        "site": 0
+      },
+      "where": "local"
+    },
+    {
+      "col": 0,
+      "end_col": 8,
+      "end_line": 9,
+      "id": 2,
+      "kind": "bind",
+      "line": 9,
+      "targets": [
+        "df2"
+      ],
+      "text": "df2 = df",
+      "value": {
+        "name": "df",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "df2"
+          ],
+          "text": "df2.shape"
+        }
+      ],
+      "col": 0,
+      "end_col": 16,
+      "end_line": 10,
+      "func_text": "print",
+      "id": 3,
+      "keywords": {},
+      "kind": "call",
+      "line": 10,
+      "text": "print(df2.shape)"
+    },
+    {
+      "args": [],
+      "col": 8,
+      "end_col": 17,
+      "end_line": 11,
+      "func_text": "df.copy",
+      "id": 4,
+      "keywords": {},
+      "kind": "call",
+      "line": 11,
+      "text": "df.copy()"
+    },
+    {
+      "col": 0,
+      "end_col": 17,
+      "end_line": 11,
+      "id": 5,
+      "kind": "bind",
+      "line": 11,
+      "targets": [
+        "other"
+      ],
+      "text": "other = df.copy()",
+      "value": {
+        "origin": "call",
+        "site": 4
+      },
+      "where": "local"
+    },
+    {
+      "col": 0,
+      "end_col": 11,
+      "end_line": 12,
+      "id": 6,
+      "kind": "bind",
+      "line": 12,
+      "targets": [
+        "df2"
+      ],
+      "text": "df2 = other",
+      "value": {
+        "name": "other",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "args": [],
+      "col": 4,
+      "end_col": 22,
+      "end_line": 13,
+      "func_text": "LinearRegression",
+      "id": 7,
+      "keywords": {},
+      "kind": "call",
+      "line": 13,
+      "text": "LinearRegression()"
+    },
+    {
+      "col": 0,
+      "end_col": 22,
+      "end_line": 13,
+      "id": 8,
+      "kind": "bind",
+      "line": 13,
+      "targets": [
+        "m"
+      ],
+      "text": "m = LinearRegression()",
+      "value": {
+        "origin": "call",
+        "site": 7
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "df"
+          ],
+          "text": "df[[\"a\"]]"
+        },
+        {
+          "origin": "expr",
+          "reads": [
+            "df"
+          ],
+          "text": "df[\"b\"]"
+        }
+      ],
+      "col": 4,
+      "end_col": 29,
+      "end_line": 14,
+      "func_text": "m.fit",
+      "id": 9,
+      "keywords": {},
+      "kind": "call",
+      "line": 14,
+      "text": "m.fit(df[[\"a\"]], df[\"b\"])"
+    },
+    {
+      "col": 0,
+      "end_col": 29,
+      "end_line": 14,
+      "id": 10,
+      "kind": "bind",
+      "line": 14,
+      "targets": [
+        "r"
+      ],
+      "text": "r = m.fit(df[[\"a\"]], df[\"b\"])",
+      "value": {
+        "origin": "call",
+        "site": 9
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "r"
+          ],
+          "text": "r.coef_"
+        }
+      ],
+      "col": 0,
+      "end_col": 14,
+      "end_line": 15,
+      "func_text": "print",
+      "id": 11,
+      "keywords": {},
+      "kind": "call",
+      "line": 15,
+      "text": "print(r.coef_)"
+    },
+    {
+      "col": 0,
+      "end_col": 9,
+      "end_line": 16,
+      "id": 12,
+      "kind": "bind",
+      "line": 16,
+      "targets": [
+        "prev"
+      ],
+      "text": "prev = df",
+      "value": {
+        "name": "df",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "3"
+        }
+      ],
+      "col": 9,
+      "end_col": 17,
+      "end_line": 17,
+      "func_text": "range",
+      "id": 13,
+      "keywords": {},
+      "kind": "call",
+      "line": 17,
+      "text": "range(3)"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "k"
+          ],
+          "text": "k % 2"
+        }
+      ],
+      "col": 42,
+      "end_col": 53,
+      "end_line": 18,
+      "func_text": "bool",
+      "id": 14,
+      "keywords": {},
+      "kind": "call",
+      "line": 18,
+      "text": "bool(k % 2)"
+    },
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "\"a\""
+        }
+      ],
+      "col": 10,
+      "end_col": 54,
+      "end_line": 18,
+      "func_text": "prev.sort_values",
+      "id": 15,
+      "keywords": {
+        "ascending": {
+          "origin": "call",
+          "site": 14
+        }
+      },
+      "kind": "call",
+      "line": 18,
+      "text": "prev.sort_values(\"a\", ascending=bool(k % 2))"
+    },
+    {
+      "col": 4,
+      "end_col": 54,
+      "end_line": 18,
+      "id": 16,
+      "kind": "bind",
+      "line": 18,
+      "targets": [
+        "cur"
+      ],
+      "text": "cur = prev.sort_values(\"a\", ascending=bool(k % 2))",
+      "value": {
+        "origin": "call",
+        "site": 15
+      },
+      "where": "local"
+    },
+    {
+      "col": 4,
+      "end_col": 14,
+      "end_line": 19,
+      "id": 17,
+      "kind": "bind",
+      "line": 19,
+      "targets": [
+        "prev"
+      ],
+      "text": "prev = cur",
+      "value": {
+        "name": "cur",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "col": 4,
+      "end_col": 5,
+      "end_line": 17,
+      "id": 18,
+      "kind": "bind",
+      "line": 17,
+      "targets": [
+        "k"
+      ],
+      "text": "k",
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "prev"
+          ],
+          "text": "prev.shape"
+        }
+      ],
+      "col": 0,
+      "end_col": 17,
+      "end_line": 20,
+      "func_text": "print",
+      "id": 19,
+      "keywords": {},
+      "kind": "call",
+      "line": 20,
+      "text": "print(prev.shape)"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 5,
+      "id": 20,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 5,
+      "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "end_col": 49,
+      "end_line": 6,
+      "id": 21,
+      "imports": [
+        {
+          "attr": "LinearRegression",
+          "module": "sklearn.linear_model",
+          "name": "LinearRegression",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 6,
+      "text": "from sklearn.linear_model import LinearRegression"
+    }
+  ],
+  "status": "ok",
+  "values": {
+    "s0": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s1": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s10": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s11": {
+      "repr": "1",
+      "type": "int64"
+    },
+    "s12": {
+      "repr": "1e-06",
+      "type": "float"
+    },
+    "s13": {
+      "repr": "0",
+      "type": "int"
+    },
+    "s14": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s15": {
+      "repr": "1",
+      "type": "int"
+    },
+    "s16": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s17": {
+      "repr": "2",
+      "type": "int"
+    },
+    "s18": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s2": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s3": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s4": {
+      "repr": "1e-06",
+      "type": "float"
+    },
+    "s5": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s6": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s7": {
+      "repr": "2.9999999999999996",
+      "type": "float64"
+    },
+    "s8": {
+      "repr": "1",
+      "type": "int"
+    },
+    "s9": {
+      "repr": "None",
+      "type": "None"
+    },
+    "v1.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "3",
+            "1.0"
+          ],
+          [
+            "1",
+            "2.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    },
+    "v10.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "1",
+          "2",
+          "0"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "2.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ],
+          [
+            "3",
+            "1.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    },
+    "v11.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "0",
+          "2",
+          "1"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "3",
+            "1.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ],
+          [
+            "1",
+            "2.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    },
+    "v2.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "3",
+            "1.0"
+          ],
+          [
+            "1",
+            "2.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    },
+    "v3.0": {
+      "attrs": {
+        "copy_X": "s0",
+        "fit_intercept": "s1",
+        "n_jobs": "s2",
+        "positive": "s3",
+        "tol": "s4"
+      },
+      "machine": true,
+      "methods": [
+        {
+          "doc": "Fit linear model.",
+          "name": "fit"
+        },
+        {
+          "doc": "Get metadata routing of this object.",
+          "name": "get_metadata_routing"
+        },
+        {
+          "doc": "Get parameters for this estimator.",
+          "name": "get_params"
+        },
+        {
+          "doc": "Predict using the linear model.",
+          "name": "predict"
+        },
+        {
+          "doc": "Return :ref:`coefficient of determination <r2_score>` on test data.",
+          "name": "score"
+        },
+        {
+          "doc": "Set the parameters of this estimator.",
+          "name": "set_params"
+        }
+      ],
+      "type": "LinearRegression"
+    },
+    "v3.1": {
+      "attrs": {
+        "coef_": "v6.0",
+        "copy_X": "s5",
+        "feature_names_in_": "v7.0",
+        "fit_intercept": "s6",
+        "intercept_": "s7",
+        "n_features_in_": "s8",
+        "n_jobs": "s9",
+        "positive": "s10",
+        "rank_": "s11",
+        "singular_": "v8.0",
+        "tol": "s12"
+      },
+      "machine": true,
+      "type": "LinearRegression"
+    },
+    "v4.0": {
+      "columns": [
+        "a"
+      ],
+      "dtypes": [
+        "int64"
+      ],
+      "preview": {
+        "columns": [
+          "a"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "3"
+          ],
+          [
+            "1"
+          ],
+          [
+            "2"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        1
+      ],
+      "type": "DF"
+    },
+    "v5.0": {
+      "dtype": "float64",
+      "preview": {
+        "columns": [
+          "b"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1.0"
+          ],
+          [
+            "2.0"
+          ],
+          [
+            "3.0"
+          ]
+        ]
+      },
+      "shape": [
+        3
+      ],
+      "type": "Series"
+    },
+    "v6.0": {
+      "dtype": "float64",
+      "preview": {
+        "kind": "matrix",
+        "rows": [
+          [
+            "-0.4999999999999998"
+          ]
+        ]
+      },
+      "shape": [
+        1
+      ],
+      "type": "array"
+    },
+    "v7.0": {
+      "dtype": "object",
+      "preview": {
+        "kind": "matrix",
+        "rows": [
+          [
+            "a"
+          ]
+        ]
+      },
+      "shape": [
+        1
+      ],
+      "type": "array"
+    },
+    "v8.0": {
+      "dtype": "float64",
+      "preview": {
+        "kind": "matrix",
+        "rows": [
+          [
+            "1.4142135623730951"
+          ]
+        ]
+      },
+      "shape": [
+        1
+      ],
+      "type": "array"
+    },
+    "v9.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "0",
+          "2",
+          "1"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "3",
+            "1.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ],
+          [
+            "1",
+            "2.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    }
+  },
+  "version": 2
+}

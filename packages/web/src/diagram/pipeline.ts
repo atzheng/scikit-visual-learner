@@ -30,7 +30,7 @@ export function layoutSignature(
       case 'call':
         return [n.id, 'c', n.parent, n.order, n.name, n.inPorts, n.outPorts];
       case 'instance':
-        return [n.id, 'i', n.parent, n.order, n.className, n.varName, n.params];
+        return [n.id, 'i', n.parent, n.order, n.className, n.varName, n.params, n.aliases];
       case 'expr':
       case 'store':
         return [n.id, n.kind, n.parent, n.order, n.text];
