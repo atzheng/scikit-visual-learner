@@ -3,6 +3,7 @@ import { stateAt, type EventLog, type GraphModel } from '@machines/log';
 import {
   attrRowsFor,
   createElk,
+  createLegendList,
   edgeLabelsFor,
   layout,
   mount,
@@ -24,6 +25,35 @@ import './diagram.css';
 import { ensureVisible, fitView, panBy, zoomAt, type View } from './panzoom';
 import { Relayouter, layoutSignature, stickyTier, type Tier } from './pipeline';
 import { bannerForLog, tooManyMessage } from './runBanner';
+
+const LEGEND_KEY = 'machines.legendOpen';
+function readLegendOpen(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(LEGEND_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+function writeLegendOpen(open: boolean): void {
+  try {
+    globalThis.localStorage?.setItem(LEGEND_KEY, open ? '1' : '0');
+  } catch {
+    // storage denied: the legend just starts closed next time
+  }
+}
+
+/** The legend list, built by the renderer package and kept in the DOM while open. */
+function LegendPanel() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const host = ref.current;
+    if (!host) return;
+    const list = createLegendList(document);
+    host.append(list);
+    return () => list.remove();
+  }, []);
+  return <div ref={ref} className="md-legend diagram-legend" id="diagram-legend" />;
+}
 
 /** At most one layout per this long while a run streams (SPEC "Layout"). */
 export const RELAYOUT_INTERVAL_MS = 500;
@@ -74,6 +104,11 @@ export function DiagramPane({
   const autoFit = useRef(true);
   const [shown, setShown] = useState<Shown | null>(null);
   const [zoomPct, setZoomPct] = useState(100);
+  const [legendOpen, setLegendOpen] = useState(readLegendOpen);
+  const toggleLegend = () => {
+    writeLegendOpen(!legendOpen);
+    setLegendOpen(!legendOpen);
+  };
   const [layoutError, setLayoutError] = useState<string | null>(null);
   const latest = useRef({ onHoverEdge, onClickEdge });
   latest.current = { onHoverEdge, onClickEdge };
@@ -352,6 +387,16 @@ export function DiagramPane({
         <span className="zoom-level" aria-label={`Zoom ${zoomPct} percent`}>
           {zoomPct}%
         </span>
+        <button
+          type="button"
+          className="legend-toggle"
+          aria-expanded={legendOpen}
+          aria-controls="diagram-legend"
+          onClick={toggleLegend}
+          title="Show or hide the legend that explains the shapes and colours"
+        >
+          Legend
+        </button>
         {running && (
           <span className="run-status" role="status">
             <span className="spinner" aria-hidden="true" />
@@ -359,6 +404,7 @@ export function DiagramPane({
           </span>
         )}
       </div>
+      {legendOpen && <LegendPanel />}
       {banner && (
         <p className="banner" role="status" data-testid="run-banner">
           <span aria-hidden="true">⚠ </span>

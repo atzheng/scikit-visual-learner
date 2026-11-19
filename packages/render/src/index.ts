@@ -20,7 +20,7 @@ export {
 export type { Laid, LaidLabel, LaidNode, LaidPort, LayoutOptions, Measure } from './layout';
 export { mount } from './mount';
 export type { DiagramController, MountOptions } from './mount';
-export { createLegend, LEGEND_ITEMS } from './legend';
+export { createLegend, createLegendList, LEGEND_ITEMS } from './legend';
 export {
   attrRowsFor,
   edgeLabelsFor,

@@ -90,3 +90,17 @@
   text-align: center;
   pointer-events: none;
 }
+
+.legend-toggle[aria-expanded='true'] {
+  background: var(--surface-2, var(--border));
+  font-weight: bold;
+}
+
+.diagram-legend {
+  flex: none;
+  max-height: 55%;
+  overflow: auto;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--md-bg, var(--surface));
+}

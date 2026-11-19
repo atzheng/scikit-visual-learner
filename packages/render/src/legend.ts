@@ -10,6 +10,10 @@ type Mk = (
 ) => SVGElement;
 
 export interface LegendItem {
+  /** Stable key, so later beads can add or look up an entry. */
+  id: string;
+  /** What the renderer draws that this entry explains: a node kind (`call`, `instance`, `expr`, `store`, `source`), `edge`, or a style name. */
+  covers: string[];
   label: string;
   /** Classes of the wrapper `<g>`: e.g. `md-node md-call md-error` styles the swatch like an error box. */
   cls: string;
@@ -29,11 +33,15 @@ const wire = (mk: Mk, dashed: boolean): SVGElement =>
 
 export const LEGEND_ITEMS: LegendItem[] = [
   {
+    id: 'call',
+    covers: ['call'],
     label: 'Function or method call: inputs above, outputs below',
     cls: 'md-node md-call',
     draw: (mk) => [box(mk)],
   },
   {
+    id: 'instance',
+    covers: ['instance'],
     label: 'Machine with memory: name pill, attributes underneath',
     cls: 'md-node md-instance',
     draw: (mk) => [
@@ -42,46 +50,89 @@ export const LEGEND_ITEMS: LegendItem[] = [
     ],
   },
   {
+    id: 'wire',
+    covers: ['edge'],
     label: 'Wire: a value, labelled with its type and shape, then its name',
     cls: 'md-edge',
     draw: (mk) => [wire(mk, false)],
   },
   {
+    id: 'dashed-wire',
+    covers: ['edge-dashed'],
     label: 'Dashed wire: a value computed by an expression',
     cls: 'md-edge',
     draw: (mk) => [wire(mk, true)],
   },
   {
+    id: 'expr',
+    covers: ['expr'],
     label: 'Expression: italic text, no box',
     cls: 'md-node md-expr',
     draw: (mk) => [mk('text', { x: 22, y: 16 }, 'md-expr-text', 'a + b')],
   },
   {
+    id: 'store',
+    covers: ['store'],
     label: 'Store: an assignment into a container',
     cls: 'md-node md-store',
     draw: (mk) => [box(mk, { rx: 4 })],
   },
   {
+    id: 'source',
+    covers: ['source'],
+    label: 'Value: data that came from outside the traced calls, as plain text',
+    cls: 'md-node md-source',
+    draw: (mk) => [mk('text', { x: 22, y: 16 }, 'md-source-text', 'X')],
+  },
+  {
+    id: 'port',
+    covers: ['port'],
+    label: 'Port: a dot where a wire enters or leaves, with its type and name',
+    cls: 'md-node md-call',
+    draw: (mk) => [
+      box(mk),
+      mk('circle', { cx: 22, cy: 4, r: 3 }, 'md-port'),
+      mk('circle', { cx: 22, cy: 20, r: 3 }, 'md-port'),
+    ],
+  },
+  {
+    id: 'const-port',
+    covers: ['const-port'],
+    label: 'Constant input: the literal value written above the box, no wire',
+    cls: 'md-node md-call',
+    draw: (mk) => [box(mk, { y: 8, height: 14 }), mk('text', { x: 22, y: 7 }, 'md-ptype', '0.5')],
+  },
+  {
+    id: 'current',
+    covers: ['current'],
     label: 'Current step: thick outline',
     cls: 'md-node md-call md-current',
     draw: (mk) => [box(mk)],
   },
   {
+    id: 'error',
+    covers: ['error'],
     label: '⚠ Error: red outline, message under the box',
     cls: 'md-node md-call md-error',
     draw: (mk) => [box(mk)],
   },
   {
+    id: 'handled',
+    covers: ['handled'],
     label: '⚠ handled: amber outline, the exception was caught',
     cls: 'md-node md-call md-handled',
     draw: (mk) => [box(mk)],
   },
   {
+    id: 'stopped',
+    covers: ['stopped'],
     label: '⏹ stopped here: dashed outline, the run was stopped',
     cls: 'md-node md-call md-stopped',
     draw: (mk) => [box(mk)],
   },
   {
+    id: 'changed-attr',
+    covers: ['changed'],
     label: '● Changed attribute: bold, set by the current call',
     cls: 'md-attr md-changed',
     draw: (mk) => [
@@ -90,6 +141,8 @@ export const LEGEND_ITEMS: LegendItem[] = [
     ],
   },
   {
+    id: 'badge',
+    covers: ['badge'],
     label: '×3 or 2 of 3: a box that ran several times, as in a loop',
     cls: 'md-badge',
     draw: (mk) => [
@@ -106,7 +159,12 @@ export function createLegend(doc: Document = document, open = false): HTMLElemen
   root.open = open;
   const summary = doc.createElement('summary');
   summary.textContent = 'Legend';
-  root.append(summary);
+  root.append(summary, createLegendList(doc));
+  return root;
+}
+
+/** Just the list of swatches and labels (no toggle), for hosts that bring their own button. */
+export function createLegendList(doc: Document = document): HTMLElement {
   const list = doc.createElement('ul');
   const mk: Mk = (tag, attrs, cls, text) => {
     const el = doc.createElementNS(SVG_NS, tag);
@@ -147,6 +205,5 @@ export function createLegend(doc: Document = document, open = false): HTMLElemen
     li.append(svg, span);
     list.append(li);
   }
-  root.append(list);
-  return root;
+  return list;
 }

@@ -3,11 +3,11 @@ import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import ELKBundled from 'elkjs/lib/elk.bundled.js';
 import type { ELK } from 'elkjs/lib/elk-api';
 import { buildGraph, stateAt } from '@machines/log';
-import type { EventLog, GraphModel } from '@machines/log';
+import type { EventLog, GNode, GraphModel } from '@machines/log';
 import { linregLog, loopLog, splitLog, twoModelsLog } from '../dev/models';
 import { layout } from './layout';
 import type { Laid } from './layout';
-import { createLegend, LEGEND_ITEMS } from './legend';
+import { createLegend, createLegendList, LEGEND_ITEMS } from './legend';
 import { mount } from './mount';
 import type { DiagramController } from './mount';
 import { attrRowsFor } from './svg';
@@ -364,6 +364,39 @@ describe('legend', () => {
     expect(el.textContent).toContain('⚠ Error');
     expect(el.textContent).toContain('⏹ stopped here');
     expect(el.textContent).toContain('● Changed attribute');
+  });
+
+  test('every node kind, edge kind and state style has an entry', () => {
+    // Record<..., true> makes this fail to compile when the graph model gains a node kind.
+    const nodeKinds: Record<GNode['kind'], true> = {
+      call: true,
+      instance: true,
+      expr: true,
+      store: true,
+      source: true,
+    };
+    const covered = new Set(LEGEND_ITEMS.flatMap((i) => i.covers));
+    const wanted = [
+      ...Object.keys(nodeKinds),
+      'edge',
+      'edge-dashed',
+      'port',
+      'const-port',
+      'current',
+      'error',
+      'handled',
+      'stopped',
+      'changed',
+      'badge',
+    ];
+    for (const w of wanted) expect(covered, w).toContain(w);
+    expect(new Set(LEGEND_ITEMS.map((i) => i.id)).size).toBe(LEGEND_ITEMS.length);
+  });
+
+  test('createLegendList has one li per item and no toggle', () => {
+    const ul = createLegendList(document);
+    expect(ul.tagName).toBe('UL');
+    expect(ul.querySelectorAll('li').length).toBe(LEGEND_ITEMS.length);
   });
 });
 
