@@ -17,6 +17,11 @@ export function progressText(p: ProgressMessage): string {
   }
 }
 
+/** True for Pyodide's "Loading a, b, c" message when matplotlib is among the packages (direct or indirect import). */
+export function loadsMatplotlib(message: string): boolean {
+  return /^Loading\b.*\bmatplotlib\b/.test(message);
+}
+
 export function versionsText(v: Record<string, string>): string {
   const parts = [
     v.python && `Python ${v.python}`,

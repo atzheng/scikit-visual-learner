@@ -6,6 +6,7 @@
 import type { PyodideInterface } from 'pyodide';
 import type { Doc, FromWorker, RunConfig, ToWorker } from '@machines/log';
 import { DATASETS } from '../course';
+import { loadsMatplotlib } from './status';
 
 const scope = self as unknown as {
   postMessage(msg: FromWorker, transfer?: Transferable[]): void;
@@ -175,24 +176,29 @@ async function loadImports(source: string): Promise<void> {
   };
   offline.clear();
   // A failed fetch may be thrown or only reported through `errorCallback`, so watch both.
+  let mplLoading = false;
   const tryLoad = async (code: string): Promise<boolean> => {
     let failed = false;
     try {
-      await pyodide.loadPackagesFromImports(code, { errorCallback: () => (failed = true) });
+      await pyodide.loadPackagesFromImports(code, {
+        errorCallback: () => (failed = true),
+        // Pyodide reports "Loading a, b" only for packages not yet loaded, so this also covers indirect imports.
+        messageCallback: (m: string) => {
+          if (!mplLoading && loadsMatplotlib(m)) {
+            mplLoading = true;
+            post({ type: 'progress', phase: 'matplotlib', done: 0, total: 1 });
+          }
+        },
+      });
     } catch {
       failed = true;
     }
     return !failed;
   };
-  // matplotlib is large: load it only for code that imports it, and say so while it loads.
-  const needsMpl =
-    !pyodide.loadedPackages.matplotlib &&
-    /^\s*(import\s+(\w+\s*,\s*)*matplotlib\b|from\s+matplotlib\b)/m.test(source);
-  if (needsMpl) post({ type: 'progress', phase: 'matplotlib', done: 0, total: 1 });
   try {
     if (await tryLoad(source)) return;
   } finally {
-    if (needsMpl) post({ type: 'progress', phase: 'matplotlib', done: 1, total: 1 });
+    if (mplLoading) post({ type: 'progress', phase: 'matplotlib', done: 1, total: 1 });
   }
   // Find out which imports are the problem, one at a time.
   const names = pyodide.runPython(
