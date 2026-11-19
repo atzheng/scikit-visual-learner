@@ -102,6 +102,8 @@ export interface DiagramPaneProps {
   onClickEdge?(id: string): void;
   /** Receives the controller (and the shown model/log) for inspect features. */
   controllerRef?: { current: DiagramController | null };
+  /** The inspect side panel (svl-bwv.5): drawn beside the diagram, next to the docs panel. */
+  children?: React.ReactNode;
 }
 
 const KEY_PAN = 48;
@@ -115,6 +117,7 @@ export function DiagramPane({
   onHoverEdge,
   onClickEdge,
   controllerRef,
+  children,
 }: DiagramPaneProps) {
   const log = useStore((s) => s.log);
   const model = useStore((s) => s.model);
@@ -579,6 +582,7 @@ export function DiagramPane({
             </p>
           )}
         </div>
+        {children}
         {docs && (
           <DocsPanel
             target={docs.target}
