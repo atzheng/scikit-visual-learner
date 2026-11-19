@@ -13,6 +13,8 @@ export {
   FONT_MONO,
   FONT_NAME,
   placeLabels,
+  tierFor,
+  longEdgeLoad,
   M as LAYOUT_METRICS,
 } from './layout';
 export type { Laid, LaidLabel, LaidNode, LaidPort, LayoutOptions, Measure } from './layout';

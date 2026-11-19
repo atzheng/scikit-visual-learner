@@ -7,7 +7,8 @@ import {
   type PointerEvent,
 } from 'react';
 import { DiagramPane } from './diagram/DiagramPane';
-import { Editor } from './editor/Editor';
+import { Editor, type EditorController } from './editor/Editor';
+import { useStepHighlight } from './editor/useStepHighlight';
 import { OutputPane } from './output/OutputPane';
 import { LinkBanner, ShareButton, useLoadShareLink } from './share/ShareUI';
 import { elapsedLabel } from './runtime/status';
@@ -158,6 +159,11 @@ export function App() {
   const mainRef = useRef<HTMLElement>(null);
   const leftRef = useRef<HTMLElement>(null);
   const rightRef = useRef<HTMLElement>(null);
+  const editorRef = useRef<EditorController | null>(null);
+  const [cursorSite, setCursorSite] = useState<number | null>(null);
+  const sites = useStore((s) => s.log?.sites);
+  const runSource = useStore((s) => s.runSource);
+  useStepHighlight(editorRef);
   // While running, Esc anywhere on the page stops the run.
   useEffect(() => {
     const onKey = (e: globalThis.KeyboardEvent) => {
@@ -190,7 +196,12 @@ export function App() {
           style={{ gridTemplateRows: `${leftRows}fr 6px ${100 - leftRows}fr` }}
         >
           <div id="pane-editor" className="pane" tabIndex={-1} aria-label="Code editor">
-            <Editor />
+            <Editor
+              sites={sites}
+              runSource={runSource ?? undefined}
+              onSiteAtCursor={(site) => setCursorSite(site ? site.id : null)}
+              controllerRef={editorRef}
+            />
           </div>
           <Splitter
             orientation="horizontal"
@@ -216,7 +227,7 @@ export function App() {
           style={{ gridTemplateRows: `${rightRows}fr 6px ${100 - rightRows}fr` }}
         >
           <div className="pane">
-            <DiagramPane />
+            <DiagramPane cursorSite={cursorSite} />
           </div>
           <Splitter
             orientation="horizontal"
