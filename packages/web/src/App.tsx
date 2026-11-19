@@ -75,7 +75,7 @@ function Toolbar() {
   const ready = state === 'ready';
   return (
     <header className="toolbar" role="toolbar" aria-label="Actions">
-      <h1>Machine Diagrams</h1>
+      <h1>Code Diagrams</h1>
       {running ? (
         <button type="button" className="primary" onClick={stop}>
           Stop

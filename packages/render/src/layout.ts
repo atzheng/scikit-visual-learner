@@ -214,9 +214,37 @@ function callPortWidths(n: CallNode, measure: Measure): PortSizes {
 const byOrder = (a: GNode, b: GNode): number =>
   a.order - b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
+/**
+ * The module shown in parentheses after a call box's name (svl-1x4): where the imported name comes from,
+ * `LinearRegression (sklearn.linear_model)`. Import nodes and callee edges stay in the model but are not drawn;
+ * this reads the import behind each callee edge. A box with no import behind it (a method, a builtin) has none.
+ * For `from m import Ridge as R` the import source is `m.Ridge`; the attribute is cut so the module remains.
+ */
+export function callModules(model: GraphModel): Map<string, string> {
+  const imports = new Map<string, string>();
+  for (const n of model.nodes) if (n.kind === 'import') imports.set(n.id, n.source ?? n.name);
+  const calls = new Map<string, CallNode>();
+  for (const n of model.nodes) if (n.kind === 'call') calls.set(n.id, n);
+  const out = new Map<string, string>();
+  for (const e of model.edges) {
+    if (!e.callee) continue;
+    const src = imports.get(e.from.node);
+    const call = calls.get(e.to.node);
+    if (src === undefined || call === undefined || out.has(call.id)) continue;
+    const tail = `.${call.name}`;
+    out.set(call.id, src.endsWith(tail) ? src.slice(0, -tail.length) : src);
+  }
+  return out;
+}
+
+/** The name line of a call box: the name, then `(module)` when the name was imported. */
+export const callTitle = (name: string, module: string | undefined): string =>
+  module === undefined ? name : `${name} (${module})`;
+
 interface SizeOpts {
   attrRows?: Record<string, string[]>;
   moreMethods?: Record<string, number>;
+  modules?: Map<string, string>;
 }
 const moreRow = (n: InstanceNode, o: SizeOpts): number =>
   (o.moreMethods?.[n.id] ?? 0) > 0 ? M.moreH : 0;
@@ -229,7 +257,7 @@ function leafSize(n: GNode, measure: Measure, o: SizeOpts): { w: number; h: numb
       const sum = (a: number[]): number => (a.length ? (a.length + 1) * Math.max(...a) : 0);
       const w = Math.max(
         M.minBoxW,
-        measure(n.name, FONT_NAME) + 2 * M.boxPadX,
+        measure(callTitle(n.name, o.modules?.get(n.id)), FONT_NAME) + 2 * M.boxPadX,
         sum(pw.in),
         sum(pw.out),
       );
@@ -297,6 +325,14 @@ export function buildElk(
   } = {},
 ): { graph: ElkNode; dropped: number } {
   const measure = opts.measure ?? defaultMeasure;
+  // Import nodes and callee edges stay in the model (a later bead draws imports as timeline steps) but are
+  // not drawn: the import shows as `(module)` in the call box (svl-1x4).
+  const modules = callModules(model);
+  model = {
+    ...model,
+    nodes: model.nodes.filter((n) => n.kind !== 'import'),
+    edges: model.edges.filter((e) => !e.callee),
+  };
   const ids = new Set(model.nodes.map((n) => n.id));
   const instIds = new Set(model.nodes.filter((n) => n.kind === 'instance').map((n) => n.id));
   const kids = new Map<string | null, GNode[]>();
@@ -355,7 +391,7 @@ export function buildElk(
   const build = (n: GNode): ElkNode => {
     const e: ElkNode = { id: n.id };
     const children = kids.get(n.id);
-    const size = leafSize(n, measure, opts);
+    const size = leafSize(n, measure, { ...opts, modules });
     if (n.kind === 'call') {
       e.width = size.w;
       e.height = size.h;

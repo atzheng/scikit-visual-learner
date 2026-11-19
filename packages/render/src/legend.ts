@@ -15,6 +15,8 @@ export interface LegendItem {
   /** What the renderer draws that this entry explains: a node kind (`call`, `instance`, `expr`, `store`, `source`), `edge`, or a style name. */
   covers: string[];
   label: string;
+  /** `basic` entries show at first; `more` entries sit behind the "More" expander (svl-1x4). */
+  level: 'basic' | 'more';
   /** Classes of the wrapper `<g>`: e.g. `md-node md-call md-error` styles the swatch like an error box. */
   cls: string;
   draw: (mk: Mk) => SVGElement[];
@@ -33,16 +35,10 @@ const wire = (mk: Mk, dashed: boolean): SVGElement =>
 
 export const LEGEND_ITEMS: LegendItem[] = [
   {
-    id: 'call',
-    covers: ['call'],
-    label: 'Function or method call: inputs above, outputs below',
-    cls: 'md-node md-call',
-    draw: (mk) => [box(mk)],
-  },
-  {
     id: 'instance',
     covers: ['instance'],
-    label: 'Machine with memory: name pill, attributes underneath',
+    label: 'Class instance: its name and attributes, with its methods inside',
+    level: 'basic',
     cls: 'md-node md-instance',
     draw: (mk) => [
       mk('rect', { x: 3, y: 2, width: 38, height: 20, rx: 6 }, 'md-inst-box'),
@@ -50,9 +46,18 @@ export const LEGEND_ITEMS: LegendItem[] = [
     ],
   },
   {
+    id: 'call',
+    covers: ['call', 'store'],
+    label: 'Function or method call: inputs above, outputs below',
+    level: 'basic',
+    cls: 'md-node md-call',
+    draw: (mk) => [box(mk)],
+  },
+  {
     id: 'wire',
     covers: ['edge'],
     label: 'Wire: a value, labelled with its type and shape, then its name',
+    level: 'more',
     cls: 'md-edge',
     draw: (mk) => [wire(mk, false)],
   },
@@ -60,37 +65,23 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'dashed-wire',
     covers: ['edge-dashed'],
     label: 'Dashed wire: a value computed by an expression',
+    level: 'more',
     cls: 'md-edge',
     draw: (mk) => [wire(mk, true)],
-  },
-  {
-    id: 'import',
-    covers: ['import', 'edge-callee'],
-    label: 'Import: a name from a module; a dotted wire leads to the calls that use it',
-    cls: 'md-node md-import',
-    draw: (mk) => [
-      mk('rect', { x: 2, y: 5, width: 18, height: 14, rx: 7 }, 'md-box'),
-      mk('path', { d: 'M22 12H40', 'marker-end': 'url(#md-arrow-legend-0)' }, 'md-wire md-callee'),
-    ],
   },
   {
     id: 'expr',
     covers: ['expr'],
     label: 'Expression: italic text, no box',
+    level: 'more',
     cls: 'md-node md-expr',
     draw: (mk) => [mk('text', { x: 22, y: 16 }, 'md-expr-text', 'a + b')],
-  },
-  {
-    id: 'store',
-    covers: ['store'],
-    label: 'Store: an assignment into a container',
-    cls: 'md-node md-store',
-    draw: (mk) => [box(mk, { rx: 4 })],
   },
   {
     id: 'source',
     covers: ['source'],
     label: 'Value: data that came from outside the traced calls, as plain text',
+    level: 'more',
     cls: 'md-node md-source',
     draw: (mk) => [mk('text', { x: 22, y: 16 }, 'md-source-text', 'X')],
   },
@@ -98,6 +89,7 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'port',
     covers: ['port'],
     label: 'Port: a dot where a wire enters or leaves, with its type and name',
+    level: 'more',
     cls: 'md-node md-call',
     draw: (mk) => [
       box(mk),
@@ -109,6 +101,7 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'const-port',
     covers: ['const-port'],
     label: 'Constant input: the literal value written above the box, no wire',
+    level: 'more',
     cls: 'md-node md-call',
     draw: (mk) => [box(mk, { y: 8, height: 14 }), mk('text', { x: 22, y: 7 }, 'md-ptype', '0.5')],
   },
@@ -116,27 +109,23 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'current',
     covers: ['current'],
     label: 'Current step: thick outline',
+    level: 'more',
     cls: 'md-node md-call md-current',
     draw: (mk) => [box(mk)],
   },
   {
     id: 'error',
-    covers: ['error'],
-    label: '⚠ Error: red outline, message under the box',
+    covers: ['error', 'handled'],
+    label: '⚠ Error: red outline, message under the box (also for an error the program caught)',
+    level: 'more',
     cls: 'md-node md-call md-error',
-    draw: (mk) => [box(mk)],
-  },
-  {
-    id: 'handled',
-    covers: ['handled'],
-    label: '⚠ handled: amber outline, the exception was caught',
-    cls: 'md-node md-call md-handled',
     draw: (mk) => [box(mk)],
   },
   {
     id: 'stopped',
     covers: ['stopped'],
     label: '⏹ stopped here: dashed outline, the run was stopped',
+    level: 'more',
     cls: 'md-node md-call md-stopped',
     draw: (mk) => [box(mk)],
   },
@@ -144,6 +133,7 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'changed-attr',
     covers: ['changed'],
     label: '● Changed attribute: bold, set by the current call',
+    level: 'more',
     cls: 'md-attr md-changed',
     draw: (mk) => [
       mk('text', { x: 4, y: 16 }, 'md-bullet', '●'),
@@ -151,26 +141,21 @@ export const LEGEND_ITEMS: LegendItem[] = [
     ],
   },
   {
-    id: 'ctor',
-    covers: ['constructor'],
-    label: 'Constructor: creates the machine below it; its wire runs into the machine',
-    cls: 'md-node md-call md-ctor',
-    draw: (mk) => [
-      box(mk, { y: 2, height: 10 }),
-      mk('path', { d: 'M22 12V20', 'marker-end': 'url(#md-arrow-legend-0)' }, 'md-wire'),
-    ],
-  },
-  {
     id: 'uncalled',
     covers: ['uncalled'],
-    label: 'Dashed, pale box: a method the program has not called yet (solid once it is called)',
+    label: 'not called yet: small text under the name of a method the program has not called yet',
+    level: 'more',
     cls: 'md-node md-call md-uncalled',
-    draw: (mk) => [box(mk)],
+    draw: (mk) => [
+      box(mk),
+      mk('rect', { x: 12, y: 13, width: 20, height: 3, rx: 1.5 }, 'md-uncalled-bar'),
+    ],
   },
   {
     id: 'more-methods',
     covers: ['more-methods'],
-    label: '▸ more methods (N): click or press Enter to list the other methods of the machine',
+    label: '▸ more methods (N): click or press Enter to list the other methods of the class',
+    level: 'more',
     cls: 'md-more',
     draw: (mk) => [
       mk('rect', { x: 3, y: 4, width: 38, height: 16, rx: 5 }, 'md-more-bg'),
@@ -181,6 +166,7 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'unused-port',
     covers: ['unused-port'],
     label: 'Faint port: an input or output this call did not use',
+    level: 'more',
     cls: 'md-node md-call',
     draw: (mk) => [
       box(mk),
@@ -192,6 +178,7 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'faint-wire',
     covers: ['edge-inactive'],
     label: 'Faint wire: used by an earlier call of the same box, not by the current one',
+    level: 'more',
     cls: 'md-edge md-inactive',
     draw: (mk) => [wire(mk, false)],
   },
@@ -199,6 +186,7 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'data-row',
     covers: ['data-row'],
     label: 'Data box row: shape, dtype or columns of a table, array or series',
+    level: 'more',
     cls: 'md-attr md-data',
     draw: (mk) => [mk('text', { x: 3, y: 16 }, 'md-aname', 'shape')],
   },
@@ -206,6 +194,7 @@ export const LEGEND_ITEMS: LegendItem[] = [
     id: 'badge',
     covers: ['badge'],
     label: '×3 or 2 of 3: a box that ran several times, as in a loop',
+    level: 'more',
     cls: 'md-badge',
     draw: (mk) => [
       mk('rect', { x: 3, y: 4, width: 38, height: 16, rx: 8 }, 'md-badge-bg'),
@@ -225,9 +214,15 @@ export function createLegend(doc: Document = document, open = false): HTMLElemen
   return root;
 }
 
-/** Just the list of swatches and labels (no toggle), for hosts that bring their own button. */
+/**
+ * The legend body (no toggle), for hosts that bring their own button: a list of the `basic` entries (a class
+ * instance, a function or method call) and under it a "More" expander with the rest (svl-1x4).
+ */
 export function createLegendList(doc: Document = document): HTMLElement {
-  const list = doc.createElement('ul');
+  const root = doc.createElement('div');
+  root.className = 'md-legend-body';
+  const basic = doc.createElement('ul');
+  const more = doc.createElement('ul');
   const mk: Mk = (tag, attrs, cls, text) => {
     const el = doc.createElementNS(SVG_NS, tag);
     for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
@@ -265,7 +260,13 @@ export function createLegendList(doc: Document = document): HTMLElement {
     const span = doc.createElement('span');
     span.textContent = item.label;
     li.append(svg, span);
-    list.append(li);
+    (item.level === 'basic' ? basic : more).append(li);
   }
-  return list;
+  const details = doc.createElement('details');
+  details.className = 'md-legend-more';
+  const summary = doc.createElement('summary');
+  summary.textContent = 'More';
+  details.append(summary, more);
+  root.append(basic, details);
+  return root;
 }
