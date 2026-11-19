@@ -195,6 +195,9 @@
 .md-node.md-stopped .md-box {
   stroke-dasharray: 6 3;
 }
+.md-diagram {
+  overflow: visible; /* messages under boxes may extend past the layout box */
+}
 .md-diagram .md-msg {
   font-size: 11px;
   text-anchor: middle;

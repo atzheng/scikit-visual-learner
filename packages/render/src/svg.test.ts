@@ -12,6 +12,7 @@ import {
   statusOf,
   summaryLabel,
   truncate,
+  wrapText,
 } from './svg';
 
 const exec = (extra: Partial<Execution>): Execution => ({
@@ -158,5 +159,35 @@ describe('instance rows', () => {
       'intercept_ float',
       'n_features_in_ int',
     ]);
+  });
+});
+
+describe('changedAttrs on a real fit (golden_linreg)', () => {
+  test('only attributes the fit set are marked; scalar hyperparameters are not', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { fileURLToPath } = await import('node:url');
+    const { stateAt } = await import('@machines/log');
+    const path = (d: string): string =>
+      fileURLToPath(new URL(`../../../fixtures/${d}/golden_linreg.json`, import.meta.url));
+    const log = JSON.parse(readFileSync(path('logs'), 'utf8'));
+    const model = buildGraph(log);
+    let found = false;
+    for (let step = 1; step <= model.steps.length; step++) {
+      const st = stateAt(model, log, step);
+      const ev = log.events.find((e: { i: number }) => e.i === st.current);
+      if (!ev?.name.endsWith('fit')) continue;
+      found = true;
+      const ch = changedAttrs(st.attrsBefore, st.attrsAfter, log.values);
+      for (const a of ['coef_', 'intercept_', 'n_features_in_', 'rank_', 'singular_'])
+        expect(ch.has(a), a).toBe(true);
+      for (const a of ['copy_X', 'fit_intercept', 'n_jobs', 'positive', 'tol'])
+        expect(ch.has(a), a).toBe(false);
+    }
+    expect(found).toBe(true);
+  });
+  test('wrapText keeps lines within the width', () => {
+    const lines = wrapText('ValueError: a fairly long message that needs wrapping', 20);
+    expect(lines.every((l) => l.length <= 20)).toBe(true);
+    expect(lines.join(' ')).toBe('ValueError: a fairly long message that needs wrapping');
   });
 });
