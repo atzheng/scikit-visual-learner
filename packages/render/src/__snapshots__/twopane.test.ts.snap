@@ -1,0 +1,155 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a value 1`] = `
+{
+  "box": {
+    "h": 60,
+    "w": 140,
+    "x": 188,
+    "y": 142,
+  },
+  "height": 344,
+  "items": [
+    {
+      "key": "x",
+      "participant": {
+        "changed": false,
+        "edge": "e1",
+        "kind": "instance",
+        "node": "x",
+        "object": null,
+        "param": "X",
+        "port": "in:0",
+        "role": "input",
+        "token": null,
+      },
+      "rect": {
+        "h": 50,
+        "w": 100,
+        "x": 208,
+        "y": 16,
+      },
+    },
+    {
+      "key": "y",
+      "participant": {
+        "changed": false,
+        "edge": "e2",
+        "kind": "instance",
+        "node": "y",
+        "object": null,
+        "param": "0",
+        "port": "out:0",
+        "role": "output",
+        "token": null,
+      },
+      "rect": {
+        "h": 50,
+        "w": 100,
+        "x": 208,
+        "y": 278,
+      },
+    },
+    {
+      "key": "m",
+      "participant": {
+        "changed": false,
+        "edge": null,
+        "kind": "instance",
+        "node": "m",
+        "object": null,
+        "param": null,
+        "port": null,
+        "role": "owner",
+        "token": null,
+      },
+      "rect": {
+        "h": 50,
+        "w": 100,
+        "x": 16,
+        "y": 147,
+      },
+    },
+  ],
+  "values": {
+    "lines": [
+      "in   k = 3",
+    ],
+    "w": 88,
+    "x": 352,
+    "y": 142,
+  },
+  "width": 456,
+  "wires": [
+    {
+      "arrow": true,
+      "edge": "e1",
+      "from": "x",
+      "label": {
+        "anchor": "start",
+        "name": "X",
+        "type": "",
+        "x": 263,
+        "y": 80,
+      },
+      "points": [
+        [
+          258,
+          66,
+        ],
+        [
+          258,
+          142,
+        ],
+      ],
+      "to": "box",
+    },
+    {
+      "arrow": true,
+      "edge": "e2",
+      "from": "box",
+      "label": {
+        "anchor": "start",
+        "name": "0",
+        "type": "",
+        "x": 263,
+        "y": 270,
+      },
+      "points": [
+        [
+          258,
+          202,
+        ],
+        [
+          258,
+          278,
+        ],
+      ],
+      "to": "y",
+    },
+    {
+      "arrow": false,
+      "edge": null,
+      "from": "m",
+      "label": {
+        "anchor": "middle",
+        "name": "owner",
+        "type": "",
+        "x": 152,
+        "y": 166,
+      },
+      "points": [
+        [
+          116,
+          172,
+        ],
+        [
+          188,
+          172,
+        ],
+      ],
+      "to": "box",
+    },
+  ],
+}
+`;

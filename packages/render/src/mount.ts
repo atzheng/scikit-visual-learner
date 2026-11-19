@@ -1,6 +1,6 @@
 // mount(): the DiagramController (CONTRACTS.md section 8). Framework-free. Builds the SVG on `setGraph`, and
 // `setState` only toggles classes and text, so stepping never re-lays-out.
-import type { EventLog, GraphModel, StepState } from '@machines/log';
+import type { EventLog, GraphModel, StepState, Token } from '@machines/log';
 import type { Laid } from './layout';
 import { applyState, buildSvg, nodeDocTarget, setMoreOpen } from './svg';
 import type { MethodDocTarget } from './svg';
@@ -19,10 +19,16 @@ export interface MountOptions {
   onOpenDocs?(target: MethodDocTarget, nodeId: string): void;
 }
 
+/** Per-call overrides used by the two-pane view (svl-61q.2); the full diagram passes none. */
+export interface StateView {
+  owns?: ReadonlySet<string>;
+  versionOf?: ReadonlyMap<string, Token>;
+}
+
 export interface DiagramController {
   setGraph(model: GraphModel, laid: Laid): void;
   /** Reveal, highlight the current node, badges, active tokens. `log` supplies value types and attributes. */
-  setState(state: StepState, log?: EventLog): void;
+  setState(state: StepState, log?: EventLog, view?: StateView): void;
   /** Scroll the box into view (does not move keyboard focus). */
   focusNode(id: string): void;
   /** Opens (or with `open` false closes) the "more methods" list of an instance. No-op for other ids. */
@@ -315,12 +321,14 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
         applyState(dom, lastState, lastLog, ctx);
       }
     },
-    setState(state, log) {
+    setState(state, log, view) {
       if (destroyed) return;
       lastState = state;
       if (log) lastLog = log;
       if (!dom || !ctx) return;
       ctx.reducedMotion = reduced();
+      ctx.owns = view?.owns;
+      ctx.versionOf = view?.versionOf;
       applyState(dom, state, lastLog, ctx);
     },
     toggleMethods(id, open) {

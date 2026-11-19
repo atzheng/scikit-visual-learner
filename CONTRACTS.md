@@ -731,6 +731,24 @@ Rules:
 - `shelfAt(model, step)`: step 0 is empty; at step s the entries with `at` before the step's event, each with `filled`; the end (`steps.length`) shows every entry full. So `filled` counts objects of a merged loop box that exist so far (the one being made by the current step is on the stage, not counted).
 - `shelfOrder` is sorted by `at`, then `order`, then id: creation order, with imports as entries at their step. A merged loop box is one entry. A box is on the shelf from the step after its `at` line; while that line is the current step its object is on the stage (so the renderer slides it in afterwards). Chips, scalars and sources are never entries. A truncated model (`tooMany`) lists only the boxes it kept, and `stageAt` returns null for steps whose box was cut; participants that were cut are left out.
 
+**Two-pane renderer** (svl-61q.2, `@machines/render` `twopane.ts`; framework-free, the full-diagram `mount` is unchanged):
+
+```ts
+function mountTwoPane(host: HTMLElement, model: GraphModel, log: EventLog, opts?: { onSelectNode?, onOpenDocs?, measure?, elk? }): Promise<TwoPaneController>;
+interface TwoPaneController {
+  setStep(step: number): void; readonly step: number;
+  cards(): CardInfo[]; card(key: string): HTMLElement | null; // key as below
+  readonly plan: StagePlan | null; readonly shelfEl: HTMLElement; readonly stageEl: HTMLElement; destroy(): void;
+}
+interface CardInfo { key: string; node: string; object: string | null; where: 'shelf' | 'stage' | 'hidden'; shelf: Rect | null; stage: Rect | null } // rects relative to the host
+function planStage(stage, size, box, mergedOf, log?): StagePlan; // pure stage layout: items, wires (points), values
+```
+
+- One ELK run sizes every box and gives the call box its port positions; the wires of the stage are drawn from `planStage`, not by ELK. Layout is top to bottom: inputs (a row), the call box with the owner to its left and inline values to its right, outputs and created objects (a row). The owner has a dotted line labelled "owner" (no port, no arrow). A step without a call/expr/store box (an import, an instance made by an expression) shows its objects in one row, no wires.
+- Cards are stable elements `div.md-card[data-card=key]`, each holding the same SVG box as the full diagram (it is a `mount` with one node, so docs "?", roving rows and keyboard behave the same). `key` = the node id; one object of a merged loop box on the stage is its own element `node#object` (the shelf keeps the box with its "N objects" caption); a chip is `chip:<edge>`. A single-object card moves from its slot `[data-slot=node]` into `.md-stage-canvas` while it is on the stage, and its slot shows a dashed `.md-slot-ph` reading "<name> on the stage". Slots exist for every entry, `hidden` until `shelfAt` lists it; their order is `shelfOrder`.
+- Keyboard: one Tab stop per pane (shelf, stage; roving `tabindex`). Left/Right/Home/End move between cards, Enter dives into a card's attribute rows (needs `onOpenDocs`, as in the full diagram), Escape comes back to the card. Each card's box has a unique name: its title, then its role on the stage (`input to X`, `owner of fit`, `created by read_csv`, `current line`) or `on the shelf, k of n`. The wires svg is `aria-hidden`; those names are its text equivalent. `.md-stage` scrolls horizontally when a line is wider than the pane. `cards()` `where` follows visibility (`hidden` when the element or its slot is `hidden`).
+- `mount.setState(state, log, view?)` takes an optional `view` (`owns`, `versionOf`) so a card can show the version that travelled and mark the changed attributes of the stage's owner. `ApplyContext` has the same two optional fields. Without them nothing changes.
+
 **Renderer** (`@machines/render`):
 
 ```ts
