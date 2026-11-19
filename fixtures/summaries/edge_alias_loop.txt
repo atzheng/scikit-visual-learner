@@ -1,0 +1,9 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Called pd.DataFrame({"a": [3, 1, 2], "b": [1.0, 2.0, 3.0]}) from pandas. It created a new DataFrame (3 × 2), df.
+3 (event 2): Computed bool(k % 2), a bool (False) (pass 1 of 3).
+4 (event 3): Called prev.sort_values("a", ascending=bool(k % 2)). It created a new DataFrame (3 × 2), cur (pass 1 of 3).
+5 (event 4): Computed bool(k % 2), a bool (True) (pass 2 of 3).
+6 (event 5): Called prev.sort_values("a", ascending=bool(k % 2)). It created a new DataFrame (3 × 2), cur.
+7 (event 6): Computed bool(k % 2), a bool (False) (pass 3 of 3).
+8 (event 7): Called prev.sort_values("a", ascending=bool(k % 2)). It created a new DataFrame (3 × 2), cur.

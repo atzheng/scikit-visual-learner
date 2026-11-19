@@ -1,0 +1,4 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
+3 (event 2): Called Table(df). It created a new Table object, t.
