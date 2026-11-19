@@ -177,7 +177,7 @@ The runtime keeps two stacks. `SCOPES` is pushed and popped by the `__scope__` w
 - A new scope's `parent_event` is `CALLS[-1]`. That covers both ordinary calls and callbacks: when `df.apply(my_func)` calls `my_func`, the `apply` event is on `CALLS`, so `my_func`'s interior nests under the `apply` box. The same holds for `FunctionTransformer(func)`, `sorted(key=…)`, and so on.
 - On entry, `__scope__` binds parameters with `inspect.signature(fn).bind(*args, **kwargs)`, so `data` passed as `df` gets a binding `df` in the new scope.
 - `__bind__` with `where="local"` writes to `SCOPES[-1]`; `"global"` writes to the module scope; `"nonlocal"` writes to the nearest `lexical_parent` that already binds that name, falling back to the immediate lexical parent.
-- Bindings are time-indexed. A wire's label is the name its value had, in the drawn scope, at the event that produced it. In `X = X.drop(...)`, the old and new values are both labelled `X`; the renderer shows the superseded one as `X′` (faded) when both are visible.
+- Bindings are time-indexed. A wire's label is the name its value had, in the drawn scope, at the event that produced it. In `X = X.drop(...)`, the old value is `X` and the new one is `X′`: each new value bound to a name gets one more prime, in time order (`X`, `X′`, `X″`, then `X‴` for any later one, as a loop rebinds on every pass). Box titles, port names and wire labels all follow this rule.
 
 **Merge keys**
 
@@ -273,7 +273,7 @@ In-place mutation (`df.dropna(inplace=True)`, `df["c"] = …`) is a **new versio
 | Expression node (no box) | an `expr` event, with dashed wires from the values it reads. If its result is an object, a dashed wire leads on to that object's box (`y = df["price"]`: `df` box, expression, `y` box). |
 | Source node (no box) | a *scalar* that was consumed but has no producing event: a loop variable, or in Jupyter a variable from an earlier cell. Labelled with its name. |
 
-Example, `golden_split`: `read_csv` makes the `df′` box (superseded by the rebinding), the `dropna` box sits inside it and makes the `df` box, two dashed expressions make the `X` and `y` boxes, and `train_test_split` takes both and makes four boxes, `X_train`, `X_test`, `y_train`, `y_test`. A superseded name gets the prime, as on wires.
+Example, `golden_split`: `read_csv` makes the `df` box, the `dropna` box sits inside it and makes the `df′` box (the new binding gets the prime), two dashed expressions make the `X` and `y` boxes, and `train_test_split` takes both and makes four boxes, `X_train`, `X_test`, `y_train`, `y_test`.
 
 Only events in the scope being viewed are drawn. The top-level view shows module-scope events. A box that is expanded becomes a compound node containing the events of every scope whose `parent_event` is that box's event. This applies to `student_function` boxes and to library calls that invoked student callbacks.
 

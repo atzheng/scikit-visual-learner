@@ -157,11 +157,11 @@ describe('golden_split', () => {
     const dropna = only(calls(g, 'DataFrame.dropna'));
     const first = boxFrom(g, readCsv, 'out:0');
     expect(first.className).toBe('DF');
-    expect(first.varName).toBe('df′'); // rebound by `df = df.dropna()`: the superseded box gets the prime
+    expect(first.varName).toBe('df'); // the new binding gets the prime: `df = df.dropna()` makes df′
     expect(dropna.parent).toBe(first.id);
     expect(edgesInto(g, dropna, 'in:self')).toEqual([]); // the owner is the box, not a port
     const second = boxFrom(g, dropna, 'out:0');
-    expect(second.varName).toBe('df');
+    expect(second.varName).toBe('df′');
     expect(second.id).not.toBe(first.id);
   });
 

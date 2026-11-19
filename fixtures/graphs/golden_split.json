@@ -36,7 +36,7 @@
           "id": "out:0",
           "param": "0",
           "typeLabel": "",
-          "nameLabel": "df′"
+          "nameLabel": "df"
         }
       ],
       "student": false
@@ -47,7 +47,7 @@
       "parent": null,
       "order": 700005,
       "className": "DF",
-      "varName": "df′",
+      "varName": "df",
       "createdAt": 0,
       "createdBy": "n:wcu5tk.0",
       "params": [],
@@ -86,7 +86,7 @@
           "id": "out:0",
           "param": "0",
           "typeLabel": "",
-          "nameLabel": "df"
+          "nameLabel": "df′"
         }
       ],
       "student": false
@@ -97,7 +97,7 @@
       "parent": null,
       "order": 800005,
       "className": "DF",
-      "varName": "df",
+      "varName": "df′",
       "createdAt": 1,
       "createdBy": "n:m1pltk3k@i:wcu5tk.0",
       "params": [],

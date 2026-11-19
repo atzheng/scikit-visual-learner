@@ -142,21 +142,27 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
 
   // ---- names (scope 0 bindings)
   const firstNameByKey = new Map<string, string>();
-  const lastKeyByName = new Map<string, string>();
+  const keysByName = new Map<string, string[]>(); // name -> distinct values bound to it, in time order
   {
     const scope0 = log.scopes.find((s) => s.id === 0);
     for (const [, name, token] of scope0?.bindings ?? []) {
       const k = keyOf(token);
       if (!firstNameByKey.has(k)) firstNameByKey.set(k, name);
-      lastKeyByName.set(name, k);
+      const ks = keysByName.get(name);
+      if (!ks) keysByName.set(name, [k]);
+      else if (!ks.includes(k)) ks.push(k);
     }
   }
-  /** Bound name of a value; a name since rebound to a different value gets a prime. */
+  /**
+   * Bound name of a value. Each new value bound to a name gets one more prime, in time order:
+   * `df`, `df′`, `df″`, then `df‴` for any later one (a loop rebinds on every pass).
+   */
   const nameOf = (t: Token): string | null => {
     const k = keyOf(t);
     const name = firstNameByKey.get(k);
     if (name === undefined) return null;
-    return lastKeyByName.get(name) === k ? name : `${name}′`;
+    const idx = Math.min(keysByName.get(name)?.indexOf(k) ?? 0, 3);
+    return name + ['', '′', '″', '‴'][idx];
   };
   const plainNameOf = (t: Token): string | null => firstNameByKey.get(keyOf(t)) ?? null;
 
@@ -521,12 +527,9 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     }
     node.varName = null;
     for (const v of node.versions) {
-      const n = plainNameOf(v.token);
+      const n = nameOf(v.token); // a loop's objects share the box: it takes the first one's name
       if (n !== null) {
-        // a name since rebound to another object (not one of this box's own: a loop's objects share a box)
-        // gets a prime, as on wires
-        const owned = info.objs.some((k) => lastKeyByName.get(n) === k);
-        node.varName = owned ? n : `${n}′`;
+        node.varName = n;
         break;
       }
     }
@@ -552,7 +555,8 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
           id,
           param: `${k}`,
           typeLabel: isObject(t) ? '' : typeOf(t),
-          nameLabel: nameOf(t),
+          // an object's port carries its box's name (a loop's objects share one box and one name)
+          nameLabel: (isObject(t) ? instByObj.get(keyOf(t))?.node.varName : null) ?? nameOf(t),
         });
       });
       e.mutates.forEach(([before, after], k) => {

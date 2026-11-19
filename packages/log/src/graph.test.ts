@@ -352,7 +352,7 @@ describe('instances and methods', () => {
     expect(insts(m)).toHaveLength(1);
   });
 
-  test('a method returning a new object creates a second box from the method box; the old box keeps its name', () => {
+  test('a method returning a new object creates a second box from the method box; the new binding gets the prime', () => {
     const b = new B();
     const s0 = b.site('df = load()', 1);
     const s1 = b.site('df = df.dropna()', 2);
@@ -368,7 +368,7 @@ describe('instances and methods', () => {
     const m = build(b.log());
     const dn = byName(m, 'DataFrame.dropna');
     const [first, second] = insts(m);
-    expect([first.varName, second.varName]).toEqual(['df′', 'df']);
+    expect([first.varName, second.varName]).toEqual(['df', 'df′']);
     expect(dn.parent).toBe(first.id);
     expect(second.createdBy).toBe(dn.id);
     expect(edgeInto(m, second.id, null).map((e) => e.from)).toEqual([
@@ -589,7 +589,7 @@ describe('merging', () => {
 });
 
 describe('name labels', () => {
-  test('X = X.drop(...) puts a prime on the superseded wire', () => {
+  test('X = X.drop(...) puts the prime on the new binding', () => {
     const b = new B();
     const s0 = b.site('X = load()', 1);
     const s1 = b.site('X = X.drop("a")', 2);
@@ -607,9 +607,9 @@ describe('name labels', () => {
     b.ev(s2, 'function', 'fit', { inputs: [wired('X', 'v2.0')] });
     const m = build(b.log());
     const drop = byName(m, 'DataFrame.drop');
-    expect(drop.outPorts[0]!.nameLabel).toBe('X');
+    expect(drop.outPorts[0]!.nameLabel).toBe('X′');
     const [old, cur] = insts(m);
-    expect([old.varName, cur.varName]).toEqual(['X′', 'X']); // the superseded box gets the prime
+    expect([old.varName, cur.varName]).toEqual(['X', 'X′']); // the new binding gets the prime
     expect(drop.parent).toBe(old.id);
     expect(edgeInto(m, byName(m, 'fit').id, 'in:X')[0]!.from.node).toBe(cur.id);
     expect(edgeInto(m, byName(m, 'fit').id, 'in:X')[0]!.nameLabel).toBeNull();

@@ -520,7 +520,7 @@ interface Execution {
 interface InstanceNode extends NodeBase {
   kind: 'instance';
   className: string; // the value's type: LinearRegression, DF, Series, array, list[3]
-  varName: string | null; // "model: LinearRegression", "X_train: DF"; a name since rebound to another object gets a prime
+  varName: string | null; // "model: LinearRegression", "X_train: DF"; each new object bound to the same name gets one more prime (`df`, `df′`, `df″`)
   createdAt: number; // i of the creating event (constructor, a function or method returning it, or an expr)
   createdBy: string | null; // id of the call or expr node that created it (the constructor box, read_csv, a method box inside another box, an expr node); null only for a lazy instance
   params: { name: string; text: string }[]; // constructor const/label args (also ports of the constructor box)
@@ -558,7 +558,7 @@ interface GEdge {
   to: { node: string; port: string | null }; // null: same
   dashed: boolean; // into or out of an expr node
   uses: { i: number; token: Token }[]; // per consumer execution: which value travelled
-  nameLabel: string | null; // the bound name of the latest token in the drawn scope; superseded names get "′"
+  nameLabel: string | null; // the bound name of the latest token in the drawn scope; each new value bound to a name gets one more prime in time order (`X`, `X′`, `X″`, capped at `‴`)
 }
 ```
 
@@ -582,7 +582,7 @@ Decisions made while building `graph.ts` (SPEC was silent):
 - A function that returns an object (`read_csv`, each of `train_test_split`'s outputs, `predict`) has an out-port for it, and an edge from that port to the instance border (`createdBy`), so layout can place the instance below the function box. A method box inside a box `A` that creates box `B` (`df.dropna()`) draws that edge out of `A`. A failed constructor is a plain call node with the error.
 - Constructor args: const and label args are `params` text; scalar args use `Input.text`, else the value's `repr`; reference args show their type in `params` and are wired to the constructor box's in-ports.
 - Port text: a wired in-port has `typeLabel` = the value type for a scalar and `''` for an object (its box shows type and shape), and `param` is the gray name (`nameLabel` is null on in-ports). Const and label inputs have `typeLabel: ''` and `constText` = the full string `param = text`. Out-port `param` is the output index as text, `nameLabel` is the bound name, `typeLabel` is the type for a scalar and `''` for an object. `mutates` on any object only adds an instance version `{ i: event.i, token: after }` (including nested machines such as a scaler inside a pipeline).
-- Name labels: names come from scope 0 bindings, matched by object (`v12`) for reference values and by token for scalars. The label is the first name bound to the value; if the last binding of that name is a different value, it gets `′`. Edges from source nodes and instances have `nameLabel: null` (the node says it); so does any edge into an object's box, and an expr's wire to the box it creates. An instance's `varName` is the first name bound to any of its objects, with `′` unless the last binding of that name is one of the box's own objects (a loop's objects share a box and a name). The label of an edge is that of its latest use.
+- Name labels: names come from scope 0 bindings, matched by object (`v12`) for reference values and by token for scalars. The label is the first name bound to the value, plus one prime per distinct value bound to that name before it (time order; at most three, so a loop's per-pass scalars stop at `‴`). Edges from source nodes and instances have `nameLabel: null` (the node says it); so does any edge into an object's box, and an expr's wire to the box it creates. An instance's `varName` is the first name bound to any of its objects, named as a wire label is (a loop's objects share a box, so it takes the first one's name; a call's out-port carries its box's name). The label of an edge is that of its latest use.
 - **Producer order.** An edge from a producer to a consumer is drawn only when the producing event's `i` is lower than the consumer event's `i`. A use that ran before the token's producer is treated as having no producer for that use: a source node for a scalar, the (lazy) instance for an object. This is a general guard against a late-recorded producer being wired to earlier uses.
 - A loop's source tokens (a new token each iteration, no producer) share one source node per consumer node and param; `SourceNode.token` is the latest.
 - `steps` = every execution `i` of drawn nodes plus every instance version `i`, sorted and unique. Dropped expr events and events outside scope 0 are not steps.
