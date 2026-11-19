@@ -9,6 +9,8 @@ import {
 import { FileList, UploadButton, useDropUpload } from './files/FilesUI';
 import { AutosaveNotice } from './storage/notice';
 import { DiagramPane } from './diagram/DiagramPane';
+import { InstanceDiff } from './inspect/InstanceDiff';
+import { useEdgeInspect } from './inspect/Preview';
 import { Editor, type EditorController } from './editor/Editor';
 import { useStepHighlight } from './editor/useStepHighlight';
 import { OutputPane } from './output/OutputPane';
@@ -164,6 +166,7 @@ export function App() {
   const rightRef = useRef<HTMLElement>(null);
   const editorRef = useRef<EditorController | null>(null);
   const [cursorSite, setCursorSite] = useState<number | null>(null);
+  const edgeInspect = useEdgeInspect();
   const sites = useStore((s) => s.log?.sites);
   const runSource = useStore((s) => s.runSource);
   useStepHighlight(editorRef);
@@ -233,7 +236,14 @@ export function App() {
           style={{ gridTemplateRows: `${rightRows}fr 6px ${100 - rightRows}fr` }}
         >
           <div className="pane">
-            <DiagramPane cursorSite={cursorSite} />
+            <DiagramPane
+              cursorSite={cursorSite}
+              onHoverEdge={edgeInspect.onHover}
+              onClickEdge={edgeInspect.onClick}
+            >
+              <InstanceDiff />
+            </DiagramPane>
+            {edgeInspect.popover}
           </div>
           <Splitter
             orientation="horizontal"

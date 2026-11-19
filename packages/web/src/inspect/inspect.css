@@ -1,0 +1,213 @@
+.pv-popover {
+  position: fixed;
+  z-index: 50;
+  max-width: min(680px, calc(100vw - 16px));
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+  pointer-events: none;
+}
+.pv-popover.pinned {
+  pointer-events: auto;
+  border: 2px solid var(--accent);
+}
+.pv-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  padding: 0 6px;
+  font-size: 12px;
+}
+.pv-popover.pinned .pv-body {
+  padding-right: 64px;
+}
+.pv-popover.pinned .pv-scroll {
+  margin-right: -64px;
+}
+.pv-title {
+  margin: 0 0 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+.pv-type {
+  font-weight: 600;
+  font-family: var(--mono);
+}
+.pv-detail,
+.pv-note,
+.pv-hint,
+.pv-none {
+  color: var(--muted);
+  font-size: 12px;
+}
+.pv-note,
+.pv-hint {
+  margin: 4px 0 0;
+}
+.pv-repr {
+  margin: 0 0 4px;
+}
+.pv-repr code {
+  font-family: var(--mono);
+  overflow-wrap: anywhere;
+}
+.pv-scroll {
+  max-width: 100%;
+  overflow: auto;
+}
+.pv-table {
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.pv-table th,
+.pv-table td {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pv-table thead th {
+  font-weight: 600;
+  background: var(--bg);
+}
+.pv-table tbody th {
+  font-weight: 400;
+  color: var(--muted);
+  background: var(--bg);
+}
+
+.inspect-panel {
+  flex: 0 0 min(360px, 46%);
+  min-width: 0;
+  overflow: auto;
+  overflow-x: hidden;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.inspect-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inspect-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.inspect-class {
+  margin-left: 6px;
+  font-weight: 400;
+  font-family: var(--mono);
+  color: var(--muted);
+  font-size: 12px;
+}
+.inspect-sub,
+.inspect-empty {
+  margin: 4px 0 8px;
+  color: var(--muted);
+}
+.inspect-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.inspect-table th,
+.inspect-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.inspect-table thead th {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.inspect-table tbody th {
+  font-weight: 400;
+}
+.inspect-table tr.changed th,
+.inspect-changed {
+  font-weight: 700;
+}
+.inspect-changed {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.inspect-table tr.changed {
+  background: var(--selection);
+}
+.pv-val {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.pv-val.changed {
+  font-weight: 700;
+}
+.pv-val:hover {
+  color: var(--accent);
+}
+.pv-val:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.inspect-preview td {
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.inspect-table td,
+.inspect-table tbody th {
+  overflow-wrap: anywhere;
+}
+
+.inspect-table tbody th {
+  overflow: hidden;
+}
+.inspect-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.inspect-flag {
+  display: block;
+  white-space: nowrap;
+}
+.inspect-table th:first-child {
+  width: 40%;
+}
+.inspect-table th,
+.inspect-table td {
+  padding: 3px 8px;
+}
+
+@media (max-width: 900px) {
+  .inspect-panel {
+    flex-basis: min(440px, 88%);
+  }
+  .inspect-table th:first-child {
+    width: 36%;
+  }
+}
