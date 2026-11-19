@@ -42,9 +42,9 @@ const controller = (): DiagramController =>
     onOpenDocs: (t, id) => note(`docs ${t.module ?? ''} ${t.name} (from ${id})`),
   }));
 
-function show(step: number): void {
+function show(step: number, animate = false): void {
   if (twoPane) {
-    twoPane.setStep(step);
+    twoPane.setStep(step, { animate });
     label.textContent = `${Math.min(step, model.steps.length)} of ${model.steps.length}`;
     return;
   }
@@ -93,6 +93,16 @@ async function load(): Promise<void> {
 
 scenario.addEventListener('change', () => void load());
 slider.addEventListener('input', () => show(Number(slider.value)));
+// single steps animate (two-pane view); the slider snaps
+for (const [id, d] of [
+  ['prev', -1],
+  ['next', 1],
+] as const)
+  $(id).addEventListener('click', () => {
+    const to = Math.max(0, Math.min(model.steps.length, Number(slider.value) + d));
+    slider.value = String(to);
+    show(to, true);
+  });
 theme.addEventListener('change', () => {
   if (theme.value) document.documentElement.dataset.theme = theme.value;
   else delete document.documentElement.dataset.theme;

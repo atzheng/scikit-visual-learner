@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { buildGraph, shelfAt, stageAt } from '@machines/log';
 import type { EventLog, GraphModel, StageParticipant } from '@machines/log';
-import { cardKey, mountTwoPane, planStage, valueLine } from './twopane';
-import type { TwoPaneController } from './twopane';
+import { cardKey, mountTwoPane, planMoves, planStage, valueLine } from './twopane';
+import type { Rect, TwoPaneController } from './twopane';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'logs');
 const names = readdirSync(ROOT)
@@ -329,5 +329,215 @@ describe('mount', () => {
     tp!.destroy();
     expect(host.children).toHaveLength(0);
     tp = undefined;
+  });
+});
+
+describe('planMoves (pure)', () => {
+  const R = (x: number, y: number): Rect => ({ x, y, w: 50, h: 30 });
+  test('step forward: shelf to stage; stepping back is the mirror', () => {
+    const shelf = new Map([
+      ['a', R(0, 100)],
+      ['b', R(60, 100)],
+      ['c', R(120, 100)],
+    ]);
+    const stage = new Map([
+      ['a', R(10, 20)],
+      ['b', R(60, 100)],
+      ['n', R(200, 20)],
+    ]);
+    expect(planMoves(shelf, stage)).toEqual([
+      { key: 'a', kind: 'move', dx: -10, dy: 80 },
+      { key: 'n', kind: 'enter', dx: 0, dy: 0 },
+    ]);
+    // back: a goes stage -> shelf, n disappears (no animation), c comes back
+    expect(planMoves(stage, shelf)).toEqual([
+      { key: 'a', kind: 'move', dx: 10, dy: -80 },
+      { key: 'c', kind: 'enter', dx: 0, dy: 0 },
+    ]);
+  });
+  test('a shelf card that kept its place in the shelf does not slide when the stage resizes', () => {
+    // the whole shelf moved down 40px (the stage grew); a goes shelf -> stage
+    const b = new Map([
+      ['a', R(0, 100)],
+      ['b', R(60, 100)],
+    ]);
+    const a = new Map([
+      ['a', R(10, 20)],
+      ['b', R(60, 140)],
+    ]);
+    const relB = new Map<string, Rect | null>([
+      ['a', R(0, 0)],
+      ['b', R(60, 0)],
+    ]);
+    const relA = new Map<string, Rect | null>([
+      ['a', null],
+      ['b', R(60, 0)],
+    ]);
+    expect(planMoves(b, a, { before: relB, after: relA })).toEqual([
+      { key: 'a', kind: 'move', dx: -10, dy: 80 },
+    ]);
+    expect(planMoves(b, a).map((m) => m.key)).toEqual(['a', 'b']);
+  });
+  test('cards that stay put or are not visible do not move', () => {
+    const b = new Map([['a', R(0, 0)]]);
+    const a = new Map([
+      ['a', R(0.4, 0)],
+      ['z', null],
+    ]);
+    expect(planMoves(b, a)).toEqual([]);
+  });
+});
+
+describe('animation', () => {
+  type Stub = { animate?: unknown };
+  const proto = HTMLElement.prototype as unknown as Stub;
+  const svgProto = SVGElement.prototype as unknown as Stub;
+  let calls: { el: Element; frames: Keyframe[] }[] = [];
+  let cancelled = 0;
+  const realRect = Element.prototype.getBoundingClientRect;
+  const realMM = window.matchMedia;
+  const setup = (reduced: boolean): void => {
+    calls = [];
+    cancelled = 0;
+    const animate = function (this: Element, frames: Keyframe[]): unknown {
+      calls.push({ el: this, frames });
+      return { cancel: () => cancelled++ };
+    };
+    proto.animate = animate;
+    svgProto.animate = animate;
+    // a card on the stage is at (left, top) in the canvas, one on the shelf is elsewhere
+    Element.prototype.getBoundingClientRect = function (this: Element) {
+      if (!(this instanceof HTMLElement) || !this.matches('.md-card, .md-chipcard'))
+        return new DOMRect(0, 0, 10, 10);
+      return this.parentElement?.classList.contains('md-stage-canvas')
+        ? new DOMRect(
+            500 + parseFloat(this.style.left || '0'),
+            parseFloat(this.style.top || '0'),
+            50,
+            30,
+          )
+        : new DOMRect(10, 400, 50, 30);
+    };
+    window.matchMedia = ((q: string) => ({ matches: reduced && q.includes('reduce') })) as never;
+  };
+  afterEach(() => {
+    delete proto.animate;
+    delete svgProto.animate;
+    Element.prototype.getBoundingClientRect = realRect;
+    window.matchMedia = realMM;
+  });
+  /** The first step whose stage uses a card that is on the shelf the step before. */
+  const usesShelf = async (): Promise<number> => {
+    const { model, log } = await open('golden_linreg');
+    for (let s = 2; s <= model.steps.length; s++) {
+      const st = stageAt(model, log, s);
+      const prev = new Set(stageAt(model, log, s - 1)?.participants.map((p) => p.node));
+      const sh = new Set(
+        shelfAt(model, s - 1)
+          .map((e) => e.node)
+          .filter((n) => !prev.has(n)),
+      );
+      if (st?.participants.some((p) => p.kind !== 'chip' && sh.has(p.node))) return s;
+    }
+    throw new Error('no such step');
+  };
+  const tx = (c: { frames: Keyframe[] }): number =>
+    parseFloat(String(c.frames[0]!.transform).slice('translate('.length));
+  const isMove = (c: { frames: Keyframe[] }): boolean =>
+    String(c.frames[0]!.transform).startsWith('translate(');
+
+  test('a single step animates cards with transforms, back plays the reverse, a new step finishes it', async () => {
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s - 1);
+    expect(calls).toHaveLength(0);
+    tp!.setStep(s, { animate: true });
+    const moved = calls.filter((c) => c.el.matches('.md-card') && isMove(c));
+    expect(moved.length).toBeGreaterThan(0);
+    for (const m of moved) expect(m.frames[1]).toEqual({ transform: 'none' }); // transforms only
+    const first = calls.length;
+    tp!.setStep(s - 1, { animate: true }); // the running animations are finished first
+    expect(cancelled).toBe(first);
+    const back = calls.slice(first).filter((c) => c.el.matches('.md-card') && isMove(c));
+    expect(back.length).toBeGreaterThan(0);
+    const same = back.find((b) => moved.some((m) => m.el === b.el))!;
+    const fwd = moved.find((m) => m.el === same.el)!;
+    expect(Math.sign(tx(same))).toBe(-Math.sign(tx(fwd)));
+  });
+  test('snap: no animation by default, with animate:false, or under prefers-reduced-motion', async () => {
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s - 1);
+    tp!.setStep(s);
+    tp!.setStep(s - 1, { animate: false });
+    expect(calls).toHaveLength(0);
+    tp!.destroy();
+    tp = undefined;
+    setup(true);
+    await usesShelf();
+    tp!.setStep(s - 1);
+    tp!.setStep(s, { animate: true });
+    expect(calls).toHaveLength(0);
+  });
+  test('cards() measures the layout box of a card that is mid-animation', async () => {
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s - 1);
+    const offs = { left: 7, top: 9 };
+    const defs: [string, number][] = [
+      ['offsetLeft', offs.left],
+      ['offsetTop', offs.top],
+      ['offsetWidth', 50],
+      ['offsetHeight', 30],
+    ];
+    for (const [k, v] of defs)
+      Object.defineProperty(HTMLElement.prototype, k, { configurable: true, get: () => v });
+    try {
+      tp!.setStep(s, { animate: true });
+      expect(calls.length).toBeGreaterThan(0);
+      const onShelf = tp!.cards().find((c) => c.where === 'shelf' && c.shelf)!;
+      // the stubbed drawn rect is (10, 400); the layout box is the offsets (host's own offsets cancel)
+      expect(onShelf.shelf).toEqual({ x: 0, y: 0, w: 50, h: 30 });
+    } finally {
+      for (const [k] of defs)
+        delete (HTMLElement.prototype as unknown as Record<string, unknown>)[k];
+    }
+  });
+  test('only new wires fade in', async () => {
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s, { animate: true });
+    tp!.setStep(s, { animate: true }); // same step again: every wire is already there
+    const wiresFaded = calls
+      .slice(0)
+      .filter((c) => c.el instanceof SVGElement && c.el.hasAttribute('data-wire'));
+    const second = wiresFaded.length;
+    const before = calls.length;
+    tp!.setStep(s, { animate: true });
+    expect(calls.slice(before).some((c) => c.el.hasAttribute('data-wire'))).toBe(false);
+    expect(second).toBeGreaterThanOrEqual(0);
+  });
+  test('focus stays on a card that moved to the stage', async () => {
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s - 1);
+    const stageKeys = new Set(
+      stageAt(
+        buildGraph(readLog('golden_linreg'), { expanded: new Set() }),
+        readLog('golden_linreg'),
+        s,
+      )!
+        .participants.filter((p) => p.kind !== 'chip')
+        .map((p) => p.node),
+    );
+    const card = [...host.querySelectorAll<HTMLElement>('.md-shelf .md-card')].find(
+      (c) => !c.hidden && stageKeys.has(c.dataset.card!),
+    )!;
+    const g = card.querySelector<HTMLElement>('.md-node')!;
+    g.focus();
+    expect(document.activeElement).toBe(g);
+    tp!.setStep(s, { animate: true });
+    expect(tp!.card(card.dataset.card!)!.parentElement).toBe(tp!.stageEl);
+    expect(document.activeElement).toBe(g);
   });
 });

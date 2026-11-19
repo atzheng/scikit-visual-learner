@@ -402,6 +402,13 @@
     transition: none;
   }
 }
+/* the two-pane view animates its cards itself (twopane.ts, only on a single step): no fade-in on a snap */
+.md-twopane .md-node,
+.md-twopane .md-edge,
+.md-twopane .md-edge-label,
+.md-twopane .md-inst-box {
+  animation: none;
+}
 @keyframes md-in {
   from {
     opacity: 0;
