@@ -81,11 +81,13 @@ describe('step following', () => {
     expect(clampStep(9, 4)).toBe(4);
     expect(clampStep(NaN, 4)).toBe(0);
   });
-  test('a new run starts at the end; a student at the end follows; one who stepped back stays', () => {
-    expect(nextStep(2, 9, 3, true)).toBe(3);
-    expect(nextStep(5, 5, 8, false)).toBe(8);
-    expect(nextStep(2, 5, 8, false)).toBe(2);
-    expect(nextStep(7, 9, 3, false)).toBe(3);
+  test('a new run starts at step 1 and stays there as steps stream in; Back to 0 is kept', () => {
+    expect(nextStep(0, 0, 0)).toBe(0); // nothing yet
+    expect(nextStep(0, 0, 3)).toBe(1); // the first steps arrive
+    expect(nextStep(1, 3, 9)).toBe(1); // more arrive: no jump to the end
+    expect(nextStep(5, 5, 8)).toBe(5); // even a student at the end stays
+    expect(nextStep(0, 3, 9)).toBe(0); // the student went back to "Before the program runs"
+    expect(nextStep(7, 9, 3)).toBe(3);
   });
 });
 

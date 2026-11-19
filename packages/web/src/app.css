@@ -206,6 +206,12 @@ button:disabled {
   background: var(--surface);
 }
 
+.pane-timeline {
+  overflow: visible; /* an auto-height row: the timeline takes what it needs (its event list scrolls itself) */
+  min-height: auto;
+  border-bottom: 1px solid var(--border);
+}
+
 .splitter {
   background: var(--border);
 }

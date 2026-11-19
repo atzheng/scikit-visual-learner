@@ -72,16 +72,12 @@ export function stepForKey(
 }
 
 /**
- * Where the slider goes when a streamed update arrives: a new run starts at its end and then follows the
- * newest step; a user who has stepped back stays where they are.
+ * Where the slider goes when a streamed update arrives. A new run starts at its first step (step 1, the first
+ * line) as soon as one exists, and stays at the student's step from then on: streaming never carries the slider
+ * to the end. Step 0 stays reachable with Back and is kept if the student goes back to it.
  */
-export function nextStep(
-  prevStep: number,
-  prevMax: number,
-  newMax: number,
-  first: boolean,
-): number {
-  if (first || prevStep >= prevMax) return newMax;
+export function nextStep(prevStep: number, prevMax: number, newMax: number): number {
+  if (prevMax === 0 && newMax > 0) return 1;
   return clampStep(prevStep, newMax);
 }
 
