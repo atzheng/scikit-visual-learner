@@ -24,7 +24,7 @@ import { clampStep, nodeForSite, stepForKey } from '../timeline/steps';
 import './diagram.css';
 import { ensureVisible, fitView, panBy, zoomAt, type View } from './panzoom';
 import { Relayouter, layoutSignature, stickyTier, type Tier } from './pipeline';
-import { bannerForLog, tooManyMessage } from './runBanner';
+import { tooManyMessage } from './runBanner';
 
 const LEGEND_KEY = 'machines.legendOpen';
 function readLegendOpen(): boolean {
@@ -364,7 +364,6 @@ export function DiagramPane({
     if (handled) e.preventDefault();
   };
 
-  const banner = !running && log ? bannerForLog(log) : null;
   const tooMany = shown?.model.tooMany;
   const empty = shown !== null && shown.model.nodes.length === 0;
   return (
@@ -405,12 +404,6 @@ export function DiagramPane({
         )}
       </div>
       {legendOpen && <LegendPanel />}
-      {banner && (
-        <p className="banner" role="status" data-testid="run-banner">
-          <span aria-hidden="true">⚠ </span>
-          {banner}
-        </p>
-      )}
       {tooMany !== undefined && (
         <p className="banner" role="status" data-testid="too-many">
           <span aria-hidden="true">⚠ </span>
