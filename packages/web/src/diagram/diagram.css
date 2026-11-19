@@ -141,8 +141,32 @@
   flex: 1;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding: 8px;
+  background: var(--md-bg, var(--surface));
+}
+/* the stage takes what it needs up to 55% of the pane (then scrolls); the shelf keeps the rest, always in view */
+.twopane-host .md-twopane {
+  flex: 1;
+  min-height: 0;
+  gap: 8px;
+}
+.twopane-host .md-stage {
+  flex: 0 1 auto;
+  max-height: 55%;
+  overflow: auto;
+}
+.twopane-host .md-shelf-sec {
+  flex: 1 1 0;
+  min-height: 110px;
+  overflow: auto;
+}
+.stage-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   background: var(--md-bg, var(--surface));
 }
 .stage-head .step-summary {

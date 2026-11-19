@@ -2,7 +2,7 @@ import '@machines/render/theme.css';
 import { describeStep, type EventLog, type GraphModel } from '@machines/log';
 import { createElk, mountTwoPane, type TwoPaneController } from '@machines/render';
 import elkWorkerUrl from 'elkjs/lib/elk-worker.min.js?url';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { DocsOpenerContext } from '../docs/opener';
 import { useStore } from '../store';
@@ -16,6 +16,7 @@ import { nearestWire } from './view';
 
 /** At most one re-mount per this long while a run streams. */
 const REMOUNT_INTERVAL_MS = 500;
+const MIN_STAGE_SCALE = 0.6;
 
 /**
  * The two-pane view: the object shelf and the current-line stage (`mountTwoPane`). The renderer takes a fixed
@@ -34,6 +35,7 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
   const elkRef = useRef<ReturnType<typeof createElk> | null>(null);
   const lastMount = useRef(0);
   const hover = useRef<string | null>(null);
+  const scale = useRef(1);
   const latest = useRef({ onHoverEdge, onClickEdge });
   latest.current = { onHoverEdge, onClickEdge };
   const { openDocs, docsPanel } = useDocs();
@@ -101,6 +103,19 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
     [],
   );
 
+  /** Scale the stage canvas to the width of its pane (floor 0.6, then the stage scrolls sideways). */
+  const fitStage = useCallback(() => {
+    const ctl = ctlRef.current;
+    const sec = ctl?.stageEl.parentElement;
+    if (!ctl || !sec) return;
+    const w = ctl.plan?.width ?? 0;
+    const avail = sec.clientWidth - 18; // the stage's padding and border
+    const k = w > 0 ? Math.max(MIN_STAGE_SCALE, Math.min(1, avail / w)) : 1;
+    // CSS zoom, not a transform: the layout box shrinks with it, so the stage's height and scroll area follow
+    ctl.stageEl.style.zoom = k < 1 ? String(k) : '';
+    scale.current = k;
+  }, []);
+
   // ---- step -> the stage
   useEffect(() => {
     const ctl = ctlRef.current;
@@ -108,7 +123,15 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
     // svl-61q.3: pass `{ animate: useStore.getState().stepSingle }` as the second argument here.
     ctl.setStep(clampStep(step, mounted.model.steps.length));
     hover.current = null;
-  }, [step, mounted]);
+    fitStage();
+  }, [step, mounted, fitStage]);
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const ro = new ResizeObserver(fitStage);
+    ro.observe(host);
+    return () => ro.disconnect();
+  }, [fitStage]);
 
   // ---- hover and click on a wire of the stage (the wires svg takes no pointer events: hit-test its plan)
   useEffect(() => {
@@ -118,7 +141,8 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
       const ctl = ctlRef.current;
       if (!ctl || !(e.target instanceof Element) || e.target.closest('.md-card')) return null;
       const r = ctl.stageEl.getBoundingClientRect();
-      return nearestWire(ctl.plan, e.clientX - r.left, e.clientY - r.top)?.edge ?? null;
+      const k = scale.current; // the canvas is zoomed: plan coordinates are unscaled
+      return nearestWire(ctl.plan, (e.clientX - r.left) / k, (e.clientY - r.top) / k)?.edge ?? null;
     };
     const setHover = (id: string | null, e: PointerEvent | MouseEvent) => {
       if (id === hover.current) return;
