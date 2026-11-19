@@ -89,8 +89,12 @@ def test_import_is_wrapped_by_hooks_and_not_rewritten() -> None:
     src = "import os\nfrom sys import path as p\nx = os.getcwd()\nfrom os import *\n"
     out = ast.unparse(instrument(src).tree).splitlines()
     assert out[:6] == [
-        "__imp__(2, True)", "import os", "__imp__(2)",
-        "__imp__(3, True)", "from sys import path as p", "__imp__(3)",
+        "__imp__(2, True)",
+        "import os",
+        "__imp__(2)",
+        "__imp__(3, True)",
+        "from sys import path as p",
+        "__imp__(3)",
     ]
     assert out[-1] == "from os import *"  # a star binds nothing: no hook
 
@@ -303,7 +307,8 @@ def test_first_statement_import_output_is_not_tagged_before_any_event(
 def test_failed_import_output_stays_with_the_previous_step(chatty_modules: None) -> None:
     from machines import record
 
-    log = record("import os\ntry:\n    import chatty_bad\nexcept ValueError:\n    print('caught')\n")
+    src = "import os\ntry:\n    import chatty_bad\nexcept ValueError:\n    print('caught')\n"
+    log = record(src)
     assert [e["name"] for e in log["events"]] == ["import os"]
     assert [(o["i"], o["text"]) for o in log["output"]] == [(0, "bad loads\ncaught\n")]
 

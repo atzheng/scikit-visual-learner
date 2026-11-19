@@ -386,6 +386,20 @@ async function main(): Promise<void> {
       await page.getByTestId('output-items').waitFor();
     });
 
+    await step('import this: its output hides before the import step', async () => {
+      await setSource(page, 'import this\n');
+      await runAndWait(page);
+      const out = page.getByRole('region', { name: 'Output' });
+      await gotoStep(page, (await stepCount(page)).m);
+      await page.getByTestId('output-items').waitFor();
+      check(/Zen of Python/.test((await out.textContent()) ?? ''), 'import output missing');
+      await gotoStep(page, 0);
+      check(
+        (await page.getByTestId('output-items').count()) === 0,
+        'import output shown at step 0',
+      );
+    });
+
     await step('edge_error.py: error box and traceback', async () => {
       await setSource(page, program('edge_error.py'));
       await runAndWait(page);
