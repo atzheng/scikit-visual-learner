@@ -155,7 +155,7 @@
 }
 .twopane-host .md-stage {
   flex: 0 1 auto;
-  max-height: 55%;
+  max-height: calc(100% - 150px); /* the shelf keeps its minimum and the gap */
   overflow: auto;
 }
 .twopane-host .md-shelf-sec {
@@ -189,4 +189,18 @@
     width: min(360px, 92%);
     box-shadow: -4px 0 12px rgb(0 0 0 / 25%);
   }
+}
+
+/* the stage still has content below the fold: a text cue, not colour alone */
+.twopane-host .md-stage[data-overflow]::after {
+  content: '↓ scroll for more';
+  position: sticky;
+  bottom: -8px;
+  display: block;
+  padding: 2px 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--md-text-muted);
+  background: var(--md-bg, var(--surface));
+  border-top: 1px dashed var(--md-text-muted);
 }

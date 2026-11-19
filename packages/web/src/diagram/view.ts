@@ -53,3 +53,13 @@ export function nearestWire(
   }
   return best;
 }
+
+/** A client point in plan coordinates, for a canvas zoomed by `k` whose top left is at `origin`. */
+export function canvasPoint(
+  clientX: number,
+  clientY: number,
+  origin: { left: number; top: number },
+  k: number,
+): { x: number; y: number } {
+  return { x: (clientX - origin.left) / k, y: (clientY - origin.top) / k };
+}

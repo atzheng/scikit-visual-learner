@@ -1,6 +1,6 @@
 import type { StagePlan } from '@machines/render';
 import { describe, expect, it } from 'vitest';
-import { distToPolyline, nearestWire, readView, writeView } from './view';
+import { canvasPoint, distToPolyline, nearestWire, readView, writeView } from './view';
 
 const wire = (edge: string | null, points: [number, number][]) => ({
   edge,
@@ -47,6 +47,20 @@ describe('nearestWire', () => {
         0,
       ),
     ).toBe(10);
+  });
+});
+
+describe('nearestWire under a stage scale', () => {
+  it('hits the wire where it is drawn at k < 1, and misses where the unscaled wire would be', () => {
+    const k = 0.6;
+    const origin = { left: 100, top: 50 };
+    // wire 'a' is the plan line x = 0 from y 0 to 100: drawn at x = 100, y 50..110
+    const on = canvasPoint(100 + 2, 50 + 24, origin, k);
+    expect(nearestWire(plan, on.x, on.y)?.edge).toBe('a');
+    const off = canvasPoint(100 + 40, 50 + 24, origin, k);
+    expect(nearestWire(plan, off.x, off.y)).toBeNull();
+    // without the scale the point 40 px right would be 40 px away; with it the wire at plan x=100 ('b') is 66 away
+    expect(canvasPoint(160, 80, origin, k)).toEqual({ x: 100, y: 50 });
   });
 });
 

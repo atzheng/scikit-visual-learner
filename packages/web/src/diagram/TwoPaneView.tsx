@@ -12,11 +12,15 @@ import './diagram.css';
 import type { DiagramPaneProps } from './DiagramPane';
 import { tooManyMessage } from './runBanner';
 import { useDocs, ViewToggle } from './shared';
-import { nearestWire } from './view';
+import { canvasPoint, nearestWire } from './view';
 
 /** At most one re-mount per this long while a run streams. */
 const REMOUNT_INTERVAL_MS = 500;
 const MIN_STAGE_SCALE = 0.6;
+/** Height the shelf keeps under the stage: its minimum (110 px) and the gap. */
+const STAGE_RESERVE = 150;
+const CUE_SLACK = 24;
+const ANIMATION_SETTLE_MS = 400;
 
 /**
  * The two-pane view: the object shelf and the current-line stage (`mountTwoPane`). The renderer takes a fixed
@@ -35,6 +39,8 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
   const elkRef = useRef<ReturnType<typeof createElk> | null>(null);
   const lastMount = useRef(0);
   const hover = useRef<string | null>(null);
+  const pending = useRef<{ model: GraphModel; log: EventLog } | null>(null);
+  const applied = useRef<{ mounted: unknown; step: number } | null>(null);
   const scale = useRef(1);
   const latest = useRef({ onHoverEdge, onClickEdge });
   latest.current = { onHoverEdge, onClickEdge };
@@ -53,12 +59,18 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
     if (!model || !log) {
       ctlRef.current?.destroy();
       ctlRef.current = null;
+      pending.current = null;
       setMounted(null);
       setHead(null);
       return;
     }
+    // the same model and log are already drawn (or on their way): `running` flipping must not mount a second root
+    if (pending.current?.model === model && pending.current.log === log) return;
+    pending.current = { model, log };
     let cancelled = false;
-    const wait = running ? Math.max(0, lastMount.current + REMOUNT_INTERVAL_MS - Date.now()) : 0;
+    const wait = useStore.getState().running
+      ? Math.max(0, lastMount.current + REMOUNT_INTERVAL_MS - Date.now())
+      : 0;
     const timer = setTimeout(() => {
       elkRef.current ??= createElk({ workerUrl: elkWorkerUrl });
       mountTwoPane(host, model, log, {
@@ -69,6 +81,7 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
         (ctl) => {
           if (cancelled) {
             ctl.destroy();
+            if (pending.current?.model === model) pending.current = null;
             return;
           }
           lastMount.current = Date.now();
@@ -86,6 +99,7 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
           setMounted({ model, log });
         },
         (e: unknown) => {
+          pending.current = null;
           if (!cancelled) setError(e instanceof Error ? e.message : String(e));
         },
       );
@@ -93,8 +107,9 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
     return () => {
       cancelled = true;
       clearTimeout(timer);
+      if (pending.current?.model === model && pending.current.log === log) pending.current = null;
     };
-  }, [model, log, running]);
+  }, [model, log]);
   useEffect(
     () => () => {
       ctlRef.current?.destroy();
@@ -103,35 +118,74 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
     [],
   );
 
-  /** Scale the stage canvas to the width of its pane (floor 0.6, then the stage scrolls sideways). */
+  /**
+   * Scale the stage canvas to fit its pane, by width and by height (floor 0.6, then the stage scrolls), and
+   * show a cue while content is still below the fold.
+   */
   const fitStage = useCallback(() => {
     const ctl = ctlRef.current;
     const sec = ctl?.stageEl.parentElement;
-    if (!ctl || !sec) return;
+    const root = sec?.parentElement;
+    if (!ctl || !sec || !root) return;
     const w = ctl.plan?.width ?? 0;
-    const avail = sec.clientWidth - 18; // the stage's padding and border
-    const k = w > 0 ? Math.max(MIN_STAGE_SCALE, Math.min(1, avail / w)) : 1;
+    const h = ctl.plan?.height ?? 0;
+    delete sec.dataset.overflow; // measure without the cue itself, which adds height
+    // what the stage holds besides the canvas: its top (summary, notes, padding) and bottom padding. Not
+    // `scrollHeight`: a card sliding in from the shelf inflates it mid-animation.
+    const overhead =
+      ctl.stageEl.getBoundingClientRect().top - sec.getBoundingClientRect().top + sec.scrollTop + 9;
+    const kW = (sec.clientWidth - 18) / (w || 1);
+    const kH = (root.clientHeight - STAGE_RESERVE - overhead - 2) / (h || 1);
+    const k = w > 0 ? Math.max(MIN_STAGE_SCALE, Math.min(1, kW, kH)) : 1;
     // CSS zoom, not a transform: the layout box shrinks with it, so the stage's height and scroll area follow
     ctl.stageEl.style.zoom = k < 1 ? String(k) : '';
     scale.current = k;
+    // a few px of blank under the last card is not "more": the cue needs real hidden content
+    if (
+      sec.scrollHeight > sec.clientHeight + CUE_SLACK &&
+      sec.scrollTop + sec.clientHeight < sec.scrollHeight - CUE_SLACK
+    )
+      sec.dataset.overflow = '';
+    else delete sec.dataset.overflow;
   }, []);
 
   // ---- step -> the stage
   useEffect(() => {
     const ctl = ctlRef.current;
     if (!ctl || !mounted) return;
-    // svl-61q.3: pass `{ animate: useStore.getState().stepSingle }` as the second argument here.
-    ctl.setStep(clampStep(step, mounted.model.steps.length));
+    const n = clampStep(step, mounted.model.steps.length);
+    // animate only a real one-step move on the controller already showing the previous step: never a
+    // remount, a view switch or the All objects toggle
+    const prev = applied.current;
+    const animate =
+      prev !== null &&
+      prev.mounted === mounted &&
+      prev.step !== n &&
+      useStore.getState().stepSingle;
+    applied.current = { mounted, step: n };
+    ctl.setStep(n, { animate });
+    if (useStore.getState().stepSingle) useStore.setState({ stepSingle: false });
     hover.current = null;
     fitStage();
+    // the cue measures overflow, which is only true once the cards have landed
+    const settle = setTimeout(fitStage, ANIMATION_SETTLE_MS);
+    return () => clearTimeout(settle);
   }, [step, mounted, fitStage]);
+  useEffect(() => {
+    const sec = ctlRef.current?.stageEl.parentElement;
+    if (!sec) return;
+    sec.addEventListener('scroll', fitStage);
+    return () => sec.removeEventListener('scroll', fitStage);
+  }, [mounted, fitStage]);
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
     const ro = new ResizeObserver(fitStage);
     ro.observe(host);
+    // the summary sentence wraps to more or fewer lines as the step changes, which changes the room left
+    if (head) ro.observe(head);
     return () => ro.disconnect();
-  }, [fitStage]);
+  }, [fitStage, head]);
 
   // ---- hover and click on a wire of the stage (the wires svg takes no pointer events: hit-test its plan)
   useEffect(() => {
@@ -141,8 +195,8 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
       const ctl = ctlRef.current;
       if (!ctl || !(e.target instanceof Element) || e.target.closest('.md-card')) return null;
       const r = ctl.stageEl.getBoundingClientRect();
-      const k = scale.current; // the canvas is zoomed: plan coordinates are unscaled
-      return nearestWire(ctl.plan, (e.clientX - r.left) / k, (e.clientY - r.top) / k)?.edge ?? null;
+      const p = canvasPoint(e.clientX, e.clientY, r, scale.current);
+      return nearestWire(ctl.plan, p.x, p.y)?.edge ?? null;
     };
     const setHover = (id: string | null, e: PointerEvent | MouseEvent) => {
       if (id === hover.current) return;

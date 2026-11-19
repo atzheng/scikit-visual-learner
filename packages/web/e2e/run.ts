@@ -463,6 +463,30 @@ async function main(): Promise<void> {
 
     for (const view of ['two', 'full'] as const) await core(page, view);
 
+    await step(
+      'two-pane: the panel stays closed until I is pressed on a focused card',
+      async () => {
+        await setView(page, 'two');
+        await gotoStep(page, (await stepCount(page)).m);
+        await settle(page);
+        const panel = page.getByRole('complementary', { name: /^Attributes of/ });
+        await page.waitForTimeout(500);
+        check(
+          (await panel.count()) === 0,
+          'the attribute panel opened by itself in the two-pane view',
+        );
+        const box = page.locator('.md-stage .md-card:not([hidden]) g.md-node[data-node]').first();
+        check(
+          /(^| )I( |$)/.test((await box.getAttribute('aria-keyshortcuts')) ?? ''),
+          'the card does not advertise I in aria-keyshortcuts',
+        );
+        await box.focus();
+        await page.keyboard.press('i');
+        await panel.waitFor({ timeout: 5000 });
+        await panel.getByRole('button', { name: 'Close attributes panel' }).click();
+      },
+    );
+
     await step('the View toggle persists and works with the keyboard', async () => {
       const two = page.getByRole('button', { name: 'Shelf and stage' });
       const full = page.getByRole('button', { name: 'Full diagram' });
@@ -471,6 +495,11 @@ async function main(): Promise<void> {
       await page.keyboard.press('Tab');
       await page.keyboard.press('Enter');
       await page.locator('.diagram-viewport').waitFor({ timeout: 5000 });
+      await page.waitForFunction(
+        () => document.activeElement?.classList.contains('view-full') ?? false,
+        undefined,
+        { timeout: 2000 },
+      ); // focus stays on the toggle across the switch
       check(
         (await full.getAttribute('aria-pressed')) === 'true',
         'Enter did not select Full diagram',

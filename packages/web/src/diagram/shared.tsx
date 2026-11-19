@@ -9,13 +9,18 @@ import { useStore } from '../store';
 export function ViewToggle() {
   const view = useStore((s) => s.view);
   const setView = useStore((s) => s.setView);
+  const switchTo = (v: 'two' | 'full') => {
+    setView(v);
+    // the other view mounts its own toggle: keep keyboard focus on the same button
+    setTimeout(() => document.querySelector<HTMLElement>(`.view-toggle .view-${v}`)?.focus(), 0);
+  };
   return (
     <div className="view-toggle" role="group" aria-label="View">
       <button
         type="button"
         className="view-two"
         aria-pressed={view === 'two'}
-        onClick={() => setView('two')}
+        onClick={() => switchTo('two')}
         title="Show the objects on a shelf and the current line on a stage"
       >
         Shelf and stage
@@ -24,7 +29,7 @@ export function ViewToggle() {
         type="button"
         className="view-full"
         aria-pressed={view === 'full'}
-        onClick={() => setView('full')}
+        onClick={() => switchTo('full')}
         title="Show the whole run as one diagram"
       >
         Full diagram
