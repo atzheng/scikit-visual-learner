@@ -1,0 +1,87 @@
+{
+  "diagnostics": [],
+  "error": {
+    "line": 4,
+    "message": "input() is not supported here",
+    "traceback": [
+      {
+        "kind": "student",
+        "line": 4,
+        "name": "<module>",
+        "text": "name = input(\"Your name? \")"
+      }
+    ],
+    "type": "RuntimeError"
+  },
+  "events": [],
+  "output": [],
+  "scopes": [
+    {
+      "bindings": [],
+      "id": 0,
+      "lexical_parent": null,
+      "name": "<module>",
+      "parent_event": null
+    }
+  ],
+  "sites": [
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "\"Your name? \""
+        }
+      ],
+      "col": 7,
+      "end_col": 27,
+      "end_line": 4,
+      "func_text": "input",
+      "id": 0,
+      "keywords": {},
+      "kind": "call",
+      "line": 4,
+      "text": "input(\"Your name? \")"
+    },
+    {
+      "col": 0,
+      "end_col": 27,
+      "end_line": 4,
+      "id": 1,
+      "kind": "bind",
+      "line": 4,
+      "targets": [
+        "name"
+      ],
+      "text": "name = input(\"Your name? \")",
+      "value": {
+        "origin": "call",
+        "site": 0
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "\"Hello,\""
+        },
+        {
+          "name": "name",
+          "origin": "name"
+        }
+      ],
+      "col": 0,
+      "end_col": 21,
+      "end_line": 5,
+      "func_text": "print",
+      "id": 2,
+      "keywords": {},
+      "kind": "call",
+      "line": 5,
+      "text": "print(\"Hello,\", name)"
+    }
+  ],
+  "status": "error",
+  "values": {},
+  "version": 2
+}

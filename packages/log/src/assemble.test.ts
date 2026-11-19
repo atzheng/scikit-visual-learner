@@ -378,3 +378,51 @@ describe('assembler review fixes', () => {
     expect(a.finish('ok').events.map((e) => e.i)).toEqual([7]);
   });
 });
+
+describe('re-sent and coarse-flush events', () => {
+  const failed = (i: number, extra: Partial<Event> = {}): Event =>
+    ev(i, 0, {
+      outputs: [],
+      error: { type: 'ValueError', message: 'boom', handled: false },
+      ...extra,
+    });
+  const handled = (e: Event): Event => ({ ...e, error: { ...e.error!, handled: true } });
+
+  test('an event re-sent with the same i replaces the first (handled flips)', () => {
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    a.push(batch(1, { events: [failed(0), ev(1, 1)] }));
+    a.push(batch(1, { events: [handled(failed(0))] }));
+    const events = a.finish('ok').events;
+    expect(events.map((e) => e.i)).toEqual([0, 1]);
+    expect(events[0]!.error!.handled).toBe(true);
+  });
+
+  test('a re-sent slot event replaces the current slot, and is dropped once a newer one exists', () => {
+    const slot = (i: number, count: number): Event =>
+      failed(i, { slot: true, count, merge_key: 's0' });
+    const a = createAssembler();
+    a.push({ type: 'started', runId: 1, sites });
+    a.push(batch(1, { events: [slot(5, 30)] }));
+    a.push(batch(1, { events: [handled(slot(5, 30))] }));
+    expect(a.snapshot().events).toHaveLength(1);
+    expect(a.snapshot().events[0]!.error!.handled).toBe(true);
+    a.push(batch(1, { events: [slot(9, 31)] })); // newer slot replaces it
+    a.push(batch(1, { events: [handled(slot(5, 30))] })); // stale re-send: ignored
+    const events = a.finish('ok').events;
+    expect(events.map((e) => [e.i, e.error!.handled])).toEqual([[9, false]]);
+  });
+
+  test('one batch holding two slot events with the same merge key keeps the later', () => {
+    for (const order of [
+      [5, 9],
+      [9, 5],
+    ]) {
+      const a = createAssembler();
+      a.push({ type: 'started', runId: 1, sites });
+      const slots = order.map((i) => ev(i, 0, { slot: true, count: i, merge_key: 's0' }));
+      a.push(batch(1, { events: slots, values: vals(5, 9) }));
+      expect(a.finish('ok').events.map((e) => e.i)).toEqual([9]);
+    }
+  });
+});

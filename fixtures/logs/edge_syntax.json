@@ -1,0 +1,31 @@
+{
+  "diagnostics": [],
+  "error": {
+    "line": 5,
+    "message": "'(' was never closed",
+    "traceback": [
+      {
+        "kind": "student",
+        "line": 5,
+        "name": "<module>",
+        "text": "df = pd.read_csv(\"listings.csv\""
+      }
+    ],
+    "type": "SyntaxError"
+  },
+  "events": [],
+  "output": [],
+  "scopes": [
+    {
+      "bindings": [],
+      "id": 0,
+      "lexical_parent": null,
+      "name": "<module>",
+      "parent_event": null
+    }
+  ],
+  "sites": [],
+  "status": "error",
+  "values": {},
+  "version": 2
+}

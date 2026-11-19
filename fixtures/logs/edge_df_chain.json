@@ -1,0 +1,497 @@
+{
+  "diagnostics": [],
+  "error": null,
+  "events": [
+    {
+      "count": 1,
+      "error": null,
+      "i": 0,
+      "inputs": [
+        {
+          "origin": "const",
+          "param": "filepath_or_buffer",
+          "text": "\"listings.csv\""
+        }
+      ],
+      "kind": "function",
+      "merge_key": "s0",
+      "module": "pandas",
+      "mutates": [],
+      "name": "read_csv",
+      "outputs": [
+        "v0.0"
+      ],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 0
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "self",
+          "value": "v0.0"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s2",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.dropna",
+      "outputs": [
+        "v1.0"
+      ],
+      "owner": "v0.0",
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 2
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [
+        {
+          "origin": "expr",
+          "param": "self",
+          "value": "v1.0"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s3",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.reset_index",
+      "outputs": [
+        "v2.0"
+      ],
+      "owner": "v1.0",
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 3
+    }
+  ],
+  "output": [
+    {
+      "i": 2,
+      "stream": "stdout",
+      "text": "(500, 7) (471, 8)\n"
+    }
+  ],
+  "scopes": [
+    {
+      "bindings": [
+        [
+          0,
+          "df",
+          "v0.0"
+        ],
+        [
+          2,
+          "clean",
+          "v2.0"
+        ]
+      ],
+      "id": 0,
+      "lexical_parent": null,
+      "name": "<module>",
+      "parent_event": null
+    }
+  ],
+  "sites": [
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "\"listings.csv\""
+        }
+      ],
+      "col": 5,
+      "end_col": 32,
+      "end_line": 6,
+      "func_text": "pd.read_csv",
+      "id": 0,
+      "keywords": {},
+      "kind": "call",
+      "line": 6,
+      "text": "pd.read_csv(\"listings.csv\")"
+    },
+    {
+      "col": 0,
+      "end_col": 32,
+      "end_line": 6,
+      "id": 1,
+      "kind": "bind",
+      "line": 6,
+      "targets": [
+        "df"
+      ],
+      "text": "df = pd.read_csv(\"listings.csv\")",
+      "value": {
+        "origin": "call",
+        "site": 0
+      },
+      "where": "local"
+    },
+    {
+      "args": [],
+      "col": 8,
+      "end_col": 19,
+      "end_line": 7,
+      "func_text": "df.dropna",
+      "id": 2,
+      "keywords": {},
+      "kind": "call",
+      "line": 7,
+      "text": "df.dropna()"
+    },
+    {
+      "args": [],
+      "col": 8,
+      "end_col": 33,
+      "end_line": 7,
+      "func_text": "df.dropna().reset_index",
+      "id": 3,
+      "keywords": {},
+      "kind": "call",
+      "line": 7,
+      "text": "df.dropna().reset_index()"
+    },
+    {
+      "col": 0,
+      "end_col": 33,
+      "end_line": 7,
+      "id": 4,
+      "kind": "bind",
+      "line": 7,
+      "targets": [
+        "clean"
+      ],
+      "text": "clean = df.dropna().reset_index()",
+      "value": {
+        "origin": "call",
+        "site": 3
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "df"
+          ],
+          "text": "df.shape"
+        },
+        {
+          "origin": "expr",
+          "reads": [
+            "clean"
+          ],
+          "text": "clean.shape"
+        }
+      ],
+      "col": 0,
+      "end_col": 28,
+      "end_line": 8,
+      "func_text": "print",
+      "id": 5,
+      "keywords": {},
+      "kind": "call",
+      "line": 8,
+      "text": "print(df.shape, clean.shape)"
+    }
+  ],
+  "status": "ok",
+  "values": {
+    "v0.0": {
+      "columns": [
+        "beds",
+        "baths",
+        "sqft",
+        "neighbourhood",
+        "room_type",
+        "year_built",
+        "price"
+      ],
+      "dtypes": [
+        "int64",
+        "float64",
+        "float64",
+        "str",
+        "str",
+        "float64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "beds",
+          "baths",
+          "sqft",
+          "neighbourhood",
+          "room_type",
+          "year_built",
+          "price"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "1.0",
+            "884.0",
+            "Riverside",
+            "private_room",
+            "1975.0",
+            "83.11"
+          ],
+          [
+            "3",
+            "2.0",
+            "1254.0",
+            "Riverside",
+            "entire_home",
+            "1963.0",
+            "248.24"
+          ],
+          [
+            "2",
+            "2.0",
+            "1004.0",
+            "Uptown",
+            "shared_room",
+            "1938.0",
+            "70.46"
+          ],
+          [
+            "5",
+            "4.5",
+            "1828.0",
+            "Midtown",
+            "entire_home",
+            "NaN",
+            "370.31"
+          ],
+          [
+            "2",
+            "1.0",
+            "1063.0",
+            "Downtown",
+            "entire_home",
+            "1926.0",
+            "279.37"
+          ]
+        ]
+      },
+      "shape": [
+        500,
+        7
+      ],
+      "type": "DF"
+    },
+    "v1.0": {
+      "columns": [
+        "beds",
+        "baths",
+        "sqft",
+        "neighbourhood",
+        "room_type",
+        "year_built",
+        "price"
+      ],
+      "dtypes": [
+        "int64",
+        "float64",
+        "float64",
+        "str",
+        "str",
+        "float64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "beds",
+          "baths",
+          "sqft",
+          "neighbourhood",
+          "room_type",
+          "year_built",
+          "price"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "4",
+          "5"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "1.0",
+            "884.0",
+            "Riverside",
+            "private_room",
+            "1975.0",
+            "83.11"
+          ],
+          [
+            "3",
+            "2.0",
+            "1254.0",
+            "Riverside",
+            "entire_home",
+            "1963.0",
+            "248.24"
+          ],
+          [
+            "2",
+            "2.0",
+            "1004.0",
+            "Uptown",
+            "shared_room",
+            "1938.0",
+            "70.46"
+          ],
+          [
+            "2",
+            "1.0",
+            "1063.0",
+            "Downtown",
+            "entire_home",
+            "1926.0",
+            "279.37"
+          ],
+          [
+            "5",
+            "4.0",
+            "1710.0",
+            "Uptown",
+            "private_room",
+            "1975.0",
+            "217.69"
+          ]
+        ]
+      },
+      "shape": [
+        471,
+        7
+      ],
+      "type": "DF"
+    },
+    "v2.0": {
+      "columns": [
+        "index",
+        "beds",
+        "baths",
+        "sqft",
+        "neighbourhood",
+        "room_type",
+        "year_built",
+        "price"
+      ],
+      "dtypes": [
+        "int64",
+        "int64",
+        "float64",
+        "float64",
+        "str",
+        "str",
+        "float64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "index",
+          "beds",
+          "baths",
+          "sqft",
+          "neighbourhood",
+          "room_type",
+          "year_built",
+          "price"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "0",
+            "1",
+            "1.0",
+            "884.0",
+            "Riverside",
+            "private_room",
+            "1975.0",
+            "83.11"
+          ],
+          [
+            "1",
+            "3",
+            "2.0",
+            "1254.0",
+            "Riverside",
+            "entire_home",
+            "1963.0",
+            "248.24"
+          ],
+          [
+            "2",
+            "2",
+            "2.0",
+            "1004.0",
+            "Uptown",
+            "shared_room",
+            "1938.0",
+            "70.46"
+          ],
+          [
+            "4",
+            "2",
+            "1.0",
+            "1063.0",
+            "Downtown",
+            "entire_home",
+            "1926.0",
+            "279.37"
+          ],
+          [
+            "5",
+            "5",
+            "4.0",
+            "1710.0",
+            "Uptown",
+            "private_room",
+            "1975.0",
+            "217.69"
+          ]
+        ]
+      },
+      "shape": [
+        471,
+        8
+      ],
+      "type": "DF"
+    }
+  },
+  "version": 2
+}
