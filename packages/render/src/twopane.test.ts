@@ -748,7 +748,7 @@ describe('a line keeps every call on the stage (svl-qol)', () => {
   test('no wire of a multi-call line crosses a card or box it does not start or end at', async () => {
     let checked = 0;
     for (const name of names) {
-      const { model, log } = await open(name);
+      const { model } = await open(name);
       for (let s = 1; s <= model.steps.length; s++) {
         tp!.setStep(s);
         const plan = tp!.plan;

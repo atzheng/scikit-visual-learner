@@ -852,6 +852,101 @@ exports[`stageAt and shelfOrder on the golden fixtures > edge_input 1`] = `
 
 exports[`stageAt and shelfOrder on the golden fixtures > edge_input 2`] = `[]`;
 
+exports[`stageAt and shelfOrder on the golden fixtures > edge_line_calls 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import LinearRegression [created:import LinearRegression]",
+  "3: L7 DataFrame [callee:import pd created:df@out:0] {input:data={"a": [1.0, 2.0, 3.0, 4.0], "b": [2.0, 4.0, 6.0, 9.0]}}",
+  "4: L8 expr [input:df created:X]",
+  "5: L9 expr [input:df created:y]",
+  "6: L10 LinearRegression [callee:import LinearRegression created:m@out:0]",
+  "7: L10 LinearRegression.fit [owner:m* input:X@in:X input:y@in:y]",
+  "8: L11 LinearRegression.predict [owner:m input:X@in:X output:chip(array)@out:0]",
+  "9: L11 ndarray.sum [input:chip(array)@in:self] {output:0=21.0}",
+  "10: L11 LinearRegression.predict [owner:m input:X@in:X output:chip(array)@out:0]",
+  "11: L11 ndarray.mean [input:chip(array)@in:self] {output:0=5.25}",
+  "12: L12 expr [input:df output:chip(list[2])]",
+  "13: L12 concat [callee:import pd input:chip(list[2])@in:objs created:DF@out:0]",
+  "14: L12 DataFrame.head [owner:df created:DF@out:0] {input:n=2}",
+  "15: L13 expr [input:df output:chip(Series)]",
+  "16: L13 DataFrame.assign [owner:df input:chip(Series)@in:c created:DF@out:0]",
+  "17: L14 DataFrame.sum [owner:df created:s1@out:0]",
+  "18: L14 DataFrame.mean [owner:df created:s2@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_line_calls 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:1gb27tr.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:1jfnuse.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:rqau80.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:teof1k.0",
+    12,
+    1,
+  ],
+  [
+    "instance",
+    "i:7tb3w4.0",
+    13,
+    1,
+  ],
+  [
+    "instance",
+    "i:btz772.0",
+    15,
+    1,
+  ],
+  [
+    "instance",
+    "i:1kcetfz.0",
+    16,
+    1,
+  ],
+  [
+    "instance",
+    "i:1khqznv.0",
+    17,
+    1,
+  ],
+]
+`;
+
 exports[`stageAt and shelfOrder on the golden fixtures > edge_literals 1`] = `
 [
   "0: -",

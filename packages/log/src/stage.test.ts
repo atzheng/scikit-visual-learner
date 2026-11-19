@@ -277,7 +277,12 @@ describe('lineStageAt: line groups (svl-qol)', () => {
         const hi = Math.max(...lines.map((l) => l[1]));
         for (const [a, b] of lines) expect(a <= hi && b >= lo).toBe(true);
         if (ls.calls.length > 1) {
-          expect(new Set(ls.calls.map((c) => c.stage.node)).size).toBe(ls.calls.length);
+          // a box runs once in a group; a method box (shared by its call sites) may run at another site
+          const plain = ls.calls.filter((c) => {
+            const n = g.nodes.find((x) => x.id === c.stage.node);
+            return !(n?.kind === 'call' && n.parent !== null);
+          });
+          expect(new Set(plain.map((c) => c.stage.node)).size).toBe(plain.length);
           for (const c of ls.calls) expect(['call', 'expr', 'store']).toContain(c.stage.kind);
         }
         // each object once, and only objects some call's own stage lists
