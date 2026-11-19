@@ -123,7 +123,8 @@
       "versions": [
         {
           "i": 1,
-          "token": "v1.0"
+          "token": "v1.0",
+          "kind": "new"
         }
       ]
     },
@@ -163,7 +164,8 @@
       "versions": [
         {
           "i": 2,
-          "token": "v2.0"
+          "token": "v2.0",
+          "kind": "new"
         }
       ]
     },
@@ -203,7 +205,8 @@
       "versions": [
         {
           "i": 3,
-          "token": "v3.0"
+          "token": "v3.0",
+          "kind": "new"
         }
       ]
     },
@@ -304,7 +307,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v4.0"
+          "token": "v4.0",
+          "kind": "new"
         }
       ]
     },
@@ -321,7 +325,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v5.0"
+          "token": "v5.0",
+          "kind": "new"
         }
       ]
     },
@@ -338,7 +343,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v6.0"
+          "token": "v6.0",
+          "kind": "new"
         }
       ]
     },
@@ -355,7 +361,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v7.0"
+          "token": "v7.0",
+          "kind": "new"
         }
       ]
     },
@@ -1010,171 +1017,213 @@
       "versions": [
         {
           "i": 6,
-          "token": "v9.0"
+          "token": "v9.0",
+          "kind": "new"
         },
         {
           "i": 7,
-          "token": "v9.1"
+          "token": "v9.1",
+          "kind": "mutate"
         },
         {
           "i": 10,
-          "token": "v12.0"
+          "token": "v12.0",
+          "kind": "new"
         },
         {
           "i": 11,
-          "token": "v12.1"
+          "token": "v12.1",
+          "kind": "mutate"
         },
         {
           "i": 14,
-          "token": "v14.0"
+          "token": "v14.0",
+          "kind": "new"
         },
         {
           "i": 15,
-          "token": "v14.1"
+          "token": "v14.1",
+          "kind": "mutate"
         },
         {
           "i": 18,
-          "token": "v16.0"
+          "token": "v16.0",
+          "kind": "new"
         },
         {
           "i": 19,
-          "token": "v16.1"
+          "token": "v16.1",
+          "kind": "mutate"
         },
         {
           "i": 22,
-          "token": "v18.0"
+          "token": "v18.0",
+          "kind": "new"
         },
         {
           "i": 23,
-          "token": "v18.1"
+          "token": "v18.1",
+          "kind": "mutate"
         },
         {
           "i": 26,
-          "token": "v20.0"
+          "token": "v20.0",
+          "kind": "new"
         },
         {
           "i": 27,
-          "token": "v20.1"
+          "token": "v20.1",
+          "kind": "mutate"
         },
         {
           "i": 30,
-          "token": "v22.0"
+          "token": "v22.0",
+          "kind": "new"
         },
         {
           "i": 31,
-          "token": "v22.1"
+          "token": "v22.1",
+          "kind": "mutate"
         },
         {
           "i": 34,
-          "token": "v24.0"
+          "token": "v24.0",
+          "kind": "new"
         },
         {
           "i": 35,
-          "token": "v24.1"
+          "token": "v24.1",
+          "kind": "mutate"
         },
         {
           "i": 38,
-          "token": "v26.0"
+          "token": "v26.0",
+          "kind": "new"
         },
         {
           "i": 39,
-          "token": "v26.1"
+          "token": "v26.1",
+          "kind": "mutate"
         },
         {
           "i": 42,
-          "token": "v28.0"
+          "token": "v28.0",
+          "kind": "new"
         },
         {
           "i": 43,
-          "token": "v28.1"
+          "token": "v28.1",
+          "kind": "mutate"
         },
         {
           "i": 46,
-          "token": "v30.0"
+          "token": "v30.0",
+          "kind": "new"
         },
         {
           "i": 47,
-          "token": "v30.1"
+          "token": "v30.1",
+          "kind": "mutate"
         },
         {
           "i": 50,
-          "token": "v32.0"
+          "token": "v32.0",
+          "kind": "new"
         },
         {
           "i": 51,
-          "token": "v32.1"
+          "token": "v32.1",
+          "kind": "mutate"
         },
         {
           "i": 54,
-          "token": "v34.0"
+          "token": "v34.0",
+          "kind": "new"
         },
         {
           "i": 55,
-          "token": "v34.1"
+          "token": "v34.1",
+          "kind": "mutate"
         },
         {
           "i": 58,
-          "token": "v36.0"
+          "token": "v36.0",
+          "kind": "new"
         },
         {
           "i": 59,
-          "token": "v36.1"
+          "token": "v36.1",
+          "kind": "mutate"
         },
         {
           "i": 62,
-          "token": "v38.0"
+          "token": "v38.0",
+          "kind": "new"
         },
         {
           "i": 63,
-          "token": "v38.1"
+          "token": "v38.1",
+          "kind": "mutate"
         },
         {
           "i": 66,
-          "token": "v40.0"
+          "token": "v40.0",
+          "kind": "new"
         },
         {
           "i": 67,
-          "token": "v40.1"
+          "token": "v40.1",
+          "kind": "mutate"
         },
         {
           "i": 70,
-          "token": "v42.0"
+          "token": "v42.0",
+          "kind": "new"
         },
         {
           "i": 71,
-          "token": "v42.1"
+          "token": "v42.1",
+          "kind": "mutate"
         },
         {
           "i": 74,
-          "token": "v44.0"
+          "token": "v44.0",
+          "kind": "new"
         },
         {
           "i": 75,
-          "token": "v44.1"
+          "token": "v44.1",
+          "kind": "mutate"
         },
         {
           "i": 78,
-          "token": "v46.0"
+          "token": "v46.0",
+          "kind": "new"
         },
         {
           "i": 79,
-          "token": "v46.1"
+          "token": "v46.1",
+          "kind": "mutate"
         },
         {
           "i": 82,
-          "token": "v48.0"
+          "token": "v48.0",
+          "kind": "new"
         },
         {
           "i": 83,
-          "token": "v48.1"
+          "token": "v48.1",
+          "kind": "mutate"
         },
         {
           "i": 122,
-          "token": "v68.0"
+          "token": "v68.0",
+          "kind": "new"
         },
         {
           "i": 123,
-          "token": "v68.1"
+          "token": "v68.1",
+          "kind": "mutate"
         }
       ]
     },

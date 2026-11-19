@@ -85,7 +85,7 @@ export type ToWorker =
 export type FromWorker =
   | {
       type: 'progress';
-      phase: 'pyodide' | 'packages' | 'recorder' | 'datasets';
+      phase: 'pyodide' | 'packages' | 'recorder' | 'datasets' | 'matplotlib';
       done: number;
       total: number;
     }

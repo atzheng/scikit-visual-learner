@@ -63,7 +63,18 @@
       "versions": [
         {
           "i": 0,
-          "token": "v0.0"
+          "token": "v0.0",
+          "kind": "new"
+        },
+        {
+          "i": 1,
+          "token": "v0.1",
+          "kind": "store"
+        },
+        {
+          "i": 4,
+          "token": "v0.2",
+          "kind": "store"
         }
       ]
     },
@@ -169,7 +180,8 @@
       "versions": [
         {
           "i": 3,
-          "token": "v2.0"
+          "token": "v2.0",
+          "kind": "new"
         }
       ]
     },
@@ -323,7 +335,8 @@
       "versions": [
         {
           "i": 7,
-          "token": "v5.0"
+          "token": "v5.0",
+          "kind": "new"
         }
       ]
     }

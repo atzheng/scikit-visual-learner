@@ -18,6 +18,11 @@ export interface StepState {
   output: OutputEntry[];
   /** Merged boxes only (n > 1): k = count of the active execution, n = total count. */
   badge: Map<string, { k: number; n: number }>;
+  /**
+   * Boxes that hold more than one object (a loop's objects from one site): k = 1-based position of the
+   * active object among them, n = how many objects the box holds in all (versions of kind `new`).
+   */
+  objectBadge: Map<string, { k: number; n: number }>;
   /** Per visible instance: its latest version token at or before the current step. */
   activeVersion: Map<string, Token>;
   /**
@@ -264,11 +269,21 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
     if (!ex || e.uses.some((u) => u.i === ex.i && u.at <= cur)) activeEdges.add(e.id);
   }
   const activeVersion = new Map<string, Token>();
+  const objectBadge = new Map<string, { k: number; n: number }>();
   for (const n of ix.instances) {
     if (!visibleNodes.has(n.id)) continue;
     let tok = n.versions[0]?.token;
-    for (const v of n.versions) if (v.i <= cur) tok = v.token;
+    let k = 0;
+    let total = 0;
+    for (const v of n.versions) {
+      if (v.kind === 'new') {
+        total++;
+        if (v.i <= cur || total === 1) k = total;
+      }
+      if (v.i <= cur) tok = v.token;
+    }
     if (tok !== undefined) activeVersion.set(n.id, tok);
+    if (total > 1) objectBadge.set(n.id, { k, n: total });
   }
   // A source is shown when any consumer of its edges is.
   for (const [id, idxs] of ix.sourceEdges)
@@ -286,6 +301,7 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
     uncalled,
     activeEdges,
     activeVersion,
+    objectBadge,
     currentNode: current === null ? null : (ix.nodeAt.get(current) ?? null),
   };
 

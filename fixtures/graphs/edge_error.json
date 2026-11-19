@@ -72,7 +72,8 @@
       "versions": [
         {
           "i": 0,
-          "token": "v0.0"
+          "token": "v0.0",
+          "kind": "new"
         }
       ]
     },
@@ -112,7 +113,8 @@
       "versions": [
         {
           "i": 1,
-          "token": "v1.0"
+          "token": "v1.0",
+          "kind": "new"
         }
       ]
     },
@@ -152,7 +154,8 @@
       "versions": [
         {
           "i": 2,
-          "token": "v2.0"
+          "token": "v2.0",
+          "kind": "new"
         }
       ]
     },
@@ -202,11 +205,13 @@
       "versions": [
         {
           "i": 3,
-          "token": "v3.0"
+          "token": "v3.0",
+          "kind": "new"
         },
         {
           "i": 4,
-          "token": "v3.1"
+          "token": "v3.1",
+          "kind": "mutate"
         }
       ]
     },

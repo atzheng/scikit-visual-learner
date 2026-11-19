@@ -43,7 +43,7 @@ const inst: InstanceNode = {
   createdAt: 3,
   createdBy: null,
   params: [],
-  versions: [{ i: 5, token: 'v1.1' }],
+  versions: [{ i: 5, token: 'v1.1', kind: 'mutate' }],
 };
 // events 0..5; the steps are events 0, 2, 3, 5 (events 1 and 4 are not drawn)
 const model: GraphModel = {
