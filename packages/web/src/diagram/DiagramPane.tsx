@@ -47,6 +47,10 @@ export interface DiagramPaneProps {
 }
 
 const KEY_PAN = 48;
+/** Room under the last row for the error text under a box. */
+const fitContent = (s: { w: number; h: number }) => ({ w: s.w, h: s.h > 0 ? s.h + 40 : 0 });
+const EMPTY_MODEL: GraphModel = { nodes: [], edges: [], steps: [] };
+const EMPTY_LAID: Laid = { width: 0, height: 0, nodes: {}, edges: {}, labels: {}, dropped: 0 };
 
 export function DiagramPane({
   cursorSite = null,
@@ -57,7 +61,7 @@ export function DiagramPane({
   const log = useStore((s) => s.log);
   const model = useStore((s) => s.model);
   const running = useStore((s) => s.running);
-  const runId = useStore((s) => s.runId);
+  const runSeq = useStore((s) => s.runSeq);
   const step = useStore((s) => s.step);
   const setStep = useStore((s) => s.setStep);
   const selectedNode = useStore((s) => s.selection.node);
@@ -86,7 +90,7 @@ export function DiagramPane({
   }, []);
   const fit = useCallback(() => {
     autoFit.current = true;
-    applyView(fitView(laidSize.current, viewportSize()));
+    applyView(fitView(fitContent(laidSize.current), viewportSize()));
   }, [applyView, viewportSize]);
   const userView = useCallback(
     (v: View) => {
@@ -143,7 +147,7 @@ export function DiagramPane({
         // setGraph re-applies the old state only when its ids still exist: set the shown step now.
         const st = stateAt(m, l, clampStep(useStore.getState().step, m.steps.length));
         ctl.setState(st, l);
-        if (autoFit.current) applyView(fitView(laidSize.current, viewportSize()));
+        if (autoFit.current) applyView(fitView(fitContent(laidSize.current), viewportSize()));
         setShown({ model: m, log: l });
       },
       onError: (e) => setLayoutError(e instanceof Error ? e.message : String(e)),
@@ -161,10 +165,17 @@ export function DiagramPane({
     skipModel.current = useStore.getState().model;
     autoFit.current = true;
     relayouter.current?.reset();
-  }, [runId]);
+  }, [runSeq]);
 
   useEffect(() => {
-    if (!model || !log || model === skipModel.current) return;
+    if (!model || !log) {
+      // A new run cleared the log: drop the old diagram too.
+      ctlRef.current?.setGraph(EMPTY_MODEL, EMPTY_LAID);
+      laidSize.current = { w: 0, h: 0 };
+      setShown(null);
+      return;
+    }
+    if (model === skipModel.current) return;
     tierRef.current = stickyTier(model, tierRef.current);
     relayouter.current?.update({ model, log, tier: tierRef.current }, !running);
   }, [model, log, running]);
@@ -209,16 +220,21 @@ export function DiagramPane({
     if (!vp) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const r = vp.getBoundingClientRect();
       const unit = e.deltaMode === 1 ? 16 : 1;
-      userView(
-        zoomAt(
-          viewRef.current,
-          Math.exp(-e.deltaY * unit * 0.002),
-          e.clientX - r.left,
-          e.clientY - r.top,
-        ),
-      );
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl/Cmd + wheel, and trackpad pinch (which arrives as ctrl + wheel), zoom at the pointer.
+        const r = vp.getBoundingClientRect();
+        userView(
+          zoomAt(
+            viewRef.current,
+            Math.exp(-e.deltaY * unit * 0.01),
+            e.clientX - r.left,
+            e.clientY - r.top,
+          ),
+        );
+      } else {
+        userView(panBy(viewRef.current, -e.deltaX * unit, -e.deltaY * unit));
+      }
     };
     vp.addEventListener('wheel', onWheel, { passive: false });
     // Tabbing to an off-screen box scrolls the viewport natively: turn that into a pan.
@@ -233,7 +249,7 @@ export function DiagramPane({
     vp.addEventListener('scroll', onScroll);
     const ro = new ResizeObserver(() => {
       if (autoFit.current && laidSize.current.w > 0)
-        applyView(fitView(laidSize.current, viewportSize()));
+        applyView(fitView(fitContent(laidSize.current), viewportSize()));
     });
     ro.observe(vp);
     return () => {

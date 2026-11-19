@@ -103,11 +103,42 @@ export function badgeText(k: number, n: number, atEnd: boolean): string {
 export function changedAttrs(
   before: Record<string, Token> | undefined,
   after: Record<string, Token> | undefined,
+  values?: Record<Token, ValueSummary>,
 ): Set<string> {
   const out = new Set<string>();
   if (!after) return out;
-  for (const [k, v] of Object.entries(after)) if (before?.[k] !== v) out.add(k);
+  for (const [k, v] of Object.entries(after)) {
+    const b = before?.[k];
+    if (b === v) continue;
+    // Scalars get a fresh token at every snapshot: compare what they hold. References keep identity.
+    if (b !== undefined && b.startsWith('s') && v.startsWith('s')) {
+      const x = values?.[b];
+      const y = values?.[v];
+      if (x && y && x.type === y.type && x.repr !== undefined && x.repr === y.repr) continue;
+    }
+    out.add(k);
+  }
   return out;
+}
+
+/** Splits text at spaces into lines of at most `max` characters (long words are cut). */
+export function wrapText(text: string, max: number): string[] {
+  const lines: string[] = [];
+  let cur = '';
+  for (let word of text.split(' ')) {
+    while (word.length > max) {
+      if (cur) lines.push(cur);
+      cur = '';
+      lines.push(word.slice(0, max));
+      word = word.slice(max);
+    }
+    if (cur && cur.length + 1 + word.length > max) {
+      lines.push(cur);
+      cur = word;
+    } else cur = cur ? `${cur} ${word}` : word;
+  }
+  if (cur) lines.push(cur);
+  return lines;
 }
 
 export interface AttrRow {
@@ -202,6 +233,26 @@ function s<K extends keyof SVGElementTagNameMap>(
   if (text !== undefined) el.textContent = text;
   return el;
 }
+/** Multi-line text under a box: one tspan per line, rewritten only when the text changes. */
+const lastLines = new WeakMap<Element, string>();
+const setLines = (el: Element, text: string, max: number): void => {
+  if (lastLines.get(el) === text) return;
+  lastLines.set(el, text);
+  const lines = wrapText(text, max);
+  if (lines.length <= 1) {
+    el.textContent = text;
+    return;
+  }
+  el.textContent = '';
+  const x = el.getAttribute('x') ?? '0';
+  lines.forEach((line, k) => {
+    const t = el.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    t.setAttribute('x', x);
+    t.setAttribute('dy', k === 0 ? '0' : '13');
+    t.textContent = line;
+    el.append(t);
+  });
+};
 const setText = (el: Element, text: string): void => {
   if (el.textContent !== text) el.textContent = text;
 };
@@ -231,6 +282,8 @@ export interface NodeHandle {
   stateEls: Element[];
   badge?: { g: SVGGElement; bg: SVGRectElement; text: SVGTextElement };
   msg?: SVGTextElement;
+  /** Characters per line of the message under the box (its width). */
+  msgChars?: number;
   rows?: AttrRowDom[];
   /** Label base for aria-label. */
   label: string;
@@ -447,6 +500,7 @@ export function buildSvg(doc: Document, model: GraphModel, laid: Laid, uid = '0'
       );
       g.append(msg);
       h.msg = msg;
+      h.msgChars = Math.max(24, Math.floor(ln.w / 6.5));
     }
     g.append(
       s(
@@ -545,7 +599,7 @@ export function applyState(
   const atEnd = ctx.lastStep === null || (state.current !== null && state.current >= ctx.lastStep);
   const changed =
     state.currentNode !== null
-      ? changedAttrs(state.attrsBefore, state.attrsAfter)
+      ? changedAttrs(state.attrsBefore, state.attrsAfter, log?.values)
       : new Set<string>();
 
   for (const h of dom.nodes.values()) {
@@ -569,7 +623,7 @@ export function applyState(
     if (isCurrent) setAttr(h.g, 'aria-current', 'step');
     else if (h.g.hasAttribute('aria-current')) h.g.removeAttribute('aria-current');
     if (h.msg) {
-      setText(h.msg, status?.text ?? '');
+      setLines(h.msg, status?.text ?? '', h.msgChars ?? 40);
       toggle(h.msg, 'md-hidden', !status);
       // the stopped marker is neutral (no red/amber): style by the group class only
     }

@@ -8,16 +8,18 @@ export function EventList() {
   const log = useStore((s) => s.log);
   const model = useStore((s) => s.model);
   const step = useStore((s) => s.step);
+  const running = useStore((s) => s.running);
   const setStep = useStore((s) => s.setStep);
   const labels = useMemo(
-    () => (log && model ? model.steps.map((i) => eventLabel(log, i)) : []),
-    [log, model],
+    () => (!running && log && model ? model.steps.map((i) => eventLabel(log, i)) : []),
+    [log, model, running],
   );
   const cur = clampStep(step, labels.length);
   const currentRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     currentRef.current?.scrollIntoView?.({ block: 'nearest' });
   }, [cur]);
+  if (running) return <p className="muted">The event list appears when the run finishes.</p>;
   if (labels.length === 0) return <p className="muted">No steps yet.</p>;
   return (
     <ol className="event-list" aria-label="Events">

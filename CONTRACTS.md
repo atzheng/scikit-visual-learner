@@ -458,7 +458,10 @@ interface AppState {
   running: boolean;
   elapsedMs: number;
   step: number;
-  setStep(n: number): void; // 0..steps.length (section 8)
+  setStep(n: number): void; // clamped to 0..model.steps.length (section 8) when a model exists
+  runSeq: number; // incremented at each Run (not the worker's runId); the diagram resets per-run layout state on it
+  runSource: string | null; // the source text of the last run; log.sites positions refer to it
+  selectNode(id: string | null): void; // a box click: selection = { node, pinned: true } and step = that node's latest execution at or before the current step (else its first one)
   selection: { node?: string; edge?: string; pinned?: boolean };
   expanded: Set<string>; // M4; empty in M1–3
   run(): Promise<void>;
@@ -466,6 +469,8 @@ interface AppState {
   restart(): Promise<void>; // restart: "Restart Python" (svl-bwv.2)
 }
 ```
+
+`run()` clears `log`, `model` and `selection` and sets `step` 0 at once, so nothing of the previous run is linked against the new `runSource`. The slider then follows the newest step while streaming (a new run starts at its end; a student who stepped back stays put) and the run ends with it at the last step.
 
 ## 8. Graph model, timeline and renderer
 

@@ -18,8 +18,8 @@ export interface AppState {
   elapsedMs: number;
   step: number;
   setStep(n: number): void;
-  /** Incremented at each Run; lets the diagram reset per-run layout state. */
-  runId: number;
+  /** Incremented at each Run (not the worker's runId); lets the diagram reset per-run layout state. */
+  runSeq: number;
   /** The source text of the last run (the log's site positions refer to it). */
   runSource: string | null;
   selection: { node?: string; edge?: string; pinned?: boolean };
@@ -44,7 +44,7 @@ export const useStore = create<AppState>()((set, get) => ({
   elapsedMs: 0,
   step: 0,
   setStep: (step) => set((s) => ({ step: clampStep(step, s.model?.steps.length ?? Infinity) })),
-  runId: 0,
+  runSeq: 0,
   runSource: null,
   selection: {},
   selectNode: (id) => {
@@ -61,8 +61,12 @@ export const useStore = create<AppState>()((set, get) => ({
     set((s) => ({
       running: true,
       elapsedMs: 0,
-      runId: s.runId + 1,
+      runSeq: s.runSeq + 1,
       runSource: s.source,
+      // Nothing of the previous run may be linked against the new source text.
+      log: null,
+      model: null,
+      step: 0,
       selection: {},
     }));
     const tick = setInterval(() => set({ elapsedMs: performance.now() - t0 }), ELAPSED_TICK_MS);

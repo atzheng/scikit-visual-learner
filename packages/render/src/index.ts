@@ -28,6 +28,7 @@ export {
   buildSvg,
   applyState,
   changedAttrs,
+  wrapText,
   instanceRowModels,
   labelAnchor,
   roundedPath,
