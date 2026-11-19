@@ -6,6 +6,23 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s9",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 9
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +39,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 1,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -30,7 +47,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 2,
       "inputs": [
         {
           "origin": "name",
@@ -47,7 +64,7 @@
         "v1.0"
       ],
       "owner": null,
-      "ret": 1,
+      "ret": 2,
       "returns_self": false,
       "scope": 0,
       "site": 2
@@ -55,7 +72,7 @@
   ],
   "output": [
     {
-      "i": 1,
+      "i": 2,
       "stream": "stdout",
       "text": "Table(rows=500, mean=178.41)\n89204.02\nTable(rows=500, mean=178.41)\n"
     }
@@ -64,12 +81,12 @@
     {
       "bindings": [
         [
-          0,
+          1,
           "df",
           "v0.0"
         ],
         [
-          1,
+          2,
           "t",
           "v1.0"
         ]

@@ -216,24 +216,13 @@ const byOrder = (a: GNode, b: GNode): number =>
 
 /**
  * The module shown in parentheses after a call box's name (svl-1x4): where the imported name comes from,
- * `LinearRegression (sklearn.linear_model)`. Import nodes and callee edges stay in the model but are not drawn;
- * this reads the import behind each callee edge. A box with no import behind it (a method, a builtin) has none.
- * For `from m import Ridge as R` the import source is `m.Ridge`; the attribute is cut so the module remains.
+ * `LinearRegression (sklearn.linear_model)`. The graph builder works it out (`CallNode.importedFrom`, from a
+ * `sole` import that ran before the call); a box with no import behind it (a method, a builtin) has none.
  */
 export function callModules(model: GraphModel): Map<string, string> {
-  const imports = new Map<string, string>();
-  for (const n of model.nodes) if (n.kind === 'import') imports.set(n.id, n.source ?? n.name);
-  const calls = new Map<string, CallNode>();
-  for (const n of model.nodes) if (n.kind === 'call') calls.set(n.id, n);
   const out = new Map<string, string>();
-  for (const e of model.edges) {
-    if (!e.callee) continue;
-    const src = imports.get(e.from.node);
-    const call = calls.get(e.to.node);
-    if (src === undefined || call === undefined || out.has(call.id)) continue;
-    const tail = `.${call.name}`;
-    out.set(call.id, src.endsWith(tail) ? src.slice(0, -tail.length) : src);
-  }
+  for (const n of model.nodes)
+    if (n.kind === 'call' && n.importedFrom !== undefined) out.set(n.id, n.importedFrom);
   return out;
 }
 
@@ -290,14 +279,17 @@ function leafSize(n: GNode, measure: Measure, o: SizeOpts): { w: number; h: numb
       return { w: Math.ceil(measure(n.text, FONT_MONO) + 2 * M.textPadX + 8), h: M.storeH };
     case 'source':
       return { w: Math.ceil(measure(n.label, FONT_MONO) + 2 * M.textPadX), h: M.exprH };
-    case 'import': {
-      // a pill: the bound name, and under it the module it comes from (gray)
-      const w = Math.max(
-        measure(n.name, FONT_NAME),
-        n.source === null ? 0 : measure(n.source, FONT_WNAME),
-      );
-      return { w: Math.ceil(w + 2 * M.textPadX), h: n.source === null ? M.exprH : M.exprH + 14 };
-    }
+    case 'import':
+      // a small box in the call box's style: `name (module)` on one line, no ports (svl-i6s)
+      return {
+        w: Math.ceil(
+          Math.max(
+            M.minBoxW,
+            measure(callTitle(n.name, n.source ?? undefined), FONT_NAME) + 2 * M.boxPadX,
+          ),
+        ),
+        h: M.nameH + M.emptyPortH,
+      };
   }
 }
 
@@ -325,14 +317,7 @@ export function buildElk(
   } = {},
 ): { graph: ElkNode; dropped: number } {
   const measure = opts.measure ?? defaultMeasure;
-  // Import nodes and callee edges stay in the model (a later bead draws imports as timeline steps) but are
-  // not drawn: the import shows as `(module)` in the call box (svl-1x4).
   const modules = callModules(model);
-  model = {
-    ...model,
-    nodes: model.nodes.filter((n) => n.kind !== 'import'),
-    edges: model.edges.filter((e) => !e.callee),
-  };
   const ids = new Set(model.nodes.map((n) => n.id));
   const instIds = new Set(model.nodes.filter((n) => n.kind === 'instance').map((n) => n.id));
   const kids = new Map<string | null, GNode[]>();

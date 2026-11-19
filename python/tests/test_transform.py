@@ -30,7 +30,7 @@ def kind(source: str, k: str) -> list[dict[str, Any]]:
 
 
 def test_contract_constants() -> None:
-    assert HOOK_NAMES == ("__rec__", "__bind__", "__store__", "__scope__", "__ret__")
+    assert HOOK_NAMES == ("__rec__", "__bind__", "__store__", "__scope__", "__ret__", "__imp__")
     assert UNWRAPPED_CALLS == {
         "super", "locals", "globals", "vars", "dir", "eval", "exec", "breakpoint"
     }  # fmt: skip
@@ -491,6 +491,7 @@ builtins.__bind__ = lambda site, m, /: None
 builtins.__store__ = lambda site, b, /: None
 builtins.__scope__ = lambda fn, /: fn
 builtins.__ret__ = lambda site, v, /: v
+builtins.__imp__ = lambda site, /: None
 path, mode = sys.argv[1], sys.argv[2]
 source = open(path).read()
 sys.argv = [path]

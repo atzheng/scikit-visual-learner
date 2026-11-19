@@ -4,19 +4,43 @@
       "id": "m:6w14qy.0.lg6rbl",
       "kind": "import",
       "parent": null,
-      "order": 399999.75,
+      "order": 400000,
       "name": "pd",
       "source": "pandas",
-      "site": 9
+      "site": 9,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "m:1vnkpvx.0.11i6nkl",
       "kind": "import",
       "parent": null,
-      "order": 499999.75,
+      "order": 500000,
       "name": "train_test_split",
       "source": "sklearn.model_selection",
-      "site": 10
+      "site": 10,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "n:wcu5tk.0",
@@ -28,8 +52,8 @@
       "order": 700005,
       "executions": [
         {
-          "i": 0,
-          "ret": 0,
+          "i": 2,
+          "ret": 2,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0"
@@ -57,7 +81,8 @@
           "nameLabel": "df"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "pandas"
     },
     {
       "id": "i:wcu5tk.0",
@@ -66,12 +91,12 @@
       "order": 700005,
       "className": "DF",
       "varName": "df",
-      "createdAt": 0,
+      "createdAt": 2,
       "createdBy": "n:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 0,
+          "i": 2,
           "token": "v0.0",
           "kind": "new"
         }
@@ -87,8 +112,8 @@
       "order": 800005,
       "executions": [
         {
-          "i": 1,
-          "ret": 1,
+          "i": 3,
+          "ret": 3,
           "inputs": {},
           "outputs": {
             "out:0": "v1.0"
@@ -117,12 +142,12 @@
       "order": 800005,
       "className": "DF",
       "varName": "df′",
-      "createdAt": 1,
+      "createdAt": 3,
       "createdBy": "n:m1pltk3k@i:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v1.0",
           "kind": "new"
         }
@@ -136,8 +161,8 @@
       "text": "df[[\"beds\", \"baths\", \"sqft\", \"year_built\"]]",
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 4,
+          "ret": 4,
           "inputs": {
             "in:df": "v1.0"
           },
@@ -158,12 +183,12 @@
       "order": 900000,
       "className": "DF",
       "varName": "X",
-      "createdAt": 2,
+      "createdAt": 4,
       "createdBy": "x:amvtlp.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v2.0",
           "kind": "new"
         }
@@ -177,8 +202,8 @@
       "text": "df[\"price\"]",
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 5,
+          "ret": 5,
           "inputs": {
             "in:df": "v1.0"
           },
@@ -199,12 +224,12 @@
       "order": 1000000,
       "className": "Series",
       "varName": "y",
-      "createdAt": 3,
+      "createdAt": 5,
       "createdBy": "x:xaeoav.0",
       "params": [],
       "versions": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v3.0",
           "kind": "new"
         }
@@ -220,8 +245,8 @@
       "order": 1100035,
       "executions": [
         {
-          "i": 4,
-          "ret": 4,
+          "i": 6,
+          "ret": 6,
           "inputs": {
             "in:arrays[0]": "v2.0",
             "in:arrays[1]": "v3.0"
@@ -292,7 +317,8 @@
           "nameLabel": "y_test"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "sklearn.model_selection"
     },
     {
       "id": "i:15uvz5m.0",
@@ -301,12 +327,12 @@
       "order": 1100035,
       "className": "DF",
       "varName": "X_train",
-      "createdAt": 4,
+      "createdAt": 6,
       "createdBy": "n:15uvz5m.0",
       "params": [],
       "versions": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v4.0",
           "kind": "new"
         }
@@ -319,12 +345,12 @@
       "order": 1100035,
       "className": "DF",
       "varName": "X_test",
-      "createdAt": 4,
+      "createdAt": 6,
       "createdBy": "n:15uvz5m.0",
       "params": [],
       "versions": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v5.0",
           "kind": "new"
         }
@@ -337,12 +363,12 @@
       "order": 1100035,
       "className": "Series",
       "varName": "y_train",
-      "createdAt": 4,
+      "createdAt": 6,
       "createdBy": "n:15uvz5m.0",
       "params": [],
       "versions": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v6.0",
           "kind": "new"
         }
@@ -355,12 +381,12 @@
       "order": 1100035,
       "className": "Series",
       "varName": "y_test",
-      "createdAt": 4,
+      "createdAt": 6,
       "createdBy": "n:15uvz5m.0",
       "params": [],
       "versions": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v7.0",
           "kind": "new"
         }
@@ -368,46 +394,6 @@
     }
   ],
   "edges": [
-    {
-      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
-      "from": {
-        "node": "m:6w14qy.0.lg6rbl",
-        "port": null
-      },
-      "to": {
-        "node": "n:wcu5tk.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
-      "id": "e:m:1vnkpvx.0.11i6nkl.>n:15uvz5m.0.",
-      "from": {
-        "node": "m:1vnkpvx.0.11i6nkl",
-        "port": null
-      },
-      "to": {
-        "node": "n:15uvz5m.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 4,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
     {
       "id": "e:i:amvtlp.0.>n:15uvz5m.0.in:arrays[0]",
       "from": {
@@ -421,7 +407,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v2.0"
         }
       ],
@@ -440,7 +426,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v3.0"
         }
       ],
@@ -459,7 +445,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v1.0"
         }
       ],
@@ -478,7 +464,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v1.0"
         }
       ],
@@ -497,7 +483,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 0,
+          "i": 2,
           "token": "v0.0"
         }
       ],
@@ -516,7 +502,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v1.0"
         }
       ],
@@ -535,7 +521,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v2.0"
         }
       ],
@@ -554,7 +540,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v3.0"
         }
       ],
@@ -573,7 +559,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v4.0"
         }
       ],
@@ -592,7 +578,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v5.0"
         }
       ],
@@ -611,7 +597,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v6.0"
         }
       ],
@@ -630,7 +616,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v7.0"
         }
       ],
@@ -642,6 +628,8 @@
     1,
     2,
     3,
-    4
+    4,
+    5,
+    6
   ]
 }

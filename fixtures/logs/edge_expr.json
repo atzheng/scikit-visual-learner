@@ -6,6 +6,57 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s16",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 16
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s17",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.linear_model import LinearRegression",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 17
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s18",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.model_selection import train_test_split",
+      "outputs": [],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 18
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +73,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 3,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -30,7 +81,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 4,
       "inputs": [
         {
           "origin": "expr",
@@ -47,7 +98,7 @@
         "v1.0"
       ],
       "owner": "v0.0",
-      "ret": 1,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 1
@@ -55,7 +106,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 5,
       "inputs": [
         {
           "origin": "name",
@@ -72,7 +123,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 3
@@ -80,7 +131,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 6,
       "inputs": [
         {
           "origin": "name",
@@ -97,7 +148,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 4
@@ -105,7 +156,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 7,
       "inputs": [
         {
           "origin": "name",
@@ -140,7 +191,7 @@
         "v7.0"
       ],
       "owner": null,
-      "ret": 4,
+      "ret": 7,
       "returns_self": false,
       "scope": 0,
       "site": 5
@@ -148,7 +199,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 5,
+      "i": 8,
       "inputs": [
         {
           "origin": "name",
@@ -165,7 +216,7 @@
         "v8.0"
       ],
       "owner": "v4.0",
-      "ret": 5,
+      "ret": 8,
       "returns_self": false,
       "scope": 0,
       "site": 7
@@ -173,7 +224,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 6,
+      "i": 9,
       "inputs": [
         {
           "origin": "name",
@@ -195,7 +246,7 @@
         "v9.0"
       ],
       "owner": null,
-      "ret": 6,
+      "ret": 9,
       "returns_self": false,
       "scope": 0,
       "site": 9
@@ -203,7 +254,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 7,
+      "i": 10,
       "inputs": [],
       "kind": "constructor",
       "merge_key": "s10",
@@ -214,7 +265,7 @@
         "v10.0"
       ],
       "owner": null,
-      "ret": 7,
+      "ret": 10,
       "returns_self": false,
       "scope": 0,
       "site": 10
@@ -222,7 +273,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 8,
+      "i": 11,
       "inputs": [
         {
           "origin": "name",
@@ -247,7 +298,7 @@
       "name": "LinearRegression.fit",
       "outputs": [],
       "owner": "v10.0",
-      "ret": 8,
+      "ret": 11,
       "returns_self": true,
       "scope": 0,
       "site": 12
@@ -255,7 +306,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 9,
+      "i": 12,
       "inputs": [
         {
           "origin": "name",
@@ -272,7 +323,7 @@
         "v11.0"
       ],
       "owner": null,
-      "ret": 9,
+      "ret": 12,
       "returns_self": false,
       "scope": 0,
       "site": 13
@@ -280,7 +331,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 10,
+      "i": 13,
       "inputs": [
         {
           "origin": "name",
@@ -302,7 +353,7 @@
         "v14.0"
       ],
       "owner": "v11.0",
-      "ret": 10,
+      "ret": 13,
       "returns_self": false,
       "scope": 0,
       "site": 14
@@ -310,7 +361,7 @@
   ],
   "output": [
     {
-      "i": 10,
+      "i": 13,
       "stream": "stdout",
       "text": "[ 2.08 23.62  0.11]\n"
     }
@@ -319,57 +370,57 @@
     {
       "bindings": [
         [
-          1,
+          4,
           "df",
           "v1.0"
         ],
         [
-          2,
+          5,
           "X",
           "v2.0"
         ],
         [
-          3,
+          6,
           "y",
           "v3.0"
         ],
         [
-          4,
+          7,
           "X_train",
           "v4.0"
         ],
         [
-          4,
+          7,
           "X_test",
           "v5.0"
         ],
         [
-          4,
+          7,
           "y_train",
           "v6.0"
         ],
         [
-          4,
+          7,
           "y_test",
           "v7.0"
         ],
         [
-          5,
+          8,
           "mean",
           "v8.0"
         ],
         [
-          6,
+          9,
           "centred",
           "v9.0"
         ],
         [
-          7,
+          10,
           "model",
           "v10.0"
         ],
         [
-          9,
+          12,
           "coefs",
           "v11.0"
         ]

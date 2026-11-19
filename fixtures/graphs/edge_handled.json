@@ -4,19 +4,43 @@
       "id": "m:6w14qy.0.lg6rbl",
       "kind": "import",
       "parent": null,
-      "order": 299999.75,
+      "order": 300000,
       "name": "pd",
       "source": "pandas",
-      "site": 14
+      "site": 14,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "m:14z9t3a.0.15b7d91",
       "kind": "import",
       "parent": null,
-      "order": 399999.75,
+      "order": 400000,
       "name": "LinearRegression",
       "source": "sklearn.linear_model",
-      "site": 15
+      "site": 15,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "n:wcu5tk.0",
@@ -28,8 +52,8 @@
       "order": 600005,
       "executions": [
         {
-          "i": 0,
-          "ret": 0,
+          "i": 2,
+          "ret": 2,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0"
@@ -57,7 +81,8 @@
           "nameLabel": "df"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "pandas"
     },
     {
       "id": "i:wcu5tk.0",
@@ -66,12 +91,12 @@
       "order": 600005,
       "className": "DF",
       "varName": "df",
-      "createdAt": 0,
+      "createdAt": 2,
       "createdBy": "n:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 0,
+          "i": 2,
           "token": "v0.0",
           "kind": "new"
         }
@@ -85,8 +110,8 @@
       "text": "df[[\"beds\", \"baths\", \"sqft\"]]",
       "executions": [
         {
-          "i": 1,
-          "ret": 1,
+          "i": 3,
+          "ret": 3,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -107,12 +132,12 @@
       "order": 700000,
       "className": "DF",
       "varName": "X",
-      "createdAt": 1,
+      "createdAt": 3,
       "createdBy": "x:f2rqav.0",
       "params": [],
       "versions": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v1.0",
           "kind": "new"
         }
@@ -126,8 +151,8 @@
       "text": "df[\"price\"]",
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 4,
+          "ret": 4,
           "inputs": {
             "in:df": "v0.0"
           },
@@ -148,12 +173,12 @@
       "order": 800000,
       "className": "Series",
       "varName": "y",
-      "createdAt": 2,
+      "createdAt": 4,
       "createdBy": "x:xaeoav.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v2.0",
           "kind": "new"
         }
@@ -169,8 +194,8 @@
       "order": 900008,
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 5,
+          "ret": 5,
           "inputs": {},
           "outputs": {
             "out:0": "v3.0"
@@ -190,7 +215,8 @@
           "nameLabel": "model"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "sklearn.linear_model"
     },
     {
       "id": "i:10epbgg.0",
@@ -199,22 +225,22 @@
       "order": 900008,
       "className": "LinearRegression",
       "varName": "model",
-      "createdAt": 3,
+      "createdAt": 5,
       "createdBy": "n:10epbgg.0",
       "params": [],
       "versions": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v3.0",
           "kind": "new"
         },
         {
-          "i": 4,
+          "i": 6,
           "token": "v3.1",
           "kind": "mutate"
         },
         {
-          "i": 8,
+          "i": 10,
           "token": "v3.2",
           "kind": "mutate"
         }
@@ -230,8 +256,8 @@
       "order": 1100004,
       "executions": [
         {
-          "i": 4,
-          "ret": 4,
+          "i": 6,
+          "ret": 6,
           "inputs": {
             "in:X": "v1.0",
             "in:y": "v2.0"
@@ -247,8 +273,8 @@
           "interrupted": false
         },
         {
-          "i": 8,
-          "ret": 8,
+          "i": 10,
+          "ret": 10,
           "inputs": {
             "in:X": "v6.0",
             "in:y": "v7.0"
@@ -287,8 +313,8 @@
       "order": 1400009,
       "executions": [
         {
-          "i": 5,
-          "ret": 5,
+          "i": 7,
+          "ret": 7,
           "inputs": {},
           "outputs": {
             "out:0": "v5.0"
@@ -317,12 +343,12 @@
       "order": 1400009,
       "className": "DF",
       "varName": "df′",
-      "createdAt": 5,
+      "createdAt": 7,
       "createdBy": "n:m1pltk3k@i:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 5,
+          "i": 7,
           "token": "v5.0",
           "kind": "new"
         }
@@ -336,8 +362,8 @@
       "text": "df[[\"beds\", \"baths\", \"sqft\"]]",
       "executions": [
         {
-          "i": 6,
-          "ret": 6,
+          "i": 8,
+          "ret": 8,
           "inputs": {
             "in:df": "v5.0"
           },
@@ -359,8 +385,8 @@
       "text": "df[\"price\"]",
       "executions": [
         {
-          "i": 7,
-          "ret": 7,
+          "i": 9,
+          "ret": 9,
           "inputs": {
             "in:df": "v5.0"
           },
@@ -382,8 +408,8 @@
       "text": "df[[\"beds\", \"baths\", \"sqft\"]]",
       "executions": [
         {
-          "i": 9,
-          "ret": 9,
+          "i": 11,
+          "ret": 11,
           "inputs": {
             "in:df": "v5.0"
           },
@@ -405,8 +431,8 @@
       "text": "df[\"price\"]",
       "executions": [
         {
-          "i": 10,
-          "ret": 10,
+          "i": 12,
+          "ret": 12,
           "inputs": {
             "in:df": "v5.0"
           },
@@ -430,8 +456,8 @@
       "order": 1600012,
       "executions": [
         {
-          "i": 11,
-          "ret": 11,
+          "i": 13,
+          "ret": 13,
           "inputs": {
             "in:X": "v11.0",
             "in:y": "v12.0"
@@ -472,46 +498,6 @@
   ],
   "edges": [
     {
-      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
-      "from": {
-        "node": "m:6w14qy.0.lg6rbl",
-        "port": null
-      },
-      "to": {
-        "node": "n:wcu5tk.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
-      "id": "e:m:14z9t3a.0.15b7d91.>n:10epbgg.0.",
-      "from": {
-        "node": "m:14z9t3a.0.15b7d91",
-        "port": null
-      },
-      "to": {
-        "node": "n:10epbgg.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 3,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
       "id": "e:i:f2rqav.0.>n:m1gsyoeo@i:10epbgg.0.in:X",
       "from": {
         "node": "i:f2rqav.0",
@@ -524,7 +510,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v1.0"
         }
       ],
@@ -543,7 +529,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v2.0"
         }
       ],
@@ -562,7 +548,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 8,
+          "i": 10,
           "token": "v6.0"
         }
       ],
@@ -590,7 +576,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 8,
+          "i": 10,
           "token": "v7.0"
         }
       ],
@@ -617,7 +603,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 11,
+          "i": 13,
           "token": "v11.0"
         }
       ],
@@ -645,7 +631,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 11,
+          "i": 13,
           "token": "v12.0"
         }
       ],
@@ -672,7 +658,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v0.0"
         }
       ],
@@ -691,7 +677,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v0.0"
         }
       ],
@@ -710,7 +696,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 6,
+          "i": 8,
           "token": "v5.0"
         }
       ],
@@ -729,7 +715,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 7,
+          "i": 9,
           "token": "v5.0"
         }
       ],
@@ -748,7 +734,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 9,
+          "i": 11,
           "token": "v5.0"
         }
       ],
@@ -767,7 +753,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 10,
+          "i": 12,
           "token": "v5.0"
         }
       ],
@@ -786,7 +772,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 0,
+          "i": 2,
           "token": "v0.0"
         }
       ],
@@ -805,7 +791,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 1,
+          "i": 3,
           "token": "v1.0"
         }
       ],
@@ -824,7 +810,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v2.0"
         }
       ],
@@ -843,7 +829,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v3.0"
         }
       ],
@@ -862,7 +848,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 5,
+          "i": 7,
           "token": "v5.0"
         }
       ],
@@ -881,7 +867,9 @@
     8,
     9,
     10,
-    11
+    11,
+    12,
+    13
   ],
   "folded": 4
 }

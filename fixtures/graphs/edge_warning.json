@@ -1,22 +1,67 @@
 {
   "nodes": [
     {
+      "id": "m:1xqqb1a.0.ktsfpw",
+      "kind": "import",
+      "parent": null,
+      "order": 400000,
+      "name": "warnings",
+      "source": null,
+      "site": 12,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
       "id": "m:6w14qy.0.lg6rbl",
       "kind": "import",
       "parent": null,
-      "order": 599999.75,
+      "order": 600000,
       "name": "pd",
       "source": "pandas",
-      "site": 13
+      "site": 13,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "m:122fznx.0.jttqxu",
       "kind": "import",
       "parent": null,
-      "order": 699999.75,
+      "order": 700000,
       "name": "LogisticRegression",
       "source": "sklearn.linear_model",
-      "site": 14
+      "site": 14,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
     },
     {
       "id": "n:wcu5tk.0",
@@ -28,8 +73,8 @@
       "order": 1000005,
       "executions": [
         {
-          "i": 0,
-          "ret": 0,
+          "i": 3,
+          "ret": 3,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0"
@@ -57,7 +102,8 @@
           "nameLabel": null
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "pandas"
     },
     {
       "id": "n:m1pltk3k@i:wcu5tk.0",
@@ -69,8 +115,8 @@
       "order": 1000005,
       "executions": [
         {
-          "i": 1,
-          "ret": 1,
+          "i": 4,
+          "ret": 4,
           "inputs": {
             "in:self": "v0.0"
           },
@@ -108,12 +154,12 @@
       "order": 1000005,
       "className": "DF",
       "varName": "df",
-      "createdAt": 1,
+      "createdAt": 4,
       "createdBy": "n:m1pltk3k@i:wcu5tk.0",
       "params": [],
       "versions": [
         {
-          "i": 1,
+          "i": 4,
           "token": "v1.0",
           "kind": "new"
         }
@@ -127,8 +173,8 @@
       "text": "df[[\"beds\", \"baths\", \"sqft\", \"year_built\"]]",
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 5,
+          "ret": 5,
           "inputs": {
             "in:df": "v1.0"
           },
@@ -149,12 +195,12 @@
       "order": 1200000,
       "className": "DF",
       "varName": "X",
-      "createdAt": 2,
+      "createdAt": 5,
       "createdBy": "x:amvtlp.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 5,
           "token": "v2.0",
           "kind": "new"
         }
@@ -168,8 +214,8 @@
       "text": "df[\"price\"] > df[\"price\"].median()",
       "executions": [
         {
-          "i": 5,
-          "ret": 5,
+          "i": 8,
+          "ret": 8,
           "inputs": {
             "in:df": "v1.0",
             "in:df[\"price\"].median": "s0"
@@ -191,12 +237,12 @@
       "order": 1300000,
       "className": "Series",
       "varName": "y",
-      "createdAt": 5,
+      "createdAt": 8,
       "createdBy": "x:baf3pv.0",
       "params": [],
       "versions": [
         {
-          "i": 5,
+          "i": 8,
           "token": "v4.0",
           "kind": "new"
         }
@@ -210,8 +256,8 @@
       "text": "df[\"price\"]",
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 6,
+          "ret": 6,
           "inputs": {
             "in:df": "v1.0"
           },
@@ -235,8 +281,8 @@
       "order": 1300018,
       "executions": [
         {
-          "i": 4,
-          "ret": 4,
+          "i": 7,
+          "ret": 7,
           "inputs": {
             "in:self": "v3.0"
           },
@@ -277,8 +323,8 @@
       "order": 1400006,
       "executions": [
         {
-          "i": 6,
-          "ret": 6,
+          "i": 9,
+          "ret": 9,
           "inputs": {},
           "outputs": {
             "out:0": "v5.0"
@@ -306,7 +352,8 @@
           "nameLabel": "clf"
         }
       ],
-      "student": false
+      "student": false,
+      "importedFrom": "sklearn.linear_model"
     },
     {
       "id": "i:jnknup.0",
@@ -315,7 +362,7 @@
       "order": 1400006,
       "className": "LogisticRegression",
       "varName": "clf",
-      "createdAt": 6,
+      "createdAt": 9,
       "createdBy": "n:jnknup.0",
       "params": [
         {
@@ -325,12 +372,12 @@
       ],
       "versions": [
         {
-          "i": 6,
+          "i": 9,
           "token": "v5.0",
           "kind": "new"
         },
         {
-          "i": 7,
+          "i": 10,
           "token": "v5.1",
           "kind": "mutate"
         }
@@ -346,8 +393,8 @@
       "order": 1500000,
       "executions": [
         {
-          "i": 7,
-          "ret": 7,
+          "i": 10,
+          "ret": 10,
           "inputs": {
             "in:X": "v2.0",
             "in:y": "v4.0"
@@ -379,46 +426,6 @@
   ],
   "edges": [
     {
-      "id": "e:m:6w14qy.0.lg6rbl.>n:wcu5tk.0.",
-      "from": {
-        "node": "m:6w14qy.0.lg6rbl",
-        "port": null
-      },
-      "to": {
-        "node": "n:wcu5tk.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
-      "id": "e:m:122fznx.0.jttqxu.>n:jnknup.0.",
-      "from": {
-        "node": "m:122fznx.0.jttqxu",
-        "port": null
-      },
-      "to": {
-        "node": "n:jnknup.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 6,
-          "token": ""
-        }
-      ],
-      "nameLabel": null,
-      "callee": true
-    },
-    {
       "id": "f:i:wcu5tk.0",
       "from": {
         "node": "n:wcu5tk.0",
@@ -431,7 +438,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 1,
+          "i": 4,
           "token": "v0.0"
         }
       ],
@@ -459,7 +466,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 4,
+          "i": 7,
           "token": "v3.0"
         }
       ],
@@ -486,7 +493,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 7,
+          "i": 10,
           "token": "v2.0"
         }
       ],
@@ -505,7 +512,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 7,
+          "i": 10,
           "token": "v4.0"
         }
       ],
@@ -524,7 +531,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 5,
           "token": "v1.0"
         }
       ],
@@ -543,7 +550,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 3,
+          "i": 6,
           "token": "v1.0"
         }
       ],
@@ -562,7 +569,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 5,
+          "i": 8,
           "token": "v1.0"
         }
       ],
@@ -581,7 +588,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 5,
+          "i": 8,
           "token": "s0"
         }
       ],
@@ -600,7 +607,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 1,
+          "i": 4,
           "token": "v1.0"
         }
       ],
@@ -619,7 +626,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 2,
+          "i": 5,
           "token": "v2.0"
         }
       ],
@@ -638,7 +645,7 @@
       "dashed": true,
       "uses": [
         {
-          "i": 5,
+          "i": 8,
           "token": "v4.0"
         }
       ],
@@ -657,7 +664,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 6,
+          "i": 9,
           "token": "v5.0"
         }
       ],
@@ -672,7 +679,10 @@
     4,
     5,
     6,
-    7
+    7,
+    8,
+    9,
+    10
   ],
   "folded": 2
 }

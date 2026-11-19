@@ -88,6 +88,12 @@ def _store_hook(site: int, base: Any, /) -> None:
         r._store(site, base, sys._getframe(1))
 
 
+def _import_hook(site: int, /) -> None:
+    r = _active
+    if r is not None:
+        r._import(site, sys._getframe(1))
+
+
 def _scope_hook(fn: Callable[..., Any], /) -> Callable[..., Any]:
     return fn
 
@@ -102,6 +108,7 @@ _HOOKS: tuple[Callable[..., Any], ...] = (
     _store_hook,
     _scope_hook,
     _ret_hook,
+    _import_hook,
 )
 
 
@@ -1266,6 +1273,47 @@ class Recorder:
                 "error": None,
             }
         )
+
+    # -- imports ------------------------------------------------------------------------------
+
+    def _import(self, site: int, frame: types.FrameType) -> None:
+        """An import statement ran (the hook follows it): one `import` event, a timeline step.
+
+        No values, no tokens: the event only says the statement at `site` ran, so nothing here can
+        touch the student's objects. It counts toward `max_events` like any other event.
+        """
+        if self.vt.in_reentry or self.limit_hit or "import" in self._off:
+            return
+        if self.namespace is None:
+            self.namespace = frame.f_globals
+        try:
+            self._tick()
+            alloc = self._alloc(f"s{site}")
+            if alloc is None:
+                return
+            i, count, slot = alloc
+            self._add_event(
+                {
+                    "i": i,
+                    "ret": i,
+                    "site": site,
+                    "scope": 0,
+                    "kind": "import",
+                    "name": self.sites[site]["text"],
+                    "module": None,
+                    "owner": None,
+                    "inputs": [],
+                    "outputs": [],
+                    "returns_self": False,
+                    "mutates": [],
+                    "count": count,
+                    **({"slot": True} if slot else {}),
+                    "merge_key": f"s{site}",
+                    "error": None,
+                }
+            )
+        except Exception as e:  # noqa: BLE001
+            self._degrade("import", e)
 
     # -- streaming and the log ----------------------------------------------------------------
 

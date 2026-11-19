@@ -6,6 +6,57 @@
       "count": 1,
       "error": null,
       "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s11",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 11
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s12",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.ensemble import RandomForestRegressor",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 12
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s13",
+      "module": null,
+      "mutates": [],
+      "name": "from sklearn.linear_model import Ridge",
+      "outputs": [],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 13
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
       "inputs": [
         {
           "origin": "const",
@@ -22,7 +73,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 0,
+      "ret": 3,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -30,7 +81,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 1,
+      "i": 4,
       "inputs": [
         {
           "origin": "expr",
@@ -47,7 +98,7 @@
         "v1.0"
       ],
       "owner": "v0.0",
-      "ret": 1,
+      "ret": 4,
       "returns_self": false,
       "scope": 0,
       "site": 1
@@ -55,7 +106,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 5,
       "inputs": [
         {
           "origin": "name",
@@ -72,7 +123,7 @@
         "v2.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 5,
       "returns_self": false,
       "scope": 0,
       "site": 3
@@ -80,7 +131,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 3,
+      "i": 6,
       "inputs": [
         {
           "origin": "name",
@@ -97,7 +148,7 @@
         "v3.0"
       ],
       "owner": null,
-      "ret": 3,
+      "ret": 6,
       "returns_self": false,
       "scope": 0,
       "site": 4
@@ -105,7 +156,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 4,
+      "i": 7,
       "inputs": [],
       "kind": "constructor",
       "merge_key": "s5",
@@ -116,7 +167,7 @@
         "v4.0"
       ],
       "owner": null,
-      "ret": 4,
+      "ret": 7,
       "returns_self": false,
       "scope": 0,
       "site": 5
@@ -124,7 +175,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 5,
+      "i": 8,
       "inputs": [
         {
           "origin": "const",
@@ -146,7 +197,7 @@
         "v5.0"
       ],
       "owner": null,
-      "ret": 5,
+      "ret": 8,
       "returns_self": false,
       "scope": 0,
       "site": 6
@@ -154,7 +205,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 6,
+      "i": 9,
       "inputs": [
         {
           "origin": "call",
@@ -176,7 +227,7 @@
         "v6.0"
       ],
       "owner": null,
-      "ret": 6,
+      "ret": 9,
       "returns_self": false,
       "scope": 0,
       "site": 7
@@ -184,7 +235,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 7,
+      "i": 10,
       "inputs": [
         {
           "origin": "name",
@@ -209,7 +260,7 @@
       "name": "RandomForestRegressor.fit",
       "outputs": [],
       "owner": "v5.0",
-      "ret": 7,
+      "ret": 10,
       "returns_self": true,
       "scope": 0,
       "site": 8
@@ -217,7 +268,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 8,
+      "i": 11,
       "inputs": [
         {
           "origin": "name",
@@ -239,7 +290,7 @@
         "s46"
       ],
       "owner": "v5.1",
-      "ret": 8,
+      "ret": 11,
       "returns_self": false,
       "scope": 0,
       "site": 9
@@ -247,7 +298,7 @@
   ],
   "output": [
     {
-      "i": 8,
+      "i": 11,
       "stream": "stdout",
       "text": "True\n"
     }
@@ -256,22 +307,22 @@
     {
       "bindings": [
         [
-          1,
+          4,
           "df",
           "v1.0"
         ],
         [
-          2,
+          5,
           "X",
           "v2.0"
         ],
         [
-          3,
+          6,
           "y",
           "v3.0"
         ],
         [
-          6,
+          9,
           "models",
           "v6.0"
         ]
