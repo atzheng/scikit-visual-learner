@@ -124,6 +124,46 @@ export const ROOT_OPTIONS: Record<string, string> = {
   'elk.padding': '[top=12,left=12,bottom=12,right=12]',
 };
 
+/**
+ * Size-based degradation (CONTRACTS section 8). ELK's cost grows with the number of dummy nodes it inserts
+ * for edges spanning several layers, so `longEdgeLoad` estimates that count and the load picks a tier.
+ * Tier 0 is full quality. Tier 1 drops the model-order sort (the superlinear part) and the extra crossing
+ * sweeps. Tier 2 also skips crossing minimisation and lays instances out per level.
+ */
+export const TIER1_LOAD = 4000;
+export const TIER2_LOAD = 15000;
+export const TIER_OPTIONS: Record<string, string>[] = [
+  {},
+  { 'elk.layered.considerModelOrder.strategy': 'NONE', 'elk.layered.thoroughness': '1' },
+  {
+    'elk.layered.considerModelOrder.strategy': 'NONE',
+    'elk.layered.thoroughness': '1',
+    'elk.layered.crossingMinimization.strategy': 'NONE',
+    'elk.hierarchyHandling': 'SEPARATE_CHILDREN',
+  },
+];
+
+/** Estimated number of long-edge dummy nodes: edges' layer spans under longest-path layering of the model. */
+export function longEdgeLoad(
+  nodes: { id: string; order: number }[],
+  edges: { fromNode: string; toNode: string }[],
+): number {
+  const pos = new Map<string, number>();
+  [...nodes]
+    .sort((a, b) => a.order - b.order || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    .forEach((n, k) => pos.set(n.id, k));
+  const fwd = edges
+    .map((e) => [pos.get(e.fromNode)!, pos.get(e.toNode)!] as const)
+    .filter(([a, b]) => a < b)
+    .sort((x, y) => x[1] - y[1]);
+  const layer = new Array<number>(nodes.length).fill(0);
+  // targets in position order: every source has a smaller position, so its layer is final
+  for (const [a, b] of fwd) layer[b] = Math.max(layer[b]!, layer[a]! + 1);
+  let load = 0;
+  for (const [a, b] of fwd) load += Math.max(0, layer[b]! - layer[a]! - 1);
+  return load;
+}
+
 const SPLIT_A = '~a';
 const SPLIT_B = '~b';
 const laneKey = (inst: string, edge: string): string => `${inst}#lane:${edge}`;
@@ -326,10 +366,12 @@ export function buildElk(
     return e;
   };
 
+  const load = longEdgeLoad(model.nodes, resolved);
+  const tier = load > TIER2_LOAD ? 2 : load > TIER1_LOAD ? 1 : 0;
   return {
     graph: {
       id: 'root',
-      layoutOptions: { ...ROOT_OPTIONS },
+      layoutOptions: { ...ROOT_OPTIONS, ...TIER_OPTIONS[tier] },
       children: (kids.get(null) ?? []).map(build),
       edges,
     },
@@ -455,6 +497,44 @@ function segHits(r: Rect, a: [number, number], b: [number, number]): boolean {
   return x0 <= r.x + r.w && x1 >= r.x && y0 <= r.y + r.h && y1 >= r.y;
 }
 
+/** A uniform grid over rectangles, so a query only visits the items near it (each item once). */
+class Grid<T> {
+  private cells = new Map<number, number[]>();
+  private items: T[] = [];
+  private seen: number[] = [];
+  private stamp = 0;
+  constructor(private cell = 64) {}
+  private key(i: number, j: number): number {
+    return i * 1048576 + j;
+  }
+  insert(r: Rect, item: T): void {
+    const id = this.items.length;
+    this.items.push(item);
+    this.seen.push(0);
+    const c = this.cell;
+    for (let i = Math.floor(r.x / c); i <= Math.floor((r.x + r.w) / c); i++)
+      for (let j = Math.floor(r.y / c); j <= Math.floor((r.y + r.h) / c); j++) {
+        const k = this.key(i, j);
+        const l = this.cells.get(k);
+        if (l) l.push(id);
+        else this.cells.set(k, [id]);
+      }
+  }
+  /** Calls `f` once for every item whose cells touch `r` (a superset of those overlapping it). */
+  query(r: Rect, f: (item: T) => void): void {
+    const c = this.cell;
+    this.stamp++;
+    for (let i = Math.floor(r.x / c); i <= Math.floor((r.x + r.w) / c); i++)
+      for (let j = Math.floor(r.y / c); j <= Math.floor((r.y + r.h) / c); j++) {
+        for (const id of this.cells.get(this.key(i, j)) ?? []) {
+          if (this.seen[id] === this.stamp) continue;
+          this.seen[id] = this.stamp;
+          f(this.items[id]!);
+        }
+      }
+  }
+}
+
 /**
  * Choose a rectangle for each wire label beside its wire, avoiding boxes, instance headers and
  * attribute rows, other wires and other labels. Greedy in edge-id order, so the result is deterministic.
@@ -487,7 +567,20 @@ export function placeLabels(
     segs.push({ id: '', a: [x0, y0], b: [x1, y0] }, { id: '', a: [x1, y0], b: [x1, y1] });
     segs.push({ id: '', a: [x0, y1], b: [x1, y1] }, { id: '', a: [x0, y0], b: [x0, y1] });
   }
-  const placed: Rect[] = [];
+  const boxGrid = new Grid<Rect>();
+  for (const b of boxes) boxGrid.insert(b, b);
+  const segGrid = new Grid<(typeof segs)[number]>();
+  for (const sg of segs)
+    segGrid.insert(
+      {
+        x: Math.min(sg.a[0], sg.b[0]),
+        y: Math.min(sg.a[1], sg.b[1]),
+        w: Math.abs(sg.a[0] - sg.b[0]),
+        h: Math.abs(sg.a[1] - sg.b[1]),
+      },
+      sg,
+    );
+  const placedGrid = new Grid<Rect>();
   const out: Record<string, LaidLabel> = {};
   const edges = [...model.edges].sort((p, q) => (p.id < q.id ? -1 : p.id > q.id ? 1 : 0));
   for (const ed of edges) {
@@ -530,9 +623,17 @@ export function placeLabels(
     });
     const score = (c: { r: Rect; pref: number }): number => {
       let cost = c.pref;
-      for (const bx of boxes) if (overlap(c.r, bx, 2)) cost += 1000;
-      for (const pl of placed) if (overlap(c.r, pl, 2)) cost += 300;
-      for (const sg of segs) if (sg.id !== ed.id && segHits(c.r, sg.a, sg.b)) cost += 40;
+      // the grid returns a superset; the exact predicates decide (the 2px / inclusive margins fit in a cell)
+      const q = { x: c.r.x - 2, y: c.r.y - 2, w: c.r.w + 4, h: c.r.h + 4 };
+      boxGrid.query(q, (bx) => {
+        if (overlap(c.r, bx, 2)) cost += 1000;
+      });
+      placedGrid.query(q, (pl) => {
+        if (overlap(c.r, pl, 2)) cost += 300;
+      });
+      segGrid.query(q, (sg) => {
+        if (sg.id !== ed.id && segHits(c.r, sg.a, sg.b)) cost += 40;
+      });
       if (c.r.x < 0) cost += 500;
       const d = nearestOnWire(c.r, pts).d;
       if (d > LABEL_MAX_DIST) cost += 150 + d / 4;
@@ -564,7 +665,7 @@ export function placeLabels(
       consider(scan);
     }
     if (best.r === null) continue;
-    placed.push(best.r);
+    placedGrid.insert(best.r, best.r);
     const near = nearestOnWire(best.r, pts);
     out[ed.id] = { ...best.r };
     if (near.d > LABEL_MAX_DIST) {
