@@ -441,8 +441,13 @@ class ValueTable:
         names: list[str] = []
         keys: list[tuple[Any, ...]] = []
         attrs = getattr(obj, "__dict__", None)
+        # pandas objects (GroupBy, Rolling, Resampler, Index, ...) memoise lazily in `_cache`,
+        # which appears on first use. It is not state the student changed: skip it.
+        skip_cache = t.__module__.split(".")[0] == "pandas"
         if isinstance(attrs, dict):
             for k in tuple(attrs):
+                if skip_cache and k == "_cache":
+                    continue
                 names.append(str(k))
                 keys.append(_key(attrs[k]))
         for k in self._slot_names(t):

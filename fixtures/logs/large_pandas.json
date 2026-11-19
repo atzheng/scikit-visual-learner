@@ -298,12 +298,7 @@
       "kind": "method",
       "merge_key": "s9",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v7.0",
-          "v7.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v8.0"
@@ -593,12 +588,7 @@
       "kind": "method",
       "merge_key": "s19",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v16.0",
-          "v16.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v17.0"
@@ -888,12 +878,7 @@
       "kind": "method",
       "merge_key": "s29",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v25.0",
-          "v25.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v26.0"
@@ -1183,12 +1168,7 @@
       "kind": "method",
       "merge_key": "s39",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v34.0",
-          "v34.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v35.0"
@@ -1478,12 +1458,7 @@
       "kind": "method",
       "merge_key": "s49",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v43.0",
-          "v43.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v44.0"
@@ -1773,12 +1748,7 @@
       "kind": "method",
       "merge_key": "s59",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v52.0",
-          "v52.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v53.0"
@@ -2068,12 +2038,7 @@
       "kind": "method",
       "merge_key": "s69",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v61.0",
-          "v61.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v62.0"
@@ -2363,12 +2328,7 @@
       "kind": "method",
       "merge_key": "s79",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v70.0",
-          "v70.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v71.0"
@@ -2658,12 +2618,7 @@
       "kind": "method",
       "merge_key": "s89",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v79.0",
-          "v79.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v80.0"
@@ -2953,12 +2908,7 @@
       "kind": "method",
       "merge_key": "s99",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v88.0",
-          "v88.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v89.0"
@@ -3248,12 +3198,7 @@
       "kind": "method",
       "merge_key": "s109",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v97.0",
-          "v97.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v98.0"
@@ -3543,12 +3488,7 @@
       "kind": "method",
       "merge_key": "s119",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v106.0",
-          "v106.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v107.0"
@@ -3838,12 +3778,7 @@
       "kind": "method",
       "merge_key": "s129",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v115.0",
-          "v115.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v116.0"
@@ -4133,12 +4068,7 @@
       "kind": "method",
       "merge_key": "s139",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v124.0",
-          "v124.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v125.0"
@@ -4428,12 +4358,7 @@
       "kind": "method",
       "merge_key": "s149",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v133.0",
-          "v133.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v134.0"
@@ -4723,12 +4648,7 @@
       "kind": "method",
       "merge_key": "s159",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v142.0",
-          "v142.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v143.0"
@@ -5018,12 +4938,7 @@
       "kind": "method",
       "merge_key": "s169",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v151.0",
-          "v151.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v152.0"
@@ -5313,12 +5228,7 @@
       "kind": "method",
       "merge_key": "s179",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v160.0",
-          "v160.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v161.0"
@@ -5608,12 +5518,7 @@
       "kind": "method",
       "merge_key": "s189",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v169.0",
-          "v169.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v170.0"
@@ -5903,12 +5808,7 @@
       "kind": "method",
       "merge_key": "s199",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v178.0",
-          "v178.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v179.0"
@@ -6198,12 +6098,7 @@
       "kind": "method",
       "merge_key": "s209",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v187.0",
-          "v187.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v188.0"
@@ -6493,12 +6388,7 @@
       "kind": "method",
       "merge_key": "s219",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v196.0",
-          "v196.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v197.0"
@@ -6788,12 +6678,7 @@
       "kind": "method",
       "merge_key": "s229",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v205.0",
-          "v205.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v206.0"
@@ -7083,12 +6968,7 @@
       "kind": "method",
       "merge_key": "s239",
       "module": "pandas.api.typing",
-      "mutates": [
-        [
-          "v214.0",
-          "v214.1"
-        ]
-      ],
+      "mutates": [],
       "name": "SeriesGroupBy.mean",
       "outputs": [
         "v215.0"
@@ -14566,10 +14446,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v106.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v107.0": {
       "dtype": "float64",
       "preview": {
@@ -14916,10 +14792,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v115.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v116.0": {
       "dtype": "float64",
       "preview": {
@@ -15263,10 +15135,6 @@
       "type": "DataFrameGroupBy"
     },
     "v124.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v124.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -15630,10 +15498,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v133.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v134.0": {
       "dtype": "float64",
       "preview": {
@@ -15994,10 +15858,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v142.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v143.0": {
       "dtype": "float64",
       "preview": {
@@ -16311,10 +16171,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v151.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v152.0": {
       "dtype": "float64",
       "preview": {
@@ -16624,15 +16480,7 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v16.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v160.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v160.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -16942,10 +16790,6 @@
       "type": "DataFrameGroupBy"
     },
     "v169.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v169.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -17292,10 +17136,6 @@
       "type": "DataFrameGroupBy"
     },
     "v178.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v178.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -17659,10 +17499,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v187.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v188.0": {
       "dtype": "float64",
       "preview": {
@@ -18006,10 +17842,6 @@
       "type": "DataFrameGroupBy"
     },
     "v196.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v196.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -18396,10 +18228,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v205.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v206.0": {
       "dtype": "float64",
       "preview": {
@@ -18746,10 +18574,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v214.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v215.0": {
       "dtype": "float64",
       "preview": {
@@ -18945,10 +18769,6 @@
       "type": "DataFrameGroupBy"
     },
     "v25.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v25.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -19295,10 +19115,6 @@
       "type": "DataFrameGroupBy"
     },
     "v34.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v34.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -19662,10 +19478,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v43.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v44.0": {
       "dtype": "float64",
       "preview": {
@@ -20026,10 +19838,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v52.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v53.0": {
       "dtype": "float64",
       "preview": {
@@ -20343,10 +20151,6 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v61.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v62.0": {
       "dtype": "float64",
       "preview": {
@@ -20656,15 +20460,7 @@
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
-    "v7.1": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
     "v70.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v70.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -20974,10 +20770,6 @@
       "type": "DataFrameGroupBy"
     },
     "v79.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v79.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -21324,10 +21116,6 @@
       "type": "DataFrameGroupBy"
     },
     "v88.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v88.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
@@ -21688,10 +21476,6 @@
       "type": "DataFrameGroupBy"
     },
     "v97.0": {
-      "repr": "<pandas.api.t...t>",
-      "type": "SeriesGroupBy"
-    },
-    "v97.1": {
       "repr": "<pandas.api.t...t>",
       "type": "SeriesGroupBy"
     },
