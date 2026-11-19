@@ -122,36 +122,46 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
    * Scale the stage canvas to fit its pane, by width and by height (floor 0.6, then the stage scrolls), and
    * show a cue while content is still below the fold.
    */
-  const fitStage = useCallback(() => {
+  const fitStage = useCallback((opts?: { zoom?: boolean }) => {
     const ctl = ctlRef.current;
     const sec = ctl?.stageEl.parentElement;
     const root = sec?.parentElement;
     if (!ctl || !sec || !root) return;
-    const w = ctl.plan?.width ?? 0;
-    const h = ctl.plan?.height ?? 0;
-    delete sec.dataset.overflow; // measure without the cue itself, which adds height
-    // what the stage holds besides the canvas: its top (summary, notes, padding) and bottom padding. Not
-    // `scrollHeight`: a card sliding in from the shelf inflates it mid-animation.
-    const overhead =
-      ctl.stageEl.getBoundingClientRect().top - sec.getBoundingClientRect().top + sec.scrollTop + 9;
-    const kW = (sec.clientWidth - 18) / (w || 1);
-    // stacked: the shelf keeps room under the stage; side by side the stage has the whole pane height
-    const sideBySide = getComputedStyle(root).flexDirection === 'row';
-    // the shelf never clips a card: side by side it is at least as wide as its widest card (the stage gives way)
-    const shelfSec = root.querySelector<HTMLElement>('.md-shelf-sec');
-    if (shelfSec) {
-      let need = 0;
-      if (sideBySide)
-        for (const c of shelfSec.querySelectorAll<HTMLElement>('.md-slot:not([hidden]) .md-card'))
-          need = Math.max(need, c.offsetWidth);
-      shelfSec.style.minWidth = need ? `${need + 20}px` : '';
+    // `zoom: false` only refreshes the overflow cue. The zoom is set once per step, before the cards fly (the
+    // controller calls this as `fit`, between placing them and measuring where they land) and not again
+    // while they fly: a late re-fit would move everything a second time.
+    if (opts?.zoom !== false) {
+      const w = ctl.plan?.width ?? 0;
+      const h = ctl.plan?.height ?? 0;
+      delete sec.dataset.overflow; // measure without the cue itself, which adds height
+      // stacked: the shelf keeps room under the stage; side by side the stage has the whole pane height
+      const sideBySide = getComputedStyle(root).flexDirection === 'row';
+      // the shelf never clips a card: side by side it is at least as wide as its widest card (the stage gives
+      // way). Set before the stage's width is read: the first fit must not use the width the shelf is leaving.
+      const shelfSec = root.querySelector<HTMLElement>('.md-shelf-sec');
+      if (shelfSec) {
+        let need = 0;
+        if (sideBySide)
+          for (const c of shelfSec.querySelectorAll<HTMLElement>('.md-slot:not([hidden]) .md-card'))
+            need = Math.max(need, c.offsetWidth);
+        shelfSec.style.minWidth = need ? `${need + 20}px` : '';
+      }
+      // what the stage holds besides the canvas: its top (summary, notes, padding) and bottom padding. Not
+      // `scrollHeight`: a card sliding in from the shelf inflates it mid-animation.
+      const overhead =
+        ctl.stageEl.getBoundingClientRect().top -
+        sec.getBoundingClientRect().top +
+        sec.scrollTop +
+        9;
+      const kW = (sec.clientWidth - 18) / (w || 1);
+      const reserve = sideBySide ? 0 : STAGE_RESERVE;
+      const kH = (root.clientHeight - reserve - overhead - 2) / (h || 1);
+      const k = w > 0 ? Math.max(MIN_STAGE_SCALE, Math.min(1, kW, kH)) : 1;
+      // CSS zoom, not a transform: the layout box shrinks with it, so the stage's height and scroll area follow
+      // (and a transform would make the stage the containing block of the flying cards, which are fixed).
+      ctl.stageEl.style.zoom = k < 1 ? String(k) : '';
+      scale.current = k;
     }
-    const reserve = sideBySide ? 0 : STAGE_RESERVE;
-    const kH = (root.clientHeight - reserve - overhead - 2) / (h || 1);
-    const k = w > 0 ? Math.max(MIN_STAGE_SCALE, Math.min(1, kW, kH)) : 1;
-    // CSS zoom, not a transform: the layout box shrinks with it, so the stage's height and scroll area follow
-    ctl.stageEl.style.zoom = k < 1 ? String(k) : '';
-    scale.current = k;
     // a few px of blank under the last card is not "more": the cue needs real hidden content
     if (
       sec.scrollHeight > sec.clientHeight + CUE_SLACK &&
@@ -175,24 +185,25 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
       prev.step !== n &&
       useStore.getState().stepSingle;
     applied.current = { mounted, step: n };
-    ctl.setStep(n, { animate });
+    // the zoom for this step's stage is set inside setStep, before the cards' landing places are measured
+    ctl.setStep(n, { animate, fit: fitStage });
     if (useStore.getState().stepSingle) useStore.setState({ stepSingle: false });
     hover.current = null;
-    fitStage();
-    // the cue measures overflow, which is only true once the cards have landed
-    const settle = setTimeout(fitStage, ANIMATION_SETTLE_MS);
+    // the cue measures overflow, which is only true once the cards have landed (no zoom change here)
+    const settle = setTimeout(() => fitStage({ zoom: false }), ANIMATION_SETTLE_MS);
     return () => clearTimeout(settle);
   }, [step, mounted, fitStage]);
   useEffect(() => {
     const sec = ctlRef.current?.stageEl.parentElement;
     if (!sec) return;
-    sec.addEventListener('scroll', fitStage);
-    return () => sec.removeEventListener('scroll', fitStage);
+    const cue = (): void => fitStage({ zoom: false });
+    sec.addEventListener('scroll', cue);
+    return () => sec.removeEventListener('scroll', cue);
   }, [mounted, fitStage]);
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
-    const ro = new ResizeObserver(fitStage);
+    const ro = new ResizeObserver(() => fitStage());
     ro.observe(host);
     // the summary sentence wraps to more or fewer lines as the step changes, which changes the room left
     if (head) ro.observe(head);

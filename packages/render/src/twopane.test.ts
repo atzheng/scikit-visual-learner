@@ -951,6 +951,11 @@ describe('planMoves (pure)', () => {
       { key: 'c', kind: 'enter', dx: 0, dy: 0 },
     ]);
   });
+  test('a card that only changed size (the stage zoom changed) is animated', () => {
+    const b = new Map([['a', { x: 10, y: 20, w: 100, h: 50 }]]);
+    const a = new Map([['a', { x: 10, y: 20, w: 60, h: 30 }]]);
+    expect(planMoves(b, a)).toEqual([{ key: 'a', kind: 'move', dx: 0, dy: 0 }]);
+  });
   test('a shelf card that kept its place in the shelf does not slide when the stage resizes', () => {
     // the whole shelf moved down 40px (the stage grew); a goes shelf -> stage
     const b = new Map([

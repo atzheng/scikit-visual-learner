@@ -920,6 +920,12 @@ export interface SetStepOptions {
    * jumps, event-list clicks and re-runs snap. `prefers-reduced-motion: reduce` always snaps.
    */
   animate?: boolean;
+  /**
+   * Called once the new step's cards are placed and before the animation measures where they land. The host
+   * sets the stage zoom here, so the cards fly to their final, already zoomed places and nothing is re-fitted
+   * mid-flight. Called for snapping steps too.
+   */
+  fit?: () => void;
 }
 
 /** Animation length in ms. */
@@ -957,7 +963,12 @@ export function planMoves(
     const ra = rel?.after.get(key);
     if (b && rb && ra && Math.abs(rb.x - ra.x) < 1 && Math.abs(rb.y - ra.y) < 1) continue;
     if (!b) out.push({ key, kind: 'enter', dx: 0, dy: 0 });
-    else if (Math.abs(b.x - a.x) >= 1 || Math.abs(b.y - a.y) >= 1)
+    else if (
+      Math.abs(b.x - a.x) >= 1 ||
+      Math.abs(b.y - a.y) >= 1 ||
+      Math.abs(b.w - a.w) >= 1 ||
+      Math.abs(b.h - a.h) >= 1
+    )
       out.push({ key, kind: 'move', dx: b.x - a.x, dy: b.y - a.y });
   }
   return out;
@@ -1312,12 +1323,21 @@ export async function mountTwoPane(
     }
     return { abs, rel };
   };
+  /**
+   * The host's CSS zoom on the stage: lengths of anything inside it, a fixed card's `left`/`top` and its
+   * transforms too, are in zoomed units. Cards on the shelf are outside it.
+   */
+  const zoomOf = (w: HTMLElement): number => {
+    if (!canvas.contains(w)) return 1;
+    const z = Number.parseFloat(doc.defaultView?.getComputedStyle(canvas).zoom ?? '1');
+    return Number.isFinite(z) && z > 0 ? z : 1;
+  };
   const play = (target: Element, frames: Keyframe[], lifted?: Rect | null): void => {
     if (typeof target.animate !== 'function') return;
     const anim = target.animate(frames, { duration: MOVE_MS, easing: 'ease-out' });
     running.push(anim);
     if (lifted && target instanceof HTMLElement) {
-      const restore = lift(target, lifted);
+      const restore = lift(target, lifted, zoomOf(target));
       anim.onfinish = restore;
       restores.push(restore);
     }
@@ -1325,7 +1345,7 @@ export async function mountTwoPane(
   // While a card flies it is drawn above everything: `position: fixed` at its final place (the stage clips
   // its overflow, so a card flying out of or into it would be cut) with a top z-index. A placeholder of the
   // same size keeps its shelf slot from collapsing. The restore puts the inline styles back exactly.
-  const lift = (w: HTMLElement, at: Rect): (() => void) => {
+  const lift = (w: HTMLElement, at: Rect, zoom: number): (() => void) => {
     const keep = ['position', 'left', 'top', 'zIndex'].map(
       (k) => [k, w.style.getPropertyValue(k === 'zIndex' ? 'z-index' : k)] as const,
     );
@@ -1338,8 +1358,8 @@ export async function mountTwoPane(
       w.before(ph);
     }
     w.style.position = 'fixed';
-    w.style.left = `${at.x}px`;
-    w.style.top = `${at.y}px`;
+    w.style.left = `${at.x / zoom}px`;
+    w.style.top = `${at.y / zoom}px`;
     w.style.zIndex = String(FLY_Z);
     let done = false;
     return () => {
@@ -1592,19 +1612,59 @@ export async function mountTwoPane(
         );
     }
     rove();
-    if (before) {
+    // the host zooms the stage to this step's plan now, so the landing places measured below are final
+    sopts.fit?.();
+    if (before) flyCards(before, prevWires);
+    // a card that was re-parented loses focus: it keeps it, wherever it went
+    if (
+      hadFocus &&
+      (active instanceof HTMLElement || active instanceof SVGElement) && // a card's box is an svg <g>
+      active.isConnected &&
+      doc.activeElement !== active
+    )
+      active.focus({ preventScroll: true });
+    if (hadFocus && active instanceof HTMLElement && active.isConnected === false) {
+      const again = root.querySelector('[tabindex="0"]');
+      if (again instanceof HTMLElement && !root.contains(doc.activeElement)) again.focus();
+    }
+  }
+
+  /**
+   * The animation, from the measured `before` to the DOM as it is now (already zoomed): cards move, resize and
+   * enter, new wires fade in. One place, so a later two-phase version (clear, rearrange, bring in) can split it.
+   */
+  function flyCards(
+    before: { abs: Map<string, Rect | null>; rel: Map<string, Rect | null> },
+    prevWires: ReadonlySet<string>,
+  ): void {
+    {
       const byKey = new Map(allCards());
       const after = measureCards();
       for (const mv of planMoves(before.abs, after.abs, { before: before.rel, after: after.rel })) {
         const w = byKey.get(mv.key);
         if (!w) continue;
-        if (mv.kind === 'move')
+        if (mv.kind === 'move') {
+          const b = before.abs.get(mv.key)!;
+          const a = after.abs.get(mv.key)!;
+          // viewport px -> the card's own (zoomed) units; a card that changes size (the stage zoom changed)
+          // grows or shrinks along the way instead of popping
+          const k = zoomOf(w);
+          const sx = a.w > 0 ? b.w / a.w : 1;
+          const sy = a.h > 0 ? b.h / a.h : 1;
+          const scaled = Math.abs(sx - 1) > 0.005 || Math.abs(sy - 1) > 0.005;
+          const origin = scaled ? { transformOrigin: '0 0' } : {};
           play(
             w,
-            [{ transform: `translate(${mv.dx}px, ${mv.dy}px)` }, { transform: 'none' }],
-            after.abs.get(mv.key),
+            [
+              {
+                transform: `translate(${mv.dx / k}px, ${mv.dy / k}px)${scaled ? ` scale(${sx}, ${sy})` : ''}`,
+                ...origin,
+              },
+              { transform: 'none', ...origin },
+            ],
+            a,
           );
-        else
+        } else
           play(
             w,
             [
@@ -1618,18 +1678,6 @@ export async function mountTwoPane(
       for (const e of wiresSvg.querySelectorAll('[data-wire]'))
         if (!prevWires.has((e as SVGElement).dataset.wire!))
           play(e, [{ opacity: 0 }, { opacity: 1 }]);
-    }
-    // a card that was re-parented loses focus: it keeps it, wherever it went
-    if (
-      hadFocus &&
-      (active instanceof HTMLElement || active instanceof SVGElement) && // a card's box is an svg <g>
-      active.isConnected &&
-      doc.activeElement !== active
-    )
-      active.focus({ preventScroll: true });
-    if (hadFocus && active instanceof HTMLElement && active.isConnected === false) {
-      const again = root.querySelector('[tabindex="0"]');
-      if (again instanceof HTMLElement && !root.contains(doc.activeElement)) again.focus();
     }
   }
 
