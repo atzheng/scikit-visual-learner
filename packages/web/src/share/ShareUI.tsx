@@ -45,8 +45,17 @@ export function ShareButton() {
   const share = async (withData = true) => {
     setManual(null);
     setCanDrop(false);
-    const files = withData ? sharableFiles(useFiles.getState().files) : {};
-    const r = await encodeShare({ code: source, files });
+    const data = withData
+      ? sharableFiles(useFiles.getState().files)
+      : { files: {}, tooLarge: [], skipped: [] };
+    if (data.tooLarge.length) {
+      setCanDrop(true);
+      return show({
+        kind: 'error',
+        text: `${data.tooLarge.join(', ')} ${data.tooLarge.length > 1 ? 'are' : 'is'} too large to put in a link. You can share the code without the data.`,
+      });
+    }
+    const r = await encodeShare({ code: source, files: data.files });
     if (!r.ok) {
       setCanDrop(r.withoutDataFits && withData);
       return show({ kind: 'error', text: r.error });
@@ -57,7 +66,7 @@ export function ShareButton() {
       show({
         kind: 'ok',
         text: withData
-          ? 'Link copied to the clipboard.'
+          ? `Link copied to the clipboard${data.skipped.length ? `, without ${data.skipped.join(', ')} (not UTF-8 text)` : ''}.`
           : 'Link copied to the clipboard, without the data files.',
       });
     } catch {

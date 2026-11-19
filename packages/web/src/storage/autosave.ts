@@ -7,6 +7,8 @@
 import { fragmentPayload } from '../share/link';
 
 export const AUTOSAVE_KEY = 'machines.source.v1';
+/** Recovery copy of link code the reader edited. Never restored automatically (CONTRACTS.md 10.14). */
+export const LINK_WORK_KEY = 'machines.linkwork.v1';
 export const AUTOSAVE_DELAY_MS = 600;
 
 export type Origin = 'starter' | 'autosave' | 'link' | 'edited';
@@ -31,16 +33,16 @@ export function readAutosave(kv: KV | null): string | null {
   if (!kv) return null;
   try {
     const v = kv.getItem(AUTOSAVE_KEY);
-    return v !== null && v.trim() !== '' ? v : null;
+    return v; // '' is a real save: an emptied editor stays empty
   } catch {
     return null;
   }
 }
 
-export function writeAutosave(kv: KV | null, source: string): boolean {
+export function writeAutosave(kv: KV | null, source: string, key = AUTOSAVE_KEY): boolean {
   if (!kv) return false;
   try {
-    kv.setItem(AUTOSAVE_KEY, source);
+    kv.setItem(key, source);
     return true;
   } catch {
     return false; // quota or blocked: the page works without autosave
@@ -56,16 +58,19 @@ export function clearAutosave(kv: KV | null): void {
 }
 
 /**
- * What to do with the current editor state. Code that arrived by link is never saved (it would
- * replace the reader's own code); the starter text is not saved either, and returning to it
- * clears the old autosave so it does not come back at the next load.
+ * What to do with the current editor state (CONTRACTS.md 10.14). The reader's own code lives in
+ * the main slot. Code that arrived by link is never saved while untouched; once edited (origin
+ * 'edited', which only link code reaches) it goes to the separate link slot, so it cannot
+ * replace the reader's earlier work. The starter text is not saved, and returning to it clears
+ * the main slot so an old autosave does not come back.
  */
 export function autosaveAction(s: {
   origin: Origin;
   source: string;
   starter: string;
-}): 'save' | 'clear' | 'skip' {
+}): 'save' | 'save-link' | 'clear' | 'skip' {
   if (s.origin === 'link') return 'skip';
+  if (s.origin === 'edited') return 'save-link';
   return s.source === s.starter ? 'clear' : 'save';
 }
 
@@ -94,15 +99,25 @@ export function createAutosaver(opts: {
   delayMs?: number;
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (t: unknown) => void;
+  /** Called once, the first time a save fails (quota or blocked storage). */
+  onFail?: () => void;
 }): Autosaver {
   const setT = opts.setTimer ?? ((fn, ms) => setTimeout(fn, ms));
   const clearT = opts.clearTimer ?? ((t) => clearTimeout(t as ReturnType<typeof setTimeout>));
   let timer: unknown = null;
+  let warned = false;
+  const wrote = (ok: boolean): void => {
+    if (!ok && !warned) {
+      warned = true;
+      opts.onFail?.();
+    }
+  };
   const apply = (): void => {
     timer = null;
     const s = opts.state();
     const a = autosaveAction({ ...s, starter: opts.starter });
-    if (a === 'save') writeAutosave(opts.kv, s.source);
+    if (a === 'save') wrote(writeAutosave(opts.kv, s.source));
+    else if (a === 'save-link') wrote(writeAutosave(opts.kv, s.source, LINK_WORK_KEY));
     else if (a === 'clear') clearAutosave(opts.kv);
   };
   return {

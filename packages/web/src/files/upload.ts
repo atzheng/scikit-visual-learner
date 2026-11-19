@@ -4,7 +4,7 @@
  * the browser: they go from the File into the worker's filesystem and nowhere else.
  */
 
-import { checkFiles } from '../share/link';
+import { MAX_FILES_CHARS, checkFiles } from '../share/link';
 
 export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 /** SPEC "Hard limits": warn above this many rows. */
@@ -68,26 +68,84 @@ export function rowWarning(name: string, rows: number): string | null {
     : null;
 }
 
-/** Writes every file again, e.g. into a fresh worker. Returns the names that failed. */
+/**
+ * Writes every file again, e.g. into a fresh worker. All writes are posted at once, before the
+ * first ack: the worker handles messages in order, so a Run clicked meanwhile is posted after
+ * every file. Returns the names that failed.
+ */
 export async function replayFiles(
   files: readonly DataFile[],
   write: (name: string, bytes: ArrayBuffer) => Promise<unknown>,
 ): Promise<string[]> {
-  const failed: string[] = [];
-  for (const f of files) {
-    try {
-      await write(f.name, f.bytes.slice().buffer); // a copy: postMessage transfers the buffer
-    } catch {
-      failed.push(f.name);
-    }
-  }
-  return failed;
+  const results = await Promise.allSettled(
+    files.map((f) => write(f.name, f.bytes.slice().buffer)), // a copy: postMessage transfers it
+  );
+  return files.filter((_, i) => results[i]?.status === 'rejected').map((f) => f.name);
 }
 
-/** Text of the files for a share link (SPEC "Share links": small inline data). */
-export function sharableFiles(files: readonly DataFile[]): Record<string, string> {
-  const dec = new TextDecoder();
-  return Object.fromEntries(files.map((f) => [f.name, dec.decode(f.bytes)]));
+export interface ShareFiles {
+  files: Record<string, string>;
+  /** Files too large to inline; their presence means the link cannot carry the data. */
+  tooLarge: string[];
+  /** Files that are not valid UTF-8 and so cannot be shared losslessly; left out. */
+  skipped: string[];
+}
+
+/**
+ * Text of the files for a share link (SPEC "Share links": small inline data). Sizes are checked
+ * on the bytes first, so a large upload is never decoded just to be refused.
+ */
+export function sharableFiles(files: readonly DataFile[]): ShareFiles {
+  const dec = new TextDecoder('utf-8', { fatal: true });
+  const out: ShareFiles = { files: {}, tooLarge: [], skipped: [] };
+  let total = 0;
+  for (const f of files) {
+    total += f.bytes.length; // characters never outnumber bytes, so this is an upper bound
+    if (total > MAX_FILES_CHARS) {
+      out.tooLarge.push(f.name);
+      continue;
+    }
+    try {
+      out.files[f.name] = dec.decode(f.bytes);
+    } catch {
+      out.skipped.push(f.name);
+    }
+  }
+  return out;
+}
+
+/**
+ * Files that came with a link must not replace or hide anything: a name already used by a
+ * student's upload or a course dataset gets a "(link)" suffix. Identical content is not a clash.
+ */
+export function resolveLinkFiles(
+  incoming: readonly DataFile[],
+  existing: readonly DataFile[],
+  reserved: readonly string[],
+): { files: DataFile[]; renamed: { from: string; to: string }[] } {
+  const mine = new Map(existing.filter((f) => f.origin === 'upload').map((f) => [f.name, f]));
+  const taken = new Set([...reserved, ...existing.map((f) => f.name)]);
+  const files: DataFile[] = [];
+  const renamed: { from: string; to: string }[] = [];
+  for (const f of incoming) {
+    const clash = mine.get(f.name);
+    if (clash && sameBytes(clash.bytes, f.bytes)) continue;
+    if (!clash && !reserved.includes(f.name)) {
+      files.push(f);
+      continue;
+    }
+    const stem = f.name.replace(/\.csv$/i, '');
+    let n = 1;
+    let to = `${stem} (link).csv`;
+    while (taken.has(to) || files.some((x) => x.name === to)) to = `${stem} (link ${++n}).csv`;
+    renamed.push({ from: f.name, to });
+    files.push({ ...f, name: to });
+  }
+  return { files, renamed };
+}
+
+function sameBytes(a: Uint8Array, b: Uint8Array): boolean {
+  return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
 /** Adds or replaces by name. */

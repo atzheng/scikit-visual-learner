@@ -1,6 +1,7 @@
 import { STARTER_EXAMPLE } from '../course';
 import { setBaseline } from '../share/shareState';
 import { useStore } from '../store';
+import { useAutosaveNotice } from './notice';
 import { chooseInitial, createAutosaver, getLocalStorage, readAutosave } from './autosave';
 
 /**
@@ -16,7 +17,12 @@ export function initPersistence(): void {
   });
   useStore.setState({ source: initial.source, origin: initial.origin });
   setBaseline(initial.source);
-  const saver = createAutosaver({ kv, state: () => useStore.getState(), starter: STARTER_EXAMPLE });
+  const saver = createAutosaver({
+    kv,
+    state: () => useStore.getState(),
+    starter: STARTER_EXAMPLE,
+    onFail: () => useAutosaveNotice.setState({ failed: true }),
+  });
   useStore.subscribe((s, prev) => {
     if (s.source !== prev.source || s.origin !== prev.origin) saver.schedule();
   });

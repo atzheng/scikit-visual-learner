@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   AUTOSAVE_KEY,
+  LINK_WORK_KEY,
   autosaveAction,
   chooseInitial,
   createAutosaver,
@@ -64,10 +65,14 @@ describe('storage that fails', () => {
     expect(readAutosave(null)).toBeNull();
     expect(writeAutosave(null, 'x')).toBe(false);
   });
-  it('treats a blank autosave as none', () => {
+  it('treats an emptied editor as a real save', () => {
     const kv = memory();
-    kv.setItem(AUTOSAVE_KEY, '  \n');
-    expect(readAutosave(kv)).toBeNull();
+    expect(writeAutosave(kv, '')).toBe(true);
+    expect(readAutosave(kv)).toBe('');
+    expect(chooseInitial({ hash: '', autosave: '', starter: 'S' })).toEqual({
+      source: '',
+      origin: 'autosave',
+    });
   });
   it('getLocalStorage is null when access throws', () => {
     const orig = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
@@ -91,7 +96,7 @@ describe('autosaveAction', () => {
     expect(autosaveAction({ origin: 'link', source: 'x', starter: 's' })).toBe('skip');
   });
   it('saves edits, clears when back at the starter', () => {
-    expect(autosaveAction({ origin: 'edited', source: 'x', starter: 's' })).toBe('save');
+    expect(autosaveAction({ origin: 'edited', source: 'x', starter: 's' })).toBe('save-link');
     expect(autosaveAction({ origin: 'starter', source: 'x', starter: 's' })).toBe('save');
     expect(autosaveAction({ origin: 'autosave', source: 's', starter: 's' })).toBe('clear');
   });
@@ -102,7 +107,7 @@ describe('createAutosaver', () => {
     vi.useFakeTimers();
     try {
       const kv = memory();
-      const st = { origin: 'edited' as const, source: 'a' };
+      const st = { origin: 'autosave' as const, source: 'a' };
       const saver = createAutosaver({ kv, state: () => st, starter: 's', delayMs: 100 });
       saver.schedule();
       st.source = 'ab';
@@ -122,7 +127,7 @@ describe('createAutosaver', () => {
     try {
       const kv = memory();
       kv.setItem(AUTOSAVE_KEY, 'mine');
-      const st: { origin: 'link' | 'edited'; source: string } = {
+      const st: { origin: 'link' | 'edited' | 'autosave'; source: string } = {
         origin: 'link',
         source: 'link code',
       };
@@ -134,20 +139,32 @@ describe('createAutosaver', () => {
       st.source = 'changed';
       saver.schedule();
       saver.flush();
-      expect(kv.getItem(AUTOSAVE_KEY)).toBe('changed');
+      // edited link code goes to its own slot: the reader's own code is untouched
+      expect(kv.getItem(AUTOSAVE_KEY)).toBe('mine');
+      expect(kv.getItem(LINK_WORK_KEY)).toBe('changed');
+      st.origin = 'autosave';
+      st.source = 'my new work';
+      saver.schedule();
+      saver.flush();
+      expect(kv.getItem(AUTOSAVE_KEY)).toBe('my new work');
       vi.advanceTimersByTime(500); // nothing pending any more
       saver.flush();
     } finally {
       vi.useRealTimers();
     }
   });
-  it('does not throw when storage is blocked', () => {
+  it('does not throw when storage is blocked, and reports the failure once', () => {
+    const onFail = vi.fn();
     const saver = createAutosaver({
       kv: throwing,
-      state: () => ({ origin: 'edited', source: 'x' }),
+      state: () => ({ origin: 'autosave', source: 'x' }),
       starter: 's',
+      onFail,
     });
     saver.schedule();
     expect(() => saver.flush()).not.toThrow();
+    saver.schedule();
+    saver.flush();
+    expect(onFail).toHaveBeenCalledTimes(1);
   });
 });

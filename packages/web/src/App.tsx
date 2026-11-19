@@ -7,6 +7,7 @@ import {
   type PointerEvent,
 } from 'react';
 import { FileList, UploadButton, useDropUpload } from './files/FilesUI';
+import { AutosaveNotice } from './storage/notice';
 import { DiagramPane } from './diagram/DiagramPane';
 import { Editor } from './editor/Editor';
 import { OutputPane } from './output/OutputPane';
@@ -182,6 +183,7 @@ export function App() {
         <Toolbar />
         <LinkBanner />
         <FileList />
+        <AutosaveNotice />
       </div>
       <main
         className="panes"

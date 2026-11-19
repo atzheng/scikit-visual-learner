@@ -4,6 +4,7 @@ import {
   MAX_UPLOAD_BYTES,
   countRows,
   replayFiles,
+  resolveLinkFiles,
   rowWarning,
   sharableFiles,
   validateUpload,
@@ -57,20 +58,17 @@ describe('rowWarning', () => {
 });
 
 describe('replayFiles', () => {
-  it('writes every file in order, each with its own buffer copy', async () => {
+  it('posts every write before the first one finishes, with its own buffer copy', async () => {
     const files = [df('a.csv', 'x\n1\n'), df('b.csv', 'y\n2\n')];
-    const seen: [string, string][] = [];
-    const failed = await replayFiles(files, async (n, b) => {
-      seen.push([n, new TextDecoder().decode(b)]);
-      structuredClone(b, { transfer: [b] }); // detaches it, as postMessage does
+    const posted: string[] = [];
+    const pending: (() => void)[] = [];
+    const done = replayFiles(files, (n, b) => {
+      posted.push(`${n}:${new TextDecoder().decode(b)}`);
+      return new Promise<void>((res) => pending.push(res));
     });
-    expect(failed).toEqual([]);
-    expect(seen).toEqual([
-      ['a.csv', 'x\n1\n'],
-      ['b.csv', 'y\n2\n'],
-    ]);
-    // the stored bytes survive for the next restart
-    expect(new TextDecoder().decode(files[0]!.bytes)).toBe('x\n1\n');
+    expect(posted).toEqual(['a.csv:x\n1\n', 'b.csv:y\n2\n']); // both before any ack
+    pending.forEach((r) => r());
+    expect(await done).toEqual([]);
   });
   it('reports failures and keeps going', async () => {
     const failed = await replayFiles([df('a.csv'), df('b.csv')], async (n) => {
@@ -87,12 +85,47 @@ describe('files helpers', () => {
     expect(out.find((f) => f.name === 'a.csv')?.rows).toBe(2);
   });
   it('sharableFiles gives file text by name', () => {
-    expect(sharableFiles([df('a.csv', 'x\n1\n')])).toEqual({ 'a.csv': 'x\n1\n' });
+    expect(sharableFiles([df('a.csv', 'x\n1\n')])).toEqual({
+      files: { 'a.csv': 'x\n1\n' },
+      tooLarge: [],
+      skipped: [],
+    });
+  });
+  it('sharableFiles checks size on bytes and skips non-UTF-8 files', () => {
+    const big: DataFile = { ...df('big.csv'), bytes: new Uint8Array(300 * 1024).fill(97) };
+    const latin1: DataFile = { ...df('l.csv'), bytes: Uint8Array.of(0x78, 0x0a, 0xe9, 0x0a) };
+    const r = sharableFiles([latin1, big]);
+    expect(r.tooLarge).toEqual(['big.csv']);
+    expect(r.skipped).toEqual(['l.csv']);
+    expect(r.files).toEqual({});
   });
 });
 
 describe('starter example', () => {
   it('is the notebook fixture and reads a course dataset', () => {
     expect(STARTER_EXAMPLE).toContain('pd.read_csv("listings.csv")');
+  });
+});
+
+describe('resolveLinkFiles', () => {
+  const link = (name: string, text = 'a\n1\n'): DataFile => ({ ...df(name, text), origin: 'link' });
+  it('adds files that do not clash', () => {
+    const r = resolveLinkFiles([link('n.csv')], [df('m.csv')], ['listings.csv']);
+    expect(r.files.map((f) => f.name)).toEqual(['n.csv']);
+    expect(r.renamed).toEqual([]);
+  });
+  it('renames a link file that clashes with an upload or a course dataset', () => {
+    const r = resolveLinkFiles(
+      [link('m.csv', 'z\n9\n'), link('listings.csv')],
+      [df('m.csv', 'x\n1\n')],
+      ['listings.csv'],
+    );
+    expect(r.files.map((f) => f.name)).toEqual(['m (link).csv', 'listings (link).csv']);
+    expect(r.renamed).toHaveLength(2);
+  });
+  it('ignores identical content, and replaces an earlier link file of the same name', () => {
+    expect(resolveLinkFiles([link('m.csv')], [df('m.csv')], []).files).toEqual([]);
+    const r = resolveLinkFiles([link('k.csv', 'q\n1\n')], [link('k.csv')], []);
+    expect(r.files.map((f) => f.name)).toEqual(['k.csv']);
   });
 });
