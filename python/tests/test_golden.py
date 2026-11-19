@@ -66,12 +66,20 @@ def marks(name: str) -> list[Any]:
 
 
 PARAMS = [pytest.param(n, marks=marks(n), id=n) for n in NAMES]
+FLOAT_NOISE = pytest.mark.no_pyodide(
+    reason="LAPACK in the wasm build differs from native in the last digits of fitted floats"
+)
+# for the two tests that compare printed floats byte for byte
+EXACT_PARAMS = [
+    pytest.param(n, marks=[*marks(n), *([FLOAT_NOISE] if n == "golden_linreg" else [])], id=n)
+    for n in NAMES
+]
 
 
 # -- the checked-in files are what the recorder produces -------------------------------------------
 
 
-@pytest.mark.parametrize("name", PARAMS)
+@pytest.mark.parametrize("name", EXACT_PARAMS)
 def test_log_matches_golden(name: str, env: None) -> None:
     log, _ = recorded(name)
     expected = (gf.LOGS / f"{name}.json").read_text()
@@ -81,7 +89,7 @@ def test_log_matches_golden(name: str, env: None) -> None:
     )
 
 
-@pytest.mark.parametrize("name", PARAMS)
+@pytest.mark.parametrize("name", EXACT_PARAMS)
 def test_stream_matches_golden(name: str, env: None) -> None:
     _, stream = recorded(name)
     expected = (gf.STREAMS / f"{name}.jsonl").read_text()
