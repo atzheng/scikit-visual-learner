@@ -110,6 +110,13 @@ export function wireTypeLabel(
   return token.startsWith('v') ? '' : summaryLabel(values?.[token]);
 }
 
+/** Accessible name of a wire label. `type` is the drawn text (`: float`, or `+ DataFrame` for a chip). */
+export function wireAriaLabel(type: string, name: string, chip: boolean): string {
+  if (chip) return `temporary ${type.slice(2)}, not named: press Enter to show it as a box`;
+  const bare = type.startsWith(': ') ? type.slice(2) : type;
+  return `wire: ${[bare, name && `named ${name}`].filter(Boolean).join(', ')}`;
+}
+
 export function truncate(s: string, max: number): string {
   const one = s.replace(/\s+/g, ' ').trim();
   return one.length > max ? `${one.slice(0, max - 1)}…` : one;
@@ -701,7 +708,7 @@ function buildCall(
     const t = s(
       doc,
       'text',
-      { x: lp.x, y: bottom - (p.nameLabel ? 17 : 11) },
+      { x: lp.x, y: bottom - (p.nameLabel ? 20 : 11) },
       'md-ptype',
       typeText(p.typeLabel),
     );
@@ -1328,14 +1335,7 @@ export function applyState(
     const hasText = visible && (type !== '' || name !== '') && h.anchor !== null;
     toggle(h.label, 'md-hidden', !hasText);
     if (hasText) {
-      const desc = [type, name && `named ${name}`].filter(Boolean).join(', ');
-      setAttr(
-        h.label,
-        'aria-label',
-        chip
-          ? `temporary ${type.slice(2)}, not named: press Enter to show it as a box`
-          : `wire: ${desc}`,
-      );
+      setAttr(h.label, 'aria-label', wireAriaLabel(type, name, chip !== undefined));
       fitLabelRing(h);
     }
   }

@@ -108,7 +108,7 @@ export const LEGEND_ITEMS: LegendItem[] = [
   {
     id: 'type',
     covers: ['type'],
-    label: 'Type: written after a colon, in blue, as in a Python annotation',
+    label: 'Type: written after a colon, as in a Python annotation',
     level: 'more',
     cls: 'md-node md-call',
     draw: (mk) => [mk('text', { x: 22, y: 16 }, 'md-ptype', ': int')],
