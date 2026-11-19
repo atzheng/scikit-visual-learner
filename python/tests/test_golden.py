@@ -411,7 +411,8 @@ def test_edge_input_is_an_error() -> None:
     assert log["status"] == "error" and log["events"] == []
     assert log["error"]["type"] == "RuntimeError"
     assert log["error"]["message"] == "input() is not supported here"
-    assert log["error"]["line"] == 4 and log["output"] == []
+    assert log["error"]["line"] == 4
+    assert [(o["stream"], o["text"]) for o in log["output"]] == [("stdout", "Your name? ")]
 
 
 def test_edge_error_fit_raises() -> None:
