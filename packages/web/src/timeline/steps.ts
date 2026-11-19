@@ -1,5 +1,5 @@
 /** Pure step logic: keyboard stepping, event/site/node lookups. No React, no DOM. */
-import type { EventLog, GraphModel } from '@machines/log';
+import type { EventLog, GraphModel, RunStatus } from '@machines/log';
 
 export function clampStep(step: number, max: number): number {
   return Math.min(Math.max(0, Math.trunc(step) || 0), Math.max(0, max));
@@ -148,4 +148,29 @@ export function nodeForSite(model: GraphModel, log: EventLog, siteId: number): s
     nodeBySite.set(model, c);
   }
   return c.map.get(siteId) ?? null;
+}
+
+/**
+ * The timeline's note about how the run ended: "ends in an error at step 7". Null for a run that finished
+ * normally, is still running, or has no steps. The run ends at its last step.
+ */
+export function endCue(status: RunStatus, running: boolean, max: number): string | null {
+  if (running || max < 1) return null;
+  switch (status) {
+    case 'error':
+      return `ends in an error at step ${max}`;
+    case 'stopped':
+      return `stopped at step ${max}`;
+    case 'timeout':
+      return `hit the time limit at step ${max}`;
+    case 'limit':
+      return `stopped recording at step ${max} (limit)`;
+    default:
+      return null;
+  }
+}
+
+/** True when the output at the last step has more entries than at the current step (output only grows). */
+export function hasLaterOutput(currentCount: number, lastCount: number): boolean {
+  return lastCount > currentCount;
 }

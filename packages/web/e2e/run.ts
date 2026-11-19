@@ -583,6 +583,39 @@ async function main(): Promise<void> {
       await shotBothThemes(page, '06-error');
     });
 
+    await step('edge_error.py: timeline cue at step 1, jump to the error', async () => {
+      await setSource(page, program('edge_error.py'));
+      await runAndWait(page);
+      await gotoStep(page, 1);
+      const { m } = await stepCount(page);
+      const cue = page.getByTestId('run-cue');
+      await cue.waitFor({ timeout: 5000 });
+      check(
+        (await page.getByTestId('run-cue-end').textContent()) ===
+          `The run ends in an error at step ${m}.`,
+        'end cue wording',
+      );
+      check((await page.getByTestId('more-output').count()) === 1, 'more-output hint missing');
+      await page.waitForFunction(
+        () =>
+          /ends in an error/.test(
+            document.querySelector('[data-testid="step-summary-live"]')?.textContent ?? '',
+          ),
+        undefined,
+        { timeout: 5000 },
+      );
+      await settle(page);
+      await shotBothThemes(page, '06b-error-cue');
+      await cue.getByRole('button', { name: `Jump to step ${m}` }).click();
+      check((await stepCount(page)).n === m, 'jump did not reach the last step');
+      check(
+        (await page.getByTestId('more-output').count()) === 0,
+        'more-output hint stays at the end',
+      );
+      check((await cue.getByRole('button').count()) === 0, 'jump button stays at the end');
+      check((await page.getByTestId('run-cue-end').count()) === 1, 'end cue vanished at the end');
+    });
+
     await step('Stop on an infinite loop', async () => {
       await setSource(page, 'import numpy as np\nwhile True:\n    pass\n');
       await runButton(page).click();

@@ -79,6 +79,17 @@
   border: 1px solid var(--border);
 }
 
+/* Text and a warning glyph, not colour alone. */
+.run-cue {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+
+.cue-jump {
+  font-size: 12px;
+  padding: 1px 8px;
+}
+
 .event-label {
   display: block;
 }
