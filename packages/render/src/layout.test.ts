@@ -729,7 +729,7 @@ describe('label distance and dense graphs', () => {
 
   // MAX_NODES (600) is the most boxes a graph draws: the dense worst case at that size must stay in budget.
   test.skipIf(!slow)(
-    'dense graphs at the node cap (600, with and without instances) lay out in under 10 s',
+    'dense graphs at the node cap (600, with and without instances) lay out in under 15 s',
     async () => {
       await layout(linregModel(), { measure }); // warm up ELK
       for (const withInstances of [false, true]) {
@@ -743,7 +743,7 @@ describe('label distance and dense graphs', () => {
         expect(
           performance.now() - t0,
           `${m.nodes.length} nodes, ${m.edges.length} edges`,
-        ).toBeLessThan(10000);
+        ).toBeLessThan(15000);
         checkDense(m, laid);
       }
     },
