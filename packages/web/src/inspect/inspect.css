@@ -213,6 +213,23 @@
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+  /* hidden at rest, shown on row hover or focus; keeps its space (svl-bc0) */
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .inspect-docs {
+    transition: opacity 0.12s;
+  }
+}
+tr:hover > th .inspect-docs,
+tr:focus-within > th .inspect-docs,
+.inspect-docs:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .inspect-docs {
+    opacity: 1;
+  }
 }
 .inspect-docs:hover {
   background: var(--text);
