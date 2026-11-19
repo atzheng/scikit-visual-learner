@@ -15,6 +15,7 @@ import io
 import os
 import struct
 import sys
+import warnings
 from collections.abc import Callable
 from typing import Any
 
@@ -22,6 +23,18 @@ __all__ = ["MplHook", "close_figures", "png_size"]
 
 _PYPLOT = "matplotlib.pyplot"
 _PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+
+
+_FLOAT_XY_MESSAGE = r"The [xy] parameter as float was deprecated"
+
+
+def _deprecation_category() -> type[Warning]:
+    try:
+        from matplotlib import MatplotlibDeprecationWarning
+
+        return MatplotlibDeprecationWarning  # type: ignore[no-any-return]
+    except ImportError:  # pragma: no cover
+        return DeprecationWarning
 
 
 def png_size(data: bytes) -> tuple[int, int]:
@@ -146,7 +159,15 @@ class MplHook:
         for num in list(plt.get_fignums()):
             fig = plt.figure(num)
             buf = io.BytesIO()
-            fig.savefig(buf, format="png", dpi=100)
+            with warnings.catch_warnings():
+                # Pyodide's matplotlib build passes float x/y to draw_text for every drawn text
+                # (CPython does not). Hide only that warning, only while we render the figure.
+                warnings.filterwarnings(
+                    "ignore",
+                    message=_FLOAT_XY_MESSAGE,
+                    category=_deprecation_category(),
+                )
+                fig.savefig(buf, format="png", dpi=100)
             data = buf.getvalue()
             w, h = png_size(data)
             self.emit_figure(base64.b64encode(data).decode("ascii"), w, h)
