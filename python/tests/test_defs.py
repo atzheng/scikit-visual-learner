@@ -46,6 +46,26 @@ def test_class_site_fields() -> None:
     assert b["def"]["signature"] == "D(…)"
 
 
+@pytest.mark.parametrize(
+    ("source", "sig"),
+    [
+        ("@d\ndef f(x): pass\n", "f(…)"),
+        ("@d\nclass C:\n    def __init__(self, a): pass\n", "C(…)"),
+        ("class C(metaclass=M):\n    def __init__(self, a): pass\n", "C(…)"),
+        ("class C(B, flag=1):\n    def __init__(self, a): pass\n", "C(…)"),
+        ("class C:\n    def __new__(cls, a): pass\n    def __init__(self, b): pass\n", "C(…)"),
+        ("class C:\n    def __call__(self, a): pass\n    def __init__(self, b): pass\n", "C(…)"),
+        ("class C:\n    @d\n    def __init__(self, a): pass\n", "C(…)"),
+        ("class C(B):\n    pass\n", "C(…)"),
+        ("class C(B):\n    def __init__(self, a, b=1): pass\n", "C(a, b=1)"),
+        ("class C:\n    def __init__(self, a): pass\n", "C(a)"),
+        ("def f(x, y=2): pass\n", "f(x, y=2)"),
+    ],
+)
+def test_signature_is_only_shown_when_nothing_can_change_it(source: str, sig: str) -> None:
+    assert defs(source)[0]["def"]["signature"] == sig
+
+
 def test_def_sites_are_appended_after_import_sites() -> None:
     ins = instrument("import os\ndef f(): pass\nx = f()\n")
     assert [s["kind"] for s in ins.sites] == ["call", "bind", "import", "def"]

@@ -466,20 +466,25 @@ def _def_sites(
 
 
 def _def_signature(stmt: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> str:
-    """`f(x, y=2)`; a class shows its `__init__` without `self` (`C()` for a class with no bases
-    and no `__init__`, `C(…)` when the constructor is inherited or a decorator may change it)."""
+    """`f(x, y=2)`; a class shows its `__init__` without `self`. No false labels: the signature is
+    `name(…)` whenever something may change the callable's parameters: a decorator (function or
+    class), a class with keywords (a metaclass), a `__new__` or `__call__` in the class body, a
+    decorated `__init__`, or a constructor that is inherited. `C()` only for a plain class with
+    no bases, keywords, decorators or `__init__`."""
+    unknown = f"{stmt.name}(…)"
+    if stmt.decorator_list:
+        return unknown
     if isinstance(stmt, ast.ClassDef):
-        init = next(
-            (
-                m
-                for m in stmt.body
-                if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef)) and m.name == "__init__"
-            ),
-            None,
-        )
+        methods = {
+            m.name: m for m in stmt.body if isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef))
+        }
+        if stmt.keywords or "__new__" in methods or "__call__" in methods:
+            return unknown
+        init = methods.get("__init__")
         if init is None:
-            plain = not stmt.bases and not stmt.keywords and not stmt.decorator_list
-            return f"{stmt.name}()" if plain else f"{stmt.name}(…)"
+            return f"{stmt.name}()" if not stmt.bases else unknown
+        if init.decorator_list:
+            return unknown
         args = _unparse_args(init.args, skip_first=True)
     else:
         args = _unparse_args(stmt.args, skip_first=False)
