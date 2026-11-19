@@ -43,6 +43,12 @@ export interface Size {
 /** A box's size and where its ports sit (x from the box's left edge). */
 export interface BoxSize extends Size {
   ports: Record<string, number>;
+  /**
+   * svl-u3v: the box is the callee's own card (a function, a class or the module of the call): the stage draws it
+   * where the call box would stand, wires the call's ports to its edges, and labels it with `label`.
+   */
+  callee?: true;
+  label?: string;
 }
 
 export interface PlanItem {
@@ -82,6 +88,10 @@ export interface StagePlan {
    * inside that card (canvas coordinates) and there is no separate call box.
    */
   nested?: true;
+  /** svl-u3v: the call box is the callee's own card (an item with role `callee`), not a card of its own. */
+  calleeBox?: true;
+  /** Text drawn beside a callee card: the call's name (`read_csv` on the `pd` card). Canvas coordinates. */
+  callLabels?: { x: number; y: number; text: string }[];
   /** Nested layouts: the method boxes, one per call, in call order. */
   boxes?: Rect[];
   /** Line groups (svl-qol, `planLine`): every call drawn, in call order; `box` is the current one's. */
@@ -184,7 +194,10 @@ export function planStage(
 
   // the callee (svl-jl3, a function or class block) stands where the owner does, left of the call box; a call
   // with a callee has no owner, so there is one participant on the left
-  const owner = stage.participants.find((p) => p.role === 'owner' || p.role === 'callee');
+  const calleeP = box.callee ? stage.participants.find((p) => p.role === 'callee') : undefined;
+  const owner = stage.participants.find(
+    (p) => p.role === 'owner' || (p.role === 'callee' && p !== calleeP),
+  );
   const ins = stage.participants.filter((p) => p.role === 'input');
   const outs = stage.participants.filter((p) => p.role === 'output' || p.role === 'created');
   const inH = Math.max(0, ...S(ins).map((s) => s.h));
@@ -194,6 +207,9 @@ export function planStage(
   const cx = boxX + box.w / 2;
   const boxY = ins.length ? inH + STAGE.rowGap : 0;
   const boxRect: Rect = { x: boxX, y: boxY, w: box.w, h: box.h };
+  // svl-u3v: the callee's card is the call box
+  if (calleeP) place(calleeP, boxX, boxY);
+  const labelW = calleeP && box.label ? Math.ceil(box.label.length * 7.2) + 12 : 0;
 
   // vertical gaps: the wires' horizontal runs sit in the gap, one level per wire
   const level = (k: number, n: number, y0: number, y1: number): number =>
@@ -316,7 +332,7 @@ export function planStage(
     const w =
       Math.ceil(Math.min(VALUE_MAX_CHARS, Math.max(...lines.map((l) => l.length))) * 7.2) + 16;
     const h = lines.length * 18;
-    let x = boxX + box.w + STAGE.valuesGap;
+    let x = boxX + box.w + STAGE.valuesGap + labelW;
     let y = boxY;
     // beside the box would make a wide canvas: put the values under the box's right edge instead when no
     // wire runs through that spot
@@ -364,6 +380,7 @@ export function planStage(
     vals.x += dx;
     vals.y += dy;
   }
+  if (labelW) maxX = Math.max(maxX, boxRect.x + boxRect.w + labelW);
   return {
     width: Math.ceil(maxX + dx + STAGE.margin),
     height: Math.ceil(maxY + dy + STAGE.margin),
@@ -371,6 +388,14 @@ export function planStage(
     items,
     wires,
     values: vals,
+    ...(calleeP
+      ? {
+          calleeBox: true as const,
+          callLabels: box.label
+            ? [{ x: boxRect.x + boxRect.w + 6, y: boxRect.y + boxRect.h / 2, text: box.label }]
+            : [],
+        }
+      : {}),
   };
 }
 
@@ -586,6 +611,8 @@ export interface PlanCall {
   rect: Rect;
   nested: boolean;
   current: boolean;
+  /** svl-u3v: the box is the callee's card (an item of the plan), so no card is made for `node`. */
+  calleeBox?: true;
 }
 
 /** Vertical space between the layouts of two calls that do not share a card (px); wires jog across it. */
@@ -605,7 +632,7 @@ const BAND_GAP = 64;
 export function planLine(
   line: LineStageModel,
   size: (p: StageParticipant) => Size,
-  boxOf: (stage: StageModel) => BoxSize | null,
+  boxOf: (stage: StageModel, calleeOk?: boolean) => BoxSize | null,
   nestedOf: (stage: StageModel) => NestedBox | null,
   mergedOf: (p: StageParticipant) => boolean,
   log?: EventLog,
@@ -642,6 +669,7 @@ export function planLine(
       if (p.role !== 'output' && p.role !== 'created') used.add(cardOf(p));
   });
   // 2. lay each band out
+  const calleesUsed = new Set<string>();
   for (const g of groups) {
     const stages = g.calls.map((k) => line.calls[k]!.stage);
     let plan: StagePlan;
@@ -660,7 +688,11 @@ export function planLine(
       for (const it of plan.items) it.call = g.calls[it.call ?? 0];
     } else {
       const stage = stages[0]!;
-      plan = planStage(stage, size, boxOf(stage), mergedOf, log);
+      // a callee card can be the call box once in a line (a second call of the same block gets a plain box)
+      const cp = stage.participants.find((p) => p.role === 'callee');
+      const ok = cp === undefined || !calleesUsed.has(cp.node);
+      if (cp && ok) calleesUsed.add(cp.node);
+      plan = planStage(stage, size, boxOf(stage, ok), mergedOf, log);
       const tag = `box#${g.calls[0]}`;
       for (const w of plan.wires) {
         if (w.from === 'box') w.from = tag;
@@ -684,6 +716,7 @@ export function planLine(
       if (w.label) w.label.y += dy;
     }
     if (p.values) p.values.y += dy;
+    for (const l of p.callLabels ?? []) l.y += dy;
     if (p.box) p.box = { ...p.box, y: p.box.y + dy };
     if (p.boxes) p.boxes = p.boxes.map((r) => ({ ...r, y: r.y + dy }));
   }
@@ -785,6 +818,7 @@ export function planLine(
         if (w.label) w.label.x += gl;
       }
       if (p.values) p.values.x += gl;
+      for (const l of p.callLabels ?? []) l.x += gl;
       if (p.box) p.box = { ...p.box, x: p.box.x + gl };
       if (p.boxes) p.boxes = p.boxes.map((r) => ({ ...r, x: r.x + gl }));
     }
@@ -832,6 +866,7 @@ export function planLine(
           rect,
           nested: b.nested,
           current: k === last,
+          ...(b.plan.calleeBox ? { calleeBox: true as const } : {}),
         });
     });
   const valuesAll = bands.flatMap((b) =>
@@ -847,7 +882,9 @@ export function planLine(
     values: valuesAll[valuesAll.length - 1] ?? null,
     valuesAll,
     calls: planCalls,
+    callLabels: bands.flatMap((b) => b.plan.callLabels ?? []),
   };
+  if (bands.some((b) => b.plan.calleeBox)) p.calleeBox = true;
   if (cur?.nested) p.nested = true;
   return p;
 }
@@ -1361,10 +1398,37 @@ export async function mountTwoPane(
         p.kind !== 'chip' && (entryOf.get(p.node)?.objects ?? 0) > 1;
       const sizeOf = (p: StageParticipant): Size =>
         p.kind === 'chip' ? chipSize(p) : visualSize(p.node);
-      const boxOf = (sg: StageModel): BoxSize | null =>
-        (sg.kind === 'call' || sg.kind === 'expr' || sg.kind === 'store') && laid.nodes[sg.node]
-          ? boxSize(sg.node)
-          : null;
+      const boxOf = (sg: StageModel, calleeOk = true): BoxSize | null => {
+        if (!(
+          (sg.kind === 'call' || sg.kind === 'expr' || sg.kind === 'store') &&
+          laid.nodes[sg.node]
+        ))
+          return null;
+        // svl-u3v: a call whose callee block is certain is drawn as that block's card, with the call's ports
+        // on its top and bottom edges (spread evenly, as the call box spreads them) and its name beside it
+        const cp = sg.participants.find(
+          (p) => p.role === 'callee' && (p.kind === 'import' || p.kind === 'def'),
+        );
+        const cn = byId.get(sg.node);
+        if (calleeOk && cp && cn?.kind === 'call' && laid.nodes[cp.node]) {
+          const sz = visualSize(cp.node);
+          const spread = (ids: string[]): Record<string, number> =>
+            Object.fromEntries(ids.map((id, k) => [id, (sz.w * (k + 1)) / (ids.length + 1)]));
+          return {
+            ...sz,
+            ports: {
+              ...spread(cn.inPorts.map((q) => q.id)),
+              ...spread(cn.outPorts.map((q) => q.id)),
+            },
+            callee: true,
+            // the call's name, unless the card already says it (`train_test_split`, `LinearRegression`)
+            ...((byId.get(cp.node) as { name?: string } | undefined)?.name !== cn.name
+              ? { label: cn.name }
+              : {}),
+          };
+        }
+        return boxSize(sg.node);
+      };
       // svl-qol: every call of the line that has run stays; a line of one call is laid out as before
       if (line && line.calls.length > 1)
         plan = planLine(line, sizeOf, boxOf, (sg) => nestedFor(sg), merged, log);
@@ -1380,8 +1444,8 @@ export async function mountTwoPane(
     if (plan && stage) {
       if (plan.calls) {
         for (const pc of plan.calls)
-          if (!pc.nested) boxCards.set(makeCard(pc.node, pc.node, null), pc.rect);
-      } else if (plan.box && !plan.nested)
+          if (!pc.nested && !pc.calleeBox) boxCards.set(makeCard(pc.node, pc.node, null), pc.rect);
+      } else if (plan.box && !plan.nested && !plan.calleeBox)
         boxCards.set(makeCard(stage.node, stage.node, null), plan.box);
     }
     canvas.classList.toggle(
@@ -1441,11 +1505,17 @@ export async function mountTwoPane(
     // 3. wires, values, notes
     drawWires();
     drawValues(stage);
+    drawLabels();
     stageEmpty.hidden = stage !== null;
     canvas.hidden = stage === null;
     notes(stage);
 
     // 4. card state
+    const curCall = plan?.calls?.find((pc) => pc.current);
+    const currentCallee =
+      plan?.calleeBox && (!plan.calls || curCall?.calleeBox)
+        ? (stage?.participants.find((p) => p.role === 'callee')?.node ?? null)
+        : null;
     const stageIds = new Set<string>();
     if (stage) {
       for (const s of onStage.values()) if (s.card) stageIds.add(s.card.node);
@@ -1484,7 +1554,13 @@ export async function mountTwoPane(
       if (visible.has(c.node))
         for (const k of methodsOf.get(c.node) ?? [])
           if (st.visibleNodes.has(k.id)) visible.add(k.id);
-      const state: StepState = { ...st, visibleNodes: visible, objectBadge };
+      const state: StepState = {
+        ...st,
+        visibleNodes: visible,
+        objectBadge,
+        // the callee's card is the call box: it carries the highlight of the current call
+        ...(stageCard && c.node === currentCallee ? { currentNode: c.node } : {}),
+      };
       c.ctl?.setState(state, log, { owns, versionOf });
       // a method drawn as a call box of its own (the fallback of a line, or a method whose owner is not on the
       // stage) is the current call there: its box inside the owner's card is shown as called, not current
@@ -1693,7 +1769,7 @@ export async function mountTwoPane(
       case 'owner':
         return what ? `owner of ${what}` : 'changed on this line';
       case 'callee':
-        return what ? `called by ${what}` : 'called on this line';
+        return what ? `the call of ${what}` : 'called on this line';
       case 'output':
         return what ? `output of ${what}` : 'output';
       case 'created':
@@ -1854,6 +1930,18 @@ export async function mountTwoPane(
         t.dataset.wire = wk;
         wiresSvg.append(t);
       }
+    }
+  }
+
+  /** The call's name beside a callee card (`read_csv` beside `pd (pandas)`); the card's own name says the same. */
+  function drawLabels(): void {
+    for (const e of canvas.querySelectorAll('.md-call-label')) e.remove();
+    for (const l of plan?.callLabels ?? []) {
+      const e = el(doc, 'div', 'md-call-label', `.${l.text}()`);
+      e.setAttribute('aria-hidden', 'true');
+      e.style.left = `${l.x}px`;
+      e.style.top = `${l.y}px`;
+      canvas.append(e);
     }
   }
 

@@ -664,3 +664,13 @@ g[data-doc-attr]:focus-visible > .md-docs-btn {
 .md-stage-canvas.md-nested .md-stage-wires {
   z-index: 2;
 }
+/* svl-u3v: the call's name beside a function or class card that is the call box */
+.md-call-label {
+  position: absolute;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  color: var(--md-text-muted);
+  white-space: nowrap;
+  pointer-events: none;
+}
