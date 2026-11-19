@@ -26,6 +26,11 @@ export interface LayoutOptions {
    * longest over the run. Default: a placeholder of the usual length. The edge's `nameLabel` follows it.
    */
   edgeLabels?: Record<string, string>;
+  /**
+   * Lowest quality tier to use (CONTRACTS section 8). A streaming caller passes the highest tier seen so far
+   * in the run so the layout style does not flip back and forth as the graph grows.
+   */
+  minTier?: 0 | 1 | 2;
 }
 
 /** Where a wire label goes: the rectangle it occupies (absolute coordinates). */
@@ -143,7 +148,13 @@ export const TIER_OPTIONS: Record<string, string>[] = [
   },
 ];
 
-/** Estimated number of long-edge dummy nodes: edges' layer spans under longest-path layering of the model. */
+/** The tier for a `longEdgeLoad`. Callers that re-lay out one run repeatedly keep the max (`minTier`). */
+export function tierFor(load: number): 0 | 1 | 2 {
+  return load > TIER2_LOAD ? 2 : load > TIER1_LOAD ? 1 : 0;
+}
+
+/**
+ * Estimated number of long-edge dummy nodes: edges' layer spans under longest-path layering of the model. */
 export function longEdgeLoad(
   nodes: { id: string; order: number }[],
   edges: { fromNode: string; toNode: string }[],
@@ -237,7 +248,7 @@ function leafSize(
 /** Pure: GraphModel -> ELK input graph. */
 export function buildElkGraph(
   model: GraphModel,
-  opts: { measure?: Measure; attrRows?: Record<string, string[]> } = {},
+  opts: { measure?: Measure; attrRows?: Record<string, string[]>; minTier?: 0 | 1 | 2 } = {},
 ): ElkNode {
   return buildElk(model, opts).graph;
 }
@@ -245,7 +256,7 @@ export function buildElkGraph(
 /** As `buildElkGraph`, also reporting how many edges were dropped for naming a missing node or port. */
 export function buildElk(
   model: GraphModel,
-  opts: { measure?: Measure; attrRows?: Record<string, string[]> } = {},
+  opts: { measure?: Measure; attrRows?: Record<string, string[]>; minTier?: 0 | 1 | 2 } = {},
 ): { graph: ElkNode; dropped: number } {
   const measure = opts.measure ?? defaultMeasure;
   const ids = new Set(model.nodes.map((n) => n.id));
@@ -367,7 +378,10 @@ export function buildElk(
   };
 
   const load = longEdgeLoad(model.nodes, resolved);
-  const tier = load > TIER2_LOAD ? 2 : load > TIER1_LOAD ? 1 : 0;
+  // Tier 2's SEPARATE_CHILDREN leaves wires that cross a compound border without sections, so with instances
+  // that have children the tier is capped at 1.
+  const compound = kids.size > 0 && [...kids.keys()].some((k) => k !== null);
+  const tier = Math.min(Math.max(tierFor(load), opts.minTier ?? 0), compound ? 1 : 2) as 0 | 1 | 2;
   return {
     graph: {
       id: 'root',
@@ -459,7 +473,11 @@ export function toLaid(
 
 export async function layout(model: GraphModel, opts: LayoutOptions = {}): Promise<Laid> {
   const measure = opts.measure ?? defaultMeasure;
-  const { graph, dropped } = buildElk(model, { measure, attrRows: opts.attrRows });
+  const { graph, dropped } = buildElk(model, {
+    measure,
+    attrRows: opts.attrRows,
+    minTier: opts.minTier,
+  });
   if (dropped > 0) console.warn(`layout: dropped ${dropped} edge(s) naming a missing node or port`);
   let out: ElkNode;
   try {
