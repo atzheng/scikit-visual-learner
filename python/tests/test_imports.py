@@ -85,10 +85,13 @@ def test_future_and_relative_imports_have_no_site() -> None:
     assert imports("from __future__ import annotations\nfrom . import x\nfrom .m import y\n") == []
 
 
-def test_import_is_followed_by_a_hook_and_not_rewritten() -> None:
+def test_import_is_wrapped_by_hooks_and_not_rewritten() -> None:
     src = "import os\nfrom sys import path as p\nx = os.getcwd()\nfrom os import *\n"
     out = ast.unparse(instrument(src).tree).splitlines()
-    assert out[:4] == ["import os", "__imp__(2)", "from sys import path as p", "__imp__(3)"]
+    assert out[:6] == [
+        "__imp__(2, True)", "import os", "__imp__(2)",
+        "__imp__(3, True)", "from sys import path as p", "__imp__(3)",
+    ]
     assert out[-1] == "from os import *"  # a star binds nothing: no hook
 
 
@@ -239,3 +242,92 @@ def test_import_in_a_long_loop_does_not_use_up_the_budget() -> None:
     assert [e["name"] for e in r.events if e["name"] == "zeros"] == ["zeros"]
     assert len([e for e in r.events if e["name"] == "import os"]) == 20
     assert r.stdout == plain(src, prelude=False).stdout and r.err is None
+
+
+# -- output printed while an import runs (svl-wqe) -------------------------------------------
+
+
+@pytest.fixture
+def chatty_modules(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    (tmp_path / "chatty_a.py").write_text(
+        "import sys, warnings\nprint('a loads')\nimport chatty_b\n"
+        "print('err', file=sys.stderr)\nwarnings.warn('careful', FutureWarning)\n"
+    )
+    (tmp_path / "chatty_b.py").write_text("print('b loads')\n")
+    (tmp_path / "chatty_bad.py").write_text("print('bad loads')\nraise ValueError('nope')\n")
+    monkeypatch.syspath_prepend(str(tmp_path))
+    for m in ("chatty_a", "chatty_b", "chatty_bad"):
+        sys.modules.pop(m, None)
+    yield
+    for m in ("chatty_a", "chatty_b", "chatty_bad"):
+        sys.modules.pop(m, None)
+
+
+def _out(log: dict[str, Any]) -> list[tuple[int, str]]:
+    return [(o["i"], o["stream"]) for o in log["output"]]
+
+
+def test_import_output_is_tagged_with_the_import_step(chatty_modules: None) -> None:
+    from machines import record
+
+    log = record("import chatty_a\nprint('after')\n")
+    assert [e["name"] for e in log["events"]] == ["import chatty_a"]
+    # nested import output, stderr and the warning all belong to the import step
+    assert _out(log) == [(0, "stdout"), (0, "stderr"), (0, "warning"), (0, "stdout")]
+    assert log["output"][0]["text"] == "a loads\nb loads\n"
+    assert log["output"][3]["text"] == "after\n"
+
+
+def test_import_output_after_earlier_output_and_events(chatty_modules: None) -> None:
+    from machines import record
+
+    log = record("import os\nprint('first')\nimport chatty_b\nprint('last')\n")
+    assert {e["name"]: e["i"] for e in log["events"]} == {"import os": 0, "import chatty_b": 1}
+    # 'first' stays with the previous step, the import's text moves to its own step
+    assert [(o["i"], o["text"]) for o in log["output"]] == [
+        (0, "first\n"),
+        (1, "b loads\n"),
+        (1, "last\n"),
+    ]
+
+
+def test_first_statement_import_output_is_not_tagged_before_any_event(
+    chatty_modules: None,
+) -> None:
+    from machines import record
+
+    log = record("import chatty_b\n")
+    assert [(o["i"], o["text"]) for o in log["output"]] == [(0, "b loads\n")]
+
+
+def test_failed_import_output_stays_with_the_previous_step(chatty_modules: None) -> None:
+    from machines import record
+
+    log = record("import os\ntry:\n    import chatty_bad\nexcept ValueError:\n    print('caught')\n")
+    assert [e["name"] for e in log["events"]] == ["import os"]
+    assert [(o["i"], o["text"]) for o in log["output"]] == [(0, "bad loads\ncaught\n")]
+
+
+def test_failed_first_import_keeps_the_no_event_tag(chatty_modules: None) -> None:
+    from machines import record
+
+    log = record("try:\n    import chatty_bad\nexcept ValueError:\n    pass\n")
+    assert log["events"] == []
+    assert [(o["i"], o["text"]) for o in log["output"]] == [(-1, "bad loads\n")]
+
+
+def test_star_import_output_is_not_a_step(chatty_modules: None) -> None:
+    from machines import record
+
+    log = record("import os\nfrom chatty_b import *\n")
+    assert [e["name"] for e in log["events"]] == ["import os"]
+    assert [(o["i"], o["text"]) for o in log["output"]] == [(0, "b loads\n")]
+
+
+def test_import_this_output() -> None:
+    from machines import record
+
+    sys.modules.pop("this", None)
+    log = record("print('x')\nimport this\n")
+    sys.modules.pop("this", None)
+    assert [(o["i"], o["text"][:3]) for o in log["output"]] == [(-1, "x\n"), (0, "The")]

@@ -88,10 +88,13 @@ def _store_hook(site: int, base: Any, /) -> None:
         r._store(site, base, sys._getframe(1))
 
 
-def _import_hook(site: int, /) -> None:
+def _import_hook(site: int, begin: bool = False, /) -> None:
     r = _active
     if r is not None:
-        r._import(site, sys._getframe(1))
+        if begin:
+            r._import_begin()
+        else:
+            r._import(site, sys._getframe(1))
 
 
 def _scope_hook(fn: Callable[..., Any], /) -> Callable[..., Any]:
@@ -245,6 +248,8 @@ class Recorder:
     def _reset_state(self) -> None:
         self.vt.reset()
         self.current_event = -1
+        self.commit_output: Callable[[], None] | None = None  # runtime seam (svl-wqe)
+        self._import_mark: tuple[int, int] | None = None
         self.limit_hit = False
         self.diagnostics: list[str] = []
         self._events: list[dict[str, Any]] = []
@@ -1276,6 +1281,29 @@ class Recorder:
 
     # -- imports ------------------------------------------------------------------------------
 
+    def _import_begin(self) -> None:
+        """Before an import statement: remember where its output starts (svl-wqe).
+
+        Text printed while the import runs is tagged with the previous event, since the import's
+        own event does not exist yet. Text pending in the runtime is committed first, so the
+        import's output starts a new entry; `_import` retags what was added after this mark. A
+        failed import never reaches `_import`, so its output keeps the previous tag.
+        """
+        if self.commit_output is not None:
+            self.commit_output()
+        self._import_mark = (len(self._output), self.current_event)
+
+    def _retag_import_output(self, i: int) -> None:
+        mark, self._import_mark = self._import_mark, None
+        if mark is None:
+            return
+        if self.commit_output is not None:
+            self.commit_output()
+        start, old = mark
+        for entry in self._output[start:]:
+            if entry["i"] == old:
+                entry["i"] = i
+
     def _import(self, site: int, frame: types.FrameType) -> None:
         """An import statement ran (the hook follows it): one `import` event, a timeline step.
 
@@ -1295,6 +1323,7 @@ class Recorder:
             if alloc is None:
                 return
             i, count, slot = alloc
+            self._retag_import_output(i)
             self._add_event(
                 {
                     "i": i,
