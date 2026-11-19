@@ -121,6 +121,11 @@
           "origin": "const",
           "param": "value",
           "text": "0"
+        },
+        {
+          "origin": "name",
+          "param": "index[mask]",
+          "value": "v2.0"
         }
       ],
       "kind": "store",
@@ -331,6 +336,12 @@
       "end_col": 34,
       "end_line": 8,
       "id": 5,
+      "index": [
+        {
+          "name": "mask",
+          "origin": "name"
+        }
+      ],
       "kind": "store",
       "line": 8,
       "root": "df",

@@ -243,10 +243,14 @@ def test_golden_linreg() -> None:
 
 def test_edge_literals_never_wired() -> None:
     log = checked_in_log("edge_literals")
-    # no scalar token is ever the input of an event: nothing here consumes one
-    assert not any(
-        is_scalar(i["value"]) for e in log["events"] for i in e["inputs"] if "value" in i
-    )
+    # no scalar token is the input of an event, except the output of a call inside an
+    # expression (`x = s.nunique() + 2`, svl-8r4), which is that call's own result
+    outputs_of = {t: e["name"] for e in log["events"] if e["kind"] != "expr" for t in e["outputs"]}
+    for e in log["events"]:
+        for i in e["inputs"]:
+            if "value" in i and is_scalar(i["value"]):
+                assert e["kind"] == "expr" and i["origin"] == "call", (e["name"], i)
+                assert outputs_of[i["value"]].endswith(i["param"].split(".")[-1]), (e["name"], i)
     produced = [t for e in log["events"] for t in e["outputs"]]
     assert len(produced) == len(set(produced))  # no token is the output of two events
     b = bound(log)
