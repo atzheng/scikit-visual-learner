@@ -48,7 +48,8 @@ export const LEGEND_ITEMS: LegendItem[] = [
   {
     id: 'call',
     covers: ['call', 'store'],
-    label: 'Function or method call (also an assignment into a container): inputs above, outputs below',
+    label:
+      'Function or method call: inputs above, outputs below',
     level: 'basic',
     cls: 'md-node md-call',
     draw: (mk) => [box(mk)],
