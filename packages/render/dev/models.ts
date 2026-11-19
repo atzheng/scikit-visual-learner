@@ -247,6 +247,33 @@ export function loopLog(): EventLog {
   return x.log();
 }
 
+/** `for k in range(3): model = SGDRegressor(); model.partial_fit(X, y)`: one box, three different objects (svl-tcy). */
+export function objectLoopLog(): EventLog {
+  const x = new Builder();
+  const s0 = x.site('model = SGDRegressor()', 2);
+  const s1 = x.site('model.partial_fit(X, y)', 3);
+  x.val('v1.0', 'DataFrame', df(100, 3));
+  x.val('v2.0', 'Series', { shape: [100] });
+  x.bind('X', 'v1.0');
+  x.bind('y', 'v2.0');
+  for (let k = 1; k <= 3; k++) {
+    const o = k + 2;
+    x.val(`v${o}.0`, 'SGDRegressor', { machine: true, attrs: {} });
+    x.ev(s0, 'constructor', 'SGDRegressor', { outputs: [`v${o}.0`], count: k });
+    x.bind('model', `v${o}.0`);
+    x.val(`v${o}.1`, 'SGDRegressor', { machine: true, attrs: { n_iter_: `n${k}` } });
+    x.val(`n${k}`, 'int', { repr: String(k) });
+    x.ev(s1, 'method', 'SGDRegressor.partial_fit', {
+      owner: `v${o}.0`,
+      inputs: [wired('X', 'v1.0'), wired('y', 'v2.0')],
+      returns_self: true,
+      mutates: [[`v${o}.0`, `v${o}.1`]],
+      count: k,
+    });
+  }
+  return x.log();
+}
+
 /** Two Ridge instances fitted one after the other: stepping onto b.fit must not mark a's attributes changed. */
 export function twoModelsLog(): EventLog {
   const x = new Builder();
@@ -290,4 +317,5 @@ export const SCENARIOS: { name: string; log: () => EventLog }[] = [
   { name: 'linreg with error', log: () => linregLog({ failAt: 'fit' }) },
   { name: 'linreg interrupted', log: () => linregLog({ interrupt: true }) },
   { name: 'loop (x3 badge)', log: loopLog },
+  { name: 'loop of new objects', log: objectLoopLog },
 ];

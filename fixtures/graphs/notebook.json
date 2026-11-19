@@ -90,7 +90,8 @@
       "versions": [
         {
           "i": 0,
-          "token": "v0.0"
+          "token": "v0.0",
+          "kind": "new"
         }
       ]
     },
@@ -140,7 +141,8 @@
       "versions": [
         {
           "i": 1,
-          "token": "v1.0"
+          "token": "v1.0",
+          "kind": "new"
         }
       ]
     },
@@ -180,7 +182,8 @@
       "versions": [
         {
           "i": 2,
-          "token": "v2.0"
+          "token": "v2.0",
+          "kind": "new"
         }
       ]
     },
@@ -220,7 +223,8 @@
       "versions": [
         {
           "i": 3,
-          "token": "v3.0"
+          "token": "v3.0",
+          "kind": "new"
         }
       ]
     },
@@ -321,7 +325,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v4.0"
+          "token": "v4.0",
+          "kind": "new"
         }
       ]
     },
@@ -338,7 +343,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v5.0"
+          "token": "v5.0",
+          "kind": "new"
         }
       ]
     },
@@ -355,7 +361,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v6.0"
+          "token": "v6.0",
+          "kind": "new"
         }
       ]
     },
@@ -372,7 +379,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v7.0"
+          "token": "v7.0",
+          "kind": "new"
         }
       ]
     },
@@ -446,11 +454,13 @@
       "versions": [
         {
           "i": 5,
-          "token": "v8.0"
+          "token": "v8.0",
+          "kind": "new"
         },
         {
           "i": 7,
-          "token": "v8.1"
+          "token": "v8.1",
+          "kind": "mutate"
         }
       ]
     },
@@ -602,7 +612,8 @@
       "versions": [
         {
           "i": 9,
-          "token": "v13.0"
+          "token": "v13.0",
+          "kind": "new"
         }
       ]
     },
@@ -642,7 +653,8 @@
       "versions": [
         {
           "i": 11,
-          "token": "v15.0"
+          "token": "v15.0",
+          "kind": "new"
         }
       ]
     },
@@ -692,11 +704,13 @@
       "versions": [
         {
           "i": 12,
-          "token": "v16.0"
+          "token": "v16.0",
+          "kind": "new"
         },
         {
           "i": 13,
-          "token": "v16.1"
+          "token": "v16.1",
+          "kind": "mutate"
         }
       ]
     },
@@ -844,7 +858,8 @@
       "versions": [
         {
           "i": 15,
-          "token": "v19.0"
+          "token": "v19.0",
+          "kind": "new"
         }
       ]
     }

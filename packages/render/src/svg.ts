@@ -119,6 +119,11 @@ export function badgeText(k: number, n: number, atEnd: boolean): string {
   return atEnd ? `×${n}` : `${k} of ${n}`;
 }
 
+/** A box holding a loop's objects: "×3 objects" at the end of the run, "2 of 3 objects" while stepping. */
+export function objectBadgeText(k: number, n: number, atEnd: boolean): string {
+  return atEnd ? `×${n} objects` : `${k} of ${n} objects`;
+}
+
 /** Names whose value differs between two attribute maps (or is new). */
 export function changedAttrs(
   before: Record<string, Token> | undefined,
@@ -818,8 +823,13 @@ export function buildSvg(
         break;
     }
 
-    // ×n badge above the top-right corner (merged boxes only)
-    if (n.kind === 'call' || n.kind === 'expr' || n.kind === 'store') {
+    // ×n badge above the top-right corner (merged boxes only; an instance's counts objects, not runs)
+    if (
+      n.kind === 'call' ||
+      n.kind === 'expr' ||
+      n.kind === 'store' ||
+      (n.kind === 'instance' && n.versions.filter((v) => v.kind === 'new').length > 1)
+    ) {
       const bg = s(
         doc,
         'rect',
@@ -1149,11 +1159,12 @@ export function applyState(
       toggle(h.msg, 'md-hidden', !status);
       // the stopped marker is neutral (no red/amber): style by the group class only
     }
-    const b = state.badge.get(h.id);
+    const isInst = h.node.kind === 'instance';
+    const b = isInst ? state.objectBadge.get(h.id) : state.badge.get(h.id);
     if (h.badge) {
       toggle(h.badge.g, 'md-hidden', !visible || !b);
       if (b) {
-        const t = badgeText(b.k, b.n, atEnd);
+        const t = (isInst ? objectBadgeText : badgeText)(b.k, b.n, atEnd);
         setText(h.badge.text, t);
         const w = Math.max(30, t.length * 6.8 + 12);
         setAttr(h.badge.bg, 'width', String(w));

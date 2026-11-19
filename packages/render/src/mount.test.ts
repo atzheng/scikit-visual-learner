@@ -6,7 +6,7 @@ import ELKBundled from 'elkjs/lib/elk.bundled.js';
 import type { ELK } from 'elkjs/lib/elk-api';
 import { buildGraph, stateAt } from '@machines/log';
 import type { EventLog, GNode, GraphModel } from '@machines/log';
-import { linregLog, loopLog, splitLog, twoModelsLog } from '../dev/models';
+import { linregLog, loopLog, objectLoopLog, splitLog, twoModelsLog } from '../dev/models';
 import { layout } from './layout';
 import type { Laid } from './layout';
 import { createLegend, createLegendList, LEGEND_ITEMS } from './legend';
@@ -465,5 +465,27 @@ describe('folded temporaries', () => {
     expect(calls.click).toEqual([chip!.id, chip!.id]);
     // plain value wires are not chips
     expect(host.querySelectorAll('.md-chip').length).toBe(model.edges.filter((e) => e.chip).length);
+  });
+});
+
+describe('object loops', () => {
+  test('a box holding a loop\'s objects says so: "k of n objects" while stepping, "×n objects" at the end', async () => {
+    const log = objectLoopLog();
+    const { model, laid } = await prepare(log);
+    const c = setup();
+    c.setGraph(model, laid);
+    const box = (): Element =>
+      [...host.querySelectorAll('.md-node')].find(
+        (n) =>
+          n.querySelector('.md-badge') &&
+          n.querySelector('.md-name')?.textContent !== 'SGDRegressor.partial_fit' &&
+          !n.querySelector('.md-port'),
+      )!;
+    expect(box()).toBeDefined();
+    const text = (): string => box().querySelector('.md-badge-text')?.textContent ?? '';
+    c.setState(stateAt(model, log, 4), log); // second pass's constructor
+    expect(text()).toBe('2 of 3 objects');
+    c.setState(stateAt(model, log, model.steps.length), log);
+    expect(text()).toBe('×3 objects');
   });
 });

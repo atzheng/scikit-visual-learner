@@ -277,6 +277,42 @@ describe('merged boxes', () => {
     expect(s4.activeToken.get(fromLoad.id)).toBe('s1');
   });
 
+  test('a loop box holding different objects: activeVersion and objectBadge follow the pass', () => {
+    // d = make(); d.drop(inplace=True)   -- twice, from the same two sites (events 0..3)
+    const b = new B();
+    const s0 = b.site('d = make()', 1);
+    const s1 = b.site('d.drop(inplace=True)', 2);
+    for (const t of ['v1.0', 'v1.1', 'v2.0', 'v2.1']) b.val(t, 'DF');
+    b.ev(s0, 'function', 'make', { outputs: ['v1.0'] });
+    b.ev(s1, 'method', 'DataFrame.drop', {
+      owner: 'v1.0',
+      inputs: [konst('inplace', 'True')],
+      mutates: [['v1.0', 'v1.1']],
+    });
+    b.ev(s0, 'function', 'make', { outputs: ['v2.0'], count: 2 });
+    b.ev(s1, 'method', 'DataFrame.drop', {
+      owner: 'v2.0',
+      inputs: [konst('inplace', 'True')],
+      mutates: [['v2.0', 'v2.1']],
+      count: 2,
+    });
+    const lg = b.log();
+    const m = build(lg);
+    const boxes = m.nodes.filter((n): n is InstanceNode => n.kind === 'instance');
+    expect(boxes).toHaveLength(1);
+    const d = boxes[0]!;
+    expect(d.versions.map((v) => v.kind)).toEqual(['new', 'mutate', 'new', 'mutate']);
+    const at = (s: number) => stateAt(m, lg, s);
+    expect(at(1).activeVersion.get(d.id)).toBe('v1.0');
+    expect(at(1).objectBadge.get(d.id)).toEqual({ k: 1, n: 2 });
+    expect(at(2).activeVersion.get(d.id)).toBe('v1.1');
+    expect(at(2).objectBadge.get(d.id)).toEqual({ k: 1, n: 2 });
+    expect(at(3).activeVersion.get(d.id)).toBe('v2.0'); // a new object, not v1.1 changed
+    expect(at(3).objectBadge.get(d.id)).toEqual({ k: 2, n: 2 });
+    expect(at(4).activeVersion.get(d.id)).toBe('v2.1');
+    expect(at(m.steps.length).objectBadge.get(d.id)).toEqual({ k: 2, n: 2 });
+  });
+
   test('slot executions (non-contiguous i) step correctly', () => {
     const b = new B();
     const s = b.site('f(x)', 1);
