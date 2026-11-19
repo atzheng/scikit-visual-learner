@@ -721,3 +721,21 @@ describe('methods split per owner instance', () => {
     expect(f.outPorts.map((p) => p.id)).toEqual(['out:mut:self']);
   });
 });
+
+describe('producer order', () => {
+  test('a consumer that ran before the producing event gets a source node, not a wire', () => {
+    const b = new B();
+    const s0 = b.site('np.round(coefs)', 1);
+    const s1 = b.site('model.coef_', 2);
+    b.val('v1.0', 'ndarray', { shape: [3] });
+    b.ev(s0, 'function', 'np.round', { inputs: [wired('a', 'v1.0')], outputs: ['v2.0'] });
+    b.val('v2.0', 'ndarray', { shape: [3] });
+    b.ev(s1, 'expr', 'model.coef_', { inputs: [], outputs: ['v1.0'] });
+    const m = build(b.log());
+    const round = byName(m, 'np.round');
+    const into = edgeInto(m, round.id, 'in:a');
+    expect(into).toHaveLength(1);
+    const from = m.nodes.find((n) => n.id === into[0]?.from.node);
+    expect(from?.kind).toBe('source');
+  });
+});

@@ -705,6 +705,27 @@ alias = models["rf"]
     assert not [e for e in r.events if e["name"] == 'models["rf"]']  # plain aliasing: no node
 
 
+def test_attribute_read_after_a_call_consumed_the_value_stays_an_alias() -> None:
+    r = record(
+        FRAME
+        + """
+df = pd.DataFrame({"a": [1.0, 2.0, 4.0], "b": [1.0, 0.0, 3.0]})
+m = LinearRegression().fit(df[["a"]], df["b"])
+rr = np.round(m.coef_)
+coefs = m.coef_
+"""
+    )
+    assert not [e for e in r.events if e["name"] == "m.coef_" and e["outputs"]]
+    assert r.bound("coefs") in [i["value"] for e in r.events for i in e["inputs"] if "value" in i]
+
+
+def test_attribute_read_with_no_tokened_name_emits_nothing() -> None:
+    rec = Recorder([], RunConfig())
+    ev_before = len(rec._events)
+    assert rec._expr_event(0, "k", "m.coef_", ["m"], object(), (), reuse="v1.0") == "v1.0"
+    assert len(rec._events) == ev_before
+
+
 def test_hidden_call_becomes_expression_event() -> None:
     r = record(
         FRAME

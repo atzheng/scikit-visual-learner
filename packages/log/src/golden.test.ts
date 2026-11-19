@@ -34,7 +34,7 @@ if (process.env.UPDATE_GRAPHS) {
 
 describe('fixtures', () => {
   it('has the 26 programs', () => {
-    expect(names.length).toBe(26);
+    expect(names.length).toBe(27);
   });
 
   describe.each(names)('%s', (n) => {

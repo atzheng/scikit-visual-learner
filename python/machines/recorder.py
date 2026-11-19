@@ -243,6 +243,7 @@ class Recorder:
         self._events: list[dict[str, Any]] = []
         self._by_i: dict[int, dict[str, Any]] = {}  # the events in `_events`, by `i`
         self._slots: dict[str, dict[str, Any]] = {}
+        self._consumed: set[str] = set()  # tokens already an input of some recorded event
         self._produced: set[str] = set()  # tokens that are the output of some recorded event
         self._bindings: list[list[Any]] = []  # [event, name, token, slot_key?]
         self._bslots: dict[str, list[Any]] = {}
@@ -963,6 +964,7 @@ class Recorder:
                 self._events = [e for e in self._events if e is not old]
                 self._by_i.pop(old["i"], None)
             self._slots[ev["merge_key"]] = ev
+        self._consumed.update(i["value"] for i in ev["inputs"] if "value" in i)
         self._produced.update(ev["outputs"])
         self._produced.update(m[1] for m in ev["mutates"])
         self._events.append(ev)
@@ -1072,7 +1074,7 @@ class Recorder:
                 # but no producer; show the read as an expression that outputs that same token
                 self._check(obj)
                 tok = vt.token(obj)
-                if tok not in self._produced:
+                if tok not in self._produced and tok not in self._consumed:
                     return self._expr_event(
                         site,
                         key,
