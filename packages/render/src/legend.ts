@@ -47,8 +47,8 @@ export const LEGEND_ITEMS: LegendItem[] = [
   },
   {
     id: 'call',
-    covers: ['call'],
-    label: 'Function or method call: inputs above, outputs below',
+    covers: ['call', 'store'],
+    label: 'Function or method call (also an assignment into a container): inputs above, outputs below',
     level: 'basic',
     cls: 'md-node md-call',
     draw: (mk) => [box(mk)],
@@ -76,14 +76,6 @@ export const LEGEND_ITEMS: LegendItem[] = [
     level: 'more',
     cls: 'md-node md-expr',
     draw: (mk) => [mk('text', { x: 22, y: 16 }, 'md-expr-text', 'a + b')],
-  },
-  {
-    id: 'store',
-    covers: ['store'],
-    label: 'Store: an assignment into a container',
-    level: 'more',
-    cls: 'md-node md-store',
-    draw: (mk) => [box(mk, { rx: 4 })],
   },
   {
     id: 'source',

@@ -288,8 +288,9 @@
 /* method not called yet: drawn like any call box; a small text cue under the name, no ports (svl-1x4) */
 .md-diagram .md-uncalled-cue {
   display: none;
-  font-size: 10px;
-  fill: var(--md-text-muted);
+  font-size: 11px;
+  font-style: italic;
+  fill: var(--md-text);
   text-anchor: middle;
 }
 .md-uncalled-bar {
@@ -422,8 +423,8 @@
   margin: 6px 0 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 6px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 12px;
 }
 .md-legend li {
   display: flex;
