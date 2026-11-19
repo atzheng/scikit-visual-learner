@@ -241,6 +241,7 @@ class Recorder:
         self.limit_hit = False
         self.diagnostics: list[str] = []
         self._events: list[dict[str, Any]] = []
+        self._by_i: dict[int, dict[str, Any]] = {}  # the events in `_events`, by `i`
         self._slots: dict[str, dict[str, Any]] = {}
         self._bindings: list[list[Any]] = []  # [event, name, token, slot_key?]
         self._bslots: dict[str, list[Any]] = {}
@@ -946,7 +947,7 @@ class Recorder:
         """The error of `ev` was caught. An event already streamed is sent again (same `i`), so
         the assembled log says `handled: true` too."""
         ev["error"]["handled"] = True
-        if any(e is ev for e in self._events) and not any(p is ev for p in self._pending_events):
+        if self._by_i.get(ev["i"]) is ev and not any(p is ev for p in self._pending_events):
             self._pending_events.append(ev)
 
     def _add_event(self, ev: dict[str, Any]) -> None:
@@ -956,8 +957,10 @@ class Recorder:
                 return
             if old is not None:
                 self._events = [e for e in self._events if e is not old]
+                self._by_i.pop(old["i"], None)
             self._slots[ev["merge_key"]] = ev
         self._events.append(ev)
+        self._by_i[ev["i"]] = ev
         self._pending_events.append(ev)
 
     # -- bindings -----------------------------------------------------------------------------

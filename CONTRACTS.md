@@ -269,7 +269,7 @@ Hook signatures, all positional-only in their leading parameters: `__rec__(site,
 
 **Store events.** `__store__` records `kind: 'store'`: inputs are the root's previous version (`param: 'target'`) and the RHS. `__store__` receives only the root, not the RHS object, so the RHS input depends on its origin: `const` gives `{param: 'value', text}`, `name` the named value, `call` the recorded output of that call (omitted when the call was hidden), and `expr` one input per name the expression reads, `param: 'value[<name>]'`, `origin: 'expr'` (the value itself has no token). The output is a **forced** new version of the root, even if the fingerprint did not change.
 
-**Errors.** An exception raised by the callee is recorded on the innermost recorded event with `handled: false` (and the `mutates` the failed call still made), and re-raised unchanged. Enclosing open events get `propagated: true`. If the student's code later continues in the same scope (the exception was caught), the recorder sets `handled: true` on the next hook call made outside the block that is still handling that exception (a call in an `except` or `finally` block that runs while it propagates does not count), or at `close_open` for an error that was not the exception that ended the run. `close_open(None)` is a normal end, `close_open(KeyboardInterrupt)` marks calls still open `interrupted`.
+**Errors.** An exception raised by the callee is recorded on the innermost recorded event with `handled: false` (and the `mutates` the failed call still made), and re-raised unchanged. Enclosing open events get `propagated: true`. If the student's code later continues in the same scope (the exception was caught), the recorder sets `handled: true` on the next hook call made outside the block that is still handling that exception (a call in an `except` or `finally` block that runs while it propagates does not count), or at `close_open` for an error that was not the exception that ended the run. If the event was already streamed it is sent again with the same `i` (section 7), so the assembled log matches `record()`. `close_open(None)` is a normal end, `close_open(KeyboardInterrupt)` marks calls still open `interrupted`.
 
 **Re-entry.** While the recorder summarizes, fingerprints or binds signatures it sets a flag, and every hook passes through.
 
@@ -363,7 +363,7 @@ interface RunConfig { draw_modules: string[]; draw_builtins: boolean; draw_conta
   preview_bytes: number; hash_cells: number }
 ```
 
-- An event is sent once it has finished (or in its slot form). `open` is the full stack of started, unfinished recorded calls at flush time, outermost first.
+- An event is sent once it has finished (or in its slot form), and may be re-sent with the same `i` when its error is later found to be handled (`handled` flips to `true`); the assembler replaces by `i`. A re-sent slot event is dropped if a newer slot event for its merge key has arrived. `open` is the full stack of started, unfinished recorded calls at flush time, outermost first.
 - `currentCall` (only when `crossOriginIsolated`): an `Int32Array(2)` = `[i + 1, site]` of the innermost open recorded call, `0` when none, written by `on_enter`/`on_exit`.
 
 **Assembler** (`assemble.ts`): `createAssembler(runId?: number) → { push(msg: FromWorker): void; finish(status?: RunStatus, currentCall?: { i: number; site: number } | null): EventLog; snapshot(): EventLog }`. `finish`'s `status` overrides the one from `done`; `currentCall` is the decoded buffer (`i = buffer[0] - 1`), passed by the client when it kills the worker.
