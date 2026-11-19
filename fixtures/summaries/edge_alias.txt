@@ -1,0 +1,15 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported LinearRegression from sklearn.linear_model.
+3 (event 2): Called pd.DataFrame({"a": [3, 1, 2], "b": [1.0, 2.0, 3.0]}) from pandas. It created a new DataFrame (3 × 2), df.
+4 (event 3): Called df.copy(). It created a new DataFrame (3 × 2), other.
+5 (event 4): Called LinearRegression() from sklearn.linear_model. It created a new LinearRegression object, m.
+6 (event 5): Computed df[["a"]], a DataFrame (3 × 1).
+7 (event 6): Computed df["b"], a Series of float64 (3).
+8 (event 7): Called m.fit(df[["a"]], df["b"]). It changed 6 attributes of m: coef_, feature_names_in_, intercept_, n_features_in_, rank_, singular_. It returned m itself.
+9 (event 8): Computed bool(k % 2), a bool (False) (pass 1 of 3).
+10 (event 9): Called prev.sort_values("a", ascending=bool(k % 2)). It created a new DataFrame (3 × 2), cur (pass 1 of 3).
+11 (event 10): Computed bool(k % 2), a bool (True) (pass 2 of 3).
+12 (event 11): Called prev.sort_values("a", ascending=bool(k % 2)). It created a new DataFrame (3 × 2), cur.
+13 (event 12): Computed bool(k % 2), a bool (False) (pass 3 of 3).
+14 (event 13): Called prev.sort_values("a", ascending=bool(k % 2)). It created a new DataFrame (3 × 2), cur.

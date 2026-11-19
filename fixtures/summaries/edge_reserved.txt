@@ -1,0 +1,16 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported builtins.
+2 (event 1): Imported pandas as pd.
+3 (event 2): Called pd.DataFrame({"site": [1, 2], "fn": [3, 4]}) from pandas. It created a new DataFrame (2 × 2).
+4 (event 3): Called your function show(df, site="a", fn="b"). It returned a tuple, ('a', 'b', 1).
+5 (event 4): Called your function print(show(df, site="a", fn="b")).
+6 (event 5): Called Child(). It created a new Child object.
+7 (event 6): Called Child().label(). It returned a str ('child+base').
+8 (event 7): Called your function count_locals(). It created a new list (2 items).
+9 (event 8): Called your function print(Child().label(), count_locals()).
+10 (event 9): Computed df["fn"], a Series of int64 (2).
+11 (event 10): Computed df["site"], a Series of int64 (2).
+12 (event 11): Called df.assign(site=df["fn"], fn=df["site"]). It created a new DataFrame (2 × 2).
+13 (event 12): Called df.assign(site=df["fn"], fn=df["site"]).sum(). It created a new Series (2).
+14 (event 13): Called df.assign(site=df["fn"], fn=df["site"]).sum().to_dict(). It created a new dict (2 items).
+15 (event 14): Called your function print(...).

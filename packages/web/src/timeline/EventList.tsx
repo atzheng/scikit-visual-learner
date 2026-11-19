@@ -1,6 +1,7 @@
-import { eventLabel } from '@machines/log';
+import { describeStep, eventLabel } from '@machines/log';
 import { useEffect, useMemo, useRef } from 'react';
 import { useStore } from '../store';
+import { SummaryText } from './SummaryText';
 import { clampStep } from './steps';
 
 /** The run's steps as an ordered list a screen reader can walk. Selecting an item sets the step. */
@@ -12,6 +13,13 @@ export function EventList() {
   const setStep = useStore((s) => s.setStep);
   const labels = useMemo(
     () => (!running && log && model ? model.steps.map((i) => eventLabel(log, i)) : []),
+    [log, model, running],
+  );
+  const summaries = useMemo(
+    () =>
+      !running && log && model
+        ? model.steps.map((_, k) => describeStep(model, log, k + 1, { short: true }))
+        : [],
     [log, model, running],
   );
   const cur = clampStep(step, labels.length);
@@ -39,7 +47,10 @@ export function EventList() {
               aria-current={k + 1 === cur ? 'step' : undefined}
               onClick={() => setStep(k + 1)}
             >
-              {label}
+              <span className="event-label">{label}</span>
+              <span className="event-summary">
+                <SummaryText parts={summaries[k] ?? []} />
+              </span>
             </button>
           </li>
         ))}

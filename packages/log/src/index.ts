@@ -23,3 +23,7 @@ export type {
 } from './graph';
 export { stateAt, eventLabel, stepOfEvent, attrsAround } from './timeline';
 export type { StepState } from './timeline';
+export { attrRows, reprTruncated, sameValue } from './attrs';
+export type { AttrRow } from './attrs';
+export { describeStep, summaryText } from './describe';
+export type { SummaryPart } from './describe';

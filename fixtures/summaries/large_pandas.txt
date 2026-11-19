@@ -1,0 +1,267 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame (500 × 7), df.
+3 (event 2): Computed df["price"], a Series of float64 (500).
+4 (event 3): Called df["price"].median(). It returned a float64 (160.515).
+5 (event 4): Computed df["price"], a Series of float64 (500).
+6 (event 5): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m0.
+7 (event 6): Set column c0 of df.
+8 (event 7): Computed df[["price", "c0"]], a DataFrame (500 × 2).
+9 (event 8): Called df[["price", "c0"]].describe(). It created a new DataFrame (8 × 2), s0.
+10 (event 9): Called df.groupby("c0"). It created a new DataFrameGroupBy object.
+11 (event 10): Computed df.groupby("c0")["price"], a SeriesGroupBy.
+12 (event 11): Called df.groupby("c0")["price"].mean(). It created a new Series (496).
+13 (event 12): Called df.groupby("c0")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g0.
+14 (event 13): Computed df["price"], a Series of float64 (500).
+15 (event 14): Called df["price"].median(). It returned a float64 (160.515).
+16 (event 15): Computed df["price"], a Series of float64 (500).
+17 (event 16): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m1.
+18 (event 17): Set column c1 of df.
+19 (event 18): Computed df[["price", "c1"]], a DataFrame (500 × 2).
+20 (event 19): Called df[["price", "c1"]].describe(). It created a new DataFrame (8 × 2), s1.
+21 (event 20): Called df.groupby("c1"). It created a new DataFrameGroupBy object.
+22 (event 21): Computed df.groupby("c1")["price"], a SeriesGroupBy.
+23 (event 22): Called df.groupby("c1")["price"].mean(). It created a new Series (496).
+24 (event 23): Called df.groupby("c1")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g1.
+25 (event 24): Computed df["price"], a Series of float64 (500).
+26 (event 25): Called df["price"].median(). It returned a float64 (160.515).
+27 (event 26): Computed df["price"], a Series of float64 (500).
+28 (event 27): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m2.
+29 (event 28): Set column c2 of df.
+30 (event 29): Computed df[["price", "c2"]], a DataFrame (500 × 2).
+31 (event 30): Called df[["price", "c2"]].describe(). It created a new DataFrame (8 × 2), s2.
+32 (event 31): Called df.groupby("c2"). It created a new DataFrameGroupBy object.
+33 (event 32): Computed df.groupby("c2")["price"], a SeriesGroupBy.
+34 (event 33): Called df.groupby("c2")["price"].mean(). It created a new Series (496).
+35 (event 34): Called df.groupby("c2")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g2.
+36 (event 35): Computed df["price"], a Series of float64 (500).
+37 (event 36): Called df["price"].median(). It returned a float64 (160.515).
+38 (event 37): Computed df["price"], a Series of float64 (500).
+39 (event 38): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m3.
+40 (event 39): Set column c3 of df.
+41 (event 40): Computed df[["price", "c3"]], a DataFrame (500 × 2).
+42 (event 41): Called df[["price", "c3"]].describe(). It created a new DataFrame (8 × 2), s3.
+43 (event 42): Called df.groupby("c3"). It created a new DataFrameGroupBy object.
+44 (event 43): Computed df.groupby("c3")["price"], a SeriesGroupBy.
+45 (event 44): Called df.groupby("c3")["price"].mean(). It created a new Series (496).
+46 (event 45): Called df.groupby("c3")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g3.
+47 (event 46): Computed df["price"], a Series of float64 (500).
+48 (event 47): Called df["price"].median(). It returned a float64 (160.515).
+49 (event 48): Computed df["price"], a Series of float64 (500).
+50 (event 49): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m4.
+51 (event 50): Set column c4 of df.
+52 (event 51): Computed df[["price", "c4"]], a DataFrame (500 × 2).
+53 (event 52): Called df[["price", "c4"]].describe(). It created a new DataFrame (8 × 2), s4.
+54 (event 53): Called df.groupby("c4"). It created a new DataFrameGroupBy object.
+55 (event 54): Computed df.groupby("c4")["price"], a SeriesGroupBy.
+56 (event 55): Called df.groupby("c4")["price"].mean(). It created a new Series (496).
+57 (event 56): Called df.groupby("c4")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g4.
+58 (event 57): Computed df["price"], a Series of float64 (500).
+59 (event 58): Called df["price"].median(). It returned a float64 (160.515).
+60 (event 59): Computed df["price"], a Series of float64 (500).
+61 (event 60): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m5.
+62 (event 61): Set column c5 of df.
+63 (event 62): Computed df[["price", "c5"]], a DataFrame (500 × 2).
+64 (event 63): Called df[["price", "c5"]].describe(). It created a new DataFrame (8 × 2), s5.
+65 (event 64): Called df.groupby("c5"). It created a new DataFrameGroupBy object.
+66 (event 65): Computed df.groupby("c5")["price"], a SeriesGroupBy.
+67 (event 66): Called df.groupby("c5")["price"].mean(). It created a new Series (496).
+68 (event 67): Called df.groupby("c5")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g5.
+69 (event 68): Computed df["price"], a Series of float64 (500).
+70 (event 69): Called df["price"].median(). It returned a float64 (160.515).
+71 (event 70): Computed df["price"], a Series of float64 (500).
+72 (event 71): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m6.
+73 (event 72): Set column c6 of df.
+74 (event 73): Computed df[["price", "c6"]], a DataFrame (500 × 2).
+75 (event 74): Called df[["price", "c6"]].describe(). It created a new DataFrame (8 × 2), s6.
+76 (event 75): Called df.groupby("c6"). It created a new DataFrameGroupBy object.
+77 (event 76): Computed df.groupby("c6")["price"], a SeriesGroupBy.
+78 (event 77): Called df.groupby("c6")["price"].mean(). It created a new Series (496).
+79 (event 78): Called df.groupby("c6")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g6.
+80 (event 79): Computed df["price"], a Series of float64 (500).
+81 (event 80): Called df["price"].median(). It returned a float64 (160.515).
+82 (event 81): Computed df["price"], a Series of float64 (500).
+83 (event 82): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m7.
+84 (event 83): Set column c7 of df.
+85 (event 84): Computed df[["price", "c7"]], a DataFrame (500 × 2).
+86 (event 85): Called df[["price", "c7"]].describe(). It created a new DataFrame (8 × 2), s7.
+87 (event 86): Called df.groupby("c7"). It created a new DataFrameGroupBy object.
+88 (event 87): Computed df.groupby("c7")["price"], a SeriesGroupBy.
+89 (event 88): Called df.groupby("c7")["price"].mean(). It created a new Series (496).
+90 (event 89): Called df.groupby("c7")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g7.
+91 (event 90): Computed df["price"], a Series of float64 (500).
+92 (event 91): Called df["price"].median(). It returned a float64 (160.515).
+93 (event 92): Computed df["price"], a Series of float64 (500).
+94 (event 93): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m8.
+95 (event 94): Set column c8 of df.
+96 (event 95): Computed df[["price", "c8"]], a DataFrame (500 × 2).
+97 (event 96): Called df[["price", "c8"]].describe(). It created a new DataFrame (8 × 2), s8.
+98 (event 97): Called df.groupby("c8"). It created a new DataFrameGroupBy object.
+99 (event 98): Computed df.groupby("c8")["price"], a SeriesGroupBy.
+100 (event 99): Called df.groupby("c8")["price"].mean(). It created a new Series (496).
+101 (event 100): Called df.groupby("c8")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g8.
+102 (event 101): Computed df["price"], a Series of float64 (500).
+103 (event 102): Called df["price"].median(). It returned a float64 (160.515).
+104 (event 103): Computed df["price"], a Series of float64 (500).
+105 (event 104): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m9.
+106 (event 105): Set column c9 of df.
+107 (event 106): Computed df[["price", "c9"]], a DataFrame (500 × 2).
+108 (event 107): Called df[["price", "c9"]].describe(). It created a new DataFrame (8 × 2), s9.
+109 (event 108): Called df.groupby("c9"). It created a new DataFrameGroupBy object.
+110 (event 109): Computed df.groupby("c9")["price"], a SeriesGroupBy.
+111 (event 110): Called df.groupby("c9")["price"].mean(). It created a new Series (496).
+112 (event 111): Called df.groupby("c9")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g9.
+113 (event 112): Computed df["price"], a Series of float64 (500).
+114 (event 113): Called df["price"].median(). It returned a float64 (160.515).
+115 (event 114): Computed df["price"], a Series of float64 (500).
+116 (event 115): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m10.
+117 (event 116): Set column c10 of df.
+118 (event 117): Computed df[["price", "c10"]], a DataFrame (500 × 2).
+119 (event 118): Called df[["price", "c10"]].describe(). It created a new DataFrame (8 × 2), s10.
+120 (event 119): Called df.groupby("c10"). It created a new DataFrameGroupBy object.
+121 (event 120): Computed df.groupby("c10")["price"], a SeriesGroupBy.
+122 (event 121): Called df.groupby("c10")["price"].mean(). It created a new Series (496).
+123 (event 122): Called df.groupby("c10")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g10.
+124 (event 123): Computed df["price"], a Series of float64 (500).
+125 (event 124): Called df["price"].median(). It returned a float64 (160.515).
+126 (event 125): Computed df["price"], a Series of float64 (500).
+127 (event 126): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m11.
+128 (event 127): Set column c11 of df.
+129 (event 128): Computed df[["price", "c11"]], a DataFrame (500 × 2).
+130 (event 129): Called df[["price", "c11"]].describe(). It created a new DataFrame (8 × 2), s11.
+131 (event 130): Called df.groupby("c11"). It created a new DataFrameGroupBy object.
+132 (event 131): Computed df.groupby("c11")["price"], a SeriesGroupBy.
+133 (event 132): Called df.groupby("c11")["price"].mean(). It created a new Series (496).
+134 (event 133): Called df.groupby("c11")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g11.
+135 (event 134): Computed df["price"], a Series of float64 (500).
+136 (event 135): Called df["price"].median(). It returned a float64 (160.515).
+137 (event 136): Computed df["price"], a Series of float64 (500).
+138 (event 137): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m12.
+139 (event 138): Set column c12 of df.
+140 (event 139): Computed df[["price", "c12"]], a DataFrame (500 × 2).
+141 (event 140): Called df[["price", "c12"]].describe(). It created a new DataFrame (8 × 2), s12.
+142 (event 141): Called df.groupby("c12"). It created a new DataFrameGroupBy object.
+143 (event 142): Computed df.groupby("c12")["price"], a SeriesGroupBy.
+144 (event 143): Called df.groupby("c12")["price"].mean(). It created a new Series (496).
+145 (event 144): Called df.groupby("c12")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g12.
+146 (event 145): Computed df["price"], a Series of float64 (500).
+147 (event 146): Called df["price"].median(). It returned a float64 (160.515).
+148 (event 147): Computed df["price"], a Series of float64 (500).
+149 (event 148): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m13.
+150 (event 149): Set column c13 of df.
+151 (event 150): Computed df[["price", "c13"]], a DataFrame (500 × 2).
+152 (event 151): Called df[["price", "c13"]].describe(). It created a new DataFrame (8 × 2), s13.
+153 (event 152): Called df.groupby("c13"). It created a new DataFrameGroupBy object.
+154 (event 153): Computed df.groupby("c13")["price"], a SeriesGroupBy.
+155 (event 154): Called df.groupby("c13")["price"].mean(). It created a new Series (496).
+156 (event 155): Called df.groupby("c13")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g13.
+157 (event 156): Computed df["price"], a Series of float64 (500).
+158 (event 157): Called df["price"].median(). It returned a float64 (160.515).
+159 (event 158): Computed df["price"], a Series of float64 (500).
+160 (event 159): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m14.
+161 (event 160): Set column c14 of df.
+162 (event 161): Computed df[["price", "c14"]], a DataFrame (500 × 2).
+163 (event 162): Called df[["price", "c14"]].describe(). It created a new DataFrame (8 × 2), s14.
+164 (event 163): Called df.groupby("c14"). It created a new DataFrameGroupBy object.
+165 (event 164): Computed df.groupby("c14")["price"], a SeriesGroupBy.
+166 (event 165): Called df.groupby("c14")["price"].mean(). It created a new Series (496).
+167 (event 166): Called df.groupby("c14")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g14.
+168 (event 167): Computed df["price"], a Series of float64 (500).
+169 (event 168): Called df["price"].median(). It returned a float64 (160.515).
+170 (event 169): Computed df["price"], a Series of float64 (500).
+171 (event 170): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m15.
+172 (event 171): Set column c15 of df.
+173 (event 172): Computed df[["price", "c15"]], a DataFrame (500 × 2).
+174 (event 173): Called df[["price", "c15"]].describe(). It created a new DataFrame (8 × 2), s15.
+175 (event 174): Called df.groupby("c15"). It created a new DataFrameGroupBy object.
+176 (event 175): Computed df.groupby("c15")["price"], a SeriesGroupBy.
+177 (event 176): Called df.groupby("c15")["price"].mean(). It created a new Series (496).
+178 (event 177): Called df.groupby("c15")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g15.
+179 (event 178): Computed df["price"], a Series of float64 (500).
+180 (event 179): Called df["price"].median(). It returned a float64 (160.515).
+181 (event 180): Computed df["price"], a Series of float64 (500).
+182 (event 181): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m16.
+183 (event 182): Set column c16 of df.
+184 (event 183): Computed df[["price", "c16"]], a DataFrame (500 × 2).
+185 (event 184): Called df[["price", "c16"]].describe(). It created a new DataFrame (8 × 2), s16.
+186 (event 185): Called df.groupby("c16"). It created a new DataFrameGroupBy object.
+187 (event 186): Computed df.groupby("c16")["price"], a SeriesGroupBy.
+188 (event 187): Called df.groupby("c16")["price"].mean(). It created a new Series (496).
+189 (event 188): Called df.groupby("c16")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g16.
+190 (event 189): Computed df["price"], a Series of float64 (500).
+191 (event 190): Called df["price"].median(). It returned a float64 (160.515).
+192 (event 191): Computed df["price"], a Series of float64 (500).
+193 (event 192): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m17.
+194 (event 193): Set column c17 of df.
+195 (event 194): Computed df[["price", "c17"]], a DataFrame (500 × 2).
+196 (event 195): Called df[["price", "c17"]].describe(). It created a new DataFrame (8 × 2), s17.
+197 (event 196): Called df.groupby("c17"). It created a new DataFrameGroupBy object.
+198 (event 197): Computed df.groupby("c17")["price"], a SeriesGroupBy.
+199 (event 198): Called df.groupby("c17")["price"].mean(). It created a new Series (496).
+200 (event 199): Called df.groupby("c17")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g17.
+201 (event 200): Computed df["price"], a Series of float64 (500).
+202 (event 201): Called df["price"].median(). It returned a float64 (160.515).
+203 (event 202): Computed df["price"], a Series of float64 (500).
+204 (event 203): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m18.
+205 (event 204): Set column c18 of df.
+206 (event 205): Computed df[["price", "c18"]], a DataFrame (500 × 2).
+207 (event 206): Called df[["price", "c18"]].describe(). It created a new DataFrame (8 × 2), s18.
+208 (event 207): Called df.groupby("c18"). It created a new DataFrameGroupBy object.
+209 (event 208): Computed df.groupby("c18")["price"], a SeriesGroupBy.
+210 (event 209): Called df.groupby("c18")["price"].mean(). It created a new Series (496).
+211 (event 210): Called df.groupby("c18")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g18.
+212 (event 211): Computed df["price"], a Series of float64 (500).
+213 (event 212): Called df["price"].median(). It returned a float64 (160.515).
+214 (event 213): Computed df["price"], a Series of float64 (500).
+215 (event 214): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m19.
+216 (event 215): Set column c19 of df.
+217 (event 216): Computed df[["price", "c19"]], a DataFrame (500 × 2).
+218 (event 217): Called df[["price", "c19"]].describe(). It created a new DataFrame (8 × 2), s19.
+219 (event 218): Called df.groupby("c19"). It created a new DataFrameGroupBy object.
+220 (event 219): Computed df.groupby("c19")["price"], a SeriesGroupBy.
+221 (event 220): Called df.groupby("c19")["price"].mean(). It created a new Series (496).
+222 (event 221): Called df.groupby("c19")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g19.
+223 (event 222): Computed df["price"], a Series of float64 (500).
+224 (event 223): Called df["price"].median(). It returned a float64 (160.515).
+225 (event 224): Computed df["price"], a Series of float64 (500).
+226 (event 225): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m20.
+227 (event 226): Set column c20 of df.
+228 (event 227): Computed df[["price", "c20"]], a DataFrame (500 × 2).
+229 (event 228): Called df[["price", "c20"]].describe(). It created a new DataFrame (8 × 2), s20.
+230 (event 229): Called df.groupby("c20"). It created a new DataFrameGroupBy object.
+231 (event 230): Computed df.groupby("c20")["price"], a SeriesGroupBy.
+232 (event 231): Called df.groupby("c20")["price"].mean(). It created a new Series (496).
+233 (event 232): Called df.groupby("c20")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g20.
+234 (event 233): Computed df["price"], a Series of float64 (500).
+235 (event 234): Called df["price"].median(). It returned a float64 (160.515).
+236 (event 235): Computed df["price"], a Series of float64 (500).
+237 (event 236): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m21.
+238 (event 237): Set column c21 of df.
+239 (event 238): Computed df[["price", "c21"]], a DataFrame (500 × 2).
+240 (event 239): Called df[["price", "c21"]].describe(). It created a new DataFrame (8 × 2), s21.
+241 (event 240): Called df.groupby("c21"). It created a new DataFrameGroupBy object.
+242 (event 241): Computed df.groupby("c21")["price"], a SeriesGroupBy.
+243 (event 242): Called df.groupby("c21")["price"].mean(). It created a new Series (496).
+244 (event 243): Called df.groupby("c21")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g21.
+245 (event 244): Computed df["price"], a Series of float64 (500).
+246 (event 245): Called df["price"].median(). It returned a float64 (160.515).
+247 (event 246): Computed df["price"], a Series of float64 (500).
+248 (event 247): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m22.
+249 (event 248): Set column c22 of df.
+250 (event 249): Computed df[["price", "c22"]], a DataFrame (500 × 2).
+251 (event 250): Called df[["price", "c22"]].describe(). It created a new DataFrame (8 × 2), s22.
+252 (event 251): Called df.groupby("c22"). It created a new DataFrameGroupBy object.
+253 (event 252): Computed df.groupby("c22")["price"], a SeriesGroupBy.
+254 (event 253): Called df.groupby("c22")["price"].mean(). It created a new Series (496).
+255 (event 254): Called df.groupby("c22")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g22.
+256 (event 255): Computed df["price"], a Series of float64 (500).
+257 (event 256): Called df["price"].median(). It returned a float64 (160.515).
+258 (event 257): Computed df["price"], a Series of float64 (500).
+259 (event 258): Called df["price"].fillna(df["price"].median()). It created a new Series (500), m23.
+260 (event 259): Set column c23 of df.
+261 (event 260): Computed df[["price", "c23"]], a DataFrame (500 × 2).
+262 (event 261): Called df[["price", "c23"]].describe(). It created a new DataFrame (8 × 2), s23.
+263 (event 262): Called df.groupby("c23"). It created a new DataFrameGroupBy object.
+264 (event 263): Computed df.groupby("c23")["price"], a SeriesGroupBy.
+265 (event 264): Called df.groupby("c23")["price"].mean(). It created a new Series (496).
+266 (event 265): Called df.groupby("c23")["price"].mean().reset_index(). It created a new DataFrame (496 × 2), g23.

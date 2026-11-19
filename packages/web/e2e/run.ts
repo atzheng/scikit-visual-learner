@@ -341,6 +341,36 @@ async function main(): Promise<void> {
       check(shown, `no preview on any of ${total} wires`);
     });
 
+    await step('the step summary at the fit step mentions coef_ (aria-live)', async () => {
+      const { m } = await stepCount(page);
+      const summary = page.getByTestId('step-summary');
+      const live = page.getByTestId('step-summary-live');
+      check((await live.getAttribute('aria-live')) === 'polite', 'summary is not aria-live');
+      let fit = -1;
+      for (let k = 1; k <= m && fit < 0; k++) {
+        await gotoStep(page, k);
+        if (/\bmodel\.fit\(/.test((await currentEvent(page)) ?? '')) fit = k;
+      }
+      check(fit > 0, 'no .fit step');
+      const text = (await summary.textContent()) ?? '';
+      check(/coef_/.test(text), `fit summary lacks coef_: ${text}`);
+      check(/model\.fit/.test(text), `fit summary lacks the call: ${text}`);
+      check(
+        (await summary.locator('code', { hasText: 'coef_' }).count()) > 0,
+        'names are not code elements',
+      );
+      await page.waitForFunction(
+        () =>
+          /coef_/.test(
+            document.querySelector('[data-testid="step-summary-live"]')?.textContent ?? '',
+          ),
+        undefined,
+        { timeout: 3000 },
+      ); // the announcement follows after the debounce
+      await gotoStep(page, 0);
+      check(/Before the program runs/.test((await summary.textContent()) ?? ''), 'step 0 summary');
+    });
+
     await step('click the LinearRegression box at the fit step: coef_ changed', async () => {
       const { m } = await stepCount(page);
       let fit = -1;

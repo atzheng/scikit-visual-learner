@@ -1,0 +1,6 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported LinearRegression from sklearn.linear_model.
+3 (event 2): Called your function load("listings.csv"). It returned 2 objects: X (DataFrame, 471 × 3), y (Series of float64, 471).
+4 (event 3): Called Pipeline(). It created a new Pipeline object, pipe.
+5 (event 4): Called pipe.run(X, y). It returned a float (0.3703319032141523).
