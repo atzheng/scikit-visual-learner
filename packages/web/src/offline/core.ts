@@ -77,3 +77,11 @@ export function shouldHandle(method: string, requestUrl: string, origin: string)
 export function cacheKey(requestUrl: string, isNavigation: boolean): string {
   return isNavigation ? '/' : new URL(requestUrl).pathname;
 }
+
+/**
+ * Reload on `controllerchange` only in the tab where the user clicked "Reload to update".
+ * Never on first install (claim() fires the event too) and never in other tabs.
+ */
+export function shouldReload(s: { applyClicked: boolean; alreadyReloading: boolean }): boolean {
+  return s.applyClicked && !s.alreadyReloading;
+}

@@ -1,17 +1,22 @@
 /** Registers the service worker (production only) and reports a waiting update to the page. */
+import { shouldReload } from './core';
 
 export type UpdateListener = (apply: () => void) => void;
 
 /**
  * Registers /sw.js. `onUpdate` is called with an `apply` function when a new build is installed and
- * waiting while an older one controls the page. `apply` activates it and reloads; nothing reloads on its own.
+ * waiting while an older one controls the page. `apply` activates it and reloads this tab only;
+ * nothing reloads on first install, and other tabs are left alone.
  */
+let registered = false;
 export function registerServiceWorker(onUpdate: UpdateListener): void {
-  if (!import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+  if (registered || !import.meta.env.PROD || !('serviceWorker' in navigator)) return;
+  registered = true;
   const sw = navigator.serviceWorker;
+  let applyClicked = false;
   let reloading = false;
   sw.addEventListener('controllerchange', () => {
-    if (reloading) return;
+    if (!shouldReload({ applyClicked, alreadyReloading: reloading })) return;
     reloading = true;
     location.reload();
   });
@@ -19,7 +24,10 @@ export function registerServiceWorker(onUpdate: UpdateListener): void {
     const waiting = reg.waiting;
     // No controller means this is the first install, not an update.
     if (!waiting || !sw.controller) return;
-    onUpdate(() => waiting.postMessage({ type: 'SKIP_WAITING' }));
+    onUpdate(() => {
+      applyClicked = true;
+      waiting.postMessage({ type: 'SKIP_WAITING' });
+    });
   };
   void sw.register('/sw.js').then(
     (reg) => {

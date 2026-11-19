@@ -1,6 +1,6 @@
 /** Walks the build output and writes dist/sw.js with the precache manifest injected. Runs after the Pyodide copy. */
 import { createHash } from 'node:crypto';
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { build } from 'vite';
 import { buildManifest, type BuildFile } from '../src/offline/core';
@@ -13,10 +13,7 @@ async function walk(dir: string, base = ''): Promise<BuildFile[]> {
     const rel = base ? `${base}/${ent.name}` : ent.name;
     const abs = path.join(dir, ent.name);
     if (ent.isDirectory()) out.push(...(await walk(abs, rel)));
-    else if (/\.(whl|wasm|zip)$/.test(ent.name)) {
-      // Large binaries: size is enough (the names carry versions); avoids hashing ~50 MB.
-      out.push({ path: rel, digest: String((await stat(abs)).size) });
-    } else out.push({ path: rel, digest: sha(await readFile(abs)) });
+    else out.push({ path: rel, digest: sha(await readFile(abs)) });
   }
   return out;
 }

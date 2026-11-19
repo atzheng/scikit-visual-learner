@@ -5,6 +5,7 @@ import {
   cacheKey,
   missingUrls,
   shouldHandle,
+  shouldReload,
   staleCaches,
   type BuildFile,
 } from './core';
@@ -77,5 +78,13 @@ describe('routing', () => {
   it('cacheKey maps navigations to the shell and drops queries', () => {
     expect(cacheKey('https://x.org/foo?debug', true)).toBe('/');
     expect(cacheKey('https://x.org/assets/a.js?v=1', false)).toBe('/assets/a.js');
+  });
+});
+
+describe('shouldReload', () => {
+  it('reloads only after this tab applied the update, once', () => {
+    expect(shouldReload({ applyClicked: false, alreadyReloading: false })).toBe(false);
+    expect(shouldReload({ applyClicked: true, alreadyReloading: false })).toBe(true);
+    expect(shouldReload({ applyClicked: true, alreadyReloading: true })).toBe(false);
   });
 });

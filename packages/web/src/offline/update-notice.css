@@ -32,3 +32,18 @@
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.update-chip {
+  left: auto;
+  right: 16px;
+  transform: none;
+  font: 13px var(--font);
+  cursor: pointer;
+}

@@ -8,6 +8,10 @@
  * - fetch: same-origin GETs are served cache-first. Cached responses are the originals the host sent,
  *   so their COOP/COEP headers are kept and crossOriginIsolated stays true offline.
  *
+ * Hazard for code splitting: activate deletes the old shell cache while an old page may still be open;
+ * its lazy chunk requests would then go to the network and could 404 against the new deploy. Today
+ * the app is one bundle. If chunks are added, keep the previous shell cache until old clients are gone.
+ *
  * Built by scripts/build-sw.ts, which injects __MANIFEST__.
  */
 import { cacheKey, missingUrls, shouldHandle, staleCaches, type Manifest } from './offline/core';
@@ -33,8 +37,10 @@ async function fill(cacheName: string, urls: string[]): Promise<void> {
   const cache = await caches.open(cacheName);
   const have = (await cache.keys()).map((r) => new URL(r.url).pathname);
   for (const url of missingUrls(urls, have)) {
-    const res = await fetch(url, { cache: 'reload' });
-    if (!res.ok) throw new Error(`precache ${url}: ${res.status}`);
+    // Default cache mode, so files the page just fetched come from the HTTP cache.
+    const res = await fetch(url);
+    // Only complete 200 responses: put() throws on 206, and a partial file must not be cached.
+    if (res.status !== 200) throw new Error(`precache ${url}: ${res.status}`);
     await cache.put(url, res);
   }
 }
