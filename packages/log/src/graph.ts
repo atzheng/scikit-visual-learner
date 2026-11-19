@@ -163,6 +163,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   const insts = new Map<string, InstInfo>(); // by instance key (merge key + output index)
   const instByObj = new Map<string, InstInfo>();
   const producers = new Map<Token, Ref>();
+  const producerAt = new Map<Token, number>(); // event index of the producing event
   const nodeOrder: GNode[] = [];
 
   const makeExecution = (
@@ -260,7 +261,10 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
       const outs: Record<string, Token> = {};
       e.outputs.forEach((t, k) => {
         outs[`out:${k}`] = t;
-        if (!producers.has(t)) producers.set(t, { node: info!.node.id, port: null });
+        if (!producers.has(t)) {
+          producers.set(t, { node: info!.node.id, port: null });
+          producerAt.set(t, e.i);
+        }
       });
       info.node.executions.push(makeExecution(e, ins, outs));
       info.node.text = e.name;
@@ -344,6 +348,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
         }
       } else if (!producers.has(t)) {
         producers.set(t, { node: info!.node.id, port });
+        producerAt.set(t, e.i);
       }
     });
     e.mutates.forEach(([before, after], k) => {
@@ -352,6 +357,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
       const port = `out:mut:${input ? input.param : k}`;
       outs[port] = after;
       producers.set(after, { node: info!.node.id, port });
+      producerAt.set(after, e.i);
     });
     info.node.executions.push({ ...makeExecution(e, ins, outs), count: nodeCount });
     info.events.push(e);
@@ -410,7 +416,8 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     if (isMachine(token))
       return { ref: { node: instanceFor(token, e).node.id, port: null }, source: false };
     const p = producers.get(token);
-    if (p) return { ref: p, source: false };
+    // a producer only counts for consumers that ran after it: an earlier use is a source
+    if (p && (producerAt.get(token) ?? -1) < e.i) return { ref: p, source: false };
     let src = sourceOfToken.get(token);
     if (!src) {
       const key = `${consumer}:${param}`;

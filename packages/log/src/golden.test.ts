@@ -34,7 +34,7 @@ if (process.env.UPDATE_GRAPHS) {
 
 describe('fixtures', () => {
   it('has the 26 programs', () => {
-    expect(names.length).toBe(26);
+    expect(names.length).toBe(27);
   });
 
   describe.each(names)('%s', (n) => {
@@ -291,11 +291,14 @@ describe('edge cases on real logs', () => {
     expect(only(instances(g)).className).toBe('Pipeline');
   });
 
-  it('an attribute read draws no expr node: the value is a labelled source node', () => {
+  it('an attribute read of a machine is an expr node wired from the machine', () => {
     const g = graphOf('edge_expr');
-    const src = only(g.nodes.filter((x) => x.kind === 'source'));
-    expect(src.kind === 'source' && src.label).toBe('coefs');
-    expect(g.nodes.some((x) => x.kind === 'expr' && x.text.includes('coef_'))).toBe(false);
+    expect(g.nodes.some((x) => x.kind === 'source' && x.label === 'coefs')).toBe(false);
+    const x = only(g.nodes.filter((n) => n.kind === 'expr' && n.text === 'model.coef_'));
+    const into = g.edges.filter((e) => e.to.node === x.id);
+    expect(into).toHaveLength(1);
+    expect(into[0]?.dashed).toBe(true);
+    expect(g.edges.some((e) => e.from.node === x.id && e.nameLabel === 'coefs')).toBe(true);
   });
 
   it('programs that record nothing give an empty graph', () => {

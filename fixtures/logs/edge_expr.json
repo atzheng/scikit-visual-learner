@@ -259,6 +259,31 @@
       "inputs": [
         {
           "origin": "name",
+          "param": "model",
+          "value": "v10.1"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s13",
+      "module": null,
+      "mutates": [],
+      "name": "model.coef_",
+      "outputs": [
+        "v11.0"
+      ],
+      "owner": null,
+      "ret": 9,
+      "returns_self": false,
+      "scope": 0,
+      "site": 13
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 10,
+      "inputs": [
+        {
+          "origin": "name",
           "param": "self",
           "value": "v11.0"
         },
@@ -277,7 +302,7 @@
         "v14.0"
       ],
       "owner": "v11.0",
-      "ret": 9,
+      "ret": 10,
       "returns_self": false,
       "scope": 0,
       "site": 14
@@ -285,7 +310,7 @@
   ],
   "output": [
     {
-      "i": 9,
+      "i": 10,
       "stream": "stdout",
       "text": "[ 2.08 23.62  0.11]\n"
     }
@@ -344,7 +369,7 @@
           "v10.0"
         ],
         [
-          8,
+          9,
           "coefs",
           "v11.0"
         ]

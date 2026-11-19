@@ -28,7 +28,7 @@ def run(name: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_all_programs_present() -> None:
-    assert len(ALL) == 26
+    assert len(ALL) == 27
 
 
 def test_notebook_is_twenty_lines() -> None:

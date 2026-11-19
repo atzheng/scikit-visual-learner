@@ -243,6 +243,8 @@ class Recorder:
         self._events: list[dict[str, Any]] = []
         self._by_i: dict[int, dict[str, Any]] = {}  # the events in `_events`, by `i`
         self._slots: dict[str, dict[str, Any]] = {}
+        self._consumed: set[str] = set()  # tokens already an input of some recorded event
+        self._produced: set[str] = set()  # tokens that are the output of some recorded event
         self._bindings: list[list[Any]] = []  # [event, name, token, slot_key?]
         self._bslots: dict[str, list[Any]] = {}
         self._output: list[dict[str, Any]] = []
@@ -759,11 +761,14 @@ class Recorder:
         value: Any,
         rebound: Any,
         counts: bool = True,
+        reuse: str | None = None,
     ) -> str:
         vt = self.vt
         scalar = vt.classify(value) == "scalar"
         inputs = self._read_inputs(reads, rebound)
-        tok = vt.fresh_scalar(value) if scalar else vt.token(value)
+        if reuse is not None and not inputs:
+            return reuse  # nothing to draw a wire from: the token stays a source
+        tok = reuse or (vt.fresh_scalar(value) if scalar else vt.token(value))
         self._chk.add(id(value))  # first sight: the baseline fingerprint was just taken
         alloc = self._alloc(key, counts)
         if alloc is None:
@@ -959,6 +964,9 @@ class Recorder:
                 self._events = [e for e in self._events if e is not old]
                 self._by_i.pop(old["i"], None)
             self._slots[ev["merge_key"]] = ev
+        self._consumed.update(i["value"] for i in ev["inputs"] if "value" in i)
+        self._produced.update(ev["outputs"])
+        self._produced.update(m[1] for m in ev["mutates"])
         self._events.append(ev)
         self._by_i[ev["i"]] = ev
         self._pending_events.append(ev)
@@ -1061,6 +1069,21 @@ class Recorder:
         if kind == "expr":
             if not vt.seen(obj):
                 return self._expr_event(site, key, o["text"], o["reads"], obj, rebound)  # type: ignore[index]
+            if name not in o["reads"] and _is_attr_chain(o["text"]):  # type: ignore[index]
+                # `coefs = model.coef_`: the object already has a token (the machine's summary)
+                # but no producer; show the read as an expression that outputs that same token
+                self._check(obj)
+                tok = vt.token(obj)
+                if tok not in self._produced and tok not in self._consumed:
+                    return self._expr_event(
+                        site,
+                        key,
+                        o["text"],
+                        o["reads"],
+                        obj,
+                        rebound,
+                        reuse=tok,  # type: ignore[index]
+                    )
             if name in o["reads"]:  # type: ignore[index]
                 before = vt.token(obj)
                 ch = vt.check(obj)
@@ -1326,6 +1349,19 @@ def _is_instance(s: Any) -> bool:
 
 def _expr_key(site: int, ref: int | str) -> str:
     return f"s{site}.a{ref}" if isinstance(ref, int) else f"s{site}.k{ref}"
+
+
+def _is_attr_chain(text: str) -> bool:
+    """`model.coef_`, `a.b.c`: attribute reads on a plain name, nothing else."""
+    try:
+        node = ast.parse(text, mode="eval").body
+    except SyntaxError:
+        return False
+    if not isinstance(node, ast.Attribute):
+        return False
+    while isinstance(node, ast.Attribute):
+        node = node.value  # type: ignore[assignment]
+    return isinstance(node, ast.Name)
 
 
 def _owner_expr(func_text: str, reads_of: Callable[[str], list[str]]) -> tuple[str, str, list[str]]:
