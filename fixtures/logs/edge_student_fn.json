@@ -1,0 +1,354 @@
+{
+  "diagnostics": [],
+  "error": null,
+  "events": [
+    {
+      "count": 1,
+      "error": null,
+      "i": 0,
+      "inputs": [
+        {
+          "origin": "const",
+          "param": "path",
+          "text": "\"listings.csv\""
+        }
+      ],
+      "kind": "student_function",
+      "merge_key": "s0",
+      "module": "__main__",
+      "mutates": [],
+      "name": "load",
+      "outputs": [
+        "v0.0",
+        "v1.0"
+      ],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 0
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [],
+      "kind": "constructor",
+      "merge_key": "s2",
+      "module": "__main__",
+      "mutates": [],
+      "name": "Pipeline",
+      "outputs": [
+        "v2.0"
+      ],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 2
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "X",
+          "value": "v0.0"
+        },
+        {
+          "origin": "name",
+          "param": "y",
+          "value": "v1.0"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s4",
+      "module": "__main__",
+      "mutates": [],
+      "name": "Pipeline.run",
+      "outputs": [
+        "s0"
+      ],
+      "owner": "v2.0",
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 4
+    }
+  ],
+  "output": [
+    {
+      "i": 2,
+      "stream": "stdout",
+      "text": "0.37\n"
+    }
+  ],
+  "scopes": [
+    {
+      "bindings": [
+        [
+          0,
+          "X",
+          "v0.0"
+        ],
+        [
+          0,
+          "y",
+          "v1.0"
+        ],
+        [
+          1,
+          "pipe",
+          "v2.0"
+        ]
+      ],
+      "id": 0,
+      "lexical_parent": null,
+      "name": "<module>",
+      "parent_event": null
+    }
+  ],
+  "sites": [
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "\"listings.csv\""
+        }
+      ],
+      "col": 11,
+      "end_col": 31,
+      "end_line": 24,
+      "func_text": "load",
+      "id": 0,
+      "keywords": {},
+      "kind": "call",
+      "line": 24,
+      "text": "load(\"listings.csv\")",
+      "unpack": 2
+    },
+    {
+      "col": 4,
+      "end_col": 31,
+      "end_line": 24,
+      "id": 1,
+      "kind": "bind",
+      "line": 24,
+      "targets": [
+        "X",
+        "y"
+      ],
+      "text": "X, y = load(\"listings.csv\")",
+      "value": {
+        "origin": "call",
+        "site": 0
+      },
+      "where": "local"
+    },
+    {
+      "args": [],
+      "col": 11,
+      "end_col": 21,
+      "end_line": 25,
+      "func_text": "Pipeline",
+      "id": 2,
+      "keywords": {},
+      "kind": "call",
+      "line": 25,
+      "text": "Pipeline()"
+    },
+    {
+      "col": 4,
+      "end_col": 21,
+      "end_line": 25,
+      "id": 3,
+      "kind": "bind",
+      "line": 25,
+      "targets": [
+        "pipe"
+      ],
+      "text": "pipe = Pipeline()",
+      "value": {
+        "origin": "call",
+        "site": 2
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "name": "X",
+          "origin": "name"
+        },
+        {
+          "name": "y",
+          "origin": "name"
+        }
+      ],
+      "col": 16,
+      "end_col": 30,
+      "end_line": 26,
+      "func_text": "pipe.run",
+      "id": 4,
+      "keywords": {},
+      "kind": "call",
+      "line": 26,
+      "text": "pipe.run(X, y)"
+    },
+    {
+      "args": [
+        {
+          "origin": "call",
+          "site": 4
+        },
+        {
+          "origin": "const",
+          "text": "3"
+        }
+      ],
+      "col": 10,
+      "end_col": 34,
+      "end_line": 26,
+      "func_text": "round",
+      "id": 5,
+      "keywords": {},
+      "kind": "call",
+      "line": 26,
+      "text": "round(pipe.run(X, y), 3)"
+    },
+    {
+      "args": [
+        {
+          "origin": "call",
+          "site": 5
+        }
+      ],
+      "col": 4,
+      "end_col": 35,
+      "end_line": 26,
+      "func_text": "print",
+      "id": 6,
+      "keywords": {},
+      "kind": "call",
+      "line": 26,
+      "text": "print(round(pipe.run(X, y), 3))"
+    }
+  ],
+  "status": "ok",
+  "values": {
+    "s0": {
+      "repr": "0.3703319032141523",
+      "type": "float"
+    },
+    "v0.0": {
+      "columns": [
+        "beds",
+        "baths",
+        "sqft"
+      ],
+      "dtypes": [
+        "int64",
+        "float64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "beds",
+          "baths",
+          "sqft"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "4",
+          "5"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "1.0",
+            "884.0"
+          ],
+          [
+            "3",
+            "2.0",
+            "1254.0"
+          ],
+          [
+            "2",
+            "2.0",
+            "1004.0"
+          ],
+          [
+            "2",
+            "1.0",
+            "1063.0"
+          ],
+          [
+            "5",
+            "4.0",
+            "1710.0"
+          ]
+        ]
+      },
+      "shape": [
+        471,
+        3
+      ],
+      "type": "DF"
+    },
+    "v1.0": {
+      "dtype": "float64",
+      "preview": {
+        "columns": [
+          "price"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "4",
+          "5"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "83.11"
+          ],
+          [
+            "248.24"
+          ],
+          [
+            "70.46"
+          ],
+          [
+            "279.37"
+          ],
+          [
+            "217.69"
+          ]
+        ]
+      },
+      "shape": [
+        471
+      ],
+      "type": "Series"
+    },
+    "v2.0": {
+      "attrs": {
+        "model": "v3.0"
+      },
+      "machine": true,
+      "type": "Pipeline"
+    },
+    "v3.0": {
+      "machine": true,
+      "type": "LinearRegression"
+    }
+  },
+  "version": 2
+}
