@@ -112,7 +112,10 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   void _opts; // expansion of student functions is M4
   const { values, sites } = log;
   const typeOf = (t: Token): string => values[t]?.type ?? '';
-  const isMachine = (t: Token | null): boolean => t !== null && values[t]?.machine === true;
+  // THE predicate for "this value is drawn as an instance box": it creates the box (via the creating call's
+  // output wire), owns method slots keyed by (box, method name), and is wired by its border. Today only
+  // machines; svl-skw widens it to any reference value (timeline.ts `ownerAttrs` follows it).
+  const isObject = (t: Token | null): boolean => t !== null && values[t]?.machine === true;
 
   // ---- stable ids: hash of the site's text plus the occurrence number among equal texts
   const siteIdBase: string[] = [];
@@ -276,7 +279,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
 
     // call node
     const ownerInst =
-      e.kind === 'method' && e.owner !== null && isMachine(e.owner)
+      e.kind === 'method' && e.owner !== null && isObject(e.owner)
         ? instanceFor(e.owner, e).node
         : null;
     // one method box per (instance, method name), not per call site
@@ -326,7 +329,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     e.outputs.forEach((t, k) => {
       const port = `out:${k}`;
       outs[port] = t;
-      if (isMachine(t)) {
+      if (isObject(t)) {
         const ik = `${mk}#${k}`;
         let ii = insts.get(ik);
         if (!ii)
@@ -347,7 +350,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
       }
     });
     e.mutates.forEach(([before, after], k) => {
-      if (isMachine(before)) return;
+      if (isObject(before)) return;
       const input = drawnInputs(e).find((x) => x.value === before);
       const port = `out:mut:${input ? input.param : k}`;
       outs[port] = after;
@@ -363,7 +366,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   function drawnInputs(e: Event): Input[] {
     let ins = e.inputs;
     if (e.kind === 'method' && e.owner !== null) {
-      if (isMachine(e.owner)) ins = ins.filter((x) => !(x.param === 'self' && x.value === e.owner));
+      if (isObject(e.owner)) ins = ins.filter((x) => !(x.param === 'self' && x.value === e.owner));
       else if (!ins.some((x) => x.param === 'self'))
         ins = [{ param: 'self', origin: 'name', value: e.owner }, ...ins];
     }
@@ -372,7 +375,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
 
   function processMutates(e: Event): void {
     for (const [before, after] of e.mutates) {
-      if (!isMachine(before)) continue;
+      if (!isObject(before)) continue;
       const inst = instanceFor(before, e);
       const last = inst.node.versions[inst.node.versions.length - 1];
       if (!last || last.token !== after || last.i !== e.i)
@@ -409,7 +412,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     consumer: string,
     param: string,
   ): { ref: Ref; source: boolean } => {
-    if (isMachine(token))
+    if (isObject(token))
       return { ref: { node: instanceFor(token, e).node.id, port: null }, source: false };
     const p = producers.get(token);
     // a producer only counts for consumers that ran after it: an earlier use is a source
@@ -446,7 +449,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
           ref,
           { node: info.node.id, port: `in:${x.param}` },
           { i: e.i, token: x.value },
-          source || isMachine(x.value) ? null : nameOf(x.value),
+          source || isObject(x.value) ? null : nameOf(x.value),
           false,
         );
       }
@@ -461,7 +464,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
           ref,
           { node: info.node.id, port: null },
           { i: e.i, token: x.value },
-          source || isMachine(x.value) ? null : nameOf(x.value),
+          source || isObject(x.value) ? null : nameOf(x.value),
           info.node.kind === 'expr',
         );
       }
@@ -525,7 +528,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
         outPorts.set(id, { id, param: `${k}`, typeLabel: typeOf(t), nameLabel: nameOf(t) });
       });
       e.mutates.forEach(([before, after], k) => {
-        if (isMachine(before)) return;
+        if (isObject(before)) return;
         const input = drawnInputs(e).find((x) => x.value === before);
         const param = input ? input.param : `${k}`;
         const id = `out:mut:${param}`;
