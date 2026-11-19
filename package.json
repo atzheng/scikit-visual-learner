@@ -16,7 +16,7 @@
     "dev": "pnpm --filter @machines/web dev",
     "preview": "pnpm --filter @machines/web preview",
     "fixtures": "uv run python -m machines.tools.gen_fixtures && pnpm --filter @machines/log gen:graphs",
-    "e2e": "echo 'e2e: not yet'",
+    "e2e": "pnpm --filter @machines/web exec tsx e2e/run.ts",
     "measure": "pnpm --filter @machines/web exec tsx ../../scripts/measure.ts"
   },
   "devDependencies": {
