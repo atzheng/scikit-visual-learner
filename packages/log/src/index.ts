@@ -23,6 +23,15 @@ export type {
 } from './graph';
 export { stateAt, eventLabel, stepOfEvent, attrsAround } from './timeline';
 export type { StepState } from './timeline';
+export { stageAt, shelfOrder, shelfAt } from './stage';
+export type {
+  StageModel,
+  StageParticipant,
+  StageRole,
+  StageValue,
+  ShelfEntry,
+  ShelfSlot,
+} from './stage';
 export { attrRows, reprTruncated, sameValue } from './attrs';
 export type { AttrRow } from './attrs';
 export { describeStep, summaryText } from './describe';

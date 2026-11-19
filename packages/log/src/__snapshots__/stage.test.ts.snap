@@ -1,0 +1,2850 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_alias 1`] = `
+[
+  "0: -",
+  "1: L5 import pd [created:import pd]",
+  "2: L6 import LinearRegression [created:import LinearRegression]",
+  "3: L8 DataFrame [created:df@out:0] {input:data={"a": [3, 1, 2], "b": [1.0, 2.0, 3.0]}}",
+  "4: L11 DataFrame.copy [owner:df created:other@out:0]",
+  "5: L13 LinearRegression [created:m@out:0]",
+  "6: L14 expr [input:df output:chip(DF)]",
+  "7: L14 expr [input:df output:chip(Series)]",
+  "8: L14 LinearRegression.fit [owner:m* input:chip(DF)@in:X input:chip(Series)@in:y]",
+  "9: L18 expr []",
+  "10: L18 DataFrame.sort_values [owner:df created:cur@out:0] {input:by="a" input:ascending=False}",
+  "11: L18 expr []",
+  "12: L18 DataFrame.sort_values [owner:cur created:cur@out:0] {input:by="a" input:ascending=True}",
+  "13: L18 expr []",
+  "14: L18 DataFrame.sort_values [owner:cur created:cur@out:0] {input:by="a" input:ascending=False}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_alias 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:1kp0hxq.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:1x9xhnv.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:1fh4vh.0",
+    9,
+    3,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_alias_loop 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L6 DataFrame [created:df@out:0] {input:data={"a": [3, 1, 2], "b": [1.0, 2.0, 3.0]}}",
+  "3: L10 expr []",
+  "4: L10 DataFrame.sort_values [owner:df created:cur@out:0] {input:by="a" input:ascending=False}",
+  "5: L10 expr []",
+  "6: L10 DataFrame.sort_values [owner:cur created:cur@out:0] {input:by="a" input:ascending=True}",
+  "7: L10 expr []",
+  "8: L10 DataFrame.sort_values [owner:cur created:cur@out:0] {input:by="a" input:ascending=False}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_alias_loop 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "instance",
+    "i:1kp0hxq.0",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:1fh4vh.0",
+    3,
+    3,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_alias_reflect 1`] = `
+[
+  "0: -",
+  "1: L3 import __main__ [created:import __main__]",
+  "2: L4 import pd [created:import pd]",
+  "3: L5 import sys [created:import sys]",
+  "4: L7 DataFrame [created:df@out:0] {input:data={"a": [3, 1, 2]}}",
+  "5: L8 DataFrame.copy [owner:df created:other@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_alias_reflect 2`] = `
+[
+  [
+    "import",
+    "m:1gqk3rq.0.12occe0",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:1szm6nw.0.1i79b12",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wf71yq.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:1x9xhnv.0",
+    4,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_alias_volatile 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L6 DataFrame [created:df@out:0] {input:data={"a": [3, 1, 2], "b": [1.0, 2.0, 3.0]}}",
+  "3: L10 DataFrame.copy [owner:df created:other@out:0]",
+  "4: L19 g []",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_alias_volatile 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "instance",
+    "i:1kp0hxq.0",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:1x9xhnv.0",
+    2,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_attr_order 1`] = `
+[
+  "0: -",
+  "1: L3 import np [created:import np]",
+  "2: L4 import pd [created:import pd]",
+  "3: L5 import LinearRegression [created:import LinearRegression]",
+  "4: L7 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "5: L7 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "6: L8 expr [input:df created:X]",
+  "7: L9 expr [input:df created:y]",
+  "8: L10 LinearRegression [created:model@out:0]",
+  "9: L11 LinearRegression.fit [owner:model* input:X@in:X input:y@in:y]",
+  "10: L13 round [input:coefs@in:a created:r@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_attr_order 2`] = `
+[
+  [
+    "import",
+    "m:65f47k.0.j7c76b",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:f2rqav.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:1g3zaox.0",
+    9,
+    1,
+  ],
+  [
+    "instance",
+    "i:1g3zaox.0!v5",
+    9,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_df_chain 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L6 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "3: L7 DataFrame.dropna [owner:df output:chip(DF)@out:0]",
+  "4: L7 DataFrame.reset_index [input:chip(DF)@in:self created:clean@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_df_chain 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:xbg973.0",
+    3,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_dict_models 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import RandomForestRegressor [created:import RandomForestRegressor]",
+  "3: L6 import Ridge [created:import Ridge]",
+  "4: L8 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "5: L8 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "6: L9 expr [input:df created:X]",
+  "7: L10 expr [input:df created:y]",
+  "8: L12 Ridge [created:Ridge@out:0]",
+  "9: L13 RandomForestRegressor [created:RandomForestRegressor@out:0] {input:n_estimators=10 input:random_state=0}",
+  "10: L11 expr [input:Ridge input:RandomForestRegressor created:models]",
+  "11: L15 RandomForestRegressor.fit [owner:RandomForestRegressor* input:X@in:X input:y@in:y]",
+  "12: L16 RandomForestRegressor.score [owner:RandomForestRegressor input:X@in:X input:y@in:y] {output:0=0.8588827679463272}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_dict_models 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:a80tic.0.1vjmf01",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:onprdx.0.1rcg1zk",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:f2rqav.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:8h82rt.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:8npe94.0",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:14txfsj.0",
+    9,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_error 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import LinearRegression [created:import LinearRegression]",
+  "3: L7 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "4: L8 expr [input:df created:X]",
+  "5: L9 expr [input:df created:y]",
+  "6: L11 LinearRegression [created:LinearRegression@out:0]",
+  "7: L11 LinearRegression.fit [owner:LinearRegression* input:X@in:X input:y@in:y]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_error 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:f2rqav.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    5,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_expr 1`] = `
+[
+  "0: -",
+  "1: L3 import pd [created:import pd]",
+  "2: L4 import LinearRegression [created:import LinearRegression]",
+  "3: L5 import train_test_split [created:import train_test_split]",
+  "4: L7 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "5: L7 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "6: L8 expr [input:df created:X]",
+  "7: L9 expr [input:df created:y]",
+  "8: L10 train_test_split [input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.25 input:random_state=1}",
+  "9: L11 DataFrame.mean [owner:X_train created:mean@out:0]",
+  "10: L12 expr [input:X_train input:mean created:centred]",
+  "11: L13 LinearRegression [created:model@out:0]",
+  "12: L14 LinearRegression.fit [owner:model* input:centred@in:X input:y_train@in:y]",
+  "13: L15 expr [input:model created:coefs]",
+  "14: L16 ndarray.round [owner:coefs created:array@out:0] {input:decimals=2}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_expr 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:1vnkpvx.0.11i6nkl",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:f2rqav.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:12eqf14.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:12eqf14.0#1",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:12eqf14.0#2",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:12eqf14.0#3",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:mj76w8.0",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:cu6mlb.0",
+    9,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    10,
+    1,
+  ],
+  [
+    "instance",
+    "i:u4f6m6.0",
+    12,
+    1,
+  ],
+  [
+    "instance",
+    "i:1m83oie.0",
+    13,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_fit_chain 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import LinearRegression [created:import LinearRegression]",
+  "3: L7 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "4: L7 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "5: L8 expr [input:df created:X]",
+  "6: L9 expr [input:df created:y]",
+  "7: L10 DataFrame.head [owner:X created:Z@out:0] {input:n=5}",
+  "8: L11 LinearRegression [created:model@out:0]",
+  "9: L12 LinearRegression.fit [owner:model* input:X@in:X input:y@in:y]",
+  "10: L12 LinearRegression.predict [owner:model input:Z@in:X created:preds@out:0]",
+  "11: L13 ndarray.round [owner:preds created:array@out:0] {input:decimals=2}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_fit_chain 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:f2rqav.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:we6yd7.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:1jmj0rx.0",
+    9,
+    1,
+  ],
+  [
+    "instance",
+    "i:7oml7o.0",
+    10,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_generator 1`] = `
+[
+  "0: -",
+  "1: L3 import asyncio [created:import asyncio]",
+  "2: L5 import pd [created:import pd]",
+  "3: L18 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "4: L19 chunks [input:df@in:df created:generator@out:0] {input:size=200}",
+  "5: L19 expr [input:df created:sizes]",
+  "6: L20 total_price [input:df@in:df created:coroutine@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_generator 2`] = `
+[
+  [
+    "import",
+    "m:13u55ad.0.1auz1hj",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:145mmls.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:1y73kgs.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:1n2ygm4.0",
+    5,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_gridsearch 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import Ridge [created:import Ridge]",
+  "3: L6 import GridSearchCV [created:import GridSearchCV]",
+  "4: L8 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "5: L8 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "6: L9 expr [input:df created:X]",
+  "7: L10 expr [input:df created:y]",
+  "8: L11 Ridge [created:base@out:0]",
+  "9: L12 GridSearchCV [input:base@in:estimator created:search@out:0] {input:param_grid={"alpha": [0.1, 1.0, 10.0]} input:n_jobs=2 input:cv=3}",
+  "10: L13 GridSearchCV.fit [owner:search* input:X@in:X input:y@in:y]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_gridsearch 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:onprdx.0.1rcg1zk",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:v971fw.0.1g14w5w",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:f2rqav.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:8h82rt.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:6qo9to.0",
+    8,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_handled 1`] = `
+[
+  "0: -",
+  "1: L3 import pd [created:import pd]",
+  "2: L4 import LinearRegression [created:import LinearRegression]",
+  "3: L6 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "4: L7 expr [input:df created:X]",
+  "5: L8 expr [input:df created:y]",
+  "6: L9 LinearRegression [created:model@out:0]",
+  "7: L11 LinearRegression.fit [owner:model* input:X@in:X input:y@in:y]",
+  "8: L14 DataFrame.dropna [owner:df created:df′@out:0]",
+  "9: L15 expr [input:df′ output:chip(DF)]",
+  "10: L15 expr [input:df′ output:chip(Series)]",
+  "11: L15 LinearRegression.fit [owner:model* input:chip(DF)@in:X input:chip(Series)@in:y]",
+  "12: L16 expr [input:df′ output:chip(DF)]",
+  "13: L16 expr [input:df′ output:chip(Series)]",
+  "14: L16 LinearRegression.score [owner:model input:chip(DF)@in:X input:chip(Series)@in:y] {output:0=0.3703319032141523}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_handled 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:f2rqav.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:1rjye1a.0",
+    7,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_inplace 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L6 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "3: L8 DataFrame.dropna [owner:df*] {input:inplace=True}",
+  "4: L9 DataFrame.sort_values [owner:df*] {input:by="price" input:inplace=True}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_inplace 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    1,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_input 1`] = `
+[
+  "0: -",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_input 2`] = `[]`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_literals 1`] = `
+[
+  "0: -",
+  "1: L4 import np [created:import np]",
+  "2: L5 import pd [created:import pd]",
+  "3: L7 array [created:a@out:0] {input:object=[1, 2, 3]}",
+  "4: L8 array [created:b@out:0] {input:object=[1, 2, 3]}",
+  "5: L11 shape [input:a@in:a] {output:0=(3,)}",
+  "6: L12 shape [input:b@in:a] {output:0=(3,)}",
+  "7: L13 isnan [input:a@in:x output:chip(array)@out:0]",
+  "8: L13 ndarray.any [input:chip(array)@in:self] {output:0=False}",
+  "9: L14 isnan [input:b@in:x output:chip(array)@out:0]",
+  "10: L14 ndarray.any [input:chip(array)@in:self] {output:0=False}",
+  "11: L15 Series [created:s@out:0] {input:data=[2, 2, 2]}",
+  "12: L16 Series.nunique [owner:s] {output:0=1}",
+  "13: L17 Series.count [owner:s] {output:0=3}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_literals 2`] = `
+[
+  [
+    "import",
+    "m:65f47k.0.j7c76b",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:1itnbtf.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:1itnbtf.1",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:ifs6pd.0",
+    12,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_loop 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import Ridge [created:import Ridge]",
+  "3: L6 import train_test_split [created:import train_test_split]",
+  "4: L8 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "5: L8 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "6: L9 expr [input:df created:X]",
+  "7: L10 expr [input:df created:y]",
+  "8: L11 train_test_split [input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.2 input:random_state=0}",
+  "9: L14 expr []",
+  "10: L14 Ridge [created:model@out:0] {input:alpha=0.1}",
+  "11: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "12: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4162984157813727}",
+  "13: L14 expr []",
+  "14: L14 Ridge [created:model@out:0] {input:alpha=0.2}",
+  "15: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "16: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4163072743703702}",
+  "17: L14 expr []",
+  "18: L14 Ridge [created:model@out:0] {input:alpha=0.30000000000000004}",
+  "19: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "20: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.41631600878600916}",
+  "21: L14 expr []",
+  "22: L14 Ridge [created:model@out:0] {input:alpha=0.4}",
+  "23: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "24: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.41632462059652964}",
+  "25: L14 expr []",
+  "26: L14 Ridge [created:model@out:0] {input:alpha=0.5}",
+  "27: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "28: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.41633311134477435}",
+  "29: L14 expr []",
+  "30: L14 Ridge [created:model@out:0] {input:alpha=0.6000000000000001}",
+  "31: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "32: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4163414825486863}",
+  "33: L14 expr []",
+  "34: L14 Ridge [created:model@out:0] {input:alpha=0.7000000000000001}",
+  "35: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "36: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4163497357017937}",
+  "37: L14 expr []",
+  "38: L14 Ridge [created:model@out:0] {input:alpha=0.8}",
+  "39: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "40: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.41635787227368826}",
+  "41: L14 expr []",
+  "42: L14 Ridge [created:model@out:0] {input:alpha=0.9}",
+  "43: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "44: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.41636589371048516}",
+  "45: L14 expr []",
+  "46: L14 Ridge [created:model@out:0] {input:alpha=1.0}",
+  "47: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "48: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4163738014352796}",
+  "49: L14 expr []",
+  "50: L14 Ridge [created:model@out:0] {input:alpha=1.1}",
+  "51: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "52: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4163815968485899}",
+  "53: L14 expr []",
+  "54: L14 Ridge [created:model@out:0] {input:alpha=1.2000000000000002}",
+  "55: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "56: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4163892813287906}",
+  "57: L14 expr []",
+  "58: L14 Ridge [created:model@out:0] {input:alpha=1.3}",
+  "59: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "60: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4163968562325362}",
+  "61: L14 expr []",
+  "62: L14 Ridge [created:model@out:0] {input:alpha=1.4000000000000001}",
+  "63: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "64: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4164043228951775}",
+  "65: L14 expr []",
+  "66: L14 Ridge [created:model@out:0] {input:alpha=1.5}",
+  "67: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "68: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.41641168263116446}",
+  "69: L14 expr []",
+  "70: L14 Ridge [created:model@out:0] {input:alpha=1.6}",
+  "71: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "72: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4164189367344431}",
+  "73: L14 expr []",
+  "74: L14 Ridge [created:model@out:0] {input:alpha=1.7000000000000002}",
+  "75: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "76: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4164260864788457}",
+  "77: L14 expr []",
+  "78: L14 Ridge [created:model@out:0] {input:alpha=1.8}",
+  "79: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "80: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.41643313311846464}",
+  "81: L14 expr []",
+  "82: L14 Ridge [created:model@out:0] {input:alpha=1.9000000000000001}",
+  "83: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "84: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.41644007788802806}",
+  "85: L14 expr []",
+  "86: L14 Ridge [created:model@out:0] {input:alpha=2.0}",
+  "87: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "88: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4164469220032615}",
+  "89: L14 expr []",
+  "90: L14 Ridge [created:model@out:0] {input:alpha=3.0}",
+  "91: L15 Ridge.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "92: L16 Ridge.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4165100817270013}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_loop 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:onprdx.0.1rcg1zk",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:1vnkpvx.0.11i6nkl",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:amvtlp.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#1",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#2",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#3",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:3xg8nf.0",
+    9,
+    21,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_mpl 1`] = `
+[
+  "0: -",
+  "1: L4 import plt [created:import plt]",
+  "2: L5 import pd [created:import pd]",
+  "3: L7 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "4: L7 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "5: L8 expr [input:df output:chip(Series)]",
+  "6: L8 Series.sort_values [input:chip(Series)@in:self output:chip(Series)@out:0]",
+  "7: L8 Series.to_numpy [input:chip(Series)@in:self output:chip(array)@out:0]",
+  "8: L8 expr [input:df output:chip(Series)]",
+  "9: L8 Series.sort_values [input:chip(Series)@in:self output:chip(Series)@out:0]",
+  "10: L8 Series.to_numpy [input:chip(Series)@in:self output:chip(array)@out:0]",
+  "11: L8 plot [input:chip(array)@in:args[0] input:chip(array)@in:args[1] created:list[1]@out:0]",
+  "12: L9 show []",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_mpl 2`] = `
+[
+  [
+    "import",
+    "m:1wv9z81.0.sn3znb",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:1pzpqvs.0",
+    10,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_nested 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L6 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "3: L7 DataFrame.dropna [owner:df output:chip(DF)@out:0]",
+  "4: L7 DataFrame.head [input:chip(DF)@in:self output:chip(DF)@out:0] {input:n=50}",
+  "5: L7 NDFrame.describe [input:chip(DF)@in:self created:summary@out:0]",
+  "6: L8 DataFrame.dropna [owner:df output:chip(DF)@out:0]",
+  "7: L8 DataFrame.head [input:chip(DF)@in:self created:DF@out:0] {input:n=10}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_nested 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:1qcc8mf.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:aq4rzu.0",
+    6,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_nosig 1`] = `
+[
+  "0: -",
+  "1: L5 import np [created:import np]",
+  "2: L6 import pd [created:import pd]",
+  "3: L8 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "4: L8 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "5: L9 expr [input:df output:chip(Series)]",
+  "6: L9 log [input:chip(Series)@in:x created:logp@out:0]",
+  "7: L10 expr [input:df output:chip(Series)]",
+  "8: L10 expr [input:df output:chip(Series)]",
+  "9: L10 add [input:chip(Series)@in:x1 input:chip(Series)@in:x2 created:total@out:0]",
+  "10: L11 expr [input:df output:chip(Series)]",
+  "11: L11 maximum [input:chip(Series)@in:x1 created:big@out:0] {input:x2=1000}",
+  "12: L12 Series.round [owner:logp output:chip(Series)@out:0] {input:decimals=3}",
+  "13: L12 Series.head [input:chip(Series)@in:self output:chip(Series)@out:0] {input:n=3}",
+  "14: L12 Series.tolist [input:chip(Series)@in:self created:list[3]@out:0]",
+  "15: L12 Series.head [owner:total output:chip(Series)@out:0] {input:n=3}",
+  "16: L12 Series.tolist [input:chip(Series)@in:self created:list[3]@out:0]",
+  "17: L12 Series.head [owner:big output:chip(Series)@out:0] {input:n=3}",
+  "18: L12 Series.tolist [input:chip(Series)@in:self created:list[3]@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_nosig 2`] = `
+[
+  [
+    "import",
+    "m:65f47k.0.j7c76b",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:xdqf0v.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:1fbvkub.0",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:doyqw5.0",
+    10,
+    1,
+  ],
+  [
+    "instance",
+    "i:13qdgdv.0",
+    13,
+    1,
+  ],
+  [
+    "instance",
+    "i:c47xlt.0",
+    15,
+    1,
+  ],
+  [
+    "instance",
+    "i:hk3029.0",
+    17,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_repr 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L19 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "3: L20 Table [input:df@in:df created:t@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_repr 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:g9r6uw.0",
+    2,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_reserved 1`] = `
+[
+  "0: -",
+  "1: L3 import builtins [created:import builtins]",
+  "2: L5 import pd [created:import pd]",
+  "3: L32 DataFrame [created:df@out:0] {input:data={"site": [1, 2], "fn": [3, 4]}}",
+  "4: L33 show [input:df@in:args[0]] {input:site="a" input:fn="b" output:0=('a', 'b', 1)}",
+  "5: L33 print [] {input:args[0]=('a', 'b', 1)}",
+  "6: L34 Child [created:Child@out:0]",
+  "7: L34 Child.label [owner:Child] {output:0='child+base'}",
+  "8: L34 count_locals [output:chip(list[2])@out:0]",
+  "9: L34 print [input:chip(list[2])@in:args[1]] {input:args[0]='child+base'}",
+  "10: L35 expr [input:df output:chip(Series)]",
+  "11: L35 expr [input:df output:chip(Series)]",
+  "12: L35 DataFrame.assign [owner:df input:chip(Series)@in:site input:chip(Series)@in:fn output:chip(DF)@out:0]",
+  "13: L35 DataFrame.sum [input:chip(DF)@in:self output:chip(Series)@out:0]",
+  "14: L35 Series.to_dict [input:chip(Series)@in:self output:chip(dict[2])@out:0]",
+  "15: L35 print [input:chip(dict[2])@in:args[0]]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_reserved 2`] = `
+[
+  [
+    "import",
+    "m:mln5h3.0.43eo3t",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:7g4jly.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:1l7vfis.0",
+    5,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_store 1`] = `
+[
+  "0: -",
+  "1: L3 import pd [created:import pd]",
+  "2: L5 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "3: L6 store [output:df*]",
+  "4: L7 expr [input:df output:chip(Series)]",
+  "5: L7 Series.isna [input:chip(Series)@in:self created:mask@out:0]",
+  "6: L8 store [input:mask output:df*]",
+  "7: L9 expr [input:df output:chip(Series)]",
+  "8: L9 Series.round [input:chip(Series)@in:self output:chip(Series)@out:0] {input:decimals=3}",
+  "9: L9 Series.head [input:chip(Series)@in:self created:Series@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_store 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:1daqhqx.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:8b0erw.0",
+    8,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_student_fn 1`] = `
+[
+  "0: -",
+  "1: L5 import pd [created:import pd]",
+  "2: L6 import LinearRegression [created:import LinearRegression]",
+  "3: L24 load [created:X@out:0 created:y@out:1] {input:path="listings.csv"}",
+  "4: L25 Pipeline [created:pipe@out:0]",
+  "5: L26 Pipeline.run [owner:pipe input:X@in:X input:y@in:y] {output:0=0.3703319032141523}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_student_fn 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:hft6en.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:hft6en.0#1",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:1t51mtq.0",
+    3,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_syntax 1`] = `
+[
+  "0: -",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_syntax 2`] = `[]`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_warning 1`] = `
+[
+  "0: -",
+  "1: L4 import warnings [created:import warnings]",
+  "2: L6 import pd [created:import pd]",
+  "3: L7 import LogisticRegression [created:import LogisticRegression]",
+  "4: L10 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "5: L10 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "6: L12 expr [input:df created:X]",
+  "7: L13 expr [input:df output:chip(Series)]",
+  "8: L13 Series.median [input:chip(Series)@in:self] {output:0=162.34}",
+  "9: L13 expr [input:df created:y]",
+  "10: L14 LogisticRegression [created:clf@out:0] {input:max_iter=2}",
+  "11: L15 LogisticRegression.fit [owner:clf* input:X@in:X input:y@in:y]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > edge_warning 2`] = `
+[
+  [
+    "import",
+    "m:1xqqb1a.0.ktsfpw",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:122fznx.0.jttqxu",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:amvtlp.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:baf3pv.0",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:jnknup.0",
+    9,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > golden_linreg 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import LinearRegression [created:import LinearRegression]",
+  "3: L6 import train_test_split [created:import train_test_split]",
+  "4: L8 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "5: L8 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "6: L9 expr [input:df created:X]",
+  "7: L10 expr [input:df created:y]",
+  "8: L11 train_test_split [input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.2 input:random_state=0}",
+  "9: L12 LinearRegression [created:model@out:0]",
+  "10: L13 LinearRegression.fit [owner:model* input:X_train@in:X input:y_train@in:y]",
+  "11: L14 LinearRegression.predict [owner:model input:X_test@in:X created:pred@out:0]",
+  "12: L15 LinearRegression.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4162894314248661}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > golden_linreg 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:1vnkpvx.0.11i6nkl",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wehbtt.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:amvtlp.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#1",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#2",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#3",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:sjhxu7.0",
+    10,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > golden_onehot 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import train_test_split [created:import train_test_split]",
+  "3: L6 import OneHotEncoder [created:import OneHotEncoder]",
+  "4: L8 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "5: L9 expr [input:df created:X]",
+  "6: L10 expr [input:df created:y]",
+  "7: L11 train_test_split [input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.2 input:random_state=0}",
+  "8: L12 OneHotEncoder [created:enc@out:0] {input:handle_unknown="ignore"}",
+  "9: L13 OneHotEncoder.fit [owner:enc* input:X_train@in:X]",
+  "10: L14 OneHotEncoder.transform [owner:enc input:X_train@in:X created:train_enc@out:0]",
+  "11: L15 OneHotEncoder.transform [owner:enc input:X_test@in:X created:test_enc@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > golden_onehot 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:1vnkpvx.0.11i6nkl",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:k8ohks.0.cqq2h6",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:66mkbo.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#1",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#2",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#3",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:1ntullb.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:dp47c5.0",
+    9,
+    1,
+  ],
+  [
+    "instance",
+    "i:63m8yj.0",
+    10,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > golden_split 1`] = `
+[
+  "0: -",
+  "1: L4 import pd [created:import pd]",
+  "2: L5 import train_test_split [created:import train_test_split]",
+  "3: L7 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "4: L8 DataFrame.dropna [owner:df created:df′@out:0]",
+  "5: L9 expr [input:df′ created:X]",
+  "6: L10 expr [input:df′ created:y]",
+  "7: L11 train_test_split [input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.2 input:random_state=0}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > golden_split 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:1vnkpvx.0.11i6nkl",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:1rjye1a.0",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:amvtlp.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#1",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#2",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#3",
+    6,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > heavy 1`] = `
+[
+  "0: -",
+  "1: L5 import pd [created:import pd]",
+  "2: L6 import RandomForestRegressor [created:import RandomForestRegressor]",
+  "3: L7 import GridSearchCV [created:import GridSearchCV created:import train_test_split]",
+  "4: L9 read_csv [output:chip(DF)@out:0] {input:filepath_or_buffer="listings_10k.csv"}",
+  "5: L9 DataFrame.dropna [input:chip(DF)@in:self created:df@out:0]",
+  "6: L10 expr [input:df output:chip(DF)]",
+  "7: L10 get_dummies [input:chip(DF)@in:data created:X@out:0]",
+  "8: L11 expr [input:df created:y]",
+  "9: L12 train_test_split [input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.2 input:random_state=0}",
+  "10: L13 RandomForestRegressor [created:forest@out:0] {input:random_state=0}",
+  "11: L15 GridSearchCV [input:forest@in:estimator input:grid@in:param_grid created:search@out:0] {input:cv=3}",
+  "12: L16 GridSearchCV.fit [owner:search* input:X_train@in:X input:y_train@in:y]",
+  "13: L18 GridSearchCV.score [owner:search input:X_test@in:X input:y_test@in:y] {output:0=0.959804707950971}",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > heavy 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:a80tic.0.1vjmf01",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:94w58s.0.1g14w5w",
+    2,
+    1,
+  ],
+  [
+    "import",
+    "m:94w58s.0.11i6nkl",
+    2,
+    1,
+  ],
+  [
+    "instance",
+    "i:z9k9xu.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:13qdsoa.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#1",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#2",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#3",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:1566nv0.0",
+    9,
+    1,
+  ],
+  [
+    "instance",
+    "i:mti101.0",
+    10,
+    1,
+  ],
+  [
+    "instance",
+    "i:mti101.0!v10",
+    10,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > large_pandas 1`] = `
+[
+  "0: -",
+  "1: L3 import pd [created:import pd]",
+  "2: L5 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "3: L6 expr [input:df output:chip(Series)]",
+  "4: L6 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "5: L6 expr [input:df output:chip(Series)]",
+  "6: L6 Series.fillna [input:chip(Series)@in:self created:m0@out:0] {input:value=160.515}",
+  "7: L7 store [input:m0 output:df*]",
+  "8: L8 expr [input:df output:chip(DF)]",
+  "9: L8 DataFrame.describe [input:chip(DF)@in:self created:s0@out:0]",
+  "10: L9 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "11: L9 expr [input:df output:chip(SeriesGroupBy)]",
+  "12: L9 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "13: L9 Series.reset_index [input:chip(Series)@in:self created:g0@out:0]",
+  "14: L10 expr [input:df output:chip(Series)]",
+  "15: L10 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "16: L10 expr [input:df output:chip(Series)]",
+  "17: L10 Series.fillna [input:chip(Series)@in:self created:m1@out:0] {input:value=160.515}",
+  "18: L11 store [input:m1 output:df*]",
+  "19: L12 expr [input:df output:chip(DF)]",
+  "20: L12 DataFrame.describe [input:chip(DF)@in:self created:s1@out:0]",
+  "21: L13 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "22: L13 expr [input:df output:chip(SeriesGroupBy)]",
+  "23: L13 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "24: L13 Series.reset_index [input:chip(Series)@in:self created:g1@out:0]",
+  "25: L14 expr [input:df output:chip(Series)]",
+  "26: L14 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "27: L14 expr [input:df output:chip(Series)]",
+  "28: L14 Series.fillna [input:chip(Series)@in:self created:m2@out:0] {input:value=160.515}",
+  "29: L15 store [input:m2 output:df*]",
+  "30: L16 expr [input:df output:chip(DF)]",
+  "31: L16 DataFrame.describe [input:chip(DF)@in:self created:s2@out:0]",
+  "32: L17 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "33: L17 expr [input:df output:chip(SeriesGroupBy)]",
+  "34: L17 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "35: L17 Series.reset_index [input:chip(Series)@in:self created:g2@out:0]",
+  "36: L18 expr [input:df output:chip(Series)]",
+  "37: L18 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "38: L18 expr [input:df output:chip(Series)]",
+  "39: L18 Series.fillna [input:chip(Series)@in:self created:m3@out:0] {input:value=160.515}",
+  "40: L19 store [input:m3 output:df*]",
+  "41: L20 expr [input:df output:chip(DF)]",
+  "42: L20 DataFrame.describe [input:chip(DF)@in:self created:s3@out:0]",
+  "43: L21 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "44: L21 expr [input:df output:chip(SeriesGroupBy)]",
+  "45: L21 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "46: L21 Series.reset_index [input:chip(Series)@in:self created:g3@out:0]",
+  "47: L22 expr [input:df output:chip(Series)]",
+  "48: L22 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "49: L22 expr [input:df output:chip(Series)]",
+  "50: L22 Series.fillna [input:chip(Series)@in:self created:m4@out:0] {input:value=160.515}",
+  "51: L23 store [input:m4 output:df*]",
+  "52: L24 expr [input:df output:chip(DF)]",
+  "53: L24 DataFrame.describe [input:chip(DF)@in:self created:s4@out:0]",
+  "54: L25 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "55: L25 expr [input:df output:chip(SeriesGroupBy)]",
+  "56: L25 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "57: L25 Series.reset_index [input:chip(Series)@in:self created:g4@out:0]",
+  "58: L26 expr [input:df output:chip(Series)]",
+  "59: L26 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "60: L26 expr [input:df output:chip(Series)]",
+  "61: L26 Series.fillna [input:chip(Series)@in:self created:m5@out:0] {input:value=160.515}",
+  "62: L27 store [input:m5 output:df*]",
+  "63: L28 expr [input:df output:chip(DF)]",
+  "64: L28 DataFrame.describe [input:chip(DF)@in:self created:s5@out:0]",
+  "65: L29 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "66: L29 expr [input:df output:chip(SeriesGroupBy)]",
+  "67: L29 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "68: L29 Series.reset_index [input:chip(Series)@in:self created:g5@out:0]",
+  "69: L30 expr [input:df output:chip(Series)]",
+  "70: L30 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "71: L30 expr [input:df output:chip(Series)]",
+  "72: L30 Series.fillna [input:chip(Series)@in:self created:m6@out:0] {input:value=160.515}",
+  "73: L31 store [input:m6 output:df*]",
+  "74: L32 expr [input:df output:chip(DF)]",
+  "75: L32 DataFrame.describe [input:chip(DF)@in:self created:s6@out:0]",
+  "76: L33 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "77: L33 expr [input:df output:chip(SeriesGroupBy)]",
+  "78: L33 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "79: L33 Series.reset_index [input:chip(Series)@in:self created:g6@out:0]",
+  "80: L34 expr [input:df output:chip(Series)]",
+  "81: L34 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "82: L34 expr [input:df output:chip(Series)]",
+  "83: L34 Series.fillna [input:chip(Series)@in:self created:m7@out:0] {input:value=160.515}",
+  "84: L35 store [input:m7 output:df*]",
+  "85: L36 expr [input:df output:chip(DF)]",
+  "86: L36 DataFrame.describe [input:chip(DF)@in:self created:s7@out:0]",
+  "87: L37 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "88: L37 expr [input:df output:chip(SeriesGroupBy)]",
+  "89: L37 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "90: L37 Series.reset_index [input:chip(Series)@in:self created:g7@out:0]",
+  "91: L38 expr [input:df output:chip(Series)]",
+  "92: L38 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "93: L38 expr [input:df output:chip(Series)]",
+  "94: L38 Series.fillna [input:chip(Series)@in:self created:m8@out:0] {input:value=160.515}",
+  "95: L39 store [input:m8 output:df*]",
+  "96: L40 expr [input:df output:chip(DF)]",
+  "97: L40 DataFrame.describe [input:chip(DF)@in:self created:s8@out:0]",
+  "98: L41 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "99: L41 expr [input:df output:chip(SeriesGroupBy)]",
+  "100: L41 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "101: L41 Series.reset_index [input:chip(Series)@in:self created:g8@out:0]",
+  "102: L42 expr [input:df output:chip(Series)]",
+  "103: L42 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "104: L42 expr [input:df output:chip(Series)]",
+  "105: L42 Series.fillna [input:chip(Series)@in:self created:m9@out:0] {input:value=160.515}",
+  "106: L43 store [input:m9 output:df*]",
+  "107: L44 expr [input:df output:chip(DF)]",
+  "108: L44 DataFrame.describe [input:chip(DF)@in:self created:s9@out:0]",
+  "109: L45 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "110: L45 expr [input:df output:chip(SeriesGroupBy)]",
+  "111: L45 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "112: L45 Series.reset_index [input:chip(Series)@in:self created:g9@out:0]",
+  "113: L46 expr [input:df output:chip(Series)]",
+  "114: L46 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "115: L46 expr [input:df output:chip(Series)]",
+  "116: L46 Series.fillna [input:chip(Series)@in:self created:m10@out:0] {input:value=160.515}",
+  "117: L47 store [input:m10 output:df*]",
+  "118: L48 expr [input:df output:chip(DF)]",
+  "119: L48 DataFrame.describe [input:chip(DF)@in:self created:s10@out:0]",
+  "120: L49 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "121: L49 expr [input:df output:chip(SeriesGroupBy)]",
+  "122: L49 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "123: L49 Series.reset_index [input:chip(Series)@in:self created:g10@out:0]",
+  "124: L50 expr [input:df output:chip(Series)]",
+  "125: L50 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "126: L50 expr [input:df output:chip(Series)]",
+  "127: L50 Series.fillna [input:chip(Series)@in:self created:m11@out:0] {input:value=160.515}",
+  "128: L51 store [input:m11 output:df*]",
+  "129: L52 expr [input:df output:chip(DF)]",
+  "130: L52 DataFrame.describe [input:chip(DF)@in:self created:s11@out:0]",
+  "131: L53 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "132: L53 expr [input:df output:chip(SeriesGroupBy)]",
+  "133: L53 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "134: L53 Series.reset_index [input:chip(Series)@in:self created:g11@out:0]",
+  "135: L54 expr [input:df output:chip(Series)]",
+  "136: L54 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "137: L54 expr [input:df output:chip(Series)]",
+  "138: L54 Series.fillna [input:chip(Series)@in:self created:m12@out:0] {input:value=160.515}",
+  "139: L55 store [input:m12 output:df*]",
+  "140: L56 expr [input:df output:chip(DF)]",
+  "141: L56 DataFrame.describe [input:chip(DF)@in:self created:s12@out:0]",
+  "142: L57 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "143: L57 expr [input:df output:chip(SeriesGroupBy)]",
+  "144: L57 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "145: L57 Series.reset_index [input:chip(Series)@in:self created:g12@out:0]",
+  "146: L58 expr [input:df output:chip(Series)]",
+  "147: L58 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "148: L58 expr [input:df output:chip(Series)]",
+  "149: L58 Series.fillna [input:chip(Series)@in:self created:m13@out:0] {input:value=160.515}",
+  "150: L59 store [input:m13 output:df*]",
+  "151: L60 expr [input:df output:chip(DF)]",
+  "152: L60 DataFrame.describe [input:chip(DF)@in:self created:s13@out:0]",
+  "153: L61 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "154: L61 expr [input:df output:chip(SeriesGroupBy)]",
+  "155: L61 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "156: L61 Series.reset_index [input:chip(Series)@in:self created:g13@out:0]",
+  "157: L62 expr [input:df output:chip(Series)]",
+  "158: L62 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "159: L62 expr [input:df output:chip(Series)]",
+  "160: L62 Series.fillna [input:chip(Series)@in:self created:m14@out:0] {input:value=160.515}",
+  "161: L63 store [input:m14 output:df*]",
+  "162: L64 expr [input:df output:chip(DF)]",
+  "163: L64 DataFrame.describe [input:chip(DF)@in:self created:s14@out:0]",
+  "164: L65 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "165: L65 expr [input:df output:chip(SeriesGroupBy)]",
+  "166: L65 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "167: L65 Series.reset_index [input:chip(Series)@in:self created:g14@out:0]",
+  "168: L66 expr [input:df output:chip(Series)]",
+  "169: L66 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "170: L66 expr [input:df output:chip(Series)]",
+  "171: L66 Series.fillna [input:chip(Series)@in:self created:m15@out:0] {input:value=160.515}",
+  "172: L67 store [input:m15 output:df*]",
+  "173: L68 expr [input:df output:chip(DF)]",
+  "174: L68 DataFrame.describe [input:chip(DF)@in:self created:s15@out:0]",
+  "175: L69 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "176: L69 expr [input:df output:chip(SeriesGroupBy)]",
+  "177: L69 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "178: L69 Series.reset_index [input:chip(Series)@in:self created:g15@out:0]",
+  "179: L70 expr [input:df output:chip(Series)]",
+  "180: L70 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "181: L70 expr [input:df output:chip(Series)]",
+  "182: L70 Series.fillna [input:chip(Series)@in:self created:m16@out:0] {input:value=160.515}",
+  "183: L71 store [input:m16 output:df*]",
+  "184: L72 expr [input:df output:chip(DF)]",
+  "185: L72 DataFrame.describe [input:chip(DF)@in:self created:s16@out:0]",
+  "186: L73 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "187: L73 expr [input:df output:chip(SeriesGroupBy)]",
+  "188: L73 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "189: L73 Series.reset_index [input:chip(Series)@in:self created:g16@out:0]",
+  "190: L74 expr [input:df output:chip(Series)]",
+  "191: L74 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "192: L74 expr [input:df output:chip(Series)]",
+  "193: L74 Series.fillna [input:chip(Series)@in:self created:m17@out:0] {input:value=160.515}",
+  "194: L75 store [input:m17 output:df*]",
+  "195: L76 expr [input:df output:chip(DF)]",
+  "196: L76 DataFrame.describe [input:chip(DF)@in:self created:s17@out:0]",
+  "197: L77 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "198: L77 expr [input:df output:chip(SeriesGroupBy)]",
+  "199: L77 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "200: L77 Series.reset_index [input:chip(Series)@in:self created:g17@out:0]",
+  "201: L78 expr [input:df output:chip(Series)]",
+  "202: L78 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "203: L78 expr [input:df output:chip(Series)]",
+  "204: L78 Series.fillna [input:chip(Series)@in:self created:m18@out:0] {input:value=160.515}",
+  "205: L79 store [input:m18 output:df*]",
+  "206: L80 expr [input:df output:chip(DF)]",
+  "207: L80 DataFrame.describe [input:chip(DF)@in:self created:s18@out:0]",
+  "208: L81 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "209: L81 expr [input:df output:chip(SeriesGroupBy)]",
+  "210: L81 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "211: L81 Series.reset_index [input:chip(Series)@in:self created:g18@out:0]",
+  "212: L82 expr [input:df output:chip(Series)]",
+  "213: L82 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "214: L82 expr [input:df output:chip(Series)]",
+  "215: L82 Series.fillna [input:chip(Series)@in:self created:m19@out:0] {input:value=160.515}",
+  "216: L83 store [input:m19 output:df*]",
+  "217: L84 expr [input:df output:chip(DF)]",
+  "218: L84 DataFrame.describe [input:chip(DF)@in:self created:s19@out:0]",
+  "219: L85 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "220: L85 expr [input:df output:chip(SeriesGroupBy)]",
+  "221: L85 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "222: L85 Series.reset_index [input:chip(Series)@in:self created:g19@out:0]",
+  "223: L86 expr [input:df output:chip(Series)]",
+  "224: L86 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "225: L86 expr [input:df output:chip(Series)]",
+  "226: L86 Series.fillna [input:chip(Series)@in:self created:m20@out:0] {input:value=160.515}",
+  "227: L87 store [input:m20 output:df*]",
+  "228: L88 expr [input:df output:chip(DF)]",
+  "229: L88 DataFrame.describe [input:chip(DF)@in:self created:s20@out:0]",
+  "230: L89 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "231: L89 expr [input:df output:chip(SeriesGroupBy)]",
+  "232: L89 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "233: L89 Series.reset_index [input:chip(Series)@in:self created:g20@out:0]",
+  "234: L90 expr [input:df output:chip(Series)]",
+  "235: L90 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "236: L90 expr [input:df output:chip(Series)]",
+  "237: L90 Series.fillna [input:chip(Series)@in:self created:m21@out:0] {input:value=160.515}",
+  "238: L91 store [input:m21 output:df*]",
+  "239: L92 expr [input:df output:chip(DF)]",
+  "240: L92 DataFrame.describe [input:chip(DF)@in:self created:s21@out:0]",
+  "241: L93 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "242: L93 expr [input:df output:chip(SeriesGroupBy)]",
+  "243: L93 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "244: L93 Series.reset_index [input:chip(Series)@in:self created:g21@out:0]",
+  "245: L94 expr [input:df output:chip(Series)]",
+  "246: L94 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "247: L94 expr [input:df output:chip(Series)]",
+  "248: L94 Series.fillna [input:chip(Series)@in:self created:m22@out:0] {input:value=160.515}",
+  "249: L95 store [input:m22 output:df*]",
+  "250: L96 expr [input:df output:chip(DF)]",
+  "251: L96 DataFrame.describe [input:chip(DF)@in:self created:s22@out:0]",
+  "252: L97 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "253: L97 expr [input:df output:chip(SeriesGroupBy)]",
+  "254: L97 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "255: L97 Series.reset_index [input:chip(Series)@in:self created:g22@out:0]",
+  "256: L98 expr [input:df output:chip(Series)]",
+  "257: L98 Series.median [input:chip(Series)@in:self] {output:0=160.515}",
+  "258: L98 expr [input:df output:chip(Series)]",
+  "259: L98 Series.fillna [input:chip(Series)@in:self created:m23@out:0] {input:value=160.515}",
+  "260: L99 store [input:m23 output:df*]",
+  "261: L100 expr [input:df output:chip(DF)]",
+  "262: L100 DataFrame.describe [input:chip(DF)@in:self created:s23@out:0]",
+  "263: L101 DataFrame.groupby [owner:df created:DataFrameGroupBy@out:0] {input:by="c23"}",
+  "264: L101 expr [input:df output:chip(SeriesGroupBy)]",
+  "265: L101 SeriesGroupBy.mean [input:chip(SeriesGroupBy)@in:self output:chip(Series)@out:0]",
+  "266: L101 Series.reset_index [input:chip(Series)@in:self created:g23@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > large_pandas 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    1,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:p6b0wz.0",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:1yojkk9.0",
+    9,
+    1,
+  ],
+  [
+    "instance",
+    "i:19y5x3p.0",
+    12,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.1",
+    16,
+    1,
+  ],
+  [
+    "instance",
+    "i:4mmv34.0",
+    19,
+    1,
+  ],
+  [
+    "instance",
+    "i:w2q47e.0",
+    20,
+    1,
+  ],
+  [
+    "instance",
+    "i:yf247i.0",
+    23,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.2",
+    27,
+    1,
+  ],
+  [
+    "instance",
+    "i:11g067t.0",
+    30,
+    1,
+  ],
+  [
+    "instance",
+    "i:whxiyj.0",
+    31,
+    1,
+  ],
+  [
+    "instance",
+    "i:xn2xan.0",
+    34,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.3",
+    38,
+    1,
+  ],
+  [
+    "instance",
+    "i:nyl7x2.0",
+    41,
+    1,
+  ],
+  [
+    "instance",
+    "i:1jw6ll0.0",
+    42,
+    1,
+  ],
+  [
+    "instance",
+    "i:ewg0l4.0",
+    45,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.4",
+    49,
+    1,
+  ],
+  [
+    "instance",
+    "i:g7aefr.0",
+    52,
+    1,
+  ],
+  [
+    "instance",
+    "i:1mkz671.0",
+    53,
+    1,
+  ],
+  [
+    "instance",
+    "i:9oek7d.0",
+    56,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.5",
+    60,
+    1,
+  ],
+  [
+    "instance",
+    "i:1ff8y1g.0",
+    63,
+    1,
+  ],
+  [
+    "instance",
+    "i:1f1x7j2.0",
+    64,
+    1,
+  ],
+  [
+    "instance",
+    "i:mudsjm.0",
+    67,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.6",
+    71,
+    1,
+  ],
+  [
+    "instance",
+    "i:o5nlul.0",
+    74,
+    1,
+  ],
+  [
+    "instance",
+    "i:bipue7.0",
+    75,
+    1,
+  ],
+  [
+    "instance",
+    "i:mkdxgz.0",
+    78,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.7",
+    82,
+    1,
+  ],
+  [
+    "instance",
+    "i:3pnv5m.0",
+    85,
+    1,
+  ],
+  [
+    "instance",
+    "i:40fbbs.0",
+    86,
+    1,
+  ],
+  [
+    "instance",
+    "i:1dl0b0c.0",
+    89,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.8",
+    93,
+    1,
+  ],
+  [
+    "instance",
+    "i:50lquj.0",
+    96,
+    1,
+  ],
+  [
+    "instance",
+    "i:11c6x0h.0",
+    97,
+    1,
+  ],
+  [
+    "instance",
+    "i:2ydofh.0",
+    100,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.9",
+    104,
+    1,
+  ],
+  [
+    "instance",
+    "i:1befzm0.0",
+    107,
+    1,
+  ],
+  [
+    "instance",
+    "i:1ovu8fm.0",
+    108,
+    1,
+  ],
+  [
+    "instance",
+    "i:z7gm6e.0",
+    111,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.10",
+    115,
+    1,
+  ],
+  [
+    "instance",
+    "i:73hxq0.0",
+    118,
+    1,
+  ],
+  [
+    "instance",
+    "i:1uans7g.0",
+    119,
+    1,
+  ],
+  [
+    "instance",
+    "i:1d06uo.0",
+    122,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.11",
+    126,
+    1,
+  ],
+  [
+    "instance",
+    "i:1vk5e57.0",
+    129,
+    1,
+  ],
+  [
+    "instance",
+    "i:77nweb.0",
+    130,
+    1,
+  ],
+  [
+    "instance",
+    "i:x3i2vb.0",
+    133,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.12",
+    137,
+    1,
+  ],
+  [
+    "instance",
+    "i:lc9fy.0",
+    140,
+    1,
+  ],
+  [
+    "instance",
+    "i:16b1mfm.0",
+    141,
+    1,
+  ],
+  [
+    "instance",
+    "i:qz9u3q.0",
+    144,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.13",
+    148,
+    1,
+  ],
+  [
+    "instance",
+    "i:d7nosx.0",
+    151,
+    1,
+  ],
+  [
+    "instance",
+    "i:1i9x875.0",
+    152,
+    1,
+  ],
+  [
+    "instance",
+    "i:19fll8t.0",
+    155,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.14",
+    159,
+    1,
+  ],
+  [
+    "instance",
+    "i:66irkc.0",
+    162,
+    1,
+  ],
+  [
+    "instance",
+    "i:e8qtk0.0",
+    163,
+    1,
+  ],
+  [
+    "instance",
+    "i:1eg4xck.0",
+    166,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.15",
+    170,
+    1,
+  ],
+  [
+    "instance",
+    "i:1gv0mjz.0",
+    173,
+    1,
+  ],
+  [
+    "instance",
+    "i:1tz1vlz.0",
+    174,
+    1,
+  ],
+  [
+    "instance",
+    "i:1091e23.0",
+    177,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.16",
+    181,
+    1,
+  ],
+  [
+    "instance",
+    "i:17p8l3m.0",
+    184,
+    1,
+  ],
+  [
+    "instance",
+    "i:prnkyu.0",
+    185,
+    1,
+  ],
+  [
+    "instance",
+    "i:1e8aq4a.0",
+    188,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.17",
+    192,
+    1,
+  ],
+  [
+    "instance",
+    "i:1o8afud.0",
+    195,
+    1,
+  ],
+  [
+    "instance",
+    "i:xgxfmt.0",
+    196,
+    1,
+  ],
+  [
+    "instance",
+    "i:1uwufoh.0",
+    199,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.18",
+    203,
+    1,
+  ],
+  [
+    "instance",
+    "i:pzij4.0",
+    206,
+    1,
+  ],
+  [
+    "instance",
+    "i:256f6s.0",
+    207,
+    1,
+  ],
+  [
+    "instance",
+    "i:xolk9k.0",
+    210,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.19",
+    214,
+    1,
+  ],
+  [
+    "instance",
+    "i:blzmxf.0",
+    217,
+    1,
+  ],
+  [
+    "instance",
+    "i:1dfnu57.0",
+    218,
+    1,
+  ],
+  [
+    "instance",
+    "i:cb441b.0",
+    221,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.20",
+    225,
+    1,
+  ],
+  [
+    "instance",
+    "i:euoa0z.0",
+    228,
+    1,
+  ],
+  [
+    "instance",
+    "i:rec1cv.0",
+    229,
+    1,
+  ],
+  [
+    "instance",
+    "i:sohf1v.0",
+    232,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.21",
+    236,
+    1,
+  ],
+  [
+    "instance",
+    "i:1hdwwu8.0",
+    239,
+    1,
+  ],
+  [
+    "instance",
+    "i:jw1iag.0",
+    240,
+    1,
+  ],
+  [
+    "instance",
+    "i:k4sygs.0",
+    243,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.22",
+    247,
+    1,
+  ],
+  [
+    "instance",
+    "i:prqxqx.0",
+    250,
+    1,
+  ],
+  [
+    "instance",
+    "i:3fhb6l.0",
+    251,
+    1,
+  ],
+  [
+    "instance",
+    "i:ao92fd.0",
+    254,
+    1,
+  ],
+  [
+    "instance",
+    "i:1syo6dh.23",
+    258,
+    1,
+  ],
+  [
+    "instance",
+    "i:ybcfg6.0",
+    261,
+    1,
+  ],
+  [
+    "instance",
+    "i:1uxjehq.0",
+    262,
+    1,
+  ],
+  [
+    "instance",
+    "i:w40rr6.0",
+    265,
+    1,
+  ],
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > notebook 1`] = `
+[
+  "0: -",
+  "1: L1 import pd [created:import pd]",
+  "2: L2 import LinearRegression [created:import LinearRegression]",
+  "3: L3 import train_test_split [created:import train_test_split]",
+  "4: L4 import OneHotEncoder [created:import OneHotEncoder]",
+  "5: L6 read_csv [created:df@out:0] {input:filepath_or_buffer="listings.csv"}",
+  "6: L7 DataFrame.dropna [owner:df created:df′@out:0]",
+  "7: L8 expr [input:df′ created:X]",
+  "8: L9 expr [input:df′ created:y]",
+  "9: L10 train_test_split [input:X@in:arrays[0] input:y@in:arrays[1] created:X_train@out:0 created:X_test@out:1 created:y_train@out:2 created:y_test@out:3] {input:test_size=0.2 input:random_state=0}",
+  "10: L11 OneHotEncoder [created:enc@out:0] {input:sparse_output=False input:handle_unknown="ignore"}",
+  "11: L12 expr [input:X_train output:chip(DF)]",
+  "12: L12 OneHotEncoder.fit [owner:enc* input:chip(DF)@in:X]",
+  "13: L13 expr [input:X_train output:chip(DF)]",
+  "14: L13 OneHotEncoder.transform [owner:enc input:chip(DF)@in:X created:hood_train@out:0]",
+  "15: L14 expr [input:X_test output:chip(DF)]",
+  "16: L14 OneHotEncoder.transform [owner:enc input:chip(DF)@in:X created:hood_test@out:0]",
+  "17: L15 LinearRegression [created:model@out:0]",
+  "18: L16 LinearRegression.fit [owner:model* input:hood_train@in:X input:y_train@in:y]",
+  "19: L17 LinearRegression.score [owner:model input:hood_test@in:X input:y_test@in:y] {output:0=0.14301225707642218}",
+  "20: L18 LinearRegression.predict [owner:model input:hood_test@in:X created:pred@out:0]",
+]
+`;
+
+exports[`stageAt and shelfOrder on the golden fixtures > notebook 2`] = `
+[
+  [
+    "import",
+    "m:6w14qy.0.lg6rbl",
+    0,
+    1,
+  ],
+  [
+    "import",
+    "m:14z9t3a.0.15b7d91",
+    1,
+    1,
+  ],
+  [
+    "import",
+    "m:1vnkpvx.0.11i6nkl",
+    2,
+    1,
+  ],
+  [
+    "import",
+    "m:k8ohks.0.cqq2h6",
+    3,
+    1,
+  ],
+  [
+    "instance",
+    "i:wcu5tk.0",
+    4,
+    1,
+  ],
+  [
+    "instance",
+    "i:1rjye1a.0",
+    5,
+    1,
+  ],
+  [
+    "instance",
+    "i:j7taqu.0",
+    6,
+    1,
+  ],
+  [
+    "instance",
+    "i:xaeoav.0",
+    7,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#1",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#2",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:15uvz5m.0#3",
+    8,
+    1,
+  ],
+  [
+    "instance",
+    "i:1yhezhd.0",
+    9,
+    1,
+  ],
+  [
+    "instance",
+    "i:1mp1rp0.0",
+    13,
+    1,
+  ],
+  [
+    "instance",
+    "i:xc2iuq.0",
+    15,
+    1,
+  ],
+  [
+    "instance",
+    "i:10epbgg.0",
+    16,
+    1,
+  ],
+  [
+    "instance",
+    "i:qsq8or.0",
+    19,
+    1,
+  ],
+]
+`;
