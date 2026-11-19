@@ -1,0 +1,13 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported RandomForestRegressor from sklearn.ensemble.
+3 (event 2): Imported Ridge from sklearn.linear_model.
+4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7).
+5 (event 4): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame object (471 × 7), df.
+6 (event 5): Computed df[["beds", "baths", "sqft"]], a DataFrame (471 × 3), named X.
+7 (event 6): Computed df["price"], a Series of float64 (471), named y.
+8 (event 7): Called Ridge() from sklearn.linear_model. It created a new Ridge object.
+9 (event 8): Called RandomForestRegressor(n_estimators=10, random_state=0) from sklearn.ensemble. It created a new RandomForestRegressor object.
+10 (event 9): Computed { "ridge": Ridge(), "rf": RandomForestRegressor(n_estimator…, a dict of 2 items, named models.
+11 (event 10): Called models["rf"].fit(X, y). It changed 5 attributes of the object: estimator_, estimators_, feature_names_in_, n_features_in_ (and 1 more). It returned the object itself.
+12 (event 11): Called models["rf"].score(X, y). It returned a float (0.8588827679463272).

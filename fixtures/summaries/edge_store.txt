@@ -1,0 +1,10 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7), df.
+3 (event 2): Set column price_per_sqft of df.
+4 (event 3): Computed df["sqft"], a Series of float64 (500).
+5 (event 4): Called df["sqft"].isna(). It created a new Series object (500), mask.
+6 (event 5): Changed df in place.
+7 (event 6): Computed df["price_per_sqft"], a Series of float64 (500).
+8 (event 7): Called df["price_per_sqft"].round(3). It created a new Series object (500).
+9 (event 8): Called df["price_per_sqft"].round(3).head(). It created a new Series object (5).

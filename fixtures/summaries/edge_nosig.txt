@@ -1,0 +1,19 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported numpy as np.
+2 (event 1): Imported pandas as pd.
+3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7).
+4 (event 3): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame object (471 × 7), df.
+5 (event 4): Computed df["price"], a Series of float64 (471).
+6 (event 5): Called np.log(df["price"]) from numpy. It created a new Series object (471), logp.
+7 (event 6): Computed df["beds"], a Series of int64 (471).
+8 (event 7): Computed df["baths"], a Series of float64 (471).
+9 (event 8): Called np.add(df["beds"], df["baths"]) from numpy. It created a new Series object (471), total.
+10 (event 9): Computed df["sqft"], a Series of float64 (471).
+11 (event 10): Called np.maximum(df["sqft"], 1000) from numpy. It created a new Series object (471), big.
+12 (event 11): Called logp.round(3). It created a new Series object (471).
+13 (event 12): Called logp.round(3).head(3). It created a new Series object (3).
+14 (event 13): Called logp.round(3).head(3).tolist(). It created a new list of 3 items object.
+15 (event 14): Called total.head(3). It created a new Series object (3).
+16 (event 15): Called total.head(3).tolist(). It created a new list of 3 items object.
+17 (event 16): Called big.head(3). It created a new Series object (3).
+18 (event 17): Called big.head(3).tolist(). It created a new list of 3 items object.

@@ -1,7 +1,8 @@
-import { eventLabel } from '@machines/log';
-import { useState, type KeyboardEvent } from 'react';
+import { describeStep, eventLabel } from '@machines/log';
+import { useMemo, useState, type KeyboardEvent } from 'react';
 import { useStore } from '../store';
 import { EventList } from './EventList';
+import { SummaryText } from './SummaryText';
 import { clampStep, stepForKey } from './steps';
 import './timeline.css';
 
@@ -15,6 +16,10 @@ export function Timeline() {
   const max = model?.steps.length ?? 0;
   const cur = clampStep(step, max);
   const event = model && log && cur > 0 ? eventLabel(log, model.steps[cur - 1]!) : null;
+  const summary = useMemo(
+    () => (model && log ? describeStep(model, log, cur) : []),
+    [model, log, cur],
+  );
   const text = `Step ${cur} of ${max}`;
   const onKeyDown = (e: KeyboardEvent) => {
     const next = stepForKey(e.nativeEvent, cur, max, { vertical: true });
@@ -70,6 +75,10 @@ export function Timeline() {
       </div>
       <p className="current-event" data-testid="current-event">
         {event ?? (max > 0 ? 'Before the first step' : 'No steps yet')}
+      </p>
+      {/* polite: read out when the step changes. The parts are memoised on (model, log, step), so an unrelated re-render leaves the text alone. */}
+      <p className="step-summary" data-testid="step-summary" aria-live="polite" aria-atomic="true">
+        <SummaryText parts={summary} />
       </p>
       <div id="event-list-region" hidden={!listOpen}>
         {listOpen && <EventList />}

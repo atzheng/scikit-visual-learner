@@ -73,7 +73,7 @@ interface Index {
   nodeAt: Map<number, string>; // event i -> node drawn for it
 }
 
-function findEvent(events: Event[], i: number): Event | undefined {
+export function findEvent(events: Event[], i: number): Event | undefined {
   let lo = 0;
   let hi = events.length - 1;
   while (lo <= hi) {

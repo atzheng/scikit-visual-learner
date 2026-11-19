@@ -1,0 +1,8 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported train_test_split from sklearn.model_selection.
+3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7), df.
+4 (event 3): Called df.dropna(). It created a new DataFrame object (471 × 7), df.
+5 (event 4): Computed df[["beds", "baths", "sqft", "year_built"]], a DataFrame (471 × 4), named X.
+6 (event 5): Computed df["price"], a Series of float64 (471), named y.
+7 (event 6): Called train_test_split(X, y, test_size=0.2, random_state=0) from sklearn.model_selection. It returned 4 objects: X_train (DataFrame, 376 × 4), X_test (DataFrame, 95 × 4), y_train (Series of float64, 376), y_test (Series of float64, 95).

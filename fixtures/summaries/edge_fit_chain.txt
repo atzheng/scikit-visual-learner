@@ -1,0 +1,12 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported LinearRegression from sklearn.linear_model.
+3 (event 2): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7).
+4 (event 3): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame object (471 × 7), df.
+5 (event 4): Computed df[["beds", "baths", "sqft"]], a DataFrame (471 × 3), named X.
+6 (event 5): Computed df["price"], a Series of float64 (471), named y.
+7 (event 6): Called X.head(5). It created a new DataFrame object (5 × 3), Z.
+8 (event 7): Called LinearRegression() from sklearn.linear_model. It created a new LinearRegression object, model.
+9 (event 8): Called model.fit(X, y). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_ (and 2 more). It returned model itself.
+10 (event 9): Called model.fit(X, y).predict(Z). It created a new array object (5), preds.
+11 (event 10): Called preds.round(2). It created a new array object (5).

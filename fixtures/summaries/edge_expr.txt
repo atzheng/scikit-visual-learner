@@ -1,0 +1,15 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported LinearRegression from sklearn.linear_model.
+3 (event 2): Imported train_test_split from sklearn.model_selection.
+4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7).
+5 (event 4): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame object (471 × 7), df.
+6 (event 5): Computed df[["beds", "baths", "sqft"]], a DataFrame (471 × 3), named X.
+7 (event 6): Computed df["price"], a Series of float64 (471), named y.
+8 (event 7): Called train_test_split(X, y, test_size=0.25, random_state=1) from sklearn.model_selection. It returned 4 objects: X_train (DataFrame, 353 × 3), X_test (DataFrame, 118 × 3), y_train (Series of float64, 353), y_test (Series of float64, 118).
+9 (event 8): Called X_train.mean(). It created a new Series object (3), mean.
+10 (event 9): Computed X_train - mean, a DataFrame (353 × 3), named centred.
+11 (event 10): Called LinearRegression() from sklearn.linear_model. It created a new LinearRegression object, model.
+12 (event 11): Called model.fit(centred, y_train). It changed 6 attributes of model: coef_, feature_names_in_, intercept_, n_features_in_ (and 2 more). It returned model itself.
+13 (event 12): Computed model.coef_, an array of float64 (3), named coefs.
+14 (event 13): Called coefs.round(2). It created a new array object (3).

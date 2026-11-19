@@ -1,0 +1,11 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported pandas as pd.
+2 (event 1): Imported Ridge from sklearn.linear_model.
+3 (event 2): Imported GridSearchCV from sklearn.model_selection.
+4 (event 3): Called pd.read_csv("listings.csv") from pandas. It created a new DataFrame object (500 × 7).
+5 (event 4): Called pd.read_csv("listings.csv").dropna(). It created a new DataFrame object (471 × 7), df.
+6 (event 5): Computed df[["beds", "baths", "sqft"]], a DataFrame (471 × 3), named X.
+7 (event 6): Computed df["price"], a Series of float64 (471), named y.
+8 (event 7): Called Ridge() from sklearn.linear_model. It created a new Ridge object, base.
+9 (event 8): Called GridSearchCV(...) from sklearn.model_selection. It created a new GridSearchCV object, search.
+10 (event 9): Called search.fit(X, y). It changed 10 attributes of search: best_estimator_, best_index_, best_params_, best_score_ (and 6 more). It returned search itself.
