@@ -1,14 +1,7 @@
 // Stage model (CONTRACTS.md section 8, svl-61q.1): which objects take part in the current step, and the
 // order of the shelf. Pure: (model, log, step) -> StageModel. No layout, no DOM, no animation.
 import { keyOf } from './graph';
-import type {
-  Execution,
-  GEdge,
-  GNode,
-  GraphModel,
-  InstanceNode,
-  InstanceVersion,
-} from './graph';
+import type { Execution, GEdge, GNode, GraphModel, InstanceNode, InstanceVersion } from './graph';
 import { stateAt } from './timeline';
 import type { EventError, EventLog, Token } from './types';
 
@@ -173,7 +166,13 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
 
   const ex = node.executions.find((e) => e.i === cur);
   if (!ex) return null;
-  const result: StageModel = { ...base, execution: ex, error: ex.error, participants: [], values: [] };
+  const result: StageModel = {
+    ...base,
+    execution: ex,
+    error: ex.error,
+    participants: [],
+    values: [],
+  };
 
   if (node.kind === 'import') {
     // one statement can bind several names: every block it placed is created now
