@@ -659,6 +659,63 @@ function eventLabel(log: EventLog, i: number): string; // "line 10: train_test_s
 
 Step `steps.length` (the end) shows everything, including wires ready after the last drawn step. `step` 0 shows nothing (unless no step is drawn, when step 0 is also the end and shows everything) except `output` entries with `i = -1`. Out-of-range steps are clamped; NaN is step 0. An out-wire of a merged box lags the box: on iteration 3 of a loop the badge says 3 of n, but a wire to a later consumer keeps carrying iteration 2's token until that consumer's own iteration 3 starts (no false wires). A source node is visible when any of its edges is. `activeToken` is per visible edge: the token of its latest use with `i <= current` and producer `ret <= current`. `activeExecution` has call, expr and store nodes only. `attrsBefore/After` come from the `mutates` entry on the owner (or the owner's own attrs for both when the method does not mutate it). `eventLabel` appends ` (error: T)`, ` (handled T)` or ` (stopped here)` for events with an error or `interrupted`, collapses whitespace and cuts the source text at 80 characters. `stateAt` caches an index per (model, log) object pair, so reuse the same objects while scrubbing.
 
+**Stage and shelf model** (svl-61q.1, `stage.ts`; the two-pane view of epic svl-61q). Pure functions next to `stateAt`; no layout, DOM or animation.
+
+```ts
+function stageAt(model: GraphModel, log: EventLog, step: number): StageModel | null; // null at step 0, or when the current event's box is not in the model
+function shelfOrder(model: GraphModel): ShelfEntry[];
+
+interface StageModel {
+  node: string; // the call/expr/store/import node of the current event (an instance id for an instance-only step)
+  kind: GNode['kind'];
+  execution: Execution | null; // the current execution of `node`; null only for an instance
+  i: number; // event i of the step
+  line: number | null; // source line of the event
+  error: EventError | null;
+  participants: StageParticipant[]; // objects, in order: owner, inputs (port order), outputs and created (out-port order)
+  values: StageValue[]; // inline scalars and literals
+}
+type StageRole = 'owner' | 'input' | 'output' | 'created';
+interface StageParticipant {
+  kind: 'instance' | 'import' | 'chip'; // instance: a shelf object; import: an import block; chip: a folded temporary, stage-only
+  role: StageRole;
+  node: string; // instance or import node id; a chip: the id its box would have (`GEdge.chip.node`)
+  object: string | null; // `v12`; null for an import
+  token: Token | null; // the token that travelled (for a chip: `chip.token`); null for an import
+  port: string | null; // the stage node's in-port (input) or out-port (output, created) it binds to; null for owner, imports, and expr/store nodes (no ports)
+  param: string | null; // the in-port's param (expr/store: the operand name), or the output index text; null for owner and imports
+  edge: string | null; // the GEdge that carries it, so the stage can draw the wire; null for owner and imports
+  changed: boolean; // the step changed it in place (a `mutate` or `store` version made by this event)
+  after?: Token; // with `changed`: the version this event made
+  objectOf?: { k: number; n: number }; // a merged loop box holding n > 1 objects: which one this step means
+  chip?: { type: string; shape: number[] | null };
+}
+interface StageValue {
+  role: 'input' | 'output';
+  port: string;
+  param: string;
+  token: Token | null; // null for a literal argument
+  text: string | null; // the literal text (`0.2`, `"price"`), else the scalar's repr
+  type: string | null;
+  edge: string | null;
+}
+interface ShelfEntry {
+  node: string; // instance or import node id
+  kind: 'instance' | 'import';
+  at: number; // event i at which the entry appears: `createdAt`, or the import's first run
+  objects: number; // instances: how many objects the box holds (a merged loop box is ONE entry); 1 for an import
+}
+```
+
+Rules:
+
+- **Which object.** `token` and `object` come from the execution's own tokens (`owner`, `inputs`, `outputs`), so a merged loop box names the object of this pass exactly; `objectOf` says which of the box's `n`. `stateAt(...).activeVersion` stays the box's attribute source. An instance with no box match is left out: a participant is never guessed (no false wires, no false labels).
+- **Roles.** `owner` = the execution's object owner (a method's receiver; it has no port and no edge). `input` = an object on an in-port. `output` = an object on an out-port that already had a box. `created` = an output object whose box has a `new` version at this event (a constructor, `read_csv`, each `train_test_split` result, an expr that yields an object). An import step has one `created` participant of kind `import` per name it binds. An object that is both an owner/input and changed (`fit`) has `changed: true`.
+- **Chips** (folded temporaries) are participants of kind `chip`, role `input` or `output`: they have no box, are never on the shelf, and exist on the stage only for the step that produces or consumes them (a chip is produced in one step and consumed in a later one; it is not carried between). `edge` is the chip wire.
+- **Scalars and constants are not participants.** They are `values`, drawn inline in the stage: a literal gives `token: null` and its text, a scalar gives its token and repr, scalar outputs (`score`) are `role: 'output'`. They are never shelf objects.
+- The same object can appear twice with different params (`df["c"] = df["a"] / df["b"]` uses `df` for `target` and for `value[df]`); both are listed, and may share an `edge` (edges are one per endpoint pair).
+- `shelfOrder` is sorted by `at`, then `order`, then id: creation order, with imports as entries at their step. A merged loop box is one entry. A box is on the shelf from the step after its `at` line; while that line is the current step its object is on the stage (so the renderer slides it in afterwards). Chips, scalars and sources are never entries. A truncated model (`tooMany`) lists only the boxes it kept, and `stageAt` returns null for steps whose box was cut; participants that were cut are left out.
+
 **Renderer** (`@machines/render`):
 
 ```ts
