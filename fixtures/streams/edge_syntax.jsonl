@@ -1,0 +1,2 @@
+{"sites": [], "type": "started"}
+{"error": {"line": 5, "message": "'(' was never closed", "traceback": [{"kind": "student", "line": 5, "name": "<module>", "text": "df = pd.read_csv(\"listings.csv\""}], "type": "SyntaxError"}, "status": "error", "type": "done"}
