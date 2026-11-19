@@ -932,6 +932,8 @@ export interface SetStepOptions {
 export const MOVE_MS = 325;
 /** z-index of a card in flight: above the stage, the shelf, other cards and the wires. */
 export const FLY_Z = 1000;
+/** Length of the wire and value fades that frame the two phases, in ms. */
+const FADE_MS = 150;
 
 export interface CardMove {
   key: string;
@@ -940,6 +942,13 @@ export interface CardMove {
   /** Where the card was, relative to where it is now (the start of the transform). Zero for `enter`. */
   dx: number;
   dy: number;
+  /**
+   * Which phase of the step animation plays it (svl-aut). 1: cards that go back to the shelf and cards that stay
+   * on the stage and take their new places. 2: cards that come onto the stage, from the shelf or from nowhere.
+   * Stepping back needs no special case: what the later step used leaves in phase 1, what the earlier step used
+   * returns in phase 2.
+   */
+  phase: 1 | 2;
 }
 
 /**
@@ -962,14 +971,24 @@ export function planMoves(
     const rb = rel?.before.get(key);
     const ra = rel?.after.get(key);
     if (b && rb && ra && Math.abs(rb.x - ra.x) < 1 && Math.abs(rb.y - ra.y) < 1) continue;
-    if (!b) out.push({ key, kind: 'enter', dx: 0, dy: 0 });
+    // phase 2 only for a card that ends on the stage (not in the shelf) and was not on the stage before; without
+    // `rel` a move is phase 1
+    const toStage = !!rel && !ra;
+    const fromStage = !!rel && !!b && !rb;
+    if (!b) out.push({ key, kind: 'enter', dx: 0, dy: 0, phase: 2 });
     else if (
       Math.abs(b.x - a.x) >= 1 ||
       Math.abs(b.y - a.y) >= 1 ||
       Math.abs(b.w - a.w) >= 1 ||
       Math.abs(b.h - a.h) >= 1
     )
-      out.push({ key, kind: 'move', dx: b.x - a.x, dy: b.y - a.y });
+      out.push({
+        key,
+        kind: 'move',
+        dx: b.x - a.x,
+        dy: b.y - a.y,
+        phase: toStage && !fromStage ? 2 : 1,
+      });
   }
   return out;
 }
@@ -1332,9 +1351,20 @@ export async function mountTwoPane(
     const z = Number.parseFloat(doc.defaultView?.getComputedStyle(canvas).zoom ?? '1');
     return Number.isFinite(z) && z > 0 ? z : 1;
   };
-  const play = (target: Element, frames: Keyframe[], lifted?: Rect | null): void => {
+  const play = (
+    target: Element,
+    frames: Keyframe[],
+    lifted?: Rect | null,
+    timing: { delay?: number; duration?: number } = {},
+  ): void => {
     if (typeof target.animate !== 'function') return;
-    const anim = target.animate(frames, { duration: MOVE_MS, easing: 'ease-out' });
+    const delay = timing.delay ?? 0;
+    // a delayed animation holds its first frame while it waits (the later phase's cards stay where they were)
+    const anim = target.animate(frames, {
+      duration: timing.duration ?? MOVE_MS,
+      easing: 'ease-out',
+      ...(delay > 0 ? { delay, fill: 'backwards' as const } : {}),
+    });
     running.push(anim);
     if (lifted && target instanceof HTMLElement) {
       const restore = lift(target, lifted, zoomOf(target));
@@ -1379,7 +1409,6 @@ export async function mountTwoPane(
     finishAnimations();
     const flip = sopts.animate === true && !reducedMotion();
     const before = flip ? measureCards() : null;
-    const prevWires = wireKeys;
     const total = model.steps.length;
     current = Number.isNaN(step) ? 0 : Math.max(0, Math.min(total, Math.trunc(step)));
     const st = stateAt(model, log, current);
@@ -1503,6 +1532,8 @@ export async function mountTwoPane(
     }
 
     // 3. wires, values, notes
+    // the wires of the step being left fade out (see `flyCards`); `drawWires` replaces them
+    const oldWires = before ? [...wiresSvg.querySelectorAll('[data-wire]')] : [];
     drawWires();
     drawValues(stage);
     drawLabels();
@@ -1614,7 +1645,7 @@ export async function mountTwoPane(
     rove();
     // the host zooms the stage to this step's plan now, so the landing places measured below are final
     sopts.fit?.();
-    if (before) flyCards(before, prevWires);
+    if (before) flyCards(before, oldWires);
     // a card that was re-parented loses focus: it keeps it, wherever it went
     if (
       hadFocus &&
@@ -1630,55 +1661,86 @@ export async function mountTwoPane(
   }
 
   /**
-   * The animation, from the measured `before` to the DOM as it is now (already zoomed): cards move, resize and
-   * enter, new wires fade in. One place, so a later two-phase version (clear, rearrange, bring in) can split it.
+   * The step animation, from the measured `before` to the DOM as it is now (already zoomed). Two phases, each
+   * MOVE_MS (svl-aut): 1) cards the step does not use go back to the shelf, the ones that stay on the stage take
+   * their new places, and the old wires fade out; 2) the cards the step needs come onto the stage. The wires and
+   * values of the new step fade in when the last phase ends. A phase with nothing in it is skipped. Phase 2 is the
+   * same animation with a delay (it holds its first frame while it waits), so cancelling any animation finishes
+   * everything: the DOM already holds the final state.
    */
   function flyCards(
     before: { abs: Map<string, Rect | null>; rel: Map<string, Rect | null> },
-    prevWires: ReadonlySet<string>,
+    oldWires: Element[],
   ): void {
-    {
-      const byKey = new Map(allCards());
-      const after = measureCards();
-      for (const mv of planMoves(before.abs, after.abs, { before: before.rel, after: after.rel })) {
-        const w = byKey.get(mv.key);
-        if (!w) continue;
-        if (mv.kind === 'move') {
-          const b = before.abs.get(mv.key)!;
-          const a = after.abs.get(mv.key)!;
-          // viewport px -> the card's own (zoomed) units; a card that changes size (the stage zoom changed)
-          // grows or shrinks along the way instead of popping
-          const k = zoomOf(w);
-          const sx = a.w > 0 ? b.w / a.w : 1;
-          const sy = a.h > 0 ? b.h / a.h : 1;
-          const scaled = Math.abs(sx - 1) > 0.005 || Math.abs(sy - 1) > 0.005;
-          const origin = scaled ? { transformOrigin: '0 0' } : {};
-          play(
-            w,
-            [
-              {
-                transform: `translate(${mv.dx / k}px, ${mv.dy / k}px)${scaled ? ` scale(${sx}, ${sy})` : ''}`,
-                ...origin,
-              },
-              { transform: 'none', ...origin },
-            ],
-            a,
-          );
-        } else
-          play(
-            w,
-            [
-              { opacity: 0, transform: 'translateY(8px)' },
-              { opacity: 1, transform: 'none' },
-            ],
-            after.abs.get(mv.key),
-          );
-      }
-      // only wires that were not there before fade in; the others stay as they are
-      for (const e of wiresSvg.querySelectorAll('[data-wire]'))
-        if (!prevWires.has((e as SVGElement).dataset.wire!))
-          play(e, [{ opacity: 0 }, { opacity: 1 }]);
+    const byKey = new Map(allCards());
+    const after = measureCards();
+    const moves = planMoves(before.abs, after.abs, { before: before.rel, after: after.rel });
+    const phase1 = moves.some((m) => m.phase === 1);
+    const phase2 = moves.some((m) => m.phase === 2);
+    const delayOf = (m: CardMove): number => (m.phase === 2 && phase1 ? MOVE_MS : 0);
+    for (const mv of moves) {
+      const w = byKey.get(mv.key);
+      if (!w) continue;
+      const timing = { delay: delayOf(mv) };
+      if (mv.kind === 'move') {
+        const b = before.abs.get(mv.key)!;
+        const a = after.abs.get(mv.key)!;
+        // viewport px -> the card's own (zoomed) units; a card that changes size (the stage zoom changed)
+        // grows or shrinks along the way instead of popping
+        const k = zoomOf(w);
+        const sx = a.w > 0 ? b.w / a.w : 1;
+        const sy = a.h > 0 ? b.h / a.h : 1;
+        const scaled = Math.abs(sx - 1) > 0.005 || Math.abs(sy - 1) > 0.005;
+        const origin = scaled ? { transformOrigin: '0 0' } : {};
+        play(
+          w,
+          [
+            {
+              transform: `translate(${mv.dx / k}px, ${mv.dy / k}px)${scaled ? ` scale(${sx}, ${sy})` : ''}`,
+              ...origin,
+            },
+            { transform: 'none', ...origin },
+          ],
+          a,
+          timing,
+        );
+      } else
+        play(
+          w,
+          [
+            { opacity: 0, transform: 'translateY(8px)' },
+            { opacity: 1, transform: 'none' },
+          ],
+          after.abs.get(mv.key),
+          timing,
+        );
     }
+    // the old wires fade out at the start (a ghost layer, so they are not hit-tested or read), the new wires and
+    // values fade in once the cards have landed
+    if (oldWires.length > 0) {
+      const ghost = sv(doc, 'g', { 'aria-hidden': 'true', 'pointer-events': 'none' });
+      for (const e of oldWires) {
+        e.removeAttribute('data-wire');
+        e.removeAttribute('data-edge');
+        ghost.append(e);
+      }
+      wiresSvg.append(ghost);
+      const gone = (): void => ghost.remove();
+      restores.push(gone);
+      if (typeof ghost.animate === 'function') {
+        const anim = ghost.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: FADE_MS,
+          easing: 'ease-out',
+        });
+        running.push(anim);
+        anim.onfinish = gone;
+      } else gone();
+    }
+    const fadeIn = (phase1 ? MOVE_MS : 0) + (phase2 ? MOVE_MS : 0);
+    const appear = [{ opacity: 0 }, { opacity: 1 }];
+    for (const e of wiresSvg.querySelectorAll('[data-wire]'))
+      play(e, appear, null, { delay: fadeIn, duration: FADE_MS });
+    if (!valuesEl.hidden) play(valuesEl, appear, null, { delay: fadeIn, duration: FADE_MS });
   }
 
   // the card's own box: an instance card also holds its method boxes, which are separate `.md-node`s
