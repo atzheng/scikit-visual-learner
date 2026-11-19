@@ -327,6 +327,20 @@ def test_figures_closed_after_show() -> None:
     assert log["output"][2]["text"] == "0\n"
 
 
+def test_second_run_shows_only_its_own_figure_and_unshown_figures_are_dropped() -> None:
+    first = "import matplotlib.pyplot as plt\nplt.plot([1, 2])\n"  # never shown
+    second = (
+        "import matplotlib.pyplot as plt\nplt.plot([2, 1])\nplt.show()\n"
+        "print(len(plt.get_fignums()))\n"
+    )
+    assert not [o for o in record(first)["output"] if o["stream"] == "figure"]
+    log = record(second)
+    assert [o["stream"] for o in log["output"]] == ["figure", "stdout"]
+    assert log["output"][1]["text"] == "0\n"
+    log = record(second)  # again: still exactly one figure
+    assert [o["stream"] for o in log["output"]] == ["figure", "stdout"]
+
+
 def test_no_matplotlib_import_unless_student_does() -> None:
     saved = {k: v for k, v in sys.modules.items() if k.startswith("matplotlib")}
     for k in saved:

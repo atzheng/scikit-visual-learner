@@ -10,6 +10,8 @@ export function progressText(p: ProgressMessage): string {
       return `Loading numpy, pandas, scikit-learn${n}…`;
     case 'recorder':
       return 'Installing the recorder…';
+    case 'matplotlib': // posted during a run: 0/1 while the wheels load, 1/1 when they are in
+      return p.done < p.total ? 'Loading matplotlib…' : 'Running…';
     case 'datasets':
       return `Loading datasets${n}…`;
   }

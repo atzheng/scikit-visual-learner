@@ -540,6 +540,12 @@ describe('pure helpers', () => {
     expect(versionsText({ python: '3.14.0', numpy: '2.0', pandas: '3.0', sklearn: '1.8' })).toBe(
       'Python 3.14.0 · numpy 2.0 · pandas 3.0 · scikit-learn 1.8',
     );
+    expect(progressText({ type: 'progress', phase: 'matplotlib', done: 0, total: 1 })).toBe(
+      'Loading matplotlib…',
+    );
+    expect(progressText({ type: 'progress', phase: 'matplotlib', done: 1, total: 1 })).toBe(
+      'Running…',
+    );
     expect(elapsedLabel(1999)).toBeNull();
     expect(elapsedLabel(3400)).toBe('3 s');
   });

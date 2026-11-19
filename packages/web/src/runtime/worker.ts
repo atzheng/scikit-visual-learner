@@ -184,7 +184,16 @@ async function loadImports(source: string): Promise<void> {
     }
     return !failed;
   };
-  if (await tryLoad(source)) return;
+  // matplotlib is large: load it only for code that imports it, and say so while it loads.
+  const needsMpl =
+    !pyodide.loadedPackages.matplotlib &&
+    /^\s*(import\s+(\w+\s*,\s*)*matplotlib\b|from\s+matplotlib\b)/m.test(source);
+  if (needsMpl) post({ type: 'progress', phase: 'matplotlib', done: 0, total: 1 });
+  try {
+    if (await tryLoad(source)) return;
+  } finally {
+    if (needsMpl) post({ type: 'progress', phase: 'matplotlib', done: 1, total: 1 });
+  }
   // Find out which imports are the problem, one at a time.
   const names = pyodide.runPython(
     'import json\nfrom pyodide.code import find_imports\njson.dumps(find_imports(_machines_source))',
