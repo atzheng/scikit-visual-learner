@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
-import { buildGraph, shelfAt, stageAt, stateAt } from '@machines/log';
+import { buildGraph, lineStageAt, shelfAt, stageAt, stateAt } from '@machines/log';
 import type { EventLog, GraphModel, StageParticipant } from '@machines/log';
 import {
   cardKey,
@@ -313,7 +313,9 @@ describe('mount', () => {
     for (const e of shelfAt(model, model.steps.length)) {
       const el = tp!.card(e.node)!;
       for (let t = 1; t <= model.steps.length; t++) {
-        const uses = stageAt(model, log, t)?.participants.some((p) => p.node === e.node);
+        const uses = lineStageAt(model, log, t)?.calls.some((c) =>
+          c.stage.participants.some((p) => p.node === e.node),
+        );
         if (uses || !shelfAt(model, t).some((x) => x.node === e.node)) continue;
         tp!.setStep(t);
         expect(tp!.card(e.node)).toBe(el);
@@ -638,6 +640,122 @@ describe('a method is drawn inside its owner (svl-a9e)', () => {
     expect(slot(owner.node).dataset.state).toBe('hidden');
     expect(tp!.card(owner.node)!.parentElement).toBe(slot(owner.node));
     expect(tp!.card(owner.node)!.style.position).toBe('');
+  });
+});
+
+describe('a line keeps every call on the stage (svl-qol)', () => {
+  const stepOf = (model: GraphModel, log: EventLog, re: RegExp): number => {
+    for (let s = 1; s <= model.steps.length; s++) {
+      const n = model.nodes.find((x) => x.id === stageAt(model, log, s)?.node);
+      if (n?.kind === 'call' && re.test(n.name)) return s;
+    }
+    throw new Error(`no step for ${re}`);
+  };
+
+  test('planLine: every wire joins cards or call boxes of the plan, and a chip is drawn once', async () => {
+    const names2 = ['golden_linreg', 'edge_nosig', 'edge_fit_chain', 'edge_alias', 'edge_mpl'];
+    let groups = 0;
+    for (const name of names2) {
+      const { model, log } = await open(name);
+      for (let s = 1; s <= model.steps.length; s++) {
+        tp!.setStep(s);
+        const line = lineStageAt(model, log, s)!;
+        const plan = tp!.plan!;
+        if (line.calls.length < 2 || !plan.calls) continue;
+        groups++;
+        const keys = new Set(plan.items.map((i) => i.key));
+        expect(keys.size).toBe(plan.items.length); // one card per object
+        const tags = new Set(plan.calls.map((c) => `box#${c.call}`));
+        for (const w of plan.wires) {
+          expect(keys.has(w.from) || tags.has(w.from)).toBe(true);
+          expect(keys.has(w.to) || tags.has(w.to)).toBe(true);
+          expect(w.points.length).toBeGreaterThanOrEqual(2);
+          for (const [x, y] of w.points) expect(x >= 0 && y >= 0).toBe(true);
+        }
+        // no wire the calls' own stages did not report
+        const edges = new Set(line.calls.flatMap((c) => c.stage.participants.map((p) => p.edge)));
+        for (const w of plan.wires) if (w.edge !== null) expect(edges.has(w.edge)).toBe(true);
+        expect(plan.calls.filter((c) => c.current)).toHaveLength(1);
+        for (const it of plan.items) expect(it.rect.y + it.rect.h).toBeLessThanOrEqual(plan.height);
+      }
+    }
+    expect(groups).toBeGreaterThan(5);
+  });
+
+  test('golden_linreg: dropna keeps read_csv on the stage with the chip wire between them', async () => {
+    const { model, log } = await open('golden_linreg');
+    const read = stepOf(model, log, /^read_csv$/);
+    const drop = stepOf(model, log, /\.dropna$/);
+    tp!.setStep(read);
+    expect(tp!.plan!.calls ?? []).toHaveLength(0); // one call: the single-call layout
+    tp!.setStep(drop);
+    const plan = tp!.plan!;
+    expect(plan.calls!.map((c) => [c.node, c.current])).toEqual([
+      [stageAt(model, log, read)!.node, false],
+      [stageAt(model, log, drop)!.node, true],
+    ]);
+    // both call boxes are cards on the stage; read_csv's is not the current one
+    for (const c of plan.calls!) expect(tp!.card(c.node)!.parentElement).toBe(tp!.stageEl);
+    const readG = tp!.card(plan.calls![0]!.node)!.querySelector('g.md-node')!;
+    expect(readG.classList.contains('md-current')).toBe(false);
+    expect(
+      tp!.card(plan.calls![1]!.node)!.querySelector('g.md-node')!.classList.contains('md-current'),
+    ).toBe(true);
+    // one chip, wired out of the first call and into the second
+    const chips = plan.items.filter((i) => i.participant.kind === 'chip');
+    expect(chips).toHaveLength(1);
+    const chip = chips[0]!.key;
+    expect(plan.wires.filter((w) => w.to === chip).map((w) => w.from)).toEqual(['box#0']);
+    expect(plan.wires.filter((w) => w.from === chip).map((w) => w.to)).toEqual(['box#1']);
+    const e = plan.wires.filter((w) => w.from === chip || w.to === chip).map((w) => w.edge);
+    expect(e[0]).toBe(e[1]);
+    expect(host.querySelectorAll('.md-chipcard')).toHaveLength(1);
+    // the names tell the calls apart
+    const names = [...host.querySelectorAll('.md-stage-canvas .md-node[aria-label]')].map((g) =>
+      g.getAttribute('aria-label'),
+    );
+    expect(names.some((n) => /earlier call 1 of 2 on this line/.test(n ?? ''))).toBe(true);
+    expect(names.some((n) => /current call/.test(n ?? ''))).toBe(true);
+
+    // stepping back within the line removes the later call
+    tp!.setStep(read);
+    expect(host.querySelectorAll('.md-chipcard')).toHaveLength(1); // read_csv's own output chip
+    expect(tp!.card(stageAt(model, log, drop)!.node)!.hidden).toBe(true);
+    // the next line sends every card of this one back to the shelf
+    tp!.setStep(drop + 1);
+    expect(tp!.plan!.calls).toBeUndefined();
+    expect(host.querySelectorAll('.md-chipcard')).toHaveLength(0);
+    expect(tp!.card(stageAt(model, log, read)!.node)!.hidden).toBe(true);
+  });
+
+  test('fit and predict of one chain share the owner card, one method box each', async () => {
+    const { model, log } = await open('edge_fit_chain');
+    const predict = stepOf(model, log, /\.predict$/);
+    tp!.setStep(predict);
+    const line = lineStageAt(model, log, predict)!;
+    expect(line.calls.length).toBe(2);
+    const plan = tp!.plan!;
+    expect(plan.calls!.every((c) => c.nested)).toBe(true);
+    const owner = line.current.participants.find((p) => p.role === 'owner')!;
+    const card = tp!.card(owner.node)!;
+    expect(card.parentElement).toBe(tp!.stageEl);
+    for (const c of plan.calls!)
+      expect(card.querySelector(`.md-node[data-node="${c.node}"]`)).not.toBeNull();
+    expect(host.querySelectorAll('.md-owner-line')).toHaveLength(0);
+    expect(plan.items.filter((i) => i.participant.role === 'owner')).toHaveLength(1);
+  });
+
+  test('a loop starts a new group on each pass', async () => {
+    const { model, log } = await open('edge_loop');
+    for (let s = 2; s <= model.steps.length; s++) {
+      const a = stageAt(model, log, s - 1);
+      const b = stageAt(model, log, s);
+      if (a && b && a.node === b.node) {
+        tp!.setStep(s);
+        expect(lineStageAt(model, log, s)!.first).toBe(s);
+        expect(tp!.plan!.calls?.some((c) => c.node === b.node && !c.current) ?? false).toBe(false);
+      }
+    }
   });
 });
 

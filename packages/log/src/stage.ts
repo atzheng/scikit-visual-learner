@@ -448,3 +448,129 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
   }
   return result;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Line groups (svl-qol): everything one source line does stays on the stage across its steps.
+
+/** One step of a line group, with the stage of that step alone. */
+export interface LineCall {
+  /** The step number (1-based, as in `stageAt`). */
+  step: number;
+  /** The step the timeline is on; false for the calls of the line that already ran. */
+  current: boolean;
+  stage: StageModel;
+}
+
+/** One object of the line, once, whatever its roles in the calls (`read_csv`'s output is `dropna`'s `self`). */
+export interface LineObject {
+  /** Identity: `node:object` for an instance, `chip:<edge>` for a folded temporary, the node id for a block. */
+  key: string;
+  kind: StageParticipant['kind'];
+  node: string;
+  object: string | null;
+  /** Each use: the index into `calls`, and the role it had there. In call order. */
+  uses: { call: number; role: StageRole }[];
+}
+
+export interface LineStageModel {
+  /** First step of the group; `calls[0].step`. */
+  first: number;
+  line: number | null;
+  /** The group's steps up to and including the current one, in order; the last is current. */
+  calls: LineCall[];
+  /** The current step's own stage. */
+  current: StageModel;
+  objects: LineObject[];
+}
+
+/** Does this step draw a box (call, expr or store)? Only those join a line group. */
+const boxed = (s: StageModel | null): s is StageModel =>
+  s !== null && (s.kind === 'call' || s.kind === 'expr' || s.kind === 'store');
+
+interface GroupIndex {
+  stages: (StageModel | null)[]; // by step - 1
+  start: number[]; // by step - 1: the first step of its group
+}
+const groupCache = new WeakMap<GraphModel, { log: EventLog; idx: GroupIndex }>();
+
+function groupIndex(model: GraphModel, log: EventLog): GroupIndex {
+  const hit = groupCache.get(model);
+  if (hit && hit.log === log) return hit.idx;
+  const byI = new Map(log.events.map((e) => [e.i, e]));
+  const stages: (StageModel | null)[] = [];
+  const start: number[] = [];
+  let nodes = new Set<string>();
+  let lo = 0;
+  let hi = 0;
+  model.steps.forEach((i, k) => {
+    const s = k + 1;
+    const st = stageAt(model, log, s);
+    stages.push(st);
+    const ev = byI.get(i);
+    const site = ev ? log.sites[ev.site] : undefined;
+    // the same statement's line span, and a box that has not run in this group yet: a second pass of a
+    // loop over the same line comes back to a box the group already holds
+    const join =
+      boxed(st) &&
+      site !== undefined &&
+      k > 0 &&
+      boxed(stages[k - 1]!) &&
+      site.line <= hi &&
+      site.end_line >= lo &&
+      !nodes.has(st.node);
+    if (join && site) {
+      lo = Math.min(lo, site.line);
+      hi = Math.max(hi, site.end_line);
+      nodes.add(st.node);
+      start.push(start[k - 1]!);
+    } else {
+      start.push(s);
+      nodes = new Set(st ? [st.node] : []);
+      lo = site ? site.line : 0;
+      hi = site ? site.end_line : -1;
+    }
+  });
+  const idx = { stages, start };
+  groupCache.set(model, { log, idx });
+  return idx;
+}
+
+const objectKey = (p: StageParticipant): string =>
+  p.kind === 'chip'
+    ? `chip:${p.edge ?? p.node}`
+    : p.kind === 'instance'
+      ? `${p.node}:${p.object ?? ''}`
+      : p.node;
+
+/**
+ * The stage of a line group at `step` (svl-qol): consecutive steps whose events lie in the same source lines
+ * (spans that overlap) form a group, and the group's calls up to the current one all stay on the stage. A site
+ * that already ran in the group starts a new group (the next pass of a loop over one line). Steps that draw
+ * no box (an import, a `def`, an instance-only step) are groups of their own. The calls are in step order;
+ * a later call of the same line that has not run yet is not listed. Each object appears once in `objects`
+ * with its role in every call that uses it, so an output of one call that is the next call's input is one
+ * object. Null where `stageAt` is null. Nothing is added to what the steps' own stages say: no wire or object
+ * exists here that `stageAt` did not report.
+ */
+export function lineStageAt(model: GraphModel, log: EventLog, step: number): LineStageModel | null {
+  const { stages, start } = groupIndex(model, log);
+  const s = Number.isNaN(step) ? 0 : Math.max(0, Math.min(model.steps.length, Math.trunc(step)));
+  const cur = s === 0 ? null : stages[s - 1];
+  if (!cur) return null;
+  const first = start[s - 1]!;
+  const calls: LineCall[] = [];
+  for (let k = first; k <= s; k++) {
+    const st = stages[k - 1];
+    if (st) calls.push({ step: k, current: k === s, stage: st });
+  }
+  const byKey = new Map<string, LineObject>();
+  calls.forEach((c, index) => {
+    for (const p of c.stage.participants) {
+      const key = objectKey(p);
+      let o = byKey.get(key);
+      if (!o) byKey.set(key, (o = { key, kind: p.kind, node: p.node, object: p.object, uses: [] }));
+      o.uses.push({ call: index, role: p.role });
+    }
+  });
+  return { first, line: cur.line, calls, current: cur, objects: [...byKey.values()] };
+}

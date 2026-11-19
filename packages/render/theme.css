@@ -563,6 +563,11 @@
 }
 .md-stage-values {
   position: absolute;
+  left: 0;
+  top: 0;
+}
+.md-stage-values-block {
+  position: absolute;
   font-size: 12px;
   white-space: pre;
   border-left: 3px solid var(--md-text-muted);
