@@ -942,19 +942,19 @@ describe('planMoves (pure)', () => {
       ['n', R(200, 20)],
     ]);
     expect(planMoves(shelf, stage)).toEqual([
-      { key: 'a', kind: 'move', dx: -10, dy: 80 },
-      { key: 'n', kind: 'enter', dx: 0, dy: 0 },
+      { key: 'a', kind: 'move', dx: -10, dy: 80, phase: 1 },
+      { key: 'n', kind: 'enter', dx: 0, dy: 0, phase: 2 },
     ]);
     // back: a goes stage -> shelf, n disappears (no animation), c comes back
     expect(planMoves(stage, shelf)).toEqual([
-      { key: 'a', kind: 'move', dx: 10, dy: -80 },
-      { key: 'c', kind: 'enter', dx: 0, dy: 0 },
+      { key: 'a', kind: 'move', dx: 10, dy: -80, phase: 1 },
+      { key: 'c', kind: 'enter', dx: 0, dy: 0, phase: 2 },
     ]);
   });
   test('a card that only changed size (the stage zoom changed) is animated', () => {
     const b = new Map([['a', { x: 10, y: 20, w: 100, h: 50 }]]);
     const a = new Map([['a', { x: 10, y: 20, w: 60, h: 30 }]]);
-    expect(planMoves(b, a)).toEqual([{ key: 'a', kind: 'move', dx: 0, dy: 0 }]);
+    expect(planMoves(b, a)).toEqual([{ key: 'a', kind: 'move', dx: 0, dy: 0, phase: 1 }]);
   });
   test('a shelf card that kept its place in the shelf does not slide when the stage resizes', () => {
     // the whole shelf moved down 40px (the stage grew); a goes shelf -> stage
@@ -975,9 +975,42 @@ describe('planMoves (pure)', () => {
       ['b', R(60, 0)],
     ]);
     expect(planMoves(b, a, { before: relB, after: relA })).toEqual([
-      { key: 'a', kind: 'move', dx: -10, dy: 80 },
+      { key: 'a', kind: 'move', dx: -10, dy: 80, phase: 2 },
     ]);
     expect(planMoves(b, a).map((m) => m.key)).toEqual(['a', 'b']);
+  });
+  test('phases: leaving and rearranging cards are phase 1, cards that come onto the stage phase 2', () => {
+    // s: on the stage and stays (rearranges), g: stage -> shelf, c: shelf -> stage, n: new
+    const before = new Map<string, Rect | null>([
+      ['s', R(100, 20)],
+      ['g', R(200, 20)],
+      ['c', R(0, 400)],
+    ]);
+    const after = new Map<string, Rect | null>([
+      ['s', R(120, 20)],
+      ['g', R(0, 400)],
+      ['c', R(250, 20)],
+      ['n', R(300, 20)],
+    ]);
+    const rel = {
+      before: new Map<string, Rect | null>([
+        ['s', null],
+        ['g', null],
+        ['c', R(0, 0)],
+      ]),
+      after: new Map<string, Rect | null>([
+        ['s', null],
+        ['g', R(0, 0)],
+        ['c', null],
+        ['n', null],
+      ]),
+    };
+    const phase = (m: Map<string, Rect | null>, n: Map<string, Rect | null>, r: typeof rel) =>
+      Object.fromEntries(planMoves(m, n, r).map((x) => [x.key, x.phase]));
+    expect(phase(before, after, rel)).toEqual({ s: 1, g: 1, c: 2, n: 2 });
+    // stepping back is the mirror: what was brought in leaves first, what left comes back last
+    const back = phase(after, before, { before: rel.after, after: rel.before });
+    expect(back).toEqual({ s: 1, g: 2, c: 1 });
   });
   test('cards that stay put or are not visible do not move', () => {
     const b = new Map([['a', R(0, 0)]]);
@@ -993,15 +1026,19 @@ describe('animation', () => {
   type Stub = { animate?: unknown };
   const proto = HTMLElement.prototype as unknown as Stub;
   const svgProto = SVGElement.prototype as unknown as Stub;
-  let calls: { el: Element; frames: Keyframe[] }[] = [];
+  let calls: { el: Element; frames: Keyframe[]; opts?: KeyframeAnimationOptions }[] = [];
   let cancelled = 0;
   const realRect = Element.prototype.getBoundingClientRect;
   const realMM = window.matchMedia;
   const setup = (reduced: boolean): void => {
     calls = [];
     cancelled = 0;
-    const animate = function (this: Element, frames: Keyframe[]): unknown {
-      calls.push({ el: this, frames });
+    const animate = function (
+      this: Element,
+      frames: Keyframe[],
+      opts?: KeyframeAnimationOptions,
+    ): unknown {
+      calls.push({ el: this, frames, opts });
       return { cancel: () => cancelled++ };
     };
     proto.animate = animate;
@@ -1065,6 +1102,24 @@ describe('animation', () => {
     const fwd = moved.find((m) => m.el === same.el)!;
     expect(Math.sign(tx(same))).toBe(-Math.sign(tx(fwd)));
   });
+  test('two phases: later cards wait for the first phase, wires fade in after the last', async () => {
+    setup(false);
+    const s = await usesShelf();
+    tp!.setStep(s - 1);
+    tp!.setStep(s, { animate: true });
+    const cardCalls = calls.filter((c) => c.el.matches('.md-card, .md-chipcard'));
+    const delays = cardCalls.map((c) => Number(c.opts?.delay ?? 0));
+    for (const d of delays) expect([0, MOVE_MS]).toContain(d);
+    const last = Math.max(...delays);
+    const wires = calls.filter((c) => c.el instanceof SVGElement && c.el.matches('[data-wire]'));
+    for (const w of wires)
+      expect(Number(w.opts?.delay ?? 0)).toBeGreaterThanOrEqual(last + MOVE_MS);
+    // nothing is left half-way: the next step finishes every animation
+    const n = calls.length;
+    tp!.setStep(s - 1);
+    expect(cancelled).toBeGreaterThan(0);
+    expect(calls).toHaveLength(n);
+  });
   test('MOVE_MS is 325, a flying card is lifted above everything and restored afterwards', async () => {
     expect(MOVE_MS).toBe(325);
     setup(false);
@@ -1126,19 +1181,24 @@ describe('animation', () => {
         delete (HTMLElement.prototype as unknown as Record<string, unknown>)[k];
     }
   });
-  test('only new wires fade in', async () => {
+  test('the old wires fade out as a ghost layer, every wire of the new step fades in at the end', async () => {
     setup(false);
     const s = await usesShelf();
+    tp!.setStep(s - 1);
+    const old = host.querySelectorAll('.md-stage-canvas [data-wire]').length;
     tp!.setStep(s, { animate: true });
-    tp!.setStep(s, { animate: true }); // same step again: every wire is already there
-    const wiresFaded = calls
-      .slice(0)
-      .filter((c) => c.el instanceof SVGElement && c.el.hasAttribute('data-wire'));
-    const second = wiresFaded.length;
-    const before = calls.length;
-    tp!.setStep(s, { animate: true });
-    expect(calls.slice(before).some((c) => c.el.hasAttribute('data-wire'))).toBe(false);
-    expect(second).toBeGreaterThanOrEqual(0);
+    const ghost = host.querySelector(
+      '.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]',
+    );
+    if (old > 0) expect(ghost).not.toBeNull();
+    // the ghost carries no data-wire/data-edge: it is neither hit-tested nor counted
+    expect(ghost?.querySelector('[data-wire], [data-edge]') ?? null).toBeNull();
+    const faded = calls.filter((c) => c.el instanceof SVGElement && c.el.hasAttribute('data-wire'));
+    for (const c of faded) expect(c.frames).toEqual([{ opacity: 0 }, { opacity: 1 }]);
+    tp!.setStep(s - 1); // snap: the ghost is gone
+    expect(
+      host.querySelector('.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]'),
+    ).toBeNull();
   });
   test('focus stays on a card that moved to the stage', async () => {
     setup(false);
