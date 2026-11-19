@@ -442,7 +442,7 @@ class Recorder:
                 if ev_exc is live:
                     keep.append((ev, ev_exc))
                 else:
-                    ev["error"]["handled"] = True
+                    self._settle(ev)
             self._unhandled[:] = keep
         if time.monotonic() - self._last_flush >= _FLUSH_SECONDS:
             self.flush()
@@ -942,6 +942,13 @@ class Recorder:
         if self.on_exit is not None:
             self.on_exit(ctx.i)
 
+    def _settle(self, ev: dict[str, Any]) -> None:
+        """The error of `ev` was caught. An event already streamed is sent again (same `i`), so
+        the assembled log says `handled: true` too."""
+        ev["error"]["handled"] = True
+        if any(e is ev for e in self._events) and not any(p is ev for p in self._pending_events):
+            self._pending_events.append(ev)
+
     def _add_event(self, ev: dict[str, Any]) -> None:
         if ev.get("slot"):
             old = self._slots.get(ev["merge_key"])
@@ -1227,7 +1234,7 @@ class Recorder:
         interrupted = exc is None or not isinstance(exc, Exception)
         for ev, ev_exc in self._unhandled:  # caught earlier: the run went on
             if ev_exc is not exc:
-                ev["error"]["handled"] = True
+                self._settle(ev)
         stack, self._stack = self._stack, []
         for ctx in stack:
             err: dict[str, Any] | None = None

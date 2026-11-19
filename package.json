@@ -15,7 +15,7 @@
     "build": "pnpm -r build",
     "dev": "pnpm --filter @machines/web dev",
     "preview": "pnpm --filter @machines/web preview",
-    "fixtures": "echo 'fixtures: not yet'",
+    "fixtures": "uv run python -m machines.tools.gen_fixtures",
     "e2e": "echo 'e2e: not yet'",
     "measure": "echo 'measure: not yet'"
   },

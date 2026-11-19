@@ -1,0 +1,347 @@
+{
+  "diagnostics": [],
+  "error": null,
+  "events": [
+    {
+      "count": 1,
+      "error": null,
+      "i": 0,
+      "inputs": [
+        {
+          "origin": "const",
+          "param": "filepath_or_buffer",
+          "text": "\"listings.csv\""
+        }
+      ],
+      "kind": "function",
+      "merge_key": "s0",
+      "module": "pandas",
+      "mutates": [],
+      "name": "read_csv",
+      "outputs": [
+        "v0.0"
+      ],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 0
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "df",
+          "value": "v0.0"
+        }
+      ],
+      "kind": "constructor",
+      "merge_key": "s2",
+      "module": "__main__",
+      "mutates": [],
+      "name": "Table",
+      "outputs": [
+        "v1.0"
+      ],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 2
+    }
+  ],
+  "output": [
+    {
+      "i": 1,
+      "stream": "stdout",
+      "text": "Table(rows=500, mean=178.41)\n89204.02\nTable(rows=500, mean=178.41)\n"
+    }
+  ],
+  "scopes": [
+    {
+      "bindings": [
+        [
+          0,
+          "df",
+          "v0.0"
+        ],
+        [
+          1,
+          "t",
+          "v1.0"
+        ]
+      ],
+      "id": 0,
+      "lexical_parent": null,
+      "name": "<module>",
+      "parent_event": null
+    }
+  ],
+  "sites": [
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "\"listings.csv\""
+        }
+      ],
+      "col": 5,
+      "end_col": 32,
+      "end_line": 19,
+      "func_text": "pd.read_csv",
+      "id": 0,
+      "keywords": {},
+      "kind": "call",
+      "line": 19,
+      "text": "pd.read_csv(\"listings.csv\")"
+    },
+    {
+      "col": 0,
+      "end_col": 32,
+      "end_line": 19,
+      "id": 1,
+      "kind": "bind",
+      "line": 19,
+      "targets": [
+        "df"
+      ],
+      "text": "df = pd.read_csv(\"listings.csv\")",
+      "value": {
+        "origin": "call",
+        "site": 0
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "name": "df",
+          "origin": "name"
+        }
+      ],
+      "col": 4,
+      "end_col": 13,
+      "end_line": 20,
+      "func_text": "Table",
+      "id": 2,
+      "keywords": {},
+      "kind": "call",
+      "line": 20,
+      "text": "Table(df)"
+    },
+    {
+      "col": 0,
+      "end_col": 13,
+      "end_line": 20,
+      "id": 3,
+      "kind": "bind",
+      "line": 20,
+      "targets": [
+        "t"
+      ],
+      "text": "t = Table(df)",
+      "value": {
+        "origin": "call",
+        "site": 2
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "name": "t",
+          "origin": "name"
+        }
+      ],
+      "col": 6,
+      "end_col": 13,
+      "end_line": 21,
+      "func_text": "repr",
+      "id": 4,
+      "keywords": {},
+      "kind": "call",
+      "line": 21,
+      "text": "repr(t)"
+    },
+    {
+      "args": [
+        {
+          "origin": "call",
+          "site": 4
+        }
+      ],
+      "col": 0,
+      "end_col": 14,
+      "end_line": 21,
+      "func_text": "print",
+      "id": 5,
+      "keywords": {},
+      "kind": "call",
+      "line": 21,
+      "text": "print(repr(t))"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "t"
+          ],
+          "text": "t.total"
+        },
+        {
+          "origin": "const",
+          "text": "2"
+        }
+      ],
+      "col": 6,
+      "end_col": 23,
+      "end_line": 22,
+      "func_text": "round",
+      "id": 6,
+      "keywords": {},
+      "kind": "call",
+      "line": 22,
+      "text": "round(t.total, 2)"
+    },
+    {
+      "args": [
+        {
+          "origin": "call",
+          "site": 6
+        }
+      ],
+      "col": 0,
+      "end_col": 24,
+      "end_line": 22,
+      "func_text": "print",
+      "id": 7,
+      "keywords": {},
+      "kind": "call",
+      "line": 22,
+      "text": "print(round(t.total, 2))"
+    },
+    {
+      "args": [
+        {
+          "name": "t",
+          "origin": "name"
+        }
+      ],
+      "col": 0,
+      "end_col": 8,
+      "end_line": 23,
+      "func_text": "print",
+      "id": 8,
+      "keywords": {},
+      "kind": "call",
+      "line": 23,
+      "text": "print(t)"
+    }
+  ],
+  "status": "ok",
+  "values": {
+    "v0.0": {
+      "columns": [
+        "beds",
+        "baths",
+        "sqft",
+        "neighbourhood",
+        "room_type",
+        "year_built",
+        "price"
+      ],
+      "dtypes": [
+        "int64",
+        "float64",
+        "float64",
+        "str",
+        "str",
+        "float64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "beds",
+          "baths",
+          "sqft",
+          "neighbourhood",
+          "room_type",
+          "year_built",
+          "price"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "1.0",
+            "884.0",
+            "Riverside",
+            "private_room",
+            "1975.0",
+            "83.11"
+          ],
+          [
+            "3",
+            "2.0",
+            "1254.0",
+            "Riverside",
+            "entire_home",
+            "1963.0",
+            "248.24"
+          ],
+          [
+            "2",
+            "2.0",
+            "1004.0",
+            "Uptown",
+            "shared_room",
+            "1938.0",
+            "70.46"
+          ],
+          [
+            "5",
+            "4.5",
+            "1828.0",
+            "Midtown",
+            "entire_home",
+            "NaN",
+            "370.31"
+          ],
+          [
+            "2",
+            "1.0",
+            "1063.0",
+            "Downtown",
+            "entire_home",
+            "1926.0",
+            "279.37"
+          ]
+        ]
+      },
+      "shape": [
+        500,
+        7
+      ],
+      "type": "DF"
+    },
+    "v1.0": {
+      "attrs": {
+        "df": "v0.0"
+      },
+      "machine": true,
+      "type": "Table"
+    }
+  },
+  "version": 2
+}
