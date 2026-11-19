@@ -444,6 +444,32 @@ describe('docs on boxes (svl-3ms)', () => {
 });
 
 describe('attribute docs (svl-3du)', () => {
+  test('data boxes map their summary type to the real class (svl-8e9)', async () => {
+    const { model } = await prepare('golden_linreg');
+    const arr = instOf(model, 'array');
+    expect(attrDocTarget(model, arr, 'shape')).toEqual({
+      module: 'numpy',
+      name: 'ndarray.shape',
+      attr: true,
+    });
+    expect(attrDocTarget(model, arr, 'dtype').name).toBe('ndarray.dtype');
+    expect(nodeDocTarget(model, arr)).toEqual({ module: 'numpy', name: 'ndarray' });
+    const fake = { ...arr, className: 'DF' } as InstanceNode;
+    expect(attrDocTarget(model, fake, 'shape')).toEqual({
+      module: 'pandas',
+      name: 'DataFrame.shape',
+      attr: true,
+    });
+    expect(attrDocTarget(model, { ...arr, className: 'Series' }, 'dtype').name).toBe(
+      'Series.dtype',
+    );
+    expect(attrDocTarget(model, { ...arr, className: 'sparse' }, 'nnz')).toEqual({
+      module: 'scipy.sparse',
+      name: 'spmatrix.nnz',
+      attr: true,
+    });
+  });
+
   test('an attribute-read box documents that attribute of its owner class', async () => {
     const { log, model, laid } = await prepare('edge_expr');
     const read = model.nodes.find((n) => n.kind === 'expr' && n.text === 'model.coef_')!;

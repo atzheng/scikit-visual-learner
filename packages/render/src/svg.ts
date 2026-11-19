@@ -339,12 +339,26 @@ export function moreMethodsFor(model: GraphModel, log: EventLog): Record<string,
   return out;
 }
 
+/**
+ * Data boxes carry the value summary's short type name (python/machines/values.py), not a class name.
+ * Map each to the real module and class so their rows resolve to library docs (svl-8e9). A sparse
+ * summary does not record its format, so it documents the `spmatrix` base.
+ */
+const SUMMARY_CLASSES: Record<string, { module: string; name: string }> = {
+  array: { module: 'numpy', name: 'ndarray' },
+  DF: { module: 'pandas', name: 'DataFrame' },
+  Series: { module: 'pandas', name: 'Series' },
+  sparse: { module: 'scipy.sparse', name: 'spmatrix' },
+};
+
 /** Target for opening the docs of `method` of an instance's class. The module comes from the constructor box or a method box. */
 export function methodDocTarget(
   model: GraphModel,
   inst: InstanceNode,
   method: string,
 ): MethodDocTarget {
+  const known = SUMMARY_CLASSES[inst.className];
+  if (known) return { module: known.module, name: `${known.name}.${method}` };
   let module: string | null = null;
   const creator = model.nodes.find((n) => n.id === inst.createdBy);
   if (creator?.kind === 'call' && creator.name === inst.className) module = creator.module;
@@ -365,7 +379,7 @@ export function nodeDocTarget(model: GraphModel, node: GNode): MethodDocTarget |
   if (node.kind === 'call') return { module: node.module, name: node.name };
   if (node.kind === 'instance') {
     const t = methodDocTarget(model, node, '');
-    return { module: t.module, name: node.className };
+    return { module: t.module, name: SUMMARY_CLASSES[node.className]?.name ?? node.className };
   }
   if (node.kind === 'expr') return attrReadDocTarget(model, node);
   return null;
