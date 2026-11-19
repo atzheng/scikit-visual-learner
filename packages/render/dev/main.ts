@@ -9,8 +9,9 @@ import {
   createLegend,
   layout,
   mount,
+  mountTwoPane,
 } from '../src/index';
-import type { DiagramController } from '../src/index';
+import type { DiagramController, TwoPaneController } from '../src/index';
 import { SCENARIOS } from './models';
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
@@ -25,6 +26,7 @@ scenario.innerHTML = SCENARIOS.map((s, k) => `<option value="${k}">${s.name}</op
 $('legend').append(createLegend(document, params.has('legend')));
 
 let ctl: DiagramController | null = null;
+let twoPane: TwoPaneController | null = null; // ?view=twopane: shelf and stage instead of the diagram
 let model: GraphModel;
 let log: EventLog;
 
@@ -41,6 +43,11 @@ const controller = (): DiagramController =>
   }));
 
 function show(step: number): void {
+  if (twoPane) {
+    twoPane.setStep(step);
+    label.textContent = `${Math.min(step, model.steps.length)} of ${model.steps.length}`;
+    return;
+  }
   const st = stateAt(model, log, step);
   controller().setState(st, log);
   label.textContent = `${Math.min(step, model.steps.length)} of ${model.steps.length}`;
@@ -58,6 +65,16 @@ async function load(): Promise<void> {
   const fixture = fx ? fixtures[`../../../fixtures/logs/${fx}.json`]?.default : undefined;
   log = fixture ?? sc.log();
   model = buildGraph(log, { expanded: new Set() });
+  if (params.get('view') === 'twopane') {
+    twoPane?.destroy();
+    twoPane = await mountTwoPane($('stage'), model, log);
+    slider.max = String(model.steps.length);
+    const at = params.get('step');
+    slider.value = at === null ? String(model.steps.length) : at;
+    show(Number(slider.value));
+    document.body.dataset.ready = '1';
+    return;
+  }
   const laid = await layout(model, {
     attrRows: attrRowsFor(model, log),
     moreMethods: moreMethodsFor(model, log),

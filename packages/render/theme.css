@@ -495,3 +495,119 @@
 .md-type-tag::before {
   content: ': ';
 }
+
+/* ---- two-pane view: shelf and stage (svl-61q.2) ---- */
+.md-twopane {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  color: var(--md-text);
+  font-family: var(--md-font-mono);
+  font-size: 12px;
+}
+.md-stage,
+.md-shelf-sec {
+  border: 1px solid var(--md-inst-stroke);
+  border-radius: 10px;
+  padding: 8px;
+  background: var(--md-bg);
+}
+.md-stage-notes {
+  display: flex;
+  gap: 14px;
+  min-height: 18px;
+  font-weight: bold;
+}
+.md-stage-note {
+  color: var(--md-error);
+}
+.md-stage-empty {
+  margin: 12px 8px;
+  color: var(--md-text-muted);
+}
+.md-stage-canvas {
+  position: relative;
+  overflow: visible;
+}
+.md-stage-wires {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.md-stage-wires .md-wire {
+  fill: none;
+}
+.md-stage-wires .md-owner-line .md-wire {
+  stroke-dasharray: 2 4;
+}
+.md-stage-wires text {
+  font-size: 11px;
+}
+.md-stage-values {
+  position: absolute;
+  font-size: 12px;
+  white-space: pre;
+  border-left: 3px solid var(--md-text-muted);
+  padding: 2px 8px;
+}
+.md-shelf-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--md-text-muted);
+  font-weight: bold;
+}
+.md-shelf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  align-items: flex-start;
+}
+.md-slot {
+  margin: -16px 0 -22px;
+}
+.md-card {
+  position: relative;
+}
+.md-card[hidden],
+.md-slot[hidden],
+.md-slot-ph[hidden],
+.md-slot-cap[hidden],
+.md-stage-values[hidden] {
+  display: none;
+}
+.md-slot-ph {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  border: 2px dashed var(--md-inst-stroke);
+  border-radius: 10px;
+  color: var(--md-text-muted);
+  text-align: center;
+  overflow: hidden;
+}
+.md-slot-ph-name {
+  font-weight: bold;
+  color: var(--md-text);
+}
+.md-slot-cap {
+  text-align: center;
+  color: var(--md-text-muted);
+  margin-top: -20px;
+  position: relative;
+}
+.md-chipcard {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed var(--md-type-text);
+  border-radius: 13px;
+  background: var(--md-type-fill);
+  color: var(--md-type-text);
+  white-space: nowrap;
+}

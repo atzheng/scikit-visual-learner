@@ -1159,6 +1159,10 @@ export interface ApplyContext {
   prevCurrent: number | null | undefined;
   reducedMotion: boolean;
   schedule: (fn: () => void) => void;
+  /** Two-pane view (svl-61q.2): instance ids whose attributes may be marked changed, instead of the parent of the current method box. */
+  owns?: ReadonlySet<string>;
+  /** Two-pane view: the version of an instance to draw, instead of its latest (or its constructor's result). */
+  versionOf?: ReadonlyMap<string, Token>;
 }
 
 /** Position the focus ring of a wire label around its text once it is visible. */
@@ -1227,10 +1231,11 @@ export function applyState(
     const status = statusOf(exec);
     const isCurrent = visible && state.currentNode === h.id;
     // the instance whose method is the current event: only its attributes can be marked as changed
-    const ownsCurrent =
-      visible &&
-      state.currentNode !== null &&
-      dom.nodes.get(state.currentNode)?.node.parent === h.id;
+    const ownsCurrent = ctx.owns
+      ? visible && ctx.owns.has(h.id)
+      : visible &&
+        state.currentNode !== null &&
+        dom.nodes.get(state.currentNode)?.node.parent === h.id;
     const uncalled = visible && state.uncalled.has(h.id);
     toggle(h.g, 'md-uncalled', uncalled);
     for (const el of h.stateEls) {
@@ -1294,7 +1299,7 @@ export function applyState(
       (isCurrent ? ', current step' : '');
 
     if (h.rows && h.node.kind === 'instance') {
-      const token = displayVersion(h.node, state, mi);
+      const token = ctx.versionOf?.get(h.id) ?? displayVersion(h.node, state, mi);
       const rows = instanceRowModels(h.node, token, log?.values);
       const cap = h.rows.length;
       const overflow = rows.length > cap;
