@@ -319,9 +319,50 @@ export interface CardInfo {
   stage: Rect | null;
 }
 
+export interface SetStepOptions {
+  /**
+   * Animate the cards from where they were to where they are now (FLIP, ~250ms, ease-out, transforms only).
+   * Default false: snap. The caller decides: a single step (arrow keys, buttons) animates; slider drags,
+   * jumps, event-list clicks and re-runs snap. `prefers-reduced-motion: reduce` always snaps.
+   */
+  animate?: boolean;
+}
+
+/** Animation length in ms. */
+export const MOVE_MS = 250;
+
+export interface CardMove {
+  key: string;
+  /** `move`: the card was visible and still is (shelf to stage and back); `enter`: it was not visible before. */
+  kind: 'move' | 'enter';
+  /** Where the card was, relative to where it is now (the start of the transform). Zero for `enter`. */
+  dx: number;
+  dy: number;
+}
+
+/**
+ * Pure FLIP plan: from each card's rectangle before a step change and after it (null = not visible), which
+ * cards move and from where. One function serves both directions: stepping back swaps before and after, so a
+ * card that went shelf -> stage now goes stage -> shelf. Cards that disappear are not animated.
+ */
+export function planMoves(
+  before: ReadonlyMap<string, Rect | null>,
+  after: ReadonlyMap<string, Rect | null>,
+): CardMove[] {
+  const out: CardMove[] = [];
+  for (const [key, a] of after) {
+    if (!a) continue;
+    const b = before.get(key);
+    if (!b) out.push({ key, kind: 'enter', dx: 0, dy: 0 });
+    else if (Math.abs(b.x - a.x) >= 1 || Math.abs(b.y - a.y) >= 1)
+      out.push({ key, kind: 'move', dx: b.x - a.x, dy: b.y - a.y });
+  }
+  return out;
+}
+
 export interface TwoPaneController {
-  /** Show step `step` (clamped; NaN is 0). */
-  setStep(step: number): void;
+  /** Show step `step` (clamped; NaN is 0). Snaps unless `opts.animate`. A running animation is finished first. */
+  setStep(step: number, opts?: SetStepOptions): void;
   readonly step: number;
   /** Every card that exists so far, with where it is and its two rectangles. */
   cards(): CardInfo[];
@@ -557,8 +598,40 @@ export async function mountTwoPane(
     return { w: Math.ceil(`temporary: ${label}`.length * 7.2) + 20, h: 26 };
   };
 
-  function setStep(step: number): void {
+  // FLIP: running animations are cancelled when the next step starts. The DOM already holds the final state
+  // (an animation only offsets it), so cancelling "finishes it instantly".
+  let running: Animation[] = [];
+  const finishAnimations = (): void => {
+    for (const a of running) a.cancel();
+    running = [];
+  };
+  const reducedMotion = (): boolean =>
+    doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
+  const allCards = (): [string, HTMLElement][] => [
+    ...[...cards].map(([k, c]) => [k, c.wrap] as [string, HTMLElement]),
+    ...chipEls,
+  ];
+  const measureCards = (): Map<string, Rect | null> => {
+    const m = new Map<string, Rect | null>();
+    for (const [k, w] of allCards()) {
+      if (!w.isConnected || w.closest('[hidden]')) m.set(k, null);
+      else {
+        const r = w.getBoundingClientRect();
+        m.set(k, { x: r.left, y: r.top, w: r.width, h: r.height });
+      }
+    }
+    return m;
+  };
+  const play = (target: Element, frames: Keyframe[]): void => {
+    if (typeof target.animate !== 'function') return;
+    running.push(target.animate(frames, { duration: MOVE_MS, easing: 'ease-out' }));
+  };
+
+  function setStep(step: number, sopts: SetStepOptions = {}): void {
     if (destroyed) return;
+    finishAnimations();
+    const flip = sopts.animate === true && !reducedMotion();
+    const before = flip ? measureCards() : null;
     const total = model.steps.length;
     current = Number.isNaN(step) ? 0 : Math.max(0, Math.min(total, Math.trunc(step)));
     const st = stateAt(model, log, current);
@@ -677,6 +750,29 @@ export async function mountTwoPane(
         );
     }
     rove();
+    if (before) {
+      const byKey = new Map(allCards());
+      for (const mv of planMoves(before, measureCards())) {
+        const w = byKey.get(mv.key);
+        if (!w) continue;
+        if (mv.kind === 'move')
+          play(w, [{ transform: `translate(${mv.dx}px, ${mv.dy}px)` }, { transform: 'none' }]);
+        else
+          play(w, [
+            { opacity: 0, transform: 'translateY(8px)' },
+            { opacity: 1, transform: 'none' },
+          ]);
+      }
+      if (plan) play(wiresSvg, [{ opacity: 0 }, { opacity: 1 }]);
+    }
+    // a card that was re-parented loses focus: it keeps it, wherever it went
+    if (
+      hadFocus &&
+      (active instanceof HTMLElement || active instanceof SVGElement) && // a card's box is an svg <g>
+      active.isConnected &&
+      doc.activeElement !== active
+    )
+      active.focus({ preventScroll: true });
     if (hadFocus && active instanceof HTMLElement && active.isConnected === false) {
       const again = root.querySelector('[tabindex="0"]');
       if (again instanceof HTMLElement && !root.contains(doc.activeElement)) again.focus();
@@ -947,6 +1043,7 @@ export async function mountTwoPane(
     },
     destroy() {
       destroyed = true;
+      finishAnimations();
       root.removeEventListener('focusin', onFocusIn);
       root.removeEventListener('keydown', onKey, true);
       for (const c of cards.values()) c.ctl?.destroy();

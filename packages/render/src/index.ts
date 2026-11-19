@@ -45,10 +45,20 @@ export {
   statusOf,
   summaryLabel,
 } from './svg';
-export { mountTwoPane, planStage, cardKey, valueLine, CARD_PAD } from './twopane';
+export {
+  mountTwoPane,
+  planStage,
+  planMoves,
+  cardKey,
+  valueLine,
+  CARD_PAD,
+  MOVE_MS,
+} from './twopane';
 export type {
   BoxSize,
   CardInfo,
+  CardMove,
+  SetStepOptions,
   PlanItem,
   PlanWire,
   Rect,
