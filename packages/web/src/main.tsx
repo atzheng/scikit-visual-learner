@@ -2,6 +2,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './app.css';
+import { DEFAULT_RUN_CONFIG } from './course';
+import { startRuntime, useStore } from './store';
+
+startRuntime();
 
 const root = document.getElementById('root');
 if (root) {
@@ -10,4 +14,9 @@ if (root) {
       <App />
     </StrictMode>,
   );
+}
+
+// ?debug exposes the store for browser checks (svl-bwv.2); remove with the real diagram pane if unwanted.
+if (new URLSearchParams(location.search).has('debug')) {
+  Object.assign(window, { __machines: useStore, __runConfig: DEFAULT_RUN_CONFIG });
 }

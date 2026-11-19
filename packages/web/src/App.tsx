@@ -10,6 +10,7 @@ import { DiagramPane } from './diagram/DiagramPane';
 import { Editor } from './editor/Editor';
 import { OutputPane } from './output/OutputPane';
 import { LinkBanner, ShareButton, useLoadShareLink } from './share/ShareUI';
+import { elapsedLabel } from './runtime/status';
 import { useStore } from './store';
 import { Timeline } from './timeline/Timeline';
 
@@ -63,6 +64,8 @@ function Toolbar() {
   const state = useStore((s) => s.runtime.state);
   const run = useStore((s) => s.run);
   const stop = useStore((s) => s.stop);
+  const restart = useStore((s) => s.restart);
+  const elapsed = elapsedLabel(useStore((s) => s.elapsedMs));
   const [menuOpen, setMenuOpen] = useState(false);
   const ready = state === 'ready';
   return (
@@ -76,6 +79,11 @@ function Toolbar() {
         <button type="button" className="primary" onClick={() => void run()} disabled={!ready}>
           Run
         </button>
+      )}
+      {running && elapsed && (
+        <span className="elapsed" role="timer" aria-label={`Running for ${elapsed}`}>
+          {elapsed}
+        </span>
       )}
       <ShareButton />
       <div className="menu">
@@ -99,7 +107,7 @@ function Toolbar() {
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
-                // TODO(svl-bwv.2): RuntimeClient.restart()
+                void restart();
               }}
             >
               Restart Python

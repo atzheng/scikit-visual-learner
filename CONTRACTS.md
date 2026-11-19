@@ -332,7 +332,7 @@ def reset_between_runs() -> None       # close matplotlib figures, pd.reset_opti
 - Redirect `sys.stdout` and `sys.stderr` to writers that append `OutputEntry` tagged with `recorder.current_event`. Merge consecutive writes with the same tag and stream; the pending entry is committed when the tag or stream changes, when a recorded call starts, and at the end of the run (so the log does not depend on timing). Warning and figure entries are never merged.
 - Warnings: override `warnings.showwarning` to emit `stream: 'warning'` entries formatted as `"<line>: <Category>: <message>"`. The line is the student line of the innermost open recorded call (or the warning's own line if it is `<student>`). Do not change warning filters.
 - `builtins.input` raises `RuntimeError("input() is not supported here")` during a run. Plain Python with stdin closed raises `EOFError`, so `except EOFError` does not catch it here.
-- Recursion: raise `sys.setrecursionlimit` to twice its value during a run (each wrapped call adds one frame). Verify the Pyodide stack survives it, and lower it if not.
+- Recursion: raise `sys.setrecursionlimit` to twice its value during a run (each wrapped call adds one frame). Verified on Pyodide 314.0.8 (svl-bwv.2): pure-Python recursion to depth 1900 works and runaway recursion raises `RecursionError` at the doubled limit, so 2x stays. Recursion that passes through C frames (`map`, `sorted(key=)`, `np.vectorize`) overflows the wasm stack and kills the interpreter ("Pyodide has suffered a fatal error") even at limit 500, so it is a Pyodide property and not caused by the doubling; the worker turns it into a worker error, the client reports `status: error` and starts a new worker.
 - Wall clock: the worker enforces `wall_ms` (section 7). `runtime.py` itself doesn't time out.
 - `tracebacks.py`: `student_traceback(exc) -> list[TracebackFrame]`. Drop frames from `machines/*`. Keep `<student>` frames with their linecache text. Fold runs of other frames into `{kind:'library', count, modules}` (`modules`: top-level module names, in order, deduplicated). Each recorded call adds a second `<student>` frame at the same line; identical student frames with a dropped recorder frame between them are merged, and runs of identical consecutive student frames (recursion) become one frame with `repeat` = the number of further occurrences. `RunError.line` is the deepest student frame. A `SyntaxError` has one student frame with the offending line's text.
 - `mpl.py`: if `matplotlib` is imported by the run, force the `Agg` backend before the import completes, and patch `plt.show` to emit each open figure as a `figure` output entry (PNG, base64, 100 dpi) and close it.
@@ -380,7 +380,8 @@ interface RunConfig { draw_modules: string[]; draw_builtins: boolean; draw_conta
 
 ```ts
 class RuntimeClient {
-  constructor(opts: { workerUrl: URL; onProgress(p): void; onReady(v): void });
+  constructor(opts: { onProgress(p): void; onReady(v): void; onState?(s): void; onError?(msg: string): void;
+                      workerUrl?: URL; createWorker?(url: URL): WorkerLike });  // the page passes createWorker with a literal `new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' })` (Vite only bundles that form); tests pass a fake
   state: 'loading' | 'ready' | 'running' | 'restarting';
   run(source: string, config: RunConfig, onUpdate: (log: EventLog) => void): Promise<EventLog>;  // onUpdate at most once per animation frame
   stop(): void;                 // interrupt; terminate + restart if no 'done' within 2 s or not isolated
@@ -389,9 +390,9 @@ class RuntimeClient {
 }
 ```
 
-The wall clock (`config.wall_ms`) is enforced by the client and goes through the same path as `stop()`, but finishes with `timeout`.
+The wall clock (`config.wall_ms`) is enforced by the client and goes through the same path as `stop()`, but finishes with `timeout`. It starts when `started` arrives (the worker may first be loading imports such as matplotlib); until then a 15 s grace plus `wall_ms` bounds the wait. A `done(stopped)` that follows a stop request is relabelled `stopped` or `timeout` by the client; any other `done` status is kept. A worker `error` event mid-run finishes the run with status `error` and a `WorkerError` `RunError`, then respawns; during load it calls `onError` and does not loop (`restart()` retries).
 
-**Worker** (`runtime/worker.ts`) on start: load the self-hosted Pyodide from `/pyodide/` with progress messages. Load numpy, pandas, scipy and scikit-learn. Write `python/machines/*.py` (bundled with `import.meta.glob('…/python/machines/**/*.py', { query: '?raw', eager: true })`) to `/home/pyodide/machines/`. Write the datasets from `course.ts`. Install the hooks. Send `ready`. Before each run, call `pyodide.loadPackagesFromImports(source)` (this is how matplotlib loads lazily), then `machines.run`. Translate `emit` dicts to messages with `toJs({ dict_converter: Object.fromEntries })`.
+**Worker** (`runtime/worker.ts`) on start: load the self-hosted Pyodide from `/pyodide/` with progress messages. Load numpy, pandas, scipy and scikit-learn. Write `python/machines/*.py` (bundled with `import.meta.glob('…/python/machines/**/*.py', { query: '?raw', eager: true })`) to `/home/pyodide/machines/`. Write the datasets from `course.ts`. Install the hooks. Send `ready`. Before each run, call `pyodide.loadPackagesFromImports(source)` (this is how matplotlib loads lazily), then `machines.run`. Translate `emit` dicts to messages with `toJs({ dict_converter: Object.fromEntries })`, then replace `undefined` (Python `None`) with `null` and BigInt with Number. Datasets are fetched from `/datasets/<name>` (`packages/web/public/datasets/`, a copy of `fixtures/data/listings.csv`). The worker keeps a stack of open calls so `on_exit(i)` restores the outer call in `currentCall`. The interrupt buffer is zeroed at the start and end of each run. `file` messages return a CSV row count of non-empty lines minus the header.
 
 **App store** (`store.ts`, zustand), the single source of state shared by the UI beads:
 
@@ -405,7 +406,7 @@ interface AppState {
   step: number; setStep(n: number): void;        // 0..steps.length (section 8)
   selection: { node?: string; edge?: string; pinned?: boolean };
   expanded: Set<string>;                         // M4; empty in M1–3
-  run(): Promise<void>; stop(): void;
+  run(): Promise<void>; stop(): void; restart(): Promise<void>;   // restart: "Restart Python" (svl-bwv.2)
 }
 ```
 
@@ -623,4 +624,4 @@ Generated fixtures are reviewed like code. A PR that changes them must say why i
   Referrer-Policy: no-referrer
 ```
 
-Everything, Pyodide and its wheels included, is served from the page's own origin (`/pyodide/`). There is no CDN at runtime. Pyodide may need `'unsafe-eval'`: the worker bead verifies this and records the result here.
+Everything, Pyodide and its wheels included, is served from the page's own origin (`/pyodide/`). There is no CDN at runtime. **Verified (svl-bwv.2, Chrome, built site with this exact CSP injected on every response):** `'wasm-unsafe-eval'` is enough. Pyodide 314.0.8 loads in the module worker, runs numpy/pandas/scikit-learn and the recorder with no CSP violations and no `'unsafe-eval'`. `worker-src 'self'` covers the bundled worker, and `connect-src 'self'` covers `/pyodide/` and `/datasets/`. `vite dev` is not CSP-compatible (inline HMR preamble, websocket), so check CSP against `vite build` + `vite preview`.

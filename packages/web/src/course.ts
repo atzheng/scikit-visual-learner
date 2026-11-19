@@ -1,16 +1,6 @@
 /** Course defaults: run configuration (CONTRACTS.md section 4), datasets and the starter example. */
 
-export interface RunConfig {
-  draw_modules: string[];
-  draw_builtins: boolean;
-  draw_container_methods: boolean;
-  machine_classes: string[];
-  wall_ms: number;
-  max_events: number;
-  per_site: number;
-  preview_bytes: number;
-  hash_cells: number;
-}
+import type { RunConfig } from '@machines/log';
 
 export const DEFAULT_RUN_CONFIG: RunConfig = {
   draw_modules: ['sklearn', 'pandas', 'numpy'],
