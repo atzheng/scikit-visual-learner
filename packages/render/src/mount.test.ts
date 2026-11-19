@@ -396,6 +396,7 @@ describe('legend', () => {
       store: true,
       source: true,
       import: true, // kept in the model, not drawn (svl-1x4): no legend entry
+      def: true, // svl-jl3: a function or class card, legend entry `def`
     };
     delete (nodeKinds as Partial<typeof nodeKinds>).import;
     const covered = new Set(LEGEND_ITEMS.flatMap((i) => i.covers));

@@ -39,7 +39,9 @@ class Result:
 
     @property
     def events(self) -> list[dict[str, Any]]:
-        return self.log["events"]
+        # `def` / `class` steps (svl-jl3) are left out: these tests are about calls and the like;
+        # python/tests/test_defs.py covers the def events.
+        return [e for e in self.log["events"] if e["kind"] != "def"]
 
     def by_name(self, name: str) -> list[dict[str, Any]]:
         return [e for e in self.events if e["name"] == name]

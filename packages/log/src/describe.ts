@@ -434,6 +434,29 @@ export function describeStep(
       sentences = s ? [s] : [];
       break;
     }
+    case 'def': {
+      const d = site?.def;
+      if (!d) {
+        sentences = [];
+        break;
+      }
+      const tail = d.decorated ? [t(' (decorated)')] : [];
+      sentences =
+        d.kind === 'function'
+          ? [[t('Defined function '), c(d.signature), ...tail, t('.')]]
+          : [
+              [
+                t('Defined class '),
+                c(d.name),
+                ...(d.methods && d.methods.length > 0
+                  ? [t(' with methods '), c(d.methods.join(', '))]
+                  : []),
+                ...tail,
+                t('.'),
+              ],
+            ];
+      break;
+    }
     case 'store':
       sentences = [storeSentence(ctx)];
       break;

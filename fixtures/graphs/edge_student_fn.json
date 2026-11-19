@@ -43,6 +43,56 @@
       ]
     },
     {
+      "id": "f:yaik45.0",
+      "kind": "def",
+      "parent": null,
+      "order": 900000,
+      "name": "load",
+      "defKind": "function",
+      "signature": "load(path)",
+      "methods": [],
+      "decorated": false,
+      "site": 9,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "f:1p356b0.0",
+      "kind": "def",
+      "parent": null,
+      "order": 1400000,
+      "name": "Pipeline",
+      "defKind": "class",
+      "signature": "Pipeline()",
+      "methods": [
+        "run"
+      ],
+      "decorated": false,
+      "site": 10,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
       "id": "n:hft6en.0",
       "kind": "call",
       "mergeKey": "s0",
@@ -52,8 +102,8 @@
       "order": 2400011,
       "executions": [
         {
-          "i": 2,
-          "ret": 2,
+          "i": 4,
+          "ret": 4,
           "inputs": {},
           "outputs": {
             "out:0": "v0.0",
@@ -62,7 +112,8 @@
           "count": 1,
           "owner": null,
           "error": null,
-          "interrupted": false
+          "interrupted": false,
+          "callee": "f:yaik45.0"
         }
       ],
       "inPorts": [
@@ -97,12 +148,12 @@
       "order": 2400011,
       "className": "DF",
       "varName": "X",
-      "createdAt": 2,
+      "createdAt": 4,
       "createdBy": "n:hft6en.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v0.0",
           "kind": "new"
         }
@@ -115,12 +166,12 @@
       "order": 2400011,
       "className": "Series",
       "varName": "y",
-      "createdAt": 2,
+      "createdAt": 4,
       "createdBy": "n:hft6en.0",
       "params": [],
       "versions": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v1.0",
           "kind": "new"
         }
@@ -136,8 +187,8 @@
       "order": 2500011,
       "executions": [
         {
-          "i": 3,
-          "ret": 3,
+          "i": 5,
+          "ret": 5,
           "inputs": {},
           "outputs": {
             "out:0": "v2.0"
@@ -145,7 +196,8 @@
           "count": 1,
           "owner": null,
           "error": null,
-          "interrupted": false
+          "interrupted": false,
+          "callee": "f:1p356b0.0"
         }
       ],
       "inPorts": [],
@@ -166,12 +218,12 @@
       "order": 2500011,
       "className": "Pipeline",
       "varName": "pipe",
-      "createdAt": 3,
+      "createdAt": 5,
       "createdBy": "n:1t51mtq.0",
       "params": [],
       "versions": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v2.0",
           "kind": "new"
         }
@@ -187,8 +239,8 @@
       "order": 2600016,
       "executions": [
         {
-          "i": 4,
-          "ret": 4,
+          "i": 6,
+          "ret": 6,
           "inputs": {
             "in:X": "v0.0",
             "in:y": "v1.0"
@@ -241,7 +293,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v0.0"
         }
       ],
@@ -260,7 +312,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 4,
+          "i": 6,
           "token": "v1.0"
         }
       ],
@@ -279,7 +331,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v0.0"
         }
       ],
@@ -298,7 +350,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 2,
+          "i": 4,
           "token": "v1.0"
         }
       ],
@@ -317,7 +369,7 @@
       "dashed": false,
       "uses": [
         {
-          "i": 3,
+          "i": 5,
           "token": "v2.0"
         }
       ],
@@ -329,6 +381,8 @@
     1,
     2,
     3,
-    4
+    4,
+    5,
+    6
   ]
 }

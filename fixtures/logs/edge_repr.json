@@ -23,6 +23,23 @@
       "count": 1,
       "error": null,
       "i": 1,
+      "inputs": [],
+      "kind": "def",
+      "merge_key": "s10",
+      "module": null,
+      "mutates": [],
+      "name": "Table",
+      "outputs": [],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 10
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
       "inputs": [
         {
           "origin": "const",
@@ -39,7 +56,7 @@
         "v0.0"
       ],
       "owner": null,
-      "ret": 1,
+      "ret": 2,
       "returns_self": false,
       "scope": 0,
       "site": 0
@@ -47,7 +64,7 @@
     {
       "count": 1,
       "error": null,
-      "i": 2,
+      "i": 3,
       "inputs": [
         {
           "origin": "name",
@@ -64,7 +81,7 @@
         "v1.0"
       ],
       "owner": null,
-      "ret": 2,
+      "ret": 3,
       "returns_self": false,
       "scope": 0,
       "site": 2
@@ -72,7 +89,7 @@
   ],
   "output": [
     {
-      "i": 2,
+      "i": 3,
       "stream": "stdout",
       "text": "Table(rows=500, mean=178.41)\n89204.02\nTable(rows=500, mean=178.41)\n"
     }
@@ -81,12 +98,12 @@
     {
       "bindings": [
         [
-          1,
+          2,
           "df",
           "v0.0"
         ],
         [
-          2,
+          3,
           "t",
           "v1.0"
         ]
@@ -274,6 +291,25 @@
       "kind": "import",
       "line": 4,
       "text": "import pandas as pd"
+    },
+    {
+      "col": 0,
+      "def": {
+        "decorated": false,
+        "kind": "class",
+        "link": true,
+        "methods": [
+          "total"
+        ],
+        "name": "Table",
+        "signature": "Table(df)"
+      },
+      "end_col": 80,
+      "end_line": 16,
+      "id": 10,
+      "kind": "def",
+      "line": 7,
+      "text": "class Table:\n    def __init__(self, df):\n        self.df = df\n\n    @property\n    def total(self):\n        return self.df[\"price\"].sum()\n\n    def __repr__(self):\n        return f\"Table(rows={len(self.df)}, mean={self.df['price'].mean():.2f})\""
     }
   ],
   "status": "ok",

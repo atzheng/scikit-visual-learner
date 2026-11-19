@@ -142,7 +142,7 @@ def test_log_invariants(name: str) -> None:
 
 
 def events_named(log: dict[str, Any], name: str) -> list[dict[str, Any]]:
-    return [e for e in log["events"] if e["name"] == name]
+    return [e for e in log["events"] if e["name"] == name and e["kind"] != "def"]
 
 
 def one(log: dict[str, Any], name: str) -> dict[str, Any]:
@@ -171,8 +171,8 @@ def is_scalar(token: str) -> bool:
 
 
 def names(log: dict[str, Any]) -> list[str]:
-    """Event names, without the import steps (every program starts with some)."""
-    return [e["name"] for e in log["events"] if e["kind"] != "import"]
+    """Event names, without the import and def steps (every program starts with some)."""
+    return [e["name"] for e in log["events"] if e["kind"] not in ("import", "def")]
 
 
 def line_of(log: dict[str, Any], ev: dict[str, Any]) -> int:
@@ -266,8 +266,8 @@ def test_edge_literals_never_wired() -> None:
 
 
 def one_of(log: dict[str, Any], i: int) -> dict[str, Any]:
-    """The `i`-th event, not counting the import steps."""
-    return [e for e in log["events"] if e["kind"] != "import"][i]
+    """The `i`-th event, not counting the import and def steps."""
+    return [e for e in log["events"] if e["kind"] not in ("import", "def")][i]
 
 
 def test_edge_gridsearch_original_unfitted() -> None:
@@ -384,7 +384,11 @@ def test_edge_repr_calls_inside_repr_and_property_not_recorded() -> None:
 def test_edge_generator_bodies_are_opaque() -> None:
     log = checked_in_log("edge_generator")
     assert names(log)[:1] == ["read_csv"]
-    assert [e["kind"] for e in log["events"] if e["name"] in ("chunks", "total_price")] == [
+    assert [
+        e["kind"]
+        for e in log["events"]
+        if e["name"] in ("chunks", "total_price") and e["kind"] != "def"
+    ] == [
         "student_function",
         "student_function",
     ]

@@ -14,7 +14,16 @@ import type {
   Token,
   ValueSummary,
 } from '@machines/log';
-import { M, aliasText, callModules, instanceTitle, instanceTitleWith, typeText } from './layout';
+import {
+  M,
+  aliasText,
+  callModules,
+  defLines,
+  defTitle,
+  instanceTitle,
+  instanceTitleWith,
+  typeText,
+} from './layout';
 import type { Laid, LaidNode } from './layout';
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -679,6 +688,10 @@ function nodeLabel(n: GNode, module?: string): string {
       return `value ${n.label}`;
     case 'import':
       return n.source === null ? `import ${n.name}` : `import ${n.name} from ${n.source}`;
+    case 'def':
+      return `${n.defKind === 'class' ? 'class' : 'function'} ${n.signature}${n.decorated ? ', decorated' : ''}${
+        n.defKind === 'class' && n.methods.length > 0 ? `, methods ${n.methods.join(', ')}` : ''
+      }`;
   }
 }
 
@@ -797,7 +810,7 @@ export function buildSvg(
       `md-node md-${n.kind} md-hidden`,
     );
     const label = nodeLabel(n, modules.get(n.id));
-    if (n.kind !== 'source' && n.kind !== 'import') {
+    if (n.kind !== 'source' && n.kind !== 'import' && n.kind !== 'def') {
       g.setAttribute('tabindex', '0');
       g.setAttribute('role', 'button');
     }
@@ -903,6 +916,32 @@ export function buildSvg(
         g.append(title);
         break;
       }
+      case 'def': {
+        // a function or class object (svl-jl3), in the import block's style: `def f` / `class C`, then the
+        // signature (and a class's methods) in mono. No ports, no wires.
+        g.append(s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h, rx: 9 }, 'md-box'));
+        g.append(
+          s(
+            doc,
+            'text',
+            { x: ln.x + ln.w / 2, y: ln.y + M.emptyPortH + 16 },
+            'md-name',
+            defTitle(n),
+          ),
+        );
+        defLines(n).forEach((line, k) =>
+          g.append(
+            s(
+              doc,
+              'text',
+              { x: ln.x + ln.w / 2, y: ln.y + M.emptyPortH + M.nameH + 12 + k * M.defLineH },
+              'md-def-line',
+              line,
+            ),
+          ),
+        );
+        break;
+      }
       case 'source':
         g.append(
           s(doc, 'rect', { x: ln.x, y: ln.y, width: ln.w, height: ln.h }, 'md-hit'),
@@ -930,7 +969,7 @@ export function buildSvg(
       g.append(bg0);
       h.badge = { g: bg0, bg, text };
     }
-    if (n.kind !== 'source' && n.kind !== 'import') {
+    if (n.kind !== 'source' && n.kind !== 'import' && n.kind !== 'def') {
       const msg = s(
         doc,
         'text',

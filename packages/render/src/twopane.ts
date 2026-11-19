@@ -148,7 +148,9 @@ export function planStage(
     };
   }
 
-  const owner = stage.participants.find((p) => p.role === 'owner');
+  // the callee (svl-jl3, a function or class block) stands where the owner does, left of the call box; a call
+  // with a callee has no owner, so there is one participant on the left
+  const owner = stage.participants.find((p) => p.role === 'owner' || p.role === 'callee');
   const ins = stage.participants.filter((p) => p.role === 'input');
   const outs = stage.participants.filter((p) => p.role === 'output' || p.role === 'created');
   const inH = Math.max(0, ...S(ins).map((s) => s.h));
@@ -262,7 +264,13 @@ export function planStage(
         [boxX, cy],
       ],
       arrow: false,
-      label: { x: s.w + STAGE.sideGap / 2, y: cy - 6, type: '', name: 'owner', anchor: 'middle' },
+      label: {
+        x: s.w + STAGE.sideGap / 2,
+        y: cy - 6,
+        type: '',
+        name: owner.role === 'callee' ? 'calls' : 'owner',
+        anchor: 'middle',
+      },
     });
   }
 
@@ -453,7 +461,7 @@ interface Card {
   size: Size;
 }
 
-const STAGEABLE = new Set<GNode['kind']>(['instance', 'import', 'call', 'expr', 'store']);
+const STAGEABLE = new Set<GNode['kind']>(['instance', 'import', 'def', 'call', 'expr', 'store']);
 let uid = 0;
 
 export async function mountTwoPane(
@@ -855,14 +863,18 @@ export async function mountTwoPane(
           ? n.name
           : n.kind === 'import'
             ? `import ${n.name}`
-            : n.kind === 'expr' || n.kind === 'store'
-              ? n.text
-              : null;
+            : n.kind === 'def'
+              ? `${n.defKind === 'class' ? 'class' : 'def'} ${n.name}`
+              : n.kind === 'expr' || n.kind === 'store'
+                ? n.text
+                : null;
     switch (p.role) {
       case 'input':
         return p.param ? `input to ${p.param}` : 'input';
       case 'owner':
         return what ? `owner of ${what}` : 'changed on this line';
+      case 'callee':
+        return what ? `called by ${what}` : 'called on this line';
       case 'output':
         return what ? `output of ${what}` : 'output';
       case 'created':
@@ -888,7 +900,7 @@ export async function mountTwoPane(
             add(it.participant.kind === 'chip' ? chipEls.get(it.key) : cards.get(it.key)?.wrap);
       };
       by((p) => p.role === 'input');
-      by((p) => p.role === 'owner');
+      by((p) => p.role === 'owner' || p.role === 'callee');
       if (curBox) add(curBox.wrap);
       by((p) => p.role === 'output' || p.role === 'created');
     }
@@ -1152,5 +1164,6 @@ export async function mountTwoPane(
 function slotLabel(n: GNode): string {
   if (n.kind === 'instance') return n.varName ? `${n.varName}: ${n.className}` : n.className;
   if (n.kind === 'import') return `import ${n.name}`;
+  if (n.kind === 'def') return `${n.defKind === 'class' ? 'class' : 'def'} ${n.name}`;
   return n.id;
 }

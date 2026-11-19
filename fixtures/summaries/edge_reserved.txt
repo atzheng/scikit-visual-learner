@@ -1,16 +1,21 @@
 0 (event -1): Before the program runs.
 1 (event 0): Imported builtins.
 2 (event 1): Imported pandas as pd.
-3 (event 2): Called pd.DataFrame({"site": [1, 2], "fn": [3, 4]}) from pandas. It created a new DataFrame (2 × 2).
-4 (event 3): Called your function show(df, site="a", fn="b"). It returned a tuple, ('a', 'b', 1).
-5 (event 4): Called your function print(show(df, site="a", fn="b")).
-6 (event 5): Called Child(). It created a new Child object.
-7 (event 6): Called Child().label(). It returned a str ('child+base').
-8 (event 7): Called your function count_locals(). It created a new list (2 items).
-9 (event 8): Called your function print(Child().label(), count_locals()).
-10 (event 9): Computed df["fn"], a Series of int64 (2).
-11 (event 10): Computed df["site"], a Series of int64 (2).
-12 (event 11): Called df.assign(site=df["fn"], fn=df["site"]). It created a new DataFrame (2 × 2).
-13 (event 12): Called df.assign(site=df["fn"], fn=df["site"]).sum(). It created a new Series (2).
-14 (event 13): Called df.assign(site=df["fn"], fn=df["site"]).sum().to_dict(). It created a new dict (2 items).
-15 (event 14): Called your function print(...).
+3 (event 2): Defined function show(*args, site=None, fn=None).
+4 (event 3): Defined class Base with methods label.
+5 (event 4): Defined class Child with methods label.
+6 (event 5): Defined function count_locals().
+7 (event 6): Defined function print(*args, **kwargs).
+8 (event 7): Called pd.DataFrame({"site": [1, 2], "fn": [3, 4]}) from pandas. It created a new DataFrame (2 × 2).
+9 (event 8): Called your function show(df, site="a", fn="b"). It returned a tuple, ('a', 'b', 1).
+10 (event 9): Called your function print(show(df, site="a", fn="b")).
+11 (event 10): Called Child(). It created a new Child object.
+12 (event 11): Called Child().label(). It returned a str ('child+base').
+13 (event 12): Called your function count_locals(). It created a new list (2 items).
+14 (event 13): Called your function print(Child().label(), count_locals()).
+15 (event 14): Computed df["fn"], a Series of int64 (2).
+16 (event 15): Computed df["site"], a Series of int64 (2).
+17 (event 16): Called df.assign(site=df["fn"], fn=df["site"]). It created a new DataFrame (2 × 2).
+18 (event 17): Called df.assign(site=df["fn"], fn=df["site"]).sum(). It created a new Series (2).
+19 (event 18): Called df.assign(site=df["fn"], fn=df["site"]).sum().to_dict(). It created a new dict (2 items).
+20 (event 19): Called your function print(...).
