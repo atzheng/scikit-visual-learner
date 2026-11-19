@@ -13,9 +13,11 @@ import {
   statusOf,
   summaryLabel,
   truncate,
+  wireAriaLabel,
   wireTypeLabel,
   wrapText,
 } from './svg';
+import { typeText } from './layout';
 
 const exec = (extra: Partial<Execution>): Execution => ({
   i: 0,
@@ -152,16 +154,16 @@ describe('instance rows', () => {
       log.values,
     );
     expect(after.map((r) => `${r.name} ${r.detail}`)).toEqual([
-      'coef_ ndarray',
-      'intercept_ float',
-      'n_features_in_ int',
+      'coef_ : ndarray',
+      'intercept_ : float',
+      'n_features_in_ : int',
     ]);
   });
   test('attrRowsFor reserves the union over versions', () => {
     expect(attrRowsFor(model, log)[inst.id]).toEqual([
-      'coef_ ndarray',
-      'intercept_ float',
-      'n_features_in_ int',
+      'coef_ : ndarray',
+      'intercept_ : float',
+      'n_features_in_ : int',
     ]);
   });
 });
@@ -230,5 +232,14 @@ describe('changedAttrs on a real fit (golden_linreg)', () => {
     const lines = wrapText('ValueError: a fairly long message that needs wrapping', 20);
     expect(lines.every((l) => l.length <= 20)).toBe(true);
     expect(lines.join(' ')).toBe('ValueError: a fairly long message that needs wrapping');
+  });
+});
+
+describe('wire aria-label (svl-465)', () => {
+  test('the type is read without its ": " prefix', () => {
+    expect(wireAriaLabel(typeText('float'), 'x', false)).toBe('wire: float, named x');
+    expect(wireAriaLabel(typeText('float'), '', false)).toBe('wire: float');
+    expect(wireAriaLabel('', 'x', false)).toBe('wire: named x');
+    expect(wireAriaLabel('+ DataFrame (2, 2)', '', true)).toContain('temporary DataFrame (2, 2)');
   });
 });

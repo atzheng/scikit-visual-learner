@@ -14,7 +14,7 @@ import type {
   Token,
   ValueSummary,
 } from '@machines/log';
-import { M, callModules, instanceTitle } from './layout';
+import { M, callModules, instanceTitle, typeText } from './layout';
 import type { Laid, LaidNode } from './layout';
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -110,6 +110,13 @@ export function wireTypeLabel(
   return token.startsWith('v') ? '' : summaryLabel(values?.[token]);
 }
 
+/** Accessible name of a wire label. `type` is the drawn text (`: float`, or `+ DataFrame` for a chip). */
+export function wireAriaLabel(type: string, name: string, chip: boolean): string {
+  if (chip) return `temporary ${type.slice(2)}, not named: press Enter to show it as a box`;
+  const bare = type.startsWith(': ') ? type.slice(2) : type;
+  return `wire: ${[bare, name && `named ${name}`].filter(Boolean).join(', ')}`;
+}
+
 export function truncate(s: string, max: number): string {
   const one = s.replace(/\s+/g, ' ').trim();
   return one.length > max ? `${one.slice(0, max - 1)}…` : one;
@@ -174,6 +181,8 @@ export interface AttrRow {
   param: boolean;
   /** A data box's row (shape, dtype, columns): the value reads first, the label is muted. */
   data?: boolean;
+  /** `detail` is a type (drawn with the type signifier), not a value. */
+  typed?: boolean;
 }
 
 /** Rows of an instance box at a version: constructor params first, then the version's attributes. */
@@ -188,7 +197,7 @@ export function instanceRowModels(
   if (attrs) {
     for (const [name, t] of Object.entries(attrs)) {
       if (names.has(name)) continue;
-      rows.push({ name, detail: values?.[t]?.type ?? '', param: false });
+      rows.push({ name, detail: typeText(values?.[t]?.type ?? ''), param: false, typed: true });
     }
   } else if (token !== undefined) {
     rows.push(...dataRowModels(values?.[token]));
@@ -490,7 +499,7 @@ export function edgeLabelsFor(model: GraphModel, log: EventLog): Record<string, 
     if (e.chip) best = chipLabel(e.chip, log.values);
     else
       for (const u of e.uses) {
-        const t = wireTypeLabel(u.token, log.values);
+        const t = typeText(wireTypeLabel(u.token, log.values));
         if (t.length > best.length) best = t;
       }
     out[e.id] = best;
@@ -677,12 +686,12 @@ function buildCall(
     if (!lp) continue;
     const pg = s(doc, 'g', { 'data-port': p.id }, 'md-port-g');
     if (p.constText !== undefined) {
-      const t = s(doc, 'text', { x: lp.x, y: ln.y + 18 }, 'md-ptype', p.constText);
+      const t = s(doc, 'text', { x: lp.x, y: ln.y + 18 }, 'md-pconst', p.constText);
       pg.append(t);
       ports.set(p.id, { g: pg, top: t, isConst: true });
     } else {
       pg.append(s(doc, 'circle', { cx: lp.x, cy: lp.y, r: 3 }, 'md-port'));
-      const t = s(doc, 'text', { x: lp.x, y: ln.y + 13 }, 'md-ptype', p.typeLabel);
+      const t = s(doc, 'text', { x: lp.x, y: ln.y + 13 }, 'md-ptype', typeText(p.typeLabel));
       const nm = s(doc, 'text', { x: lp.x, y: ln.y + 25 }, 'md-pname', p.param);
       pg.append(t, nm);
       ports.set(p.id, { g: pg, top: t, name: nm, isConst: false });
@@ -699,9 +708,9 @@ function buildCall(
     const t = s(
       doc,
       'text',
-      { x: lp.x, y: bottom - (p.nameLabel ? 17 : 11) },
+      { x: lp.x, y: bottom - (p.nameLabel ? 20 : 11) },
       'md-ptype',
-      p.typeLabel,
+      typeText(p.typeLabel),
     );
     const nm = s(doc, 'text', { x: lp.x, y: bottom - 5 }, 'md-pname', p.nameLabel ?? '');
     pg.append(t, nm);
@@ -819,7 +828,7 @@ export function buildSvg(
           bullet.classList.add('md-hidden');
           const text = s(doc, 'text', { x: ln.x + M.instPad, y: ry + 13 });
           const name = s(doc, 'tspan', {}, 'md-aname');
-          const detail = s(doc, 'tspan', { dx: 6 }, 'md-atype');
+          const detail = s(doc, 'tspan', { dx: 6 }, 'md-aval');
           text.append(name, detail);
           rg.append(flash, bullet, text);
           if (opts.docs) {
@@ -1226,7 +1235,7 @@ export function applyState(
         const v = pv.in[pid] ?? pv.out[pid];
         if (!v) continue;
         toggle(pd.g, 'md-port-unused', !v.used);
-        setText(pd.top, pd.isConst ? (v.constText ?? '') : v.typeLabel);
+        setText(pd.top, pd.isConst ? (v.constText ?? '') : typeText(v.typeLabel));
         if (pd.name) setText(pd.name, v.name);
         if (pd.bottom !== undefined) setAttr(pd.top, 'y', String(pd.bottom - (v.name ? 17 : 11)));
       }
@@ -1272,6 +1281,7 @@ export function applyState(
         }
         setText(r.name, row.name);
         setText(r.detail, row.detail);
+        setAttr(r.detail, 'class', row.typed ? 'md-atype' : 'md-aval');
         if (dom.docs) {
           const t = attrDocTarget(ctx.model, h.node as InstanceNode, row.name);
           setAttr(r.g, 'data-doc-name', t.name);
@@ -1316,7 +1326,7 @@ export function applyState(
         ? chipLabel(chip, log?.values)
         : ''
       : visible && active && token !== undefined
-        ? wireTypeLabel(token, log?.values)
+        ? typeText(wireTypeLabel(token, log?.values))
         : '';
     const name = visible && active ? (h.edge.nameLabel ?? '') : '';
     setText(h.typeEl, type);
@@ -1325,14 +1335,7 @@ export function applyState(
     const hasText = visible && (type !== '' || name !== '') && h.anchor !== null;
     toggle(h.label, 'md-hidden', !hasText);
     if (hasText) {
-      const desc = [type, name && `named ${name}`].filter(Boolean).join(', ');
-      setAttr(
-        h.label,
-        'aria-label',
-        chip
-          ? `temporary ${type.slice(2)}, not named: press Enter to show it as a box`
-          : `wire: ${desc}`,
-      );
+      setAttr(h.label, 'aria-label', wireAriaLabel(type, name, chip !== undefined));
       fitLabelRing(h);
     }
   }

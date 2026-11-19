@@ -104,6 +104,10 @@ export function InstanceDiff() {
  * One attribute: its name (never broken mid-word: it is cut with an ellipsis and carries a title), the
  * before and after values as buttons, and the inline preview of the value that is open.
  */
+/** `valueLine` shows a type (and shape) rather than a repr: draw it with the type signifier (svl-465). */
+const isTypeLine = (v: ValueSummary | undefined): boolean =>
+  v !== undefined && !(v.repr !== undefined && v.shape === undefined);
+
 export function AttrRowView({
   row,
   call,
@@ -131,7 +135,11 @@ export function AttrRowView({
         title="Show a preview of this value"
         onClick={() => onToggle(id)}
       >
-        {valueLine(values[tok])}
+        {isTypeLine(values[tok]) ? (
+          <span className="md-type-tag">{valueLine(values[tok])}</span>
+        ) : (
+          valueLine(values[tok])
+        )}
       </button>
     );
   };

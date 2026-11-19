@@ -12,7 +12,7 @@ import type { Laid } from './layout';
 import { createLegend, createLegendList, LEGEND_ITEMS } from './legend';
 import { mount } from './mount';
 import type { DiagramController } from './mount';
-import { attrRowsFor } from './svg';
+import { attrRowsFor, edgeLabelsFor } from './svg';
 
 const measure = (t: string): number => t.length * 7;
 const realElk = new ELKBundled() as unknown as ELK;
@@ -432,6 +432,39 @@ describe('legend', () => {
     expect(more.querySelector('summary')!.textContent).toBe('More');
     expect(more.hasAttribute('open')).toBe(false);
     expect(more.querySelectorAll('li').length).toBe(LEGEND_ITEMS.length - 2);
+  });
+});
+
+describe('type signifier (svl-465)', () => {
+  test('type text in ports, wire labels and attribute rows is ": Type"; values and names are not', async () => {
+    const log = linregLog();
+    const { model, laid } = await prepare(log);
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log);
+    const shown = (sel: string): string[] =>
+      [...host.querySelectorAll(sel)]
+        .filter((e) => !e.closest('.md-hidden'))
+        .map((e) => e.textContent ?? '')
+        .filter((t) => t !== '');
+    for (const sel of ['.md-ptype', '.md-atype'])
+      for (const t of shown(sel)) expect(t, sel).toMatch(/^: \S/);
+    const wire = shown('.md-wtype').filter((t) => !t.startsWith('+'));
+    for (const t of wire) expect(t).toMatch(/^: \S/);
+    expect(shown('.md-atype').length).toBeGreaterThan(0);
+    for (const t of shown('.md-pconst')) expect(t).not.toMatch(/^: /);
+    for (const t of shown('.md-pname')) expect(t).not.toMatch(/^: /);
+  });
+  test('layout reserves the prefix: attribute rows and wire labels are measured with it', async () => {
+    const log = linregLog();
+    const model = buildGraph(log, { expanded: new Set() });
+    for (const rows of Object.values(attrRowsFor(model, log)))
+      for (const r of rows) if (r.includes(' : ')) expect(r).toMatch(/^\S+ : \S/);
+    for (const t of Object.values(edgeLabelsFor(model, log)))
+      if (t && !t.startsWith('+')) expect(t).toMatch(/^: /);
+  });
+  test('the legend explains the type style', () => {
+    expect(LEGEND_ITEMS.some((i) => i.id === 'type')).toBe(true);
   });
 });
 

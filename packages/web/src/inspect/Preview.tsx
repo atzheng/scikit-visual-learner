@@ -22,7 +22,7 @@ export function ValueBody({ value }: { value: ValueSummary | undefined }) {
   return (
     <div className="pv-body">
       <p className="pv-title">
-        <span className="pv-type">{summaryTitle(value)}</span>
+        <span className="pv-type md-type-tag">{summaryTitle(value)}</span>
         {detail && <span className="pv-detail">{detail}</span>}
       </p>
       {value.repr !== undefined && value.shape === undefined && (

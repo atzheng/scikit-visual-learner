@@ -13,6 +13,7 @@ export {
   FONT_MONO,
   FONT_NAME,
   placeLabels,
+  typeText,
   tierFor,
   longEdgeLoad,
   M as LAYOUT_METRICS,

@@ -53,7 +53,12 @@ function Section({ sec, passed }: { sec: DocSection; passed: Map<string, string>
               <div key={i} className={val !== undefined ? 'doc-entry passed' : 'doc-entry'}>
                 <dt>
                   {e.name !== '' && <code>{e.name}</code>}
-                  {e.type !== '' && <span className="doc-type"> {e.type}</span>}
+                  {e.type !== '' && (
+                    <span className="doc-type">
+                      {' '}
+                      <span className="md-type-tag">{e.type}</span>
+                    </span>
+                  )}
                   {val !== undefined && (
                     <span className="doc-passed">
                       {' '}
