@@ -1,0 +1,1046 @@
+{
+  "diagnostics": [],
+  "error": null,
+  "events": [
+    {
+      "count": 1,
+      "error": null,
+      "i": 0,
+      "inputs": [
+        {
+          "origin": "const",
+          "param": "filepath_or_buffer",
+          "text": "\"listings.csv\""
+        }
+      ],
+      "kind": "function",
+      "merge_key": "s0",
+      "module": "pandas",
+      "mutates": [],
+      "name": "read_csv",
+      "outputs": [
+        "v0.0"
+      ],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 0
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [
+        {
+          "origin": "expr",
+          "param": "self",
+          "value": "v0.0"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s1",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.dropna",
+      "outputs": [
+        "v1.0"
+      ],
+      "owner": "v0.0",
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 1
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "df",
+          "value": "v1.0"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s3",
+      "module": null,
+      "mutates": [],
+      "name": "df[[\"beds\", \"baths\", \"sqft\"]]",
+      "outputs": [
+        "v2.0"
+      ],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 3
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "df",
+          "value": "v1.0"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s4",
+      "module": null,
+      "mutates": [],
+      "name": "df[\"price\"]",
+      "outputs": [
+        "v3.0"
+      ],
+      "owner": null,
+      "ret": 3,
+      "returns_self": false,
+      "scope": 0,
+      "site": 4
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 4,
+      "inputs": [],
+      "kind": "constructor",
+      "merge_key": "s5",
+      "module": "sklearn.linear_model._ridge",
+      "mutates": [],
+      "name": "Ridge",
+      "outputs": [
+        "v4.0"
+      ],
+      "owner": null,
+      "ret": 4,
+      "returns_self": false,
+      "scope": 0,
+      "site": 5
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 5,
+      "inputs": [
+        {
+          "origin": "const",
+          "param": "n_estimators",
+          "text": "10"
+        },
+        {
+          "origin": "const",
+          "param": "random_state",
+          "text": "0"
+        }
+      ],
+      "kind": "constructor",
+      "merge_key": "s6",
+      "module": "sklearn.ensemble._forest",
+      "mutates": [],
+      "name": "RandomForestRegressor",
+      "outputs": [
+        "v5.0"
+      ],
+      "owner": null,
+      "ret": 5,
+      "returns_self": false,
+      "scope": 0,
+      "site": 6
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 6,
+      "inputs": [],
+      "kind": "expr",
+      "merge_key": "s7",
+      "module": null,
+      "mutates": [],
+      "name": "{\n    \"ridge\": Ridge(),\n    \"rf\": RandomForestRegressor(n_estimators=10, random_state=0),\n}",
+      "outputs": [
+        "v6.0"
+      ],
+      "owner": null,
+      "ret": 6,
+      "returns_self": false,
+      "scope": 0,
+      "site": 7
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 7,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "X",
+          "value": "v2.0"
+        },
+        {
+          "origin": "name",
+          "param": "y",
+          "value": "v3.0"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s8",
+      "module": "sklearn.ensemble._forest",
+      "mutates": [
+        [
+          "v5.0",
+          "v5.1"
+        ]
+      ],
+      "name": "RandomForestRegressor.fit",
+      "outputs": [],
+      "owner": "v5.0",
+      "ret": 7,
+      "returns_self": true,
+      "scope": 0,
+      "site": 8
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 8,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "X",
+          "value": "v2.0"
+        },
+        {
+          "origin": "name",
+          "param": "y",
+          "value": "v3.0"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s9",
+      "module": "sklearn.ensemble._forest",
+      "mutates": [],
+      "name": "RandomForestRegressor.score",
+      "outputs": [
+        "s46"
+      ],
+      "owner": "v5.1",
+      "ret": 8,
+      "returns_self": false,
+      "scope": 0,
+      "site": 9
+    }
+  ],
+  "output": [
+    {
+      "i": 8,
+      "stream": "stdout",
+      "text": "True\n"
+    }
+  ],
+  "scopes": [
+    {
+      "bindings": [
+        [
+          1,
+          "df",
+          "v1.0"
+        ],
+        [
+          2,
+          "X",
+          "v2.0"
+        ],
+        [
+          3,
+          "y",
+          "v3.0"
+        ],
+        [
+          6,
+          "models",
+          "v6.0"
+        ]
+      ],
+      "id": 0,
+      "lexical_parent": null,
+      "name": "<module>",
+      "parent_event": null
+    }
+  ],
+  "sites": [
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "\"listings.csv\""
+        }
+      ],
+      "col": 5,
+      "end_col": 32,
+      "end_line": 8,
+      "func_text": "pd.read_csv",
+      "id": 0,
+      "keywords": {},
+      "kind": "call",
+      "line": 8,
+      "text": "pd.read_csv(\"listings.csv\")"
+    },
+    {
+      "args": [],
+      "col": 5,
+      "end_col": 41,
+      "end_line": 8,
+      "func_text": "pd.read_csv(\"listings.csv\").dropna",
+      "id": 1,
+      "keywords": {},
+      "kind": "call",
+      "line": 8,
+      "text": "pd.read_csv(\"listings.csv\").dropna()"
+    },
+    {
+      "col": 0,
+      "end_col": 41,
+      "end_line": 8,
+      "id": 2,
+      "kind": "bind",
+      "line": 8,
+      "targets": [
+        "df"
+      ],
+      "text": "df = pd.read_csv(\"listings.csv\").dropna()",
+      "value": {
+        "origin": "call",
+        "site": 1
+      },
+      "where": "local"
+    },
+    {
+      "col": 0,
+      "end_col": 33,
+      "end_line": 9,
+      "id": 3,
+      "kind": "bind",
+      "line": 9,
+      "targets": [
+        "X"
+      ],
+      "text": "X = df[[\"beds\", \"baths\", \"sqft\"]]",
+      "value": {
+        "origin": "expr",
+        "reads": [
+          "df"
+        ],
+        "text": "df[[\"beds\", \"baths\", \"sqft\"]]"
+      },
+      "where": "local"
+    },
+    {
+      "col": 0,
+      "end_col": 15,
+      "end_line": 10,
+      "id": 4,
+      "kind": "bind",
+      "line": 10,
+      "targets": [
+        "y"
+      ],
+      "text": "y = df[\"price\"]",
+      "value": {
+        "origin": "expr",
+        "reads": [
+          "df"
+        ],
+        "text": "df[\"price\"]"
+      },
+      "where": "local"
+    },
+    {
+      "args": [],
+      "col": 13,
+      "end_col": 20,
+      "end_line": 12,
+      "func_text": "Ridge",
+      "id": 5,
+      "keywords": {},
+      "kind": "call",
+      "line": 12,
+      "text": "Ridge()"
+    },
+    {
+      "args": [],
+      "col": 10,
+      "end_col": 64,
+      "end_line": 13,
+      "func_text": "RandomForestRegressor",
+      "id": 6,
+      "keywords": {
+        "n_estimators": {
+          "origin": "const",
+          "text": "10"
+        },
+        "random_state": {
+          "origin": "const",
+          "text": "0"
+        }
+      },
+      "kind": "call",
+      "line": 13,
+      "text": "RandomForestRegressor(n_estimators=10, random_state=0)"
+    },
+    {
+      "col": 0,
+      "end_col": 1,
+      "end_line": 14,
+      "id": 7,
+      "kind": "bind",
+      "line": 11,
+      "targets": [
+        "models"
+      ],
+      "text": "models = {\n    \"ridge\": Ridge(),\n    \"rf\": RandomForestRegressor(n_estimators=10, random_state=0),\n}",
+      "value": {
+        "origin": "expr",
+        "reads": [
+          "Ridge",
+          "RandomForestRegressor"
+        ],
+        "text": "{\n    \"ridge\": Ridge(),\n    \"rf\": RandomForestRegressor(n_estimators=10, random_state=0),\n}"
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "name": "X",
+          "origin": "name"
+        },
+        {
+          "name": "y",
+          "origin": "name"
+        }
+      ],
+      "col": 0,
+      "end_col": 22,
+      "end_line": 15,
+      "func_text": "models[\"rf\"].fit",
+      "id": 8,
+      "keywords": {},
+      "kind": "call",
+      "line": 15,
+      "text": "models[\"rf\"].fit(X, y)"
+    },
+    {
+      "args": [
+        {
+          "name": "X",
+          "origin": "name"
+        },
+        {
+          "name": "y",
+          "origin": "name"
+        }
+      ],
+      "col": 6,
+      "end_col": 30,
+      "end_line": 16,
+      "func_text": "models[\"rf\"].score",
+      "id": 9,
+      "keywords": {},
+      "kind": "call",
+      "line": 16,
+      "text": "models[\"rf\"].score(X, y)"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "models",
+            "X",
+            "y"
+          ],
+          "text": "models[\"rf\"].score(X, y) > 0.5"
+        }
+      ],
+      "col": 0,
+      "end_col": 37,
+      "end_line": 16,
+      "func_text": "print",
+      "id": 10,
+      "keywords": {},
+      "kind": "call",
+      "line": 16,
+      "text": "print(models[\"rf\"].score(X, y) > 0.5)"
+    }
+  ],
+  "status": "ok",
+  "values": {
+    "s0": {
+      "repr": "1.0",
+      "type": "float"
+    },
+    "s1": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s10": {
+      "repr": "'squared_error'",
+      "type": "str"
+    },
+    "s11": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s12": {
+      "repr": "1.0",
+      "type": "float"
+    },
+    "s13": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s14": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s15": {
+      "repr": "0.0",
+      "type": "float"
+    },
+    "s16": {
+      "repr": "1",
+      "type": "int"
+    },
+    "s17": {
+      "repr": "2",
+      "type": "int"
+    },
+    "s18": {
+      "repr": "0.0",
+      "type": "float"
+    },
+    "s19": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s2": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s20": {
+      "repr": "10",
+      "type": "int"
+    },
+    "s21": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s22": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s23": {
+      "repr": "0",
+      "type": "int"
+    },
+    "s24": {
+      "repr": "0",
+      "type": "int"
+    },
+    "s25": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s26": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s27": {
+      "repr": "0.0",
+      "type": "float"
+    },
+    "s28": {
+      "repr": "'squared_error'",
+      "type": "str"
+    },
+    "s29": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s3": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s30": {
+      "repr": "1.0",
+      "type": "float"
+    },
+    "s31": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s32": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s33": {
+      "repr": "0.0",
+      "type": "float"
+    },
+    "s34": {
+      "repr": "1",
+      "type": "int"
+    },
+    "s35": {
+      "repr": "2",
+      "type": "int"
+    },
+    "s36": {
+      "repr": "0.0",
+      "type": "float"
+    },
+    "s37": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s38": {
+      "repr": "10",
+      "type": "int"
+    },
+    "s39": {
+      "repr": "3",
+      "type": "int"
+    },
+    "s4": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s40": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s41": {
+      "repr": "1",
+      "type": "int"
+    },
+    "s42": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s43": {
+      "repr": "0",
+      "type": "int"
+    },
+    "s44": {
+      "repr": "0",
+      "type": "int"
+    },
+    "s45": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s46": {
+      "repr": "0.8588827679463272",
+      "type": "float"
+    },
+    "s5": {
+      "repr": "None",
+      "type": "None"
+    },
+    "s6": {
+      "repr": "'auto'",
+      "type": "str"
+    },
+    "s7": {
+      "repr": "0.0001",
+      "type": "float"
+    },
+    "s8": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s9": {
+      "repr": "0.0",
+      "type": "float"
+    },
+    "v0.0": {
+      "columns": [
+        "beds",
+        "baths",
+        "sqft",
+        "neighbourhood",
+        "room_type",
+        "year_built",
+        "price"
+      ],
+      "dtypes": [
+        "int64",
+        "float64",
+        "float64",
+        "str",
+        "str",
+        "float64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "beds",
+          "baths",
+          "sqft",
+          "neighbourhood",
+          "room_type",
+          "year_built",
+          "price"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "1.0",
+            "884.0",
+            "Riverside",
+            "private_room",
+            "1975.0",
+            "83.11"
+          ],
+          [
+            "3",
+            "2.0",
+            "1254.0",
+            "Riverside",
+            "entire_home",
+            "1963.0",
+            "248.24"
+          ],
+          [
+            "2",
+            "2.0",
+            "1004.0",
+            "Uptown",
+            "shared_room",
+            "1938.0",
+            "70.46"
+          ],
+          [
+            "5",
+            "4.5",
+            "1828.0",
+            "Midtown",
+            "entire_home",
+            "NaN",
+            "370.31"
+          ],
+          [
+            "2",
+            "1.0",
+            "1063.0",
+            "Downtown",
+            "entire_home",
+            "1926.0",
+            "279.37"
+          ]
+        ]
+      },
+      "shape": [
+        500,
+        7
+      ],
+      "type": "DF"
+    },
+    "v1.0": {
+      "columns": [
+        "beds",
+        "baths",
+        "sqft",
+        "neighbourhood",
+        "room_type",
+        "year_built",
+        "price"
+      ],
+      "dtypes": [
+        "int64",
+        "float64",
+        "float64",
+        "str",
+        "str",
+        "float64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "beds",
+          "baths",
+          "sqft",
+          "neighbourhood",
+          "room_type",
+          "year_built",
+          "price"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "4",
+          "5"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "1.0",
+            "884.0",
+            "Riverside",
+            "private_room",
+            "1975.0",
+            "83.11"
+          ],
+          [
+            "3",
+            "2.0",
+            "1254.0",
+            "Riverside",
+            "entire_home",
+            "1963.0",
+            "248.24"
+          ],
+          [
+            "2",
+            "2.0",
+            "1004.0",
+            "Uptown",
+            "shared_room",
+            "1938.0",
+            "70.46"
+          ],
+          [
+            "2",
+            "1.0",
+            "1063.0",
+            "Downtown",
+            "entire_home",
+            "1926.0",
+            "279.37"
+          ],
+          [
+            "5",
+            "4.0",
+            "1710.0",
+            "Uptown",
+            "private_room",
+            "1975.0",
+            "217.69"
+          ]
+        ]
+      },
+      "shape": [
+        471,
+        7
+      ],
+      "type": "DF"
+    },
+    "v2.0": {
+      "columns": [
+        "beds",
+        "baths",
+        "sqft"
+      ],
+      "dtypes": [
+        "int64",
+        "float64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "beds",
+          "baths",
+          "sqft"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "4",
+          "5"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "1.0",
+            "884.0"
+          ],
+          [
+            "3",
+            "2.0",
+            "1254.0"
+          ],
+          [
+            "2",
+            "2.0",
+            "1004.0"
+          ],
+          [
+            "2",
+            "1.0",
+            "1063.0"
+          ],
+          [
+            "5",
+            "4.0",
+            "1710.0"
+          ]
+        ]
+      },
+      "shape": [
+        471,
+        3
+      ],
+      "type": "DF"
+    },
+    "v3.0": {
+      "dtype": "float64",
+      "preview": {
+        "columns": [
+          "price"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2",
+          "4",
+          "5"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "83.11"
+          ],
+          [
+            "248.24"
+          ],
+          [
+            "70.46"
+          ],
+          [
+            "279.37"
+          ],
+          [
+            "217.69"
+          ]
+        ]
+      },
+      "shape": [
+        471
+      ],
+      "type": "Series"
+    },
+    "v4.0": {
+      "attrs": {
+        "alpha": "s0",
+        "copy_X": "s1",
+        "fit_intercept": "s2",
+        "max_iter": "s3",
+        "positive": "s4",
+        "random_state": "s5",
+        "solver": "s6",
+        "tol": "s7"
+      },
+      "machine": true,
+      "type": "Ridge"
+    },
+    "v5.0": {
+      "attrs": {
+        "bootstrap": "s8",
+        "ccp_alpha": "s9",
+        "criterion": "s10",
+        "max_depth": "s11",
+        "max_features": "s12",
+        "max_leaf_nodes": "s13",
+        "max_samples": "s14",
+        "min_impurity_decrease": "s15",
+        "min_samples_leaf": "s16",
+        "min_samples_split": "s17",
+        "min_weight_fraction_leaf": "s18",
+        "monotonic_cst": "s19",
+        "n_estimators": "s20",
+        "n_jobs": "s21",
+        "oob_score": "s22",
+        "random_state": "s23",
+        "verbose": "s24",
+        "warm_start": "s25"
+      },
+      "machine": true,
+      "type": "RandomForestRegressor"
+    },
+    "v5.1": {
+      "attrs": {
+        "bootstrap": "s26",
+        "ccp_alpha": "s27",
+        "criterion": "s28",
+        "estimator_": "v7.0",
+        "estimators_": "v8.0",
+        "feature_names_in_": "v9.0",
+        "max_depth": "s29",
+        "max_features": "s30",
+        "max_leaf_nodes": "s31",
+        "max_samples": "s32",
+        "min_impurity_decrease": "s33",
+        "min_samples_leaf": "s34",
+        "min_samples_split": "s35",
+        "min_weight_fraction_leaf": "s36",
+        "monotonic_cst": "s37",
+        "n_estimators": "s38",
+        "n_features_in_": "s39",
+        "n_jobs": "s40",
+        "n_outputs_": "s41",
+        "oob_score": "s42",
+        "random_state": "s43",
+        "verbose": "s44",
+        "warm_start": "s45"
+      },
+      "machine": true,
+      "type": "RandomForestRegressor"
+    },
+    "v6.0": {
+      "repr": "{'rf': RandomForestR...andom_state=0), …",
+      "type": "dict[2]"
+    },
+    "v7.0": {
+      "machine": true,
+      "type": "DecisionTreeRegressor"
+    },
+    "v8.0": {
+      "repr": "[DecisionTreeR...ate=209652396), Decisi…",
+      "type": "list[10]"
+    },
+    "v9.0": {
+      "dtype": "object",
+      "preview": {
+        "kind": "matrix",
+        "rows": [
+          [
+            "beds",
+            "baths",
+            "sqft"
+          ]
+        ]
+      },
+      "shape": [
+        3
+      ],
+      "type": "array"
+    }
+  },
+  "version": 2
+}
