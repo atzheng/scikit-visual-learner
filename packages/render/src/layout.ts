@@ -36,7 +36,20 @@ export interface LayoutOptions {
    * in the run so the layout style does not flip back and forth as the graph grows.
    */
   minTier?: 0 | 1 | 2;
+  /**
+   * Tight spacing (svl-faf): the shelf cards lay each instance out with its method boxes close together and
+   * no outer padding, so a card is only as big as its box. Default false: the spacing of the full diagram.
+   */
+  compact?: boolean;
 }
+
+/** Spacing overrides for `compact`. */
+export const COMPACT_OPTIONS: Record<string, string> = {
+  'elk.spacing.nodeNode': '8',
+  'elk.layered.spacing.nodeNodeBetweenLayers': '8',
+  'elk.spacing.edgeNode': '4',
+  'elk.padding': '[top=0,left=0,bottom=0,right=0]',
+};
 
 /** Where a wire label goes: the rectangle it occupies (absolute coordinates). */
 export interface LaidLabel {
@@ -376,6 +389,7 @@ export function buildElk(
     attrRows?: Record<string, string[]>;
     moreMethods?: Record<string, number>;
     minTier?: 0 | 1 | 2;
+    compact?: boolean;
   } = {},
 ): { graph: ElkNode; dropped: number } {
   const measure = opts.measure ?? defaultMeasure;
@@ -509,7 +523,11 @@ export function buildElk(
   return {
     graph: {
       id: 'root',
-      layoutOptions: { ...ROOT_OPTIONS, ...TIER_OPTIONS[tier] },
+      layoutOptions: {
+        ...ROOT_OPTIONS,
+        ...TIER_OPTIONS[tier],
+        ...(opts.compact ? COMPACT_OPTIONS : {}),
+      },
       children: (kids.get(null) ?? []).map(build),
       edges,
     },
@@ -608,6 +626,7 @@ export async function layout(model: GraphModel, opts: LayoutOptions = {}): Promi
     attrRows: opts.attrRows,
     moreMethods: opts.moreMethods,
     minTier: opts.minTier,
+    compact: opts.compact,
   });
   if (dropped > 0) console.warn(`layout: dropped ${dropped} edge(s) naming a missing node or port`);
   let out: ElkNode;

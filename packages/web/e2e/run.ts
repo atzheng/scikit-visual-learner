@@ -260,6 +260,11 @@ async function core(page: Page, view: View): Promise<void> {
     check((await stepCount(page)).n === 2, '→ after a run did not go to step 2');
     await gotoStep(page, m);
     check((await visibleNodes(page).count()) > 0, 'no visible boxes at the last step');
+    await page
+      .locator('g.md-node[data-kind="instance"]')
+      .first()
+      .waitFor({ state: 'attached', timeout: 15_000 })
+      .catch(() => undefined);
     check(
       (await page.locator('g.md-node[data-kind="instance"]').count()) > 0,
       'no instance box (LinearRegression)',
@@ -393,7 +398,9 @@ async function core(page: Page, view: View): Promise<void> {
       await frame.scrollIntoViewIfNeeded();
       const bb = await frame.boundingBox();
       check(bb, 'the LinearRegression frame has no box');
-      await page.mouse.click(bb.x + 8, bb.y + bb.height - 8);
+      // (the two-pane card holds its method boxes and a "more methods" button at the bottom: click its title)
+      if (view === 'two') await page.mouse.click(bb.x + bb.width / 2, bb.y + 14);
+      else await page.mouse.click(bb.x + 8, bb.y + bb.height - 8);
       const panel = page.getByRole('complementary', { name: /^Attributes of/ });
       await panel.waitFor({ timeout: 5000 });
       const row = panel.locator('tr.changed', { hasText: 'coef_' });

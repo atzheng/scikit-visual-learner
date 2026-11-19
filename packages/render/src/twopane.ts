@@ -4,7 +4,9 @@
 // builds the DOM. Each object card is one stable element that moves between its shelf slot and the stage.
 import { shelfAt, shelfOrder, stageAt, stateAt } from '@machines/log';
 import type {
+  CallNode,
   EventLog,
+  GEdge,
   GNode,
   GraphModel,
   ShelfEntry,
@@ -18,11 +20,13 @@ import { layout, typeText } from './layout';
 import type { Laid, LaidNode, Measure } from './layout';
 import { mount } from './mount';
 import type { DiagramController, MountOptions } from './mount';
-import { attrRowsFor, SVG_NS, wireTypeLabel, roundedPath } from './svg';
+import { attrRowsFor, moreMethodsFor, SVG_NS, wireTypeLabel, roundedPath } from './svg';
 import type { MethodDocTarget } from './svg';
 
 /** Room around a card's box inside its element: the "x3" badge above, a status message below. */
 export const CARD_PAD = { l: 6, t: 22, r: 6, b: 30 };
+/** Tallest shelf placeholder (px): about one shelf row. */
+export const PH_MAX_H = 100;
 export const STAGE = { margin: 16, colGap: 24, rowGap: 76, sideGap: 72, valuesGap: 24 };
 
 export interface Rect {
@@ -374,7 +378,9 @@ export interface SetStepOptions {
 }
 
 /** Animation length in ms. */
-export const MOVE_MS = 250;
+export const MOVE_MS = 325;
+/** z-index of a card in flight: above the stage, the shelf, other cards and the wires. */
+export const FLY_Z = 1000;
 
 export interface CardMove {
   key: string;
@@ -461,6 +467,14 @@ interface Card {
   size: Size;
 }
 
+/** Columns for an instance's method boxes: one while they are few, more so a card with many methods stays short. */
+export function methodColumns(n: number): number {
+  return n <= 4 ? 1 : Math.ceil(n / 4);
+}
+function pick<V>(rec: Record<string, V>, ids: ReadonlySet<string>): Record<string, V> {
+  return Object.fromEntries(Object.entries(rec).filter(([k]) => ids.has(k)));
+}
+
 const STAGEABLE = new Set<GNode['kind']>(['instance', 'import', 'def', 'call', 'expr', 'store']);
 let uid = 0;
 
@@ -475,18 +489,62 @@ export async function mountTwoPane(
   const entryOf = new Map<string, ShelfEntry>(entries.map((e) => [e.node, e]));
 
   // one ELK run for the size (and ports) of every box; the wires are drawn by `planStage`, not by ELK
+  const attrRows = attrRowsFor(model, log);
   const synth: GraphModel = {
     nodes: model.nodes
-      .filter((n) => STAGEABLE.has(n.kind))
+      .filter((n) => STAGEABLE.has(n.kind) && n.kind !== 'instance')
       .map((n) => ({ ...n, parent: null }) as GNode),
     edges: [],
     steps: [],
   };
-  const laid: Laid = await layout(synth, {
-    attrRows: attrRowsFor(model, log),
-    measure: opts.measure,
-    elk: opts.elk,
-  });
+  const laidBoxes: Laid = await layout(synth, { attrRows, measure: opts.measure, elk: opts.elk });
+  // Instance cards (svl-faf) are the full diagram's compound box: the instance with its method boxes inside
+  // and the "more methods" row, laid out by the same code (`layout`, compact spacing). The method boxes
+  // are stripped of their ports (no wires on the shelf) and chained top to bottom so they stack.
+  const instIds = new Set(model.nodes.filter((n) => n.kind === 'instance').map((n) => n.id));
+  const methodsOf = new Map<string, CallNode[]>();
+  for (const n of model.nodes)
+    if (n.kind === 'call' && n.parent !== null && instIds.has(n.parent)) {
+      const l = methodsOf.get(n.parent);
+      if (l) l.push(n);
+      else methodsOf.set(n.parent, [n]);
+    }
+  const cardNodes: GNode[] = [];
+  const cardEdges: GEdge[] = [];
+  for (const n of model.nodes) {
+    if (n.kind === 'instance') cardNodes.push(n);
+    else if (n.kind === 'call' && n.parent !== null && instIds.has(n.parent))
+      cardNodes.push({ ...n, inPorts: [], outPorts: [] });
+  }
+  for (const [inst, kids] of methodsOf) {
+    const cols = methodColumns(kids.length);
+    kids.forEach((k, i) => {
+      if (i >= cols)
+        cardEdges.push({
+          id: `${inst}:stack:${i}`,
+          from: { node: kids[i - cols]!.id, port: null },
+          to: { node: k.id, port: null },
+          dashed: false,
+          uses: [],
+          nameLabel: null,
+        });
+    });
+  }
+  const cardModel: GraphModel = { nodes: cardNodes, edges: [], steps: model.steps };
+  const laidCards: Laid = await layout(
+    { ...cardModel, edges: cardEdges },
+    {
+      attrRows,
+      moreMethods: moreMethodsFor(model, log),
+      measure: opts.measure,
+      elk: opts.elk,
+      compact: true,
+    },
+  );
+  const laid: Laid = {
+    ...laidBoxes,
+    nodes: { ...laidBoxes.nodes, ...pick(laidCards.nodes, instIds) },
+  };
   const byId = new Map(model.nodes.map((n) => [n.id, n]));
   const visualSize = (id: string): Size => {
     const ln = laid.nodes[id];
@@ -547,22 +605,25 @@ export async function mountTwoPane(
     wrap.style.width = `${size.w + CARD_PAD.l + CARD_PAD.r}px`;
     wrap.style.height = `${size.h + CARD_PAD.t + CARD_PAD.b}px`;
     if (ln) {
-      const shifted: LaidNode = {
-        ...ln,
-        x: CARD_PAD.l,
-        y: CARD_PAD.t,
+      const dx = CARD_PAD.l - ln.x;
+      const dy = CARD_PAD.t - ln.y;
+      const shift = (l: LaidNode): LaidNode => ({
+        ...l,
+        x: l.x + dx,
+        y: l.y + dy,
         ports: Object.fromEntries(
-          Object.entries(ln.ports).map(([k, p]) => [
-            k,
-            { ...p, x: p.x - ln.x + CARD_PAD.l, y: p.y - ln.y + CARD_PAD.t },
-          ]),
+          Object.entries(l.ports).map(([k, p]) => [k, { ...p, x: p.x + dx, y: p.y + dy }]),
         ),
-      };
+      });
+      const nodes: Record<string, LaidNode> = { [node]: shift(ln) };
+      // an instance's method boxes sit inside it (their layout is relative to the instance, like the full view)
+      for (const k of methodsOf.get(node) ?? [])
+        if (laidCards.nodes[k.id]) nodes[k.id] = shift(laidCards.nodes[k.id]!);
       ctl = mount(wrap, mountOpts);
-      ctl.setGraph(model, {
+      ctl.setGraph(instIds.has(node) ? cardModel : model, {
         width: size.w + CARD_PAD.l + CARD_PAD.r,
         height: size.h + CARD_PAD.t + CARD_PAD.b,
-        nodes: { [node]: shifted },
+        nodes,
         edges: {},
         labels: {},
         dropped: 0,
@@ -572,8 +633,10 @@ export async function mountTwoPane(
     ctl?.svg?.removeAttribute('aria-label');
     ctl?.svg?.setAttribute('role', 'presentation');
     ctl?.svg?.setAttribute('tabindex', '-1'); // some browsers put an svg root in the Tab order
-    const g = wrap.querySelector('.md-node');
-    g?.setAttribute('tabindex', '-1'); // roving: see `rove`
+    // roving: see `rove`. Method boxes and the "more methods" button inside the card are reached from the
+    // card's box with the arrow keys (see `innerKey`), not by Tab.
+    for (const g of wrap.querySelectorAll('.md-node, .md-more-ctl'))
+      g.setAttribute('tabindex', '-1');
     const c: Card = { key, node, object, wrap, ctl, size };
     cards.set(key, c);
     return c;
@@ -598,7 +661,9 @@ export async function mountTwoPane(
     ph.hidden = true;
     // the dashed outline is the card's box; the card's padding becomes its margin, so the slot keeps its size
     ph.style.width = `${card.size.w}px`;
-    ph.style.height = `${card.size.h}px`;
+    // a tall card (an instance with its attributes and methods) leaves a placeholder of about one shelf row;
+    // the cards after it reflow while it is away
+    ph.style.height = `${Math.min(card.size.h, PH_MAX_H)}px`;
     ph.style.margin = `${CARD_PAD.t}px ${CARD_PAD.r}px ${CARD_PAD.b}px ${CARD_PAD.l}px`;
     const label = byId.get(e.node) ? slotLabel(byId.get(e.node)!) : e.node;
     ph.append(
@@ -653,10 +718,12 @@ export async function mountTwoPane(
   // FLIP: running animations are cancelled when the next step starts. The DOM already holds the final state
   // (an animation only offsets it), so cancelling "finishes it instantly".
   let running: Animation[] = [];
+  const restores: (() => void)[] = [];
   let wireKeys = new Set<string>(); // the wires drawn by the last step
   const finishAnimations = (): void => {
     for (const a of running) a.cancel();
     running = [];
+    for (const r of restores.splice(0)) r();
   };
   const reducedMotion = (): boolean =>
     doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
@@ -680,9 +747,46 @@ export async function mountTwoPane(
     }
     return { abs, rel };
   };
-  const play = (target: Element, frames: Keyframe[]): void => {
+  const play = (target: Element, frames: Keyframe[], lifted?: Rect | null): void => {
     if (typeof target.animate !== 'function') return;
-    running.push(target.animate(frames, { duration: MOVE_MS, easing: 'ease-out' }));
+    const anim = target.animate(frames, { duration: MOVE_MS, easing: 'ease-out' });
+    running.push(anim);
+    if (lifted && target instanceof HTMLElement) {
+      const restore = lift(target, lifted);
+      anim.onfinish = restore;
+      restores.push(restore);
+    }
+  };
+  // While a card flies it is drawn above everything: `position: fixed` at its final place (the stage clips
+  // its overflow, so a card flying out of or into it would be cut) with a top z-index. A placeholder of the
+  // same size keeps its shelf slot from collapsing. The restore puts the inline styles back exactly.
+  const lift = (w: HTMLElement, at: Rect): (() => void) => {
+    const keep = ['position', 'left', 'top', 'zIndex'].map(
+      (k) => [k, w.style.getPropertyValue(k === 'zIndex' ? 'z-index' : k)] as const,
+    );
+    let ph: HTMLElement | null = null;
+    if (w.parentElement?.classList.contains('md-slot')) {
+      ph = el(doc, 'div', 'md-fly-ph');
+      ph.setAttribute('aria-hidden', 'true');
+      ph.style.width = w.style.width;
+      ph.style.height = w.style.height;
+      w.before(ph);
+    }
+    w.style.position = 'fixed';
+    w.style.left = `${at.x}px`;
+    w.style.top = `${at.y}px`;
+    w.style.zIndex = String(FLY_Z);
+    let done = false;
+    return () => {
+      if (done) return;
+      done = true;
+      ph?.remove();
+      for (const [k, v] of keep) {
+        const prop = k === 'zIndex' ? 'z-index' : k;
+        if (v) w.style.setProperty(prop, v);
+        else w.style.removeProperty(prop);
+      }
+    };
   };
 
   function setStep(step: number, sopts: SetStepOptions = {}): void {
@@ -792,6 +896,11 @@ export async function mountTwoPane(
       } else if (isBox) visible.add(c.node);
       else if (c.object === null && onShelf.has(c.node) && !onStage.has(c.node))
         visible.add(c.node);
+      // the method boxes drawn in the instance, as in the full diagram: shown from its creation on, with the
+      // "not called yet" cue until their first call (`visibleNodes` says which, at this step)
+      if (visible.has(c.node))
+        for (const k of methodsOf.get(c.node) ?? [])
+          if (st.visibleNodes.has(k.id)) visible.add(k.id);
       const state: StepState = { ...st, visibleNodes: visible, objectBadge };
       c.ctl?.setState(state, log, { owns, versionOf });
       c.wrap.hidden = visible.size === 0;
@@ -803,7 +912,11 @@ export async function mountTwoPane(
           : isBox
             ? 'current line'
             : 'on the shelf';
-        g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? ''}, ${suffix}`);
+        const base = g.getAttribute('aria-label') ?? '';
+        g.setAttribute('aria-label', `${base}, ${suffix}`);
+        // a method box names the instance it belongs to (two cards can both have a `fit`)
+        for (const m of innerMethods(c.wrap))
+          m.setAttribute('aria-label', `${m.getAttribute('aria-label') ?? ''}, in ${base}`);
         // I selects the card (the app opens the attribute panel); Enter still dives into its rows
         const keys = (g.getAttribute('aria-keyshortcuts') ?? '').split(' ').filter(Boolean);
         if (!keys.includes('I')) g.setAttribute('aria-keyshortcuts', [...keys, 'I'].join(' '));
@@ -825,12 +938,20 @@ export async function mountTwoPane(
         const w = byKey.get(mv.key);
         if (!w) continue;
         if (mv.kind === 'move')
-          play(w, [{ transform: `translate(${mv.dx}px, ${mv.dy}px)` }, { transform: 'none' }]);
+          play(
+            w,
+            [{ transform: `translate(${mv.dx}px, ${mv.dy}px)` }, { transform: 'none' }],
+            after.abs.get(mv.key),
+          );
         else
-          play(w, [
-            { opacity: 0, transform: 'translateY(8px)' },
-            { opacity: 1, transform: 'none' },
-          ]);
+          play(
+            w,
+            [
+              { opacity: 0, transform: 'translateY(8px)' },
+              { opacity: 1, transform: 'none' },
+            ],
+            after.abs.get(mv.key),
+          );
       }
       // only wires that were not there before fade in; the others stay as they are
       for (const e of wiresSvg.querySelectorAll('[data-wire]'))
@@ -851,8 +972,56 @@ export async function mountTwoPane(
     }
   }
 
+  // the card's own box: an instance card also holds its method boxes, which are separate `.md-node`s
   const focusOf = (wrap: HTMLElement): HTMLElement | null =>
-    wrap.matches('.md-chipcard') ? wrap : wrap.querySelector<HTMLElement>('.md-node');
+    wrap.matches('.md-chipcard')
+      ? wrap
+      : ([...wrap.querySelectorAll<HTMLElement>('.md-node')].find(
+          (g) => g.getAttribute('data-node') === wrap.dataset.node,
+        ) ?? null);
+  const innerMethods = (wrap: HTMLElement): HTMLElement[] => {
+    const own = wrap.dataset.node;
+    return [...wrap.querySelectorAll<HTMLElement>('.md-node')].filter(
+      (g) => g.getAttribute('data-node') !== own && !g.classList.contains('md-hidden'),
+    );
+  };
+  /** What the arrow keys visit inside a card, in order: attribute rows, method boxes, the "more methods" button. */
+  const innerItems = (wrap: HTMLElement): HTMLElement[] => {
+    const box = focusOf(wrap);
+    const rows = box
+      ? [...box.querySelectorAll<HTMLElement>('[data-doc-attr]')].filter(
+          (r) => !r.classList.contains('md-hidden'),
+        )
+      : [];
+    const more = wrap.querySelector<HTMLElement>('.md-more:not(.md-hidden) .md-more-ctl');
+    return [...rows, ...innerMethods(wrap), ...(more ? [more] : [])];
+  };
+  /** ArrowDown/Up walk the card's rows, methods and "more" button; Escape and I from inside. True if handled. */
+  const innerKey = (k: KeyboardEvent, wrap: HTMLElement): boolean => {
+    const box = focusOf(wrap);
+    const t = k.target as HTMLElement;
+    if (!box) return false;
+    const items = innerItems(wrap);
+    const cur = t === box ? -1 : items.indexOf(t);
+    if (t !== box && cur < 0) return false; // somewhere else in the card (an open list): mount.ts handles it
+    let to: HTMLElement | undefined;
+    if (k.key === 'ArrowDown') to = items[Math.min(cur + 1, items.length - 1)];
+    else if (k.key === 'ArrowUp') to = cur < 0 ? undefined : cur === 0 ? box : items[cur - 1];
+    else if (k.key === 'Escape') to = cur >= 0 ? box : undefined;
+    else if ((k.key === 'i' || k.key === 'I') && cur >= 0) {
+      const node = t.closest('[data-node]')?.getAttribute('data-node');
+      if (!node) return false;
+      k.preventDefault();
+      k.stopPropagation();
+      opts.onSelectNode?.(node);
+      return true;
+    }
+    if (!to) return false;
+    k.preventDefault();
+    k.stopPropagation();
+    to.focus();
+    return true;
+  };
 
   function roleSuffix(p: StageParticipant, stage: StageModel | null): string {
     const n = stage ? byId.get(stage.node) : undefined;
@@ -943,6 +1112,8 @@ export async function mountTwoPane(
     if (k.ctrlKey || k.metaKey || k.altKey || k.shiftKey || !(k.target instanceof Element)) return;
     const region = regionOf(k.target);
     if (!region) return;
+    const own = k.target.closest('.md-card');
+    if (own instanceof HTMLElement && innerKey(k, own)) return;
     const m = members(region);
     const at = m.indexOf(k.target as HTMLElement);
     if (at < 0) return; // inside a card: its own arrow keys and Escape (mount.ts)
