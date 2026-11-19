@@ -1012,6 +1012,67 @@ describe('planMoves (pure)', () => {
     const back = phase(after, before, { before: rel.after, after: rel.before });
     expect(back).toEqual({ s: 1, g: 2, c: 1 });
   });
+  test('phase 3: outputs that come onto the stage come last; stepping back they leave first', () => {
+    // i: input on the shelf, o: output on the shelf (returned again), n: a new object, s: stays
+    const shelfAt0 = new Map<string, Rect | null>([
+      ['s', R(100, 20)],
+      ['i', R(0, 400)],
+      ['o', R(60, 400)],
+    ]);
+    const stageAt1 = new Map<string, Rect | null>([
+      ['s', R(100, 20)],
+      ['i', R(250, 20)],
+      ['o', R(300, 20)],
+      ['n', R(350, 20)],
+    ]);
+    const rel0 = new Map<string, Rect | null>([
+      ['s', null],
+      ['i', R(0, 0)],
+      ['o', R(60, 0)],
+    ]);
+    const rel1 = new Map<string, Rect | null>([
+      ['s', null],
+      ['i', null],
+      ['o', null],
+      ['n', null],
+    ]);
+    const keys = new Set(['o', 'n']);
+    const fwd = planMoves(
+      shelfAt0,
+      stageAt1,
+      { before: rel0, after: rel1 },
+      { keys, reverse: false },
+    );
+    expect(Object.fromEntries(fwd.map((m) => [m.key, [m.kind, m.phase]]))).toEqual({
+      i: ['move', 2],
+      o: ['move', 3],
+      n: ['enter', 3],
+    });
+    // back: the outputs leave first (n out of sight, o to the shelf), the input follows in phase 1
+    const back = planMoves(
+      stageAt1,
+      shelfAt0,
+      { before: rel1, after: rel0 },
+      { keys, reverse: true },
+    );
+    expect(Object.fromEntries(back.map((m) => [m.key, [m.kind, m.phase]]))).toEqual({
+      n: ['leave', 0],
+      o: ['move', 0],
+      i: ['move', 1],
+    });
+    // an output that was on the stage already (an earlier call of the line made it) is not delayed
+    const same = planMoves(
+      stageAt1,
+      stageAt1,
+      { before: rel1, after: rel1 },
+      { keys, reverse: false },
+    );
+    expect(same).toEqual([]);
+    // without outputs nothing changes
+    expect(
+      planMoves(shelfAt0, stageAt1, { before: rel0, after: rel1 }).every((m) => m.phase === 2),
+    ).toBe(true);
+  });
   test('cards that stay put or are not visible do not move', () => {
     const b = new Map([['a', R(0, 0)]]);
     const a = new Map([
@@ -1109,16 +1170,88 @@ describe('animation', () => {
     tp!.setStep(s, { animate: true });
     const cardCalls = calls.filter((c) => c.el.matches('.md-card, .md-chipcard'));
     const delays = cardCalls.map((c) => Number(c.opts?.delay ?? 0));
-    for (const d of delays) expect([0, MOVE_MS]).toContain(d);
+    for (const d of delays) expect([0, MOVE_MS, 2 * MOVE_MS]).toContain(d);
     const last = Math.max(...delays);
     const wires = calls.filter((c) => c.el instanceof SVGElement && c.el.matches('[data-wire]'));
-    for (const w of wires)
-      expect(Number(w.opts?.delay ?? 0)).toBeGreaterThanOrEqual(last + MOVE_MS);
+    expect(wires.length).toBeGreaterThan(0);
+    for (const w of wires) expect(Number(w.opts?.delay ?? 0)).toBeGreaterThanOrEqual(last);
     // nothing is left half-way: the next step finishes every animation
     const n = calls.length;
     tp!.setStep(s - 1);
     expect(cancelled).toBeGreaterThan(0);
     expect(calls).toHaveLength(n);
+  });
+  /** The keys of the cards (and chips) that are outputs or created objects of a step's call. */
+  const outputKeysAt = (
+    model: Parameters<typeof stageAt>[0],
+    log: Parameters<typeof stageAt>[1],
+    s: number,
+  ): Set<string> => {
+    const st = stageAt(model, log, s);
+    return new Set(
+      (st?.participants ?? [])
+        .filter((p) => p.role === 'output' || p.role === 'created')
+        .map((p) => (p.kind === 'chip' ? `chip:${p.edge ?? p.node}` : p.node)),
+    );
+  };
+  const delayOfCard = (key: string): number | undefined => {
+    const w = tp!.card(key) ?? host.querySelector<HTMLElement>(`[data-card="${key}"]`);
+    const c = calls.find((x) => x.el === w);
+    return c ? Number(c.opts?.delay ?? 0) : undefined;
+  };
+  test('outputs are animated last: after every input card, from the call box, mirrored on step back', async () => {
+    setup(false);
+    const { model, log } = await open('golden_linreg');
+    let checked = 0;
+    for (let s = 1; s <= model.steps.length; s++) {
+      const outs = outputKeysAt(model, log, s);
+      const ins = new Set(
+        (stageAt(model, log, s)?.participants ?? [])
+          .filter((p) => p.role !== 'output' && p.role !== 'created' && p.kind !== 'chip')
+          .map((p) => p.node),
+      );
+      tp!.setStep(s - 1);
+      calls = [];
+      tp!.setStep(s, { animate: true });
+      const outDelays = [...outs].map(delayOfCard).filter((d): d is number => d !== undefined);
+      const inDelays = [...ins]
+        .filter((k) => !outs.has(k))
+        .map(delayOfCard)
+        .filter((d): d is number => d !== undefined);
+      if (outDelays.length && inDelays.length) {
+        checked++;
+        expect(Math.min(...outDelays)).toBeGreaterThanOrEqual(Math.max(...inDelays) + MOVE_MS);
+      }
+      // stepping back: the outputs' own animations (if any) start before every other card's
+      calls = [];
+      tp!.setStep(s - 1, { animate: true });
+      const gone = [...outs].map(delayOfCard).filter((d): d is number => d !== undefined);
+      const rest = [...ins]
+        .filter((k) => !outs.has(k))
+        .map(delayOfCard)
+        .filter((d): d is number => d !== undefined);
+      if (gone.length && rest.length)
+        expect(Math.max(...gone)).toBeLessThanOrEqual(Math.min(...rest));
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+  test('an output emerges from the call box: it starts at the box centre and scaled down', async () => {
+    setup(false);
+    const { model, log } = await open('golden_linreg');
+    let seen = 0;
+    for (let s = 1; s <= model.steps.length; s++) {
+      tp!.setStep(s - 1);
+      calls = [];
+      tp!.setStep(s, { animate: true });
+      for (const key of outputKeysAt(model, log, s)) {
+        const w = tp!.card(key) ?? host.querySelector<HTMLElement>(`[data-card="${key}"]`);
+        const c = calls.find((x) => x.el === w && x.frames[0]!.opacity === 0);
+        if (c && Number(c.opts?.delay ?? 0) > 0) {
+          if (String(c.frames[0]!.transform).includes('scale(0.3)')) seen++;
+        }
+      }
+    }
+    expect(seen).toBeGreaterThan(0);
   });
   test('MOVE_MS is 325, a flying card is lifted above everything and restored afterwards', async () => {
     expect(MOVE_MS).toBe(325);

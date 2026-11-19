@@ -937,8 +937,11 @@ const FADE_MS = 150;
 
 export interface CardMove {
   key: string;
-  /** `move`: the card was visible and still is (shelf to stage and back); `enter`: it was not visible before. */
-  kind: 'move' | 'enter';
+  /**
+   * `move`: the card was visible and still is (shelf to stage and back); `enter`: it was not visible before;
+   * `leave` (stepping back only): it was an output of the step being left and is not visible after it.
+   */
+  kind: 'move' | 'enter' | 'leave';
   /** Where the card was, relative to where it is now (the start of the transform). Zero for `enter`. */
   dx: number;
   dy: number;
@@ -947,8 +950,16 @@ export interface CardMove {
    * on the stage and take their new places. 2: cards that come onto the stage, from the shelf or from nowhere.
    * Stepping back needs no special case: what the later step used leaves in phase 1, what the earlier step used
    * returns in phase 2.
+   * Phase 3 (svl-8rx, forward): the step's outputs and created objects, which come onto the stage after the inputs
+   * have landed. Phase 0 (stepping back): the outputs of the step being left go first, before phase 1.
    */
-  phase: 1 | 2;
+  phase: 0 | 1 | 2 | 3;
+}
+
+export interface PlanMovesOptions {
+  /** Each card's rectangle relative to the shelf (null for a card not in it), before and after. */
+  before: ReadonlyMap<string, Rect | null>;
+  after: ReadonlyMap<string, Rect | null>;
 }
 
 /**
@@ -961,9 +972,21 @@ export interface CardMove {
 export function planMoves(
   before: ReadonlyMap<string, Rect | null>,
   after: ReadonlyMap<string, Rect | null>,
-  rel?: { before: ReadonlyMap<string, Rect | null>; after: ReadonlyMap<string, Rect | null> },
+  rel?: PlanMovesOptions,
+  /**
+   * svl-8rx: the keys of the cards that are outputs or created objects of the later of the two steps, and the
+   * direction. Forward, the ones that come onto the stage are phase 3 (after the inputs); in reverse, the ones
+   * that leave it (to the shelf, or out of sight: kind `leave`) are phase 0 (before everything else).
+   */
+  outputs?: { keys: ReadonlySet<string>; reverse: boolean },
 ): CardMove[] {
   const out: CardMove[] = [];
+  const outs = outputs?.keys;
+  const rev = outputs?.reverse === true;
+  if (rev && outs && rel)
+    for (const [key, b] of before)
+      if (b && outs.has(key) && !rel.before.get(key) && !after.get(key))
+        out.push({ key, kind: 'leave', dx: 0, dy: 0, phase: 0 });
   for (const [key, a] of after) {
     if (!a) continue;
     const b = before.get(key);
@@ -975,7 +998,9 @@ export function planMoves(
     // `rel` a move is phase 1
     const toStage = !!rel && !ra;
     const fromStage = !!rel && !!b && !rb;
-    if (!b) out.push({ key, kind: 'enter', dx: 0, dy: 0, phase: 2 });
+    const lateOut = !!outs && !rev && outs.has(key);
+    const earlyOut = !!outs && rev && outs.has(key);
+    if (!b) out.push({ key, kind: 'enter', dx: 0, dy: 0, phase: lateOut ? 3 : 2 });
     else if (
       Math.abs(b.x - a.x) >= 1 ||
       Math.abs(b.y - a.y) >= 1 ||
@@ -987,7 +1012,8 @@ export function planMoves(
         kind: 'move',
         dx: b.x - a.x,
         dy: b.y - a.y,
-        phase: toStage && !fromStage ? 2 : 1,
+        phase:
+          toStage && !fromStage ? (lateOut ? 3 : 2) : earlyOut && fromStage && !toStage ? 0 : 1,
       });
   }
   return out;
@@ -1404,11 +1430,77 @@ export async function mountTwoPane(
     };
   };
 
+  /** The stage of the current call: the line group's current call, else the step's. */
+  const currentStage = (): StageModel | null => {
+    const pc = plan?.calls?.find((c) => c.current);
+    return pc && lineNow ? (lineNow.calls[pc.call]?.stage ?? null) : stageAt(model, log, current);
+  };
+  /**
+   * svl-8rx: the cards that are outputs or created objects of the current call (a line group: only the current
+   * call's; earlier calls' outputs are on the stage already), by card key.
+   */
+  const outputKeys = (): Set<string> => {
+    const keys = new Set<string>();
+    const cur = plan?.calls?.find((c) => c.current);
+    for (const it of plan?.items ?? [])
+      if (
+        (it.participant.role === 'output' || it.participant.role === 'created') &&
+        (cur === undefined || it.call === undefined || it.call === cur.call)
+      )
+        keys.add(it.key);
+    return keys;
+  };
+  /** The element that is the call box now: the callee's card, the method's box inside its owner, or the call's own card. */
+  const callBoxEl = (): Element | null => {
+    const sg = currentStage();
+    if (!plan || !sg) return null;
+    const cur = plan.calls?.find((c) => c.current);
+    const node = cur ? cur.node : sg.node;
+    const callee = cur ? cur.calleeBox === true : plan.calleeBox === true;
+    const nested = cur ? cur.nested : plan.nested === true;
+    if (callee) {
+      for (const [k, v] of onStage)
+        if (
+          v.item.participant.role === 'callee' &&
+          (cur === undefined || v.item.call === undefined || v.item.call === cur.call)
+        )
+          return (v.card?.wrap ?? chipEls.get(k)) || null;
+      return null;
+    }
+    if (nested) {
+      for (const g of canvas.querySelectorAll('.md-node'))
+        if (g.getAttribute('data-node') === node) return g;
+      return null;
+    }
+    for (const bc of boxCards.keys()) if (bc.node === node) return bc.wrap;
+    return null;
+  };
+  const rectOf = (e: Element | null): Rect | null => {
+    if (!e) return null;
+    const r = e.getBoundingClientRect();
+    return r.width > 0 || r.height > 0 ? { x: r.left, y: r.top, w: r.width, h: r.height } : null;
+  };
+
   function setStep(step: number, sopts: SetStepOptions = {}): void {
     if (destroyed) return;
     finishAnimations();
     const flip = sopts.animate === true && !reducedMotion();
     const before = flip ? measureCards() : null;
+    // stepping back: what the step being left made, and where it came from, is read before the DOM changes
+    const reverse = Number.isNaN(step) ? false : step < current;
+    const left =
+      before && reverse
+        ? {
+            outputs: outputKeys(),
+            box: rectOf(callBoxEl()),
+            clones: new Map<string, HTMLElement>(),
+          }
+        : null;
+    if (left)
+      for (const key of left.outputs) {
+        const w = onStage.get(key)?.card?.wrap ?? chipEls.get(key);
+        if (w && w.isConnected && !w.hidden) left.clones.set(key, w.cloneNode(true) as HTMLElement);
+      }
     const total = model.steps.length;
     current = Number.isNaN(step) ? 0 : Math.max(0, Math.min(total, Math.trunc(step)));
     const st = stateAt(model, log, current);
@@ -1645,7 +1737,7 @@ export async function mountTwoPane(
     rove();
     // the host zooms the stage to this step's plan now, so the landing places measured below are final
     sopts.fit?.();
-    if (before) flyCards(before, oldWires);
+    if (before) flyCards(before, oldWires, left);
     // a card that was re-parented loses focus: it keeps it, wherever it went
     if (
       hadFocus &&
@@ -1661,27 +1753,81 @@ export async function mountTwoPane(
   }
 
   /**
-   * The step animation, from the measured `before` to the DOM as it is now (already zoomed). Two phases, each
-   * MOVE_MS (svl-aut): 1) cards the step does not use go back to the shelf, the ones that stay on the stage take
-   * their new places, and the old wires fade out; 2) the cards the step needs come onto the stage. The wires and
-   * values of the new step fade in when the last phase ends. A phase with nothing in it is skipped. Phase 2 is the
-   * same animation with a delay (it holds its first frame while it waits), so cancelling any animation finishes
-   * everything: the DOM already holds the final state.
+   * The step animation, from the measured `before` to the DOM as it is now (already zoomed). Phases of MOVE_MS
+   * each (svl-aut, svl-8rx), forward: 1) cards the step does not use go back to the shelf, the ones that stay on the
+   * stage take their new places, and the old wires fade out; 2) the cards the step needs come onto the stage and
+   * the input wires appear; 3) the step's outputs and created objects emerge from the call box (or fly in from the
+   * shelf) and the output wires and values appear. Stepping back (`left`) mirrors it: 0) the outputs of the step
+   * being left go back into the call box and off (or to the shelf), then phases 1 and 2 as before, and the wires
+   * fade in last. A phase with nothing in it is skipped. Later phases are the same animation with a delay (it holds
+   * its first frame while it waits), so cancelling any animation finishes everything: the DOM already holds the
+   * final state.
    */
   function flyCards(
     before: { abs: Map<string, Rect | null>; rel: Map<string, Rect | null> },
     oldWires: Element[],
+    left: { outputs: Set<string>; box: Rect | null; clones: Map<string, HTMLElement> } | null,
   ): void {
     const byKey = new Map(allCards());
     const after = measureCards();
-    const moves = planMoves(before.abs, after.abs, { before: before.rel, after: after.rel });
-    const phase1 = moves.some((m) => m.phase === 1);
-    const phase2 = moves.some((m) => m.phase === 2);
-    const delayOf = (m: CardMove): number => (m.phase === 2 && phase1 ? MOVE_MS : 0);
+    const reverse = left !== null;
+    const outs = left ? left.outputs : outputKeys();
+    const moves = planMoves(
+      before.abs,
+      after.abs,
+      { before: before.rel, after: after.rel },
+      { keys: outs, reverse },
+    );
+    const present = [0, 1, 2, 3].map((n) => moves.some((m) => m.phase === n));
+    // the delay of a phase: one MOVE_MS for every earlier phase that has something in it
+    const slotOf = (n: number): number => present.slice(0, n).filter(Boolean).length * MOVE_MS;
+    const callBox = left ? left.box : rectOf(callBoxEl());
+    const centre = (r: Rect): [number, number] => [r.x + r.w / 2, r.y + r.h / 2];
     for (const mv of moves) {
+      const timing = { delay: slotOf(mv.phase) };
+      if (mv.kind === 'leave') {
+        // an output of the step being left that is gone in the earlier one: its picture shrinks into the call box
+        const b = before.abs.get(mv.key);
+        const ghost = left?.clones.get(mv.key);
+        if (!b || !ghost || canvas.hidden) continue;
+        const k = zoomOf(canvas);
+        ghost.removeAttribute('data-card');
+        ghost.hidden = false;
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.setAttribute('inert', '');
+        ghost.style.pointerEvents = 'none';
+        canvas.append(ghost);
+        const [bx, by] = centre(b);
+        const [tx, ty] = callBox ? centre(callBox) : [bx, by + 8];
+        const undo = lift(ghost, b, k);
+        const remove = (): void => {
+          undo();
+          ghost.remove();
+        };
+        restores.push(remove);
+        if (typeof ghost.animate === 'function') {
+          const anim = ghost.animate(
+            [
+              { opacity: 1, transform: 'none' },
+              {
+                opacity: 0,
+                transform: `translate(${(tx - bx) / k}px, ${(ty - by) / k}px) scale(0.3)`,
+              },
+            ],
+            {
+              duration: MOVE_MS,
+              easing: 'ease-in',
+              fill: 'forwards',
+              ...(timing.delay > 0 ? { delay: timing.delay } : {}),
+            },
+          );
+          running.push(anim);
+          anim.onfinish = remove;
+        } else remove();
+        continue;
+      }
       const w = byKey.get(mv.key);
       if (!w) continue;
-      const timing = { delay: delayOf(mv) };
       if (mv.kind === 'move') {
         const b = before.abs.get(mv.key)!;
         const a = after.abs.get(mv.key)!;
@@ -1704,16 +1850,26 @@ export async function mountTwoPane(
           a,
           timing,
         );
-      } else
+      } else {
+        const a = after.abs.get(mv.key);
+        // an output (phase 3) emerges from the call box; any other card fades in from below
+        let from = 'translateY(8px)';
+        if (mv.phase === 3 && callBox && a) {
+          const k = zoomOf(w);
+          const [cx, cy] = centre(a);
+          const [bx, by] = centre(callBox);
+          from = `translate(${(bx - cx) / k}px, ${(by - cy) / k}px) scale(0.3)`;
+        }
         play(
           w,
           [
-            { opacity: 0, transform: 'translateY(8px)' },
+            { opacity: 0, transform: from },
             { opacity: 1, transform: 'none' },
           ],
-          after.abs.get(mv.key),
+          a,
           timing,
         );
+      }
     }
     // the old wires fade out at the start (a ghost layer, so they are not hit-tested or read), the new wires and
     // values fade in once the cards have landed
@@ -1731,16 +1887,33 @@ export async function mountTwoPane(
         const anim = ghost.animate([{ opacity: 1 }, { opacity: 0 }], {
           duration: FADE_MS,
           easing: 'ease-out',
+          fill: 'forwards',
         });
         running.push(anim);
         anim.onfinish = gone;
       } else gone();
     }
-    const fadeIn = (phase1 ? MOVE_MS : 0) + (phase2 ? MOVE_MS : 0);
+    // forward: the input wires appear when phase 2 ends, the output wires and values when phase 3 ends (the
+    // call's inputs, then its outputs); stepping back: everything when the last phase ends
+    const inputAt = slotOf(3);
+    const outputAt = reverse ? inputAt : slotOf(4);
+    const cs = currentStage();
+    const outEdges = new Set<string>();
+    for (const p of cs?.participants ?? [])
+      if ((p.role === 'output' || p.role === 'created') && p.edge) outEdges.add(p.edge);
+    for (const v of cs?.values ?? []) if (v.role === 'output' && v.edge) outEdges.add(v.edge);
+    const edgeOf = new Map((plan?.wires ?? []).map((w) => [`${w.from}>${w.to}`, w.edge]));
     const appear = [{ opacity: 0 }, { opacity: 1 }];
-    for (const e of wiresSvg.querySelectorAll('[data-wire]'))
-      play(e, appear, null, { delay: fadeIn, duration: FADE_MS });
-    if (!valuesEl.hidden) play(valuesEl, appear, null, { delay: fadeIn, duration: FADE_MS });
+    for (const e of wiresSvg.querySelectorAll('[data-wire]')) {
+      const edge = edgeOf.get(e.getAttribute('data-wire') ?? '');
+      play(e, appear, null, {
+        delay: edge && outEdges.has(edge) ? outputAt : inputAt,
+        duration: FADE_MS,
+      });
+    }
+    // the inline values sit in one block: with the outputs when the call has any, else with the inputs
+    const valuesAt = (cs?.values ?? []).some((v) => v.role === 'output') ? outputAt : inputAt;
+    if (!valuesEl.hidden) play(valuesEl, appear, null, { delay: valuesAt, duration: FADE_MS });
   }
 
   // the card's own box: an instance card also holds its method boxes, which are separate `.md-node`s
