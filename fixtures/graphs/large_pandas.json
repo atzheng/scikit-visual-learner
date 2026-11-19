@@ -822,41 +822,20 @@
       ]
     },
     {
-      "id": "i:16edel4.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 900005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 10,
-      "createdBy": "x:16edel4.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 10,
-          "token": "v7.0",
-          "kind": "new"
-        },
-        {
-          "i": 11,
-          "token": "v7.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:16edel4.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s9",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:16edel4.0~u7kfkb",
+      "parent": null,
       "order": 900005,
       "executions": [
         {
           "i": 11,
           "ret": 11,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v7.0"
+          },
           "outputs": {
             "out:0": "v8.0"
           },
@@ -866,7 +845,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -1241,41 +1227,20 @@
       ]
     },
     {
-      "id": "i:o2eha3.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 1300005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 21,
-      "createdBy": "x:o2eha3.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 21,
-          "token": "v16.0",
-          "kind": "new"
-        },
-        {
-          "i": 22,
-          "token": "v16.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:o2eha3.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s19",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:o2eha3.0~u7kfkb",
+      "parent": null,
       "order": 1300005,
       "executions": [
         {
           "i": 22,
           "ret": 22,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v16.0"
+          },
           "outputs": {
             "out:0": "v17.0"
           },
@@ -1285,7 +1250,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -1660,41 +1632,20 @@
       ]
     },
     {
-      "id": "i:1ul6hvy.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 1700005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 32,
-      "createdBy": "x:1ul6hvy.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 32,
-          "token": "v25.0",
-          "kind": "new"
-        },
-        {
-          "i": 33,
-          "token": "v25.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:1ul6hvy.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s29",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:1ul6hvy.0~u7kfkb",
+      "parent": null,
       "order": 1700005,
       "executions": [
         {
           "i": 33,
           "ret": 33,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v25.0"
+          },
           "outputs": {
             "out:0": "v26.0"
           },
@@ -1704,7 +1655,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -2079,41 +2037,20 @@
       ]
     },
     {
-      "id": "i:w2u11l.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 2100005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 43,
-      "createdBy": "x:w2u11l.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 43,
-          "token": "v34.0",
-          "kind": "new"
-        },
-        {
-          "i": 44,
-          "token": "v34.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:w2u11l.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s39",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:w2u11l.0~u7kfkb",
+      "parent": null,
       "order": 2100005,
       "executions": [
         {
           "i": 44,
           "ret": 44,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v34.0"
+          },
           "outputs": {
             "out:0": "v35.0"
           },
@@ -2123,7 +2060,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -2498,41 +2442,20 @@
       ]
     },
     {
-      "id": "i:1ps16p8.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 2500005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 54,
-      "createdBy": "x:1ps16p8.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 54,
-          "token": "v43.0",
-          "kind": "new"
-        },
-        {
-          "i": 55,
-          "token": "v43.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:1ps16p8.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s49",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:1ps16p8.0~u7kfkb",
+      "parent": null,
       "order": 2500005,
       "executions": [
         {
           "i": 55,
           "ret": 55,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v43.0"
+          },
           "outputs": {
             "out:0": "v44.0"
           },
@@ -2542,7 +2465,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -2917,41 +2847,20 @@
       ]
     },
     {
-      "id": "i:shf1fj.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 2900005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 65,
-      "createdBy": "x:shf1fj.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 65,
-          "token": "v52.0",
-          "kind": "new"
-        },
-        {
-          "i": 66,
-          "token": "v52.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:shf1fj.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s59",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:shf1fj.0~u7kfkb",
+      "parent": null,
       "order": 2900005,
       "executions": [
         {
           "i": 66,
           "ret": 66,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v52.0"
+          },
           "outputs": {
             "out:0": "v53.0"
           },
@@ -2961,7 +2870,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -3336,41 +3252,20 @@
       ]
     },
     {
-      "id": "i:57t43m.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 3300005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 76,
-      "createdBy": "x:57t43m.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 76,
-          "token": "v61.0",
-          "kind": "new"
-        },
-        {
-          "i": 77,
-          "token": "v61.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:57t43m.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s69",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:57t43m.0~u7kfkb",
+      "parent": null,
       "order": 3300005,
       "executions": [
         {
           "i": 77,
           "ret": 77,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v61.0"
+          },
           "outputs": {
             "out:0": "v62.0"
           },
@@ -3380,7 +3275,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -3755,41 +3657,20 @@
       ]
     },
     {
-      "id": "i:vtvki5.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 3700005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 87,
-      "createdBy": "x:vtvki5.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 87,
-          "token": "v70.0",
-          "kind": "new"
-        },
-        {
-          "i": 88,
-          "token": "v70.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:vtvki5.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s79",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:vtvki5.0~u7kfkb",
+      "parent": null,
       "order": 3700005,
       "executions": [
         {
           "i": 88,
           "ret": 88,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v70.0"
+          },
           "outputs": {
             "out:0": "v71.0"
           },
@@ -3799,7 +3680,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -4174,41 +4062,20 @@
       ]
     },
     {
-      "id": "i:17u15kw.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 4100005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 98,
-      "createdBy": "x:17u15kw.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 98,
-          "token": "v79.0",
-          "kind": "new"
-        },
-        {
-          "i": 99,
-          "token": "v79.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:17u15kw.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s89",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:17u15kw.0~u7kfkb",
+      "parent": null,
       "order": 4100005,
       "executions": [
         {
           "i": 99,
           "ret": 99,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v79.0"
+          },
           "outputs": {
             "out:0": "v80.0"
           },
@@ -4218,7 +4085,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -4593,41 +4467,20 @@
       ]
     },
     {
-      "id": "i:1tnjlpf.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 4500005,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 109,
-      "createdBy": "x:1tnjlpf.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 109,
-          "token": "v88.0",
-          "kind": "new"
-        },
-        {
-          "i": 110,
-          "token": "v88.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:1tnjlpf.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s99",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:1tnjlpf.0~u7kfkb",
+      "parent": null,
       "order": 4500005,
       "executions": [
         {
           "i": 110,
           "ret": 110,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v88.0"
+          },
           "outputs": {
             "out:0": "v89.0"
           },
@@ -4637,7 +4490,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -5012,41 +4872,20 @@
       ]
     },
     {
-      "id": "i:143ouep.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 4900006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 120,
-      "createdBy": "x:143ouep.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 120,
-          "token": "v97.0",
-          "kind": "new"
-        },
-        {
-          "i": 121,
-          "token": "v97.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:143ouep.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s109",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:143ouep.0~u7kfkb",
+      "parent": null,
       "order": 4900006,
       "executions": [
         {
           "i": 121,
           "ret": 121,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v97.0"
+          },
           "outputs": {
             "out:0": "v98.0"
           },
@@ -5056,7 +4895,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -5431,41 +5277,20 @@
       ]
     },
     {
-      "id": "i:6msera.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 5300006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 131,
-      "createdBy": "x:6msera.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 131,
-          "token": "v106.0",
-          "kind": "new"
-        },
-        {
-          "i": 132,
-          "token": "v106.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:6msera.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s119",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:6msera.0~u7kfkb",
+      "parent": null,
       "order": 5300006,
       "executions": [
         {
           "i": 132,
           "ret": 132,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v106.0"
+          },
           "outputs": {
             "out:0": "v107.0"
           },
@@ -5475,7 +5300,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -5850,41 +5682,20 @@
       ]
     },
     {
-      "id": "i:1wpxkcj.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 5700006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 142,
-      "createdBy": "x:1wpxkcj.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 142,
-          "token": "v115.0",
-          "kind": "new"
-        },
-        {
-          "i": 143,
-          "token": "v115.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:1wpxkcj.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s129",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:1wpxkcj.0~u7kfkb",
+      "parent": null,
       "order": 5700006,
       "executions": [
         {
           "i": 143,
           "ret": 143,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v115.0"
+          },
           "outputs": {
             "out:0": "v116.0"
           },
@@ -5894,7 +5705,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -6269,41 +6087,20 @@
       ]
     },
     {
-      "id": "i:qfkkrk.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 6100006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 153,
-      "createdBy": "x:qfkkrk.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 153,
-          "token": "v124.0",
-          "kind": "new"
-        },
-        {
-          "i": 154,
-          "token": "v124.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:qfkkrk.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s139",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:qfkkrk.0~u7kfkb",
+      "parent": null,
       "order": 6100006,
       "executions": [
         {
           "i": 154,
           "ret": 154,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v124.0"
+          },
           "outputs": {
             "out:0": "v125.0"
           },
@@ -6313,7 +6110,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -6688,41 +6492,20 @@
       ]
     },
     {
-      "id": "i:15peo39.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 6500006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 164,
-      "createdBy": "x:15peo39.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 164,
-          "token": "v133.0",
-          "kind": "new"
-        },
-        {
-          "i": 165,
-          "token": "v133.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:15peo39.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s149",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:15peo39.0~u7kfkb",
+      "parent": null,
       "order": 6500006,
       "executions": [
         {
           "i": 165,
           "ret": 165,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v133.0"
+          },
           "outputs": {
             "out:0": "v134.0"
           },
@@ -6732,7 +6515,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -7107,41 +6897,20 @@
       ]
     },
     {
-      "id": "i:1kl9dey.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 6900006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 175,
-      "createdBy": "x:1kl9dey.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 175,
-          "token": "v142.0",
-          "kind": "new"
-        },
-        {
-          "i": 176,
-          "token": "v142.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:1kl9dey.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s159",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:1kl9dey.0~u7kfkb",
+      "parent": null,
       "order": 6900006,
       "executions": [
         {
           "i": 176,
           "ret": 176,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v142.0"
+          },
           "outputs": {
             "out:0": "v143.0"
           },
@@ -7151,7 +6920,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -7526,41 +7302,20 @@
       ]
     },
     {
-      "id": "i:ntdg07.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 7300006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 186,
-      "createdBy": "x:ntdg07.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 186,
-          "token": "v151.0",
-          "kind": "new"
-        },
-        {
-          "i": 187,
-          "token": "v151.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:ntdg07.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s169",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:ntdg07.0~u7kfkb",
+      "parent": null,
       "order": 7300006,
       "executions": [
         {
           "i": 187,
           "ret": 187,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v151.0"
+          },
           "outputs": {
             "out:0": "v152.0"
           },
@@ -7570,7 +7325,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -7945,41 +7707,20 @@
       ]
     },
     {
-      "id": "i:ybptkk.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 7700006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 197,
-      "createdBy": "x:ybptkk.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 197,
-          "token": "v160.0",
-          "kind": "new"
-        },
-        {
-          "i": 198,
-          "token": "v160.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:ybptkk.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s179",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:ybptkk.0~u7kfkb",
+      "parent": null,
       "order": 7700006,
       "executions": [
         {
           "i": 198,
           "ret": 198,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v160.0"
+          },
           "outputs": {
             "out:0": "v161.0"
           },
@@ -7989,7 +7730,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -8364,41 +8112,20 @@
       ]
     },
     {
-      "id": "i:19hepk9.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 8100006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 208,
-      "createdBy": "x:19hepk9.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 208,
-          "token": "v169.0",
-          "kind": "new"
-        },
-        {
-          "i": 209,
-          "token": "v169.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:19hepk9.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s189",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:19hepk9.0~u7kfkb",
+      "parent": null,
       "order": 8100006,
       "executions": [
         {
           "i": 209,
           "ret": 209,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v169.0"
+          },
           "outputs": {
             "out:0": "v170.0"
           },
@@ -8408,7 +8135,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -8783,41 +8517,20 @@
       ]
     },
     {
-      "id": "i:10z1fam.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 8500006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 219,
-      "createdBy": "x:10z1fam.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 219,
-          "token": "v178.0",
-          "kind": "new"
-        },
-        {
-          "i": 220,
-          "token": "v178.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:10z1fam.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s199",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:10z1fam.0~u7kfkb",
+      "parent": null,
       "order": 8500006,
       "executions": [
         {
           "i": 220,
           "ret": 220,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v178.0"
+          },
           "outputs": {
             "out:0": "v179.0"
           },
@@ -8827,7 +8540,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -9202,41 +8922,20 @@
       ]
     },
     {
-      "id": "i:jlcabm.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 8900006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 230,
-      "createdBy": "x:jlcabm.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 230,
-          "token": "v187.0",
-          "kind": "new"
-        },
-        {
-          "i": 231,
-          "token": "v187.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:jlcabm.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s209",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:jlcabm.0~u7kfkb",
+      "parent": null,
       "order": 8900006,
       "executions": [
         {
           "i": 231,
           "ret": 231,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v187.0"
+          },
           "outputs": {
             "out:0": "v188.0"
           },
@@ -9246,7 +8945,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -9621,41 +9327,20 @@
       ]
     },
     {
-      "id": "i:s59sr1.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 9300006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 241,
-      "createdBy": "x:s59sr1.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 241,
-          "token": "v196.0",
-          "kind": "new"
-        },
-        {
-          "i": 242,
-          "token": "v196.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:s59sr1.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s219",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:s59sr1.0~u7kfkb",
+      "parent": null,
       "order": 9300006,
       "executions": [
         {
           "i": 242,
           "ret": 242,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v196.0"
+          },
           "outputs": {
             "out:0": "v197.0"
           },
@@ -9665,7 +9350,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -10040,41 +9732,20 @@
       ]
     },
     {
-      "id": "i:al8gvg.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 9700006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 252,
-      "createdBy": "x:al8gvg.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 252,
-          "token": "v205.0",
-          "kind": "new"
-        },
-        {
-          "i": 253,
-          "token": "v205.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:al8gvg.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s229",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:al8gvg.0~u7kfkb",
+      "parent": null,
       "order": 9700006,
       "executions": [
         {
           "i": 253,
           "ret": 253,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v205.0"
+          },
           "outputs": {
             "out:0": "v206.0"
           },
@@ -10084,7 +9755,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -10459,41 +10137,20 @@
       ]
     },
     {
-      "id": "i:182uukf.0~u7kfkb",
-      "kind": "instance",
-      "parent": null,
-      "order": 10100006,
-      "className": "SeriesGroupBy",
-      "varName": null,
-      "createdAt": 263,
-      "createdBy": "x:182uukf.0~u7kfkb",
-      "params": [],
-      "versions": [
-        {
-          "i": 263,
-          "token": "v214.0",
-          "kind": "new"
-        },
-        {
-          "i": 264,
-          "token": "v214.1",
-          "kind": "mutate"
-        }
-      ]
-    },
-    {
       "id": "n:mmnge1t@i:182uukf.0~u7kfkb",
       "kind": "call",
       "mergeKey": "s239",
       "name": "SeriesGroupBy.mean",
       "module": "pandas.api.typing",
-      "parent": "i:182uukf.0~u7kfkb",
+      "parent": null,
       "order": 10100006,
       "executions": [
         {
           "i": 264,
           "ret": 264,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v214.0"
+          },
           "outputs": {
             "out:0": "v215.0"
           },
@@ -10503,7 +10160,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -10678,6 +10342,31 @@
       }
     },
     {
+      "id": "f:i:16edel4.0~u7kfkb",
+      "from": {
+        "node": "x:16edel4.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:16edel4.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 11,
+          "token": "v7.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:16edel4.0~u7kfkb",
+        "token": "v7.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:16edel4.0",
       "from": {
         "node": "n:mmnge1t@i:16edel4.0~u7kfkb",
@@ -10803,6 +10492,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:o2eha3.0~u7kfkb",
+      "from": {
+        "node": "x:o2eha3.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:o2eha3.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 22,
+          "token": "v16.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:o2eha3.0~u7kfkb",
+        "token": "v16.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -10934,6 +10648,31 @@
       }
     },
     {
+      "id": "f:i:1ul6hvy.0~u7kfkb",
+      "from": {
+        "node": "x:1ul6hvy.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:1ul6hvy.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 33,
+          "token": "v25.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1ul6hvy.0~u7kfkb",
+        "token": "v25.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:1ul6hvy.0",
       "from": {
         "node": "n:mmnge1t@i:1ul6hvy.0~u7kfkb",
@@ -11059,6 +10798,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:w2u11l.0~u7kfkb",
+      "from": {
+        "node": "x:w2u11l.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:w2u11l.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 44,
+          "token": "v34.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:w2u11l.0~u7kfkb",
+        "token": "v34.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -11190,6 +10954,31 @@
       }
     },
     {
+      "id": "f:i:1ps16p8.0~u7kfkb",
+      "from": {
+        "node": "x:1ps16p8.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:1ps16p8.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 55,
+          "token": "v43.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1ps16p8.0~u7kfkb",
+        "token": "v43.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:1ps16p8.0",
       "from": {
         "node": "n:mmnge1t@i:1ps16p8.0~u7kfkb",
@@ -11315,6 +11104,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:shf1fj.0~u7kfkb",
+      "from": {
+        "node": "x:shf1fj.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:shf1fj.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 66,
+          "token": "v52.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:shf1fj.0~u7kfkb",
+        "token": "v52.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -11446,6 +11260,31 @@
       }
     },
     {
+      "id": "f:i:57t43m.0~u7kfkb",
+      "from": {
+        "node": "x:57t43m.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:57t43m.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 77,
+          "token": "v61.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:57t43m.0~u7kfkb",
+        "token": "v61.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:57t43m.0",
       "from": {
         "node": "n:mmnge1t@i:57t43m.0~u7kfkb",
@@ -11571,6 +11410,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:vtvki5.0~u7kfkb",
+      "from": {
+        "node": "x:vtvki5.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:vtvki5.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 88,
+          "token": "v70.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:vtvki5.0~u7kfkb",
+        "token": "v70.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -11702,6 +11566,31 @@
       }
     },
     {
+      "id": "f:i:17u15kw.0~u7kfkb",
+      "from": {
+        "node": "x:17u15kw.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:17u15kw.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 99,
+          "token": "v79.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:17u15kw.0~u7kfkb",
+        "token": "v79.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:17u15kw.0",
       "from": {
         "node": "n:mmnge1t@i:17u15kw.0~u7kfkb",
@@ -11827,6 +11716,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:1tnjlpf.0~u7kfkb",
+      "from": {
+        "node": "x:1tnjlpf.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:1tnjlpf.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 110,
+          "token": "v88.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1tnjlpf.0~u7kfkb",
+        "token": "v88.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -11958,6 +11872,31 @@
       }
     },
     {
+      "id": "f:i:143ouep.0~u7kfkb",
+      "from": {
+        "node": "x:143ouep.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:143ouep.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 121,
+          "token": "v97.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:143ouep.0~u7kfkb",
+        "token": "v97.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:143ouep.0",
       "from": {
         "node": "n:mmnge1t@i:143ouep.0~u7kfkb",
@@ -12083,6 +12022,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:6msera.0~u7kfkb",
+      "from": {
+        "node": "x:6msera.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:6msera.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 132,
+          "token": "v106.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:6msera.0~u7kfkb",
+        "token": "v106.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -12214,6 +12178,31 @@
       }
     },
     {
+      "id": "f:i:1wpxkcj.0~u7kfkb",
+      "from": {
+        "node": "x:1wpxkcj.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:1wpxkcj.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 143,
+          "token": "v115.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1wpxkcj.0~u7kfkb",
+        "token": "v115.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:1wpxkcj.0",
       "from": {
         "node": "n:mmnge1t@i:1wpxkcj.0~u7kfkb",
@@ -12339,6 +12328,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:qfkkrk.0~u7kfkb",
+      "from": {
+        "node": "x:qfkkrk.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:qfkkrk.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 154,
+          "token": "v124.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:qfkkrk.0~u7kfkb",
+        "token": "v124.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -12470,6 +12484,31 @@
       }
     },
     {
+      "id": "f:i:15peo39.0~u7kfkb",
+      "from": {
+        "node": "x:15peo39.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:15peo39.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 165,
+          "token": "v133.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:15peo39.0~u7kfkb",
+        "token": "v133.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:15peo39.0",
       "from": {
         "node": "n:mmnge1t@i:15peo39.0~u7kfkb",
@@ -12595,6 +12634,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:1kl9dey.0~u7kfkb",
+      "from": {
+        "node": "x:1kl9dey.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:1kl9dey.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 176,
+          "token": "v142.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1kl9dey.0~u7kfkb",
+        "token": "v142.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -12726,6 +12790,31 @@
       }
     },
     {
+      "id": "f:i:ntdg07.0~u7kfkb",
+      "from": {
+        "node": "x:ntdg07.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:ntdg07.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 187,
+          "token": "v151.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:ntdg07.0~u7kfkb",
+        "token": "v151.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:ntdg07.0",
       "from": {
         "node": "n:mmnge1t@i:ntdg07.0~u7kfkb",
@@ -12851,6 +12940,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:ybptkk.0~u7kfkb",
+      "from": {
+        "node": "x:ybptkk.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:ybptkk.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 198,
+          "token": "v160.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:ybptkk.0~u7kfkb",
+        "token": "v160.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -12982,6 +13096,31 @@
       }
     },
     {
+      "id": "f:i:19hepk9.0~u7kfkb",
+      "from": {
+        "node": "x:19hepk9.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:19hepk9.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 209,
+          "token": "v169.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:19hepk9.0~u7kfkb",
+        "token": "v169.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:19hepk9.0",
       "from": {
         "node": "n:mmnge1t@i:19hepk9.0~u7kfkb",
@@ -13107,6 +13246,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:10z1fam.0~u7kfkb",
+      "from": {
+        "node": "x:10z1fam.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:10z1fam.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 220,
+          "token": "v178.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:10z1fam.0~u7kfkb",
+        "token": "v178.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -13238,6 +13402,31 @@
       }
     },
     {
+      "id": "f:i:jlcabm.0~u7kfkb",
+      "from": {
+        "node": "x:jlcabm.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:jlcabm.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 231,
+          "token": "v187.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:jlcabm.0~u7kfkb",
+        "token": "v187.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:jlcabm.0",
       "from": {
         "node": "n:mmnge1t@i:jlcabm.0~u7kfkb",
@@ -13363,6 +13552,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:s59sr1.0~u7kfkb",
+      "from": {
+        "node": "x:s59sr1.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:s59sr1.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 242,
+          "token": "v196.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:s59sr1.0~u7kfkb",
+        "token": "v196.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -13494,6 +13708,31 @@
       }
     },
     {
+      "id": "f:i:al8gvg.0~u7kfkb",
+      "from": {
+        "node": "x:al8gvg.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:al8gvg.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 253,
+          "token": "v205.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:al8gvg.0~u7kfkb",
+        "token": "v205.0",
+        "type": "SeriesGroupBy",
+        "shape": null
+      }
+    },
+    {
       "id": "f:i:al8gvg.0",
       "from": {
         "node": "n:mmnge1t@i:al8gvg.0~u7kfkb",
@@ -13619,6 +13858,31 @@
           500,
           2
         ]
+      }
+    },
+    {
+      "id": "f:i:182uukf.0~u7kfkb",
+      "from": {
+        "node": "x:182uukf.0~u7kfkb",
+        "port": null
+      },
+      "to": {
+        "node": "n:mmnge1t@i:182uukf.0~u7kfkb",
+        "port": "in:self"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 264,
+          "token": "v214.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:182uukf.0~u7kfkb",
+        "token": "v214.0",
+        "type": "SeriesGroupBy",
+        "shape": null
       }
     },
     {
@@ -16461,25 +16725,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:16edel4.0~u7kfkb.>i:16edel4.0~u7kfkb.",
-      "from": {
-        "node": "x:16edel4.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:16edel4.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 10,
-          "token": "v7.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:16edel4.0.out:0>i:19y5x3p.0.",
       "from": {
         "node": "n:m1ejze5m@i:16edel4.0",
@@ -16551,25 +16796,6 @@
         {
           "i": 20,
           "token": "v15.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:o2eha3.0~u7kfkb.>i:o2eha3.0~u7kfkb.",
-      "from": {
-        "node": "x:o2eha3.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:o2eha3.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 21,
-          "token": "v16.0"
         }
       ],
       "nameLabel": null
@@ -16651,25 +16877,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:1ul6hvy.0~u7kfkb.>i:1ul6hvy.0~u7kfkb.",
-      "from": {
-        "node": "x:1ul6hvy.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:1ul6hvy.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 32,
-          "token": "v25.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:1ul6hvy.0.out:0>i:xn2xan.0.",
       "from": {
         "node": "n:m1ejze5m@i:1ul6hvy.0",
@@ -16741,25 +16948,6 @@
         {
           "i": 42,
           "token": "v33.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:w2u11l.0~u7kfkb.>i:w2u11l.0~u7kfkb.",
-      "from": {
-        "node": "x:w2u11l.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:w2u11l.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 43,
-          "token": "v34.0"
         }
       ],
       "nameLabel": null
@@ -16841,25 +17029,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:1ps16p8.0~u7kfkb.>i:1ps16p8.0~u7kfkb.",
-      "from": {
-        "node": "x:1ps16p8.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:1ps16p8.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 54,
-          "token": "v43.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:1ps16p8.0.out:0>i:9oek7d.0.",
       "from": {
         "node": "n:m1ejze5m@i:1ps16p8.0",
@@ -16931,25 +17100,6 @@
         {
           "i": 64,
           "token": "v51.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:shf1fj.0~u7kfkb.>i:shf1fj.0~u7kfkb.",
-      "from": {
-        "node": "x:shf1fj.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:shf1fj.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 65,
-          "token": "v52.0"
         }
       ],
       "nameLabel": null
@@ -17031,25 +17181,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:57t43m.0~u7kfkb.>i:57t43m.0~u7kfkb.",
-      "from": {
-        "node": "x:57t43m.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:57t43m.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 76,
-          "token": "v61.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:57t43m.0.out:0>i:mkdxgz.0.",
       "from": {
         "node": "n:m1ejze5m@i:57t43m.0",
@@ -17121,25 +17252,6 @@
         {
           "i": 86,
           "token": "v69.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:vtvki5.0~u7kfkb.>i:vtvki5.0~u7kfkb.",
-      "from": {
-        "node": "x:vtvki5.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:vtvki5.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 87,
-          "token": "v70.0"
         }
       ],
       "nameLabel": null
@@ -17221,25 +17333,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:17u15kw.0~u7kfkb.>i:17u15kw.0~u7kfkb.",
-      "from": {
-        "node": "x:17u15kw.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:17u15kw.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 98,
-          "token": "v79.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:17u15kw.0.out:0>i:2ydofh.0.",
       "from": {
         "node": "n:m1ejze5m@i:17u15kw.0",
@@ -17311,25 +17404,6 @@
         {
           "i": 108,
           "token": "v87.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:1tnjlpf.0~u7kfkb.>i:1tnjlpf.0~u7kfkb.",
-      "from": {
-        "node": "x:1tnjlpf.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:1tnjlpf.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 109,
-          "token": "v88.0"
         }
       ],
       "nameLabel": null
@@ -17411,25 +17485,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:143ouep.0~u7kfkb.>i:143ouep.0~u7kfkb.",
-      "from": {
-        "node": "x:143ouep.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:143ouep.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 120,
-          "token": "v97.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:143ouep.0.out:0>i:1d06uo.0.",
       "from": {
         "node": "n:m1ejze5m@i:143ouep.0",
@@ -17501,25 +17556,6 @@
         {
           "i": 130,
           "token": "v105.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:6msera.0~u7kfkb.>i:6msera.0~u7kfkb.",
-      "from": {
-        "node": "x:6msera.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:6msera.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 131,
-          "token": "v106.0"
         }
       ],
       "nameLabel": null
@@ -17601,25 +17637,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:1wpxkcj.0~u7kfkb.>i:1wpxkcj.0~u7kfkb.",
-      "from": {
-        "node": "x:1wpxkcj.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:1wpxkcj.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 142,
-          "token": "v115.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:1wpxkcj.0.out:0>i:qz9u3q.0.",
       "from": {
         "node": "n:m1ejze5m@i:1wpxkcj.0",
@@ -17691,25 +17708,6 @@
         {
           "i": 152,
           "token": "v123.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:qfkkrk.0~u7kfkb.>i:qfkkrk.0~u7kfkb.",
-      "from": {
-        "node": "x:qfkkrk.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:qfkkrk.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 153,
-          "token": "v124.0"
         }
       ],
       "nameLabel": null
@@ -17791,25 +17789,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:15peo39.0~u7kfkb.>i:15peo39.0~u7kfkb.",
-      "from": {
-        "node": "x:15peo39.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:15peo39.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 164,
-          "token": "v133.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:15peo39.0.out:0>i:1eg4xck.0.",
       "from": {
         "node": "n:m1ejze5m@i:15peo39.0",
@@ -17881,25 +17860,6 @@
         {
           "i": 174,
           "token": "v141.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:1kl9dey.0~u7kfkb.>i:1kl9dey.0~u7kfkb.",
-      "from": {
-        "node": "x:1kl9dey.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:1kl9dey.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 175,
-          "token": "v142.0"
         }
       ],
       "nameLabel": null
@@ -17981,25 +17941,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:ntdg07.0~u7kfkb.>i:ntdg07.0~u7kfkb.",
-      "from": {
-        "node": "x:ntdg07.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:ntdg07.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 186,
-          "token": "v151.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:ntdg07.0.out:0>i:1e8aq4a.0.",
       "from": {
         "node": "n:m1ejze5m@i:ntdg07.0",
@@ -18071,25 +18012,6 @@
         {
           "i": 196,
           "token": "v159.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:ybptkk.0~u7kfkb.>i:ybptkk.0~u7kfkb.",
-      "from": {
-        "node": "x:ybptkk.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:ybptkk.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 197,
-          "token": "v160.0"
         }
       ],
       "nameLabel": null
@@ -18171,25 +18093,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:19hepk9.0~u7kfkb.>i:19hepk9.0~u7kfkb.",
-      "from": {
-        "node": "x:19hepk9.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:19hepk9.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 208,
-          "token": "v169.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:19hepk9.0.out:0>i:xolk9k.0.",
       "from": {
         "node": "n:m1ejze5m@i:19hepk9.0",
@@ -18261,25 +18164,6 @@
         {
           "i": 218,
           "token": "v177.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:10z1fam.0~u7kfkb.>i:10z1fam.0~u7kfkb.",
-      "from": {
-        "node": "x:10z1fam.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:10z1fam.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 219,
-          "token": "v178.0"
         }
       ],
       "nameLabel": null
@@ -18361,25 +18245,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:jlcabm.0~u7kfkb.>i:jlcabm.0~u7kfkb.",
-      "from": {
-        "node": "x:jlcabm.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:jlcabm.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 230,
-          "token": "v187.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:jlcabm.0.out:0>i:sohf1v.0.",
       "from": {
         "node": "n:m1ejze5m@i:jlcabm.0",
@@ -18451,25 +18316,6 @@
         {
           "i": 240,
           "token": "v195.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:s59sr1.0~u7kfkb.>i:s59sr1.0~u7kfkb.",
-      "from": {
-        "node": "x:s59sr1.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:s59sr1.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 241,
-          "token": "v196.0"
         }
       ],
       "nameLabel": null
@@ -18551,25 +18397,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:x:al8gvg.0~u7kfkb.>i:al8gvg.0~u7kfkb.",
-      "from": {
-        "node": "x:al8gvg.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:al8gvg.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 252,
-          "token": "v205.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:m1ejze5m@i:al8gvg.0.out:0>i:ao92fd.0.",
       "from": {
         "node": "n:m1ejze5m@i:al8gvg.0",
@@ -18641,25 +18468,6 @@
         {
           "i": 262,
           "token": "v213.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:182uukf.0~u7kfkb.>i:182uukf.0~u7kfkb.",
-      "from": {
-        "node": "x:182uukf.0~u7kfkb",
-        "port": null
-      },
-      "to": {
-        "node": "i:182uukf.0~u7kfkb",
-        "port": null
-      },
-      "dashed": true,
-      "uses": [
-        {
-          "i": 263,
-          "token": "v214.0"
         }
       ],
       "nameLabel": null
@@ -18952,5 +18760,5 @@
     264,
     265
   ],
-  "folded": 96
+  "folded": 120
 }
