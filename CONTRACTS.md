@@ -718,6 +718,8 @@ pnpm e2e            # Playwright (playwright-core + system Chrome) against `pnpm
 pnpm measure        # scripts/measure.ts, section SPEC "Performance"
 ```
 
+`pnpm fixtures` runs the Python generator, then `pnpm --filter @machines/log gen:graphs`, which runs `packages/log/src/golden.test.ts` with `UPDATE_GRAPHS=1` to write `fixtures/graphs/<name>.json` = `buildGraph(fixtures/logs/<name>.json)`. The same test file checks that assembling each stream gives its log, that each graph equals the checked-in one, that no wire is unbacked by the log (consumer took the token, producer had returned), and the slide structure of the three golden programs.
+
 Generated fixtures are reviewed like code. A PR that changes them must say why in its body.
 
 ## 10. Decisions resolving SPEC gaps

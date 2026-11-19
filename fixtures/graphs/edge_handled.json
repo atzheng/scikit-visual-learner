@@ -1,0 +1,646 @@
+{
+  "nodes": [
+    {
+      "id": "n:wcu5tk.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "read_csv",
+      "module": "pandas",
+      "parent": null,
+      "order": 600005,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v0.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:filepath_or_buffer",
+          "param": "filepath_or_buffer",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "filepath_or_buffer = \"listings.csv\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df′"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "x:f2rqav.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 700000,
+      "text": "df[[\"beds\", \"baths\", \"sqft\"]]",
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {
+            "in:df": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "x:xaeoav.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 800000,
+      "text": "df[\"price\"]",
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:df": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "i:10epbgg.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 900008,
+      "className": "LinearRegression",
+      "varName": "model",
+      "createdAt": 3,
+      "createdBy": null,
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v3.0"
+        },
+        {
+          "i": 4,
+          "token": "v3.1"
+        },
+        {
+          "i": 8,
+          "token": "v3.2"
+        }
+      ]
+    },
+    {
+      "id": "n:luinfn.0@i:10epbgg.0",
+      "kind": "call",
+      "mergeKey": "s6",
+      "name": "LinearRegression.fit",
+      "module": "sklearn.linear_model._base",
+      "parent": "i:10epbgg.0",
+      "order": 1100004,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:X": "v1.0",
+            "in:y": "v2.0"
+          },
+          "outputs": {},
+          "count": 1,
+          "owner": "v3.0",
+          "error": {
+            "handled": true,
+            "message": "Input X contains NaN.\nLinearRegression does not accept missing values encoded as NaN natively. For supervised learning, you might want to consider sklearn.ensemble.HistGradientBoostingClassifier and Regressor which accept missing values encoded as NaNs natively. Alternatively, it is possible to preprocess the data, for instance by using an imputer transformer in a pipeline or drop samples with missing values. See https://scikit-learn.org/stable/modules/impute.html You can find a list of all est…",
+            "type": "ValueError"
+          },
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:X",
+          "param": "X",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:y",
+          "param": "y",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [],
+      "student": false
+    },
+    {
+      "id": "n:1rjye1a.0",
+      "kind": "call",
+      "mergeKey": "s8",
+      "name": "DataFrame.dropna",
+      "module": "pandas",
+      "parent": null,
+      "order": 1400009,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {
+            "in:self": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v5.0"
+          },
+          "count": 1,
+          "owner": "v0.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "x:1jl2bar.0~2ruef4",
+      "kind": "expr",
+      "parent": null,
+      "order": 1500004,
+      "text": "df[[\"beds\", \"baths\", \"sqft\"]]",
+      "executions": [
+        {
+          "i": 6,
+          "ret": 6,
+          "inputs": {
+            "in:df": "v5.0"
+          },
+          "outputs": {
+            "out:0": "v6.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "x:1jl2bar.0~31u043",
+      "kind": "expr",
+      "parent": null,
+      "order": 1500004,
+      "text": "df[\"price\"]",
+      "executions": [
+        {
+          "i": 7,
+          "ret": 7,
+          "inputs": {
+            "in:df": "v5.0"
+          },
+          "outputs": {
+            "out:0": "v7.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:1jl2bar.0@i:10epbgg.0",
+      "kind": "call",
+      "mergeKey": "s10",
+      "name": "LinearRegression.fit",
+      "module": "sklearn.linear_model._base",
+      "parent": "i:10epbgg.0",
+      "order": 1500004,
+      "executions": [
+        {
+          "i": 8,
+          "ret": 8,
+          "inputs": {
+            "in:X": "v6.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {},
+          "count": 1,
+          "owner": "v3.1",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:X",
+          "param": "X",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:y",
+          "param": "y",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [],
+      "student": false
+    },
+    {
+      "id": "x:j5a9i.0~2ruef4",
+      "kind": "expr",
+      "parent": null,
+      "order": 1600012,
+      "text": "df[[\"beds\", \"baths\", \"sqft\"]]",
+      "executions": [
+        {
+          "i": 9,
+          "ret": 9,
+          "inputs": {
+            "in:df": "v5.0"
+          },
+          "outputs": {
+            "out:0": "v11.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "x:j5a9i.0~31u043",
+      "kind": "expr",
+      "parent": null,
+      "order": 1600012,
+      "text": "df[\"price\"]",
+      "executions": [
+        {
+          "i": 10,
+          "ret": 10,
+          "inputs": {
+            "in:df": "v5.0"
+          },
+          "outputs": {
+            "out:0": "v12.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:j5a9i.0@i:10epbgg.0",
+      "kind": "call",
+      "mergeKey": "s11",
+      "name": "LinearRegression.score",
+      "module": "sklearn.linear_model._base",
+      "parent": "i:10epbgg.0",
+      "order": 1600012,
+      "executions": [
+        {
+          "i": 11,
+          "ret": 11,
+          "inputs": {
+            "in:X": "v11.0",
+            "in:y": "v12.0"
+          },
+          "outputs": {
+            "out:0": "s18"
+          },
+          "count": 1,
+          "owner": "v3.2",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:X",
+          "param": "X",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:y",
+          "param": "y",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "float",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:x:f2rqav.0.>n:luinfn.0@i:10epbgg.0.in:X",
+      "from": {
+        "node": "x:f2rqav.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:luinfn.0@i:10epbgg.0",
+        "port": "in:X"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "X"
+    },
+    {
+      "id": "e:x:xaeoav.0.>n:luinfn.0@i:10epbgg.0.in:y",
+      "from": {
+        "node": "x:xaeoav.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:luinfn.0@i:10epbgg.0",
+        "port": "in:y"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": "y"
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>n:1rjye1a.0.in:self",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:1rjye1a.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df′"
+    },
+    {
+      "id": "e:x:1jl2bar.0~2ruef4.>n:1jl2bar.0@i:10epbgg.0.in:X",
+      "from": {
+        "node": "x:1jl2bar.0~2ruef4",
+        "port": null
+      },
+      "to": {
+        "node": "n:1jl2bar.0@i:10epbgg.0",
+        "port": "in:X"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 8,
+          "token": "v6.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:1jl2bar.0~31u043.>n:1jl2bar.0@i:10epbgg.0.in:y",
+      "from": {
+        "node": "x:1jl2bar.0~31u043",
+        "port": null
+      },
+      "to": {
+        "node": "n:1jl2bar.0@i:10epbgg.0",
+        "port": "in:y"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 8,
+          "token": "v7.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:j5a9i.0~2ruef4.>n:j5a9i.0@i:10epbgg.0.in:X",
+      "from": {
+        "node": "x:j5a9i.0~2ruef4",
+        "port": null
+      },
+      "to": {
+        "node": "n:j5a9i.0@i:10epbgg.0",
+        "port": "in:X"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 11,
+          "token": "v11.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:j5a9i.0~31u043.>n:j5a9i.0@i:10epbgg.0.in:y",
+      "from": {
+        "node": "x:j5a9i.0~31u043",
+        "port": null
+      },
+      "to": {
+        "node": "n:j5a9i.0@i:10epbgg.0",
+        "port": "in:y"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 11,
+          "token": "v12.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>x:f2rqav.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:f2rqav.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df′"
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>x:xaeoav.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:xaeoav.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df′"
+    },
+    {
+      "id": "e:n:1rjye1a.0.out:0>x:1jl2bar.0~2ruef4.",
+      "from": {
+        "node": "n:1rjye1a.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:1jl2bar.0~2ruef4",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:1rjye1a.0.out:0>x:1jl2bar.0~31u043.",
+      "from": {
+        "node": "n:1rjye1a.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:1jl2bar.0~31u043",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:1rjye1a.0.out:0>x:j5a9i.0~2ruef4.",
+      "from": {
+        "node": "n:1rjye1a.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:j5a9i.0~2ruef4",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 9,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:1rjye1a.0.out:0>x:j5a9i.0~31u043.",
+      "from": {
+        "node": "n:1rjye1a.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:j5a9i.0~31u043",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 10,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": "df"
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ]
+}

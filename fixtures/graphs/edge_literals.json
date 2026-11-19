@@ -1,0 +1,630 @@
+{
+  "nodes": [
+    {
+      "id": "n:1itnbtf.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "array",
+      "module": "numpy",
+      "parent": null,
+      "order": 700004,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:object",
+          "param": "object",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "object = [1, 2, 3]"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "array",
+          "nameLabel": "a"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:1itnbtf.1",
+      "kind": "call",
+      "mergeKey": "s2",
+      "name": "array",
+      "module": "numpy",
+      "parent": null,
+      "order": 800004,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v3.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:object",
+          "param": "object",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "object = [1, 2, 3]"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "array",
+          "nameLabel": "b"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:1tzb8l4.0",
+      "kind": "call",
+      "mergeKey": "s8",
+      "name": "shape",
+      "module": "numpy",
+      "parent": null,
+      "order": 1100005,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:a": "v1.0"
+          },
+          "outputs": {
+            "out:0": "s2"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:a",
+          "param": "a",
+          "typeLabel": "array",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "tuple[1]",
+          "nameLabel": "t1"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:uggnar.0",
+      "kind": "call",
+      "mergeKey": "s10",
+      "name": "shape",
+      "module": "numpy",
+      "parent": null,
+      "order": 1200005,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {
+            "in:a": "v3.0"
+          },
+          "outputs": {
+            "out:0": "s3"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:a",
+          "param": "a",
+          "typeLabel": "array",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "tuple[1]",
+          "nameLabel": "t2"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:3t9yj8.0",
+      "kind": "call",
+      "mergeKey": "s12",
+      "name": "isnan",
+      "module": "numpy",
+      "parent": null,
+      "order": 1300005,
+      "executions": [
+        {
+          "i": 6,
+          "ret": 6,
+          "inputs": {
+            "in:x": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v4.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:x",
+          "param": "x",
+          "typeLabel": "array",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "array",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:inuvcj.0",
+      "kind": "call",
+      "mergeKey": "s13",
+      "name": "ndarray.any",
+      "module": "numpy",
+      "parent": null,
+      "order": 1300005,
+      "executions": [
+        {
+          "i": 7,
+          "ret": 7,
+          "inputs": {
+            "in:self": "v4.0"
+          },
+          "outputs": {
+            "out:0": "s4"
+          },
+          "count": 1,
+          "owner": "v4.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "array",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "bool",
+          "nameLabel": "f1"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:13bjf7z.0",
+      "kind": "call",
+      "mergeKey": "s15",
+      "name": "isnan",
+      "module": "numpy",
+      "parent": null,
+      "order": 1400005,
+      "executions": [
+        {
+          "i": 8,
+          "ret": 8,
+          "inputs": {
+            "in:x": "v3.0"
+          },
+          "outputs": {
+            "out:0": "v5.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:x",
+          "param": "x",
+          "typeLabel": "array",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "array",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:rq5qiw.0",
+      "kind": "call",
+      "mergeKey": "s16",
+      "name": "ndarray.any",
+      "module": "numpy",
+      "parent": null,
+      "order": 1400005,
+      "executions": [
+        {
+          "i": 9,
+          "ret": 9,
+          "inputs": {
+            "in:self": "v5.0"
+          },
+          "outputs": {
+            "out:0": "s5"
+          },
+          "count": 1,
+          "owner": "v5.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "array",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "bool",
+          "nameLabel": "f2"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:ifs6pd.0",
+      "kind": "call",
+      "mergeKey": "s18",
+      "name": "Series",
+      "module": "pandas",
+      "parent": null,
+      "order": 1500004,
+      "executions": [
+        {
+          "i": 10,
+          "ret": 10,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v7.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:data",
+          "param": "data",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "data = [2, 2, 2]"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "Series",
+          "nameLabel": "s"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:jeprpo.0",
+      "kind": "call",
+      "mergeKey": "s20",
+      "name": "Series.nunique",
+      "module": "pandas",
+      "parent": null,
+      "order": 1600004,
+      "executions": [
+        {
+          "i": 11,
+          "ret": 11,
+          "inputs": {
+            "in:self": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s6"
+          },
+          "count": 1,
+          "owner": "v7.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "int",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:jm9xj6.0",
+      "kind": "call",
+      "mergeKey": "s22",
+      "name": "Series.count",
+      "module": "pandas",
+      "parent": null,
+      "order": 1700004,
+      "executions": [
+        {
+          "i": 13,
+          "ret": 13,
+          "inputs": {
+            "in:self": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s8"
+          },
+          "count": 1,
+          "owner": "v7.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "int64",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:1itnbtf.0.out:0>n:1tzb8l4.0.in:a",
+      "from": {
+        "node": "n:1itnbtf.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:1tzb8l4.0",
+        "port": "in:a"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "a"
+    },
+    {
+      "id": "e:n:1itnbtf.1.out:0>n:uggnar.0.in:a",
+      "from": {
+        "node": "n:1itnbtf.1",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:uggnar.0",
+        "port": "in:a"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": "b"
+    },
+    {
+      "id": "e:n:1itnbtf.0.out:0>n:3t9yj8.0.in:x",
+      "from": {
+        "node": "n:1itnbtf.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:3t9yj8.0",
+        "port": "in:x"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "a"
+    },
+    {
+      "id": "e:n:3t9yj8.0.out:0>n:inuvcj.0.in:self",
+      "from": {
+        "node": "n:3t9yj8.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:inuvcj.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:1itnbtf.1.out:0>n:13bjf7z.0.in:x",
+      "from": {
+        "node": "n:1itnbtf.1",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:13bjf7z.0",
+        "port": "in:x"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 8,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": "b"
+    },
+    {
+      "id": "e:n:13bjf7z.0.out:0>n:rq5qiw.0.in:self",
+      "from": {
+        "node": "n:13bjf7z.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:rq5qiw.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 9,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:ifs6pd.0.out:0>n:jeprpo.0.in:self",
+      "from": {
+        "node": "n:ifs6pd.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:jeprpo.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 11,
+          "token": "v7.0"
+        }
+      ],
+      "nameLabel": "s"
+    },
+    {
+      "id": "e:n:ifs6pd.0.out:0>n:jm9xj6.0.in:self",
+      "from": {
+        "node": "n:ifs6pd.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:jm9xj6.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 13,
+          "token": "v7.0"
+        }
+      ],
+      "nameLabel": "s"
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    13
+  ]
+}

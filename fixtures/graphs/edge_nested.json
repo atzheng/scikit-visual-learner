@@ -1,0 +1,374 @@
+{
+  "nodes": [
+    {
+      "id": "n:wcu5tk.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "read_csv",
+      "module": "pandas",
+      "parent": null,
+      "order": 600005,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v0.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:filepath_or_buffer",
+          "param": "filepath_or_buffer",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "filepath_or_buffer = \"listings.csv\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:1qcc8mf.0",
+      "kind": "call",
+      "mergeKey": "s4",
+      "name": "NDFrame.describe",
+      "module": "pandas.core.generic",
+      "parent": null,
+      "order": 700010,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {
+            "in:self": "v2.0"
+          },
+          "outputs": {
+            "out:0": "v3.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "summary"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:1rjye1a.0",
+      "kind": "call",
+      "mergeKey": "s2",
+      "name": "DataFrame.dropna",
+      "module": "pandas",
+      "parent": null,
+      "order": 700032,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {
+            "in:self": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": "v0.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:tpbvbi.0",
+      "kind": "call",
+      "mergeKey": "s3",
+      "name": "DataFrame.head",
+      "module": "pandas",
+      "parent": null,
+      "order": 700032,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:self": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:n",
+          "param": "n",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "n = 50"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:1rjye1a.1",
+      "kind": "call",
+      "mergeKey": "s6",
+      "name": "DataFrame.dropna",
+      "module": "pandas",
+      "parent": null,
+      "order": 800008,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:self": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v4.0"
+          },
+          "count": 1,
+          "owner": "v0.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:aq4rzu.0",
+      "kind": "call",
+      "mergeKey": "s7",
+      "name": "DataFrame.head",
+      "module": "pandas",
+      "parent": null,
+      "order": 800008,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {
+            "in:self": "v4.0"
+          },
+          "outputs": {
+            "out:0": "v5.0"
+          },
+          "count": 1,
+          "owner": "v4.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:n",
+          "param": "n",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "n = 10"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:wcu5tk.0.out:0>n:1rjye1a.0.in:self",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:1rjye1a.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:1rjye1a.0.out:0>n:tpbvbi.0.in:self",
+      "from": {
+        "node": "n:1rjye1a.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:tpbvbi.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:tpbvbi.0.out:0>n:1qcc8mf.0.in:self",
+      "from": {
+        "node": "n:tpbvbi.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:1qcc8mf.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>n:1rjye1a.1.in:self",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:1rjye1a.1",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:1rjye1a.1.out:0>n:aq4rzu.0.in:self",
+      "from": {
+        "node": "n:1rjye1a.1",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:aq4rzu.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ]
+}

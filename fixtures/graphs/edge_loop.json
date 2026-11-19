@@ -1,0 +1,1615 @@
+{
+  "nodes": [
+    {
+      "id": "n:wcu5tk.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "read_csv",
+      "module": "pandas",
+      "parent": null,
+      "order": 800005,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v0.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:filepath_or_buffer",
+          "param": "filepath_or_buffer",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "filepath_or_buffer = \"listings.csv\""
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:wehbtt.0",
+      "kind": "call",
+      "mergeKey": "s1",
+      "name": "DataFrame.dropna",
+      "module": "pandas",
+      "parent": null,
+      "order": 800005,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {
+            "in:self": "v0.0"
+          },
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": "v0.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "DF",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "x:amvtlp.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 900000,
+      "text": "df[[\"beds\", \"baths\", \"sqft\", \"year_built\"]]",
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:df": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "x:xaeoav.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 1000000,
+      "text": "df[\"price\"]",
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {
+            "in:df": "v1.0"
+          },
+          "outputs": {
+            "out:0": "v3.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:15uvz5m.0",
+      "kind": "call",
+      "mergeKey": "s5",
+      "name": "train_test_split",
+      "module": "sklearn.model_selection._split",
+      "parent": null,
+      "order": 1100035,
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:arrays[0]": "v2.0",
+            "in:arrays[1]": "v3.0"
+          },
+          "outputs": {
+            "out:0": "v4.0",
+            "out:1": "v5.0",
+            "out:2": "v6.0",
+            "out:3": "v7.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:arrays[0]",
+          "param": "arrays[0]",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:arrays[1]",
+          "param": "arrays[1]",
+          "typeLabel": "Series",
+          "nameLabel": null
+        },
+        {
+          "id": "in:test_size",
+          "param": "test_size",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "test_size = 0.2"
+        },
+        {
+          "id": "in:random_state",
+          "param": "random_state",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "random_state = 0"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "DF",
+          "nameLabel": "X_train"
+        },
+        {
+          "id": "out:1",
+          "param": "1",
+          "typeLabel": "DF",
+          "nameLabel": "X_test"
+        },
+        {
+          "id": "out:2",
+          "param": "2",
+          "typeLabel": "Series",
+          "nameLabel": "y_train"
+        },
+        {
+          "id": "out:3",
+          "param": "3",
+          "typeLabel": "Series",
+          "nameLabel": "y_test"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "i:3xg8nf.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1400012,
+      "className": "Ridge",
+      "varName": "model",
+      "createdAt": 6,
+      "createdBy": null,
+      "params": [
+        {
+          "name": "alpha",
+          "text": "3.0"
+        }
+      ],
+      "versions": [
+        {
+          "i": 6,
+          "token": "v9.0"
+        },
+        {
+          "i": 7,
+          "token": "v9.1"
+        },
+        {
+          "i": 10,
+          "token": "v12.0"
+        },
+        {
+          "i": 11,
+          "token": "v12.1"
+        },
+        {
+          "i": 14,
+          "token": "v14.0"
+        },
+        {
+          "i": 15,
+          "token": "v14.1"
+        },
+        {
+          "i": 18,
+          "token": "v16.0"
+        },
+        {
+          "i": 19,
+          "token": "v16.1"
+        },
+        {
+          "i": 22,
+          "token": "v18.0"
+        },
+        {
+          "i": 23,
+          "token": "v18.1"
+        },
+        {
+          "i": 26,
+          "token": "v20.0"
+        },
+        {
+          "i": 27,
+          "token": "v20.1"
+        },
+        {
+          "i": 30,
+          "token": "v22.0"
+        },
+        {
+          "i": 31,
+          "token": "v22.1"
+        },
+        {
+          "i": 34,
+          "token": "v24.0"
+        },
+        {
+          "i": 35,
+          "token": "v24.1"
+        },
+        {
+          "i": 38,
+          "token": "v26.0"
+        },
+        {
+          "i": 39,
+          "token": "v26.1"
+        },
+        {
+          "i": 42,
+          "token": "v28.0"
+        },
+        {
+          "i": 43,
+          "token": "v28.1"
+        },
+        {
+          "i": 46,
+          "token": "v30.0"
+        },
+        {
+          "i": 47,
+          "token": "v30.1"
+        },
+        {
+          "i": 50,
+          "token": "v32.0"
+        },
+        {
+          "i": 51,
+          "token": "v32.1"
+        },
+        {
+          "i": 54,
+          "token": "v34.0"
+        },
+        {
+          "i": 55,
+          "token": "v34.1"
+        },
+        {
+          "i": 58,
+          "token": "v36.0"
+        },
+        {
+          "i": 59,
+          "token": "v36.1"
+        },
+        {
+          "i": 62,
+          "token": "v38.0"
+        },
+        {
+          "i": 63,
+          "token": "v38.1"
+        },
+        {
+          "i": 66,
+          "token": "v40.0"
+        },
+        {
+          "i": 67,
+          "token": "v40.1"
+        },
+        {
+          "i": 70,
+          "token": "v42.0"
+        },
+        {
+          "i": 71,
+          "token": "v42.1"
+        },
+        {
+          "i": 74,
+          "token": "v44.0"
+        },
+        {
+          "i": 75,
+          "token": "v44.1"
+        },
+        {
+          "i": 78,
+          "token": "v46.0"
+        },
+        {
+          "i": 79,
+          "token": "v46.1"
+        },
+        {
+          "i": 82,
+          "token": "v48.0"
+        },
+        {
+          "i": 83,
+          "token": "v48.1"
+        },
+        {
+          "i": 122,
+          "token": "v68.0"
+        },
+        {
+          "i": 123,
+          "token": "v68.1"
+        }
+      ]
+    },
+    {
+      "id": "n:12gqu2d.0@i:3xg8nf.0",
+      "kind": "call",
+      "mergeKey": "s11",
+      "name": "Ridge.fit",
+      "module": "sklearn.linear_model._ridge",
+      "parent": "i:3xg8nf.0",
+      "order": 1500004,
+      "executions": [
+        {
+          "i": 7,
+          "ret": 7,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 1,
+          "owner": "v9.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 11,
+          "ret": 11,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 2,
+          "owner": "v12.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 15,
+          "ret": 15,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 3,
+          "owner": "v14.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 19,
+          "ret": 19,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 4,
+          "owner": "v16.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 23,
+          "ret": 23,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 5,
+          "owner": "v18.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 27,
+          "ret": 27,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 6,
+          "owner": "v20.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 31,
+          "ret": 31,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 7,
+          "owner": "v22.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 35,
+          "ret": 35,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 8,
+          "owner": "v24.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 39,
+          "ret": 39,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 9,
+          "owner": "v26.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 43,
+          "ret": 43,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 10,
+          "owner": "v28.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 47,
+          "ret": 47,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 11,
+          "owner": "v30.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 51,
+          "ret": 51,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 12,
+          "owner": "v32.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 55,
+          "ret": 55,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 13,
+          "owner": "v34.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 59,
+          "ret": 59,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 14,
+          "owner": "v36.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 63,
+          "ret": 63,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 15,
+          "owner": "v38.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 67,
+          "ret": 67,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 16,
+          "owner": "v40.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 71,
+          "ret": 71,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 17,
+          "owner": "v42.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 75,
+          "ret": 75,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 18,
+          "owner": "v44.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 79,
+          "ret": 79,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 19,
+          "owner": "v46.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 83,
+          "ret": 83,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 20,
+          "owner": "v48.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 123,
+          "ret": 123,
+          "inputs": {
+            "in:X": "v4.0",
+            "in:y": "v6.0"
+          },
+          "outputs": {},
+          "count": 30,
+          "owner": "v68.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:X",
+          "param": "X",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:y",
+          "param": "y",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [],
+      "student": false
+    },
+    {
+      "id": "n:unncig.0@i:3xg8nf.0",
+      "kind": "call",
+      "mergeKey": "s12",
+      "name": "Ridge.score",
+      "module": "sklearn.linear_model._ridge",
+      "parent": "i:3xg8nf.0",
+      "order": 1600018,
+      "executions": [
+        {
+          "i": 8,
+          "ret": 8,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s22"
+          },
+          "count": 1,
+          "owner": "v9.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 12,
+          "ret": 12,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s45"
+          },
+          "count": 2,
+          "owner": "v12.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 16,
+          "ret": 16,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s68"
+          },
+          "count": 3,
+          "owner": "v14.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 20,
+          "ret": 20,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s91"
+          },
+          "count": 4,
+          "owner": "v16.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 24,
+          "ret": 24,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s114"
+          },
+          "count": 5,
+          "owner": "v18.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 28,
+          "ret": 28,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s137"
+          },
+          "count": 6,
+          "owner": "v20.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 32,
+          "ret": 32,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s160"
+          },
+          "count": 7,
+          "owner": "v22.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 36,
+          "ret": 36,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s183"
+          },
+          "count": 8,
+          "owner": "v24.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 40,
+          "ret": 40,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s206"
+          },
+          "count": 9,
+          "owner": "v26.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 44,
+          "ret": 44,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s229"
+          },
+          "count": 10,
+          "owner": "v28.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 48,
+          "ret": 48,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s252"
+          },
+          "count": 11,
+          "owner": "v30.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 52,
+          "ret": 52,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s275"
+          },
+          "count": 12,
+          "owner": "v32.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 56,
+          "ret": 56,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s298"
+          },
+          "count": 13,
+          "owner": "v34.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 60,
+          "ret": 60,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s321"
+          },
+          "count": 14,
+          "owner": "v36.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 64,
+          "ret": 64,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s344"
+          },
+          "count": 15,
+          "owner": "v38.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 68,
+          "ret": 68,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s367"
+          },
+          "count": 16,
+          "owner": "v40.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 72,
+          "ret": 72,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s390"
+          },
+          "count": 17,
+          "owner": "v42.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 76,
+          "ret": 76,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s413"
+          },
+          "count": 18,
+          "owner": "v44.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 80,
+          "ret": 80,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s436"
+          },
+          "count": 19,
+          "owner": "v46.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 84,
+          "ret": 84,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s459"
+          },
+          "count": 20,
+          "owner": "v48.1",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 124,
+          "ret": 124,
+          "inputs": {
+            "in:X": "v5.0",
+            "in:y": "v7.0"
+          },
+          "outputs": {
+            "out:0": "s689"
+          },
+          "count": 30,
+          "owner": "v68.1",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:X",
+          "param": "X",
+          "typeLabel": "DF",
+          "nameLabel": null
+        },
+        {
+          "id": "in:y",
+          "param": "y",
+          "typeLabel": "Series",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "float",
+          "nameLabel": null
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:n:wcu5tk.0.out:0>n:wehbtt.0.in:self",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:wehbtt.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:amvtlp.0.>n:15uvz5m.0.in:arrays[0]",
+      "from": {
+        "node": "x:amvtlp.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:15uvz5m.0",
+        "port": "in:arrays[0]"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": "X"
+    },
+    {
+      "id": "e:x:xaeoav.0.>n:15uvz5m.0.in:arrays[1]",
+      "from": {
+        "node": "x:xaeoav.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:15uvz5m.0",
+        "port": "in:arrays[1]"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 4,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": "y"
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:0>n:12gqu2d.0@i:3xg8nf.0.in:X",
+      "from": {
+        "node": "n:15uvz5m.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:12gqu2d.0@i:3xg8nf.0",
+        "port": "in:X"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v4.0"
+        },
+        {
+          "i": 11,
+          "token": "v4.0"
+        },
+        {
+          "i": 15,
+          "token": "v4.0"
+        },
+        {
+          "i": 19,
+          "token": "v4.0"
+        },
+        {
+          "i": 23,
+          "token": "v4.0"
+        },
+        {
+          "i": 27,
+          "token": "v4.0"
+        },
+        {
+          "i": 31,
+          "token": "v4.0"
+        },
+        {
+          "i": 35,
+          "token": "v4.0"
+        },
+        {
+          "i": 39,
+          "token": "v4.0"
+        },
+        {
+          "i": 43,
+          "token": "v4.0"
+        },
+        {
+          "i": 47,
+          "token": "v4.0"
+        },
+        {
+          "i": 51,
+          "token": "v4.0"
+        },
+        {
+          "i": 55,
+          "token": "v4.0"
+        },
+        {
+          "i": 59,
+          "token": "v4.0"
+        },
+        {
+          "i": 63,
+          "token": "v4.0"
+        },
+        {
+          "i": 67,
+          "token": "v4.0"
+        },
+        {
+          "i": 71,
+          "token": "v4.0"
+        },
+        {
+          "i": 75,
+          "token": "v4.0"
+        },
+        {
+          "i": 79,
+          "token": "v4.0"
+        },
+        {
+          "i": 83,
+          "token": "v4.0"
+        },
+        {
+          "i": 123,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": "X_train"
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:2>n:12gqu2d.0@i:3xg8nf.0.in:y",
+      "from": {
+        "node": "n:15uvz5m.0",
+        "port": "out:2"
+      },
+      "to": {
+        "node": "n:12gqu2d.0@i:3xg8nf.0",
+        "port": "in:y"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v6.0"
+        },
+        {
+          "i": 11,
+          "token": "v6.0"
+        },
+        {
+          "i": 15,
+          "token": "v6.0"
+        },
+        {
+          "i": 19,
+          "token": "v6.0"
+        },
+        {
+          "i": 23,
+          "token": "v6.0"
+        },
+        {
+          "i": 27,
+          "token": "v6.0"
+        },
+        {
+          "i": 31,
+          "token": "v6.0"
+        },
+        {
+          "i": 35,
+          "token": "v6.0"
+        },
+        {
+          "i": 39,
+          "token": "v6.0"
+        },
+        {
+          "i": 43,
+          "token": "v6.0"
+        },
+        {
+          "i": 47,
+          "token": "v6.0"
+        },
+        {
+          "i": 51,
+          "token": "v6.0"
+        },
+        {
+          "i": 55,
+          "token": "v6.0"
+        },
+        {
+          "i": 59,
+          "token": "v6.0"
+        },
+        {
+          "i": 63,
+          "token": "v6.0"
+        },
+        {
+          "i": 67,
+          "token": "v6.0"
+        },
+        {
+          "i": 71,
+          "token": "v6.0"
+        },
+        {
+          "i": 75,
+          "token": "v6.0"
+        },
+        {
+          "i": 79,
+          "token": "v6.0"
+        },
+        {
+          "i": 83,
+          "token": "v6.0"
+        },
+        {
+          "i": 123,
+          "token": "v6.0"
+        }
+      ],
+      "nameLabel": "y_train"
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:1>n:unncig.0@i:3xg8nf.0.in:X",
+      "from": {
+        "node": "n:15uvz5m.0",
+        "port": "out:1"
+      },
+      "to": {
+        "node": "n:unncig.0@i:3xg8nf.0",
+        "port": "in:X"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 8,
+          "token": "v5.0"
+        },
+        {
+          "i": 12,
+          "token": "v5.0"
+        },
+        {
+          "i": 16,
+          "token": "v5.0"
+        },
+        {
+          "i": 20,
+          "token": "v5.0"
+        },
+        {
+          "i": 24,
+          "token": "v5.0"
+        },
+        {
+          "i": 28,
+          "token": "v5.0"
+        },
+        {
+          "i": 32,
+          "token": "v5.0"
+        },
+        {
+          "i": 36,
+          "token": "v5.0"
+        },
+        {
+          "i": 40,
+          "token": "v5.0"
+        },
+        {
+          "i": 44,
+          "token": "v5.0"
+        },
+        {
+          "i": 48,
+          "token": "v5.0"
+        },
+        {
+          "i": 52,
+          "token": "v5.0"
+        },
+        {
+          "i": 56,
+          "token": "v5.0"
+        },
+        {
+          "i": 60,
+          "token": "v5.0"
+        },
+        {
+          "i": 64,
+          "token": "v5.0"
+        },
+        {
+          "i": 68,
+          "token": "v5.0"
+        },
+        {
+          "i": 72,
+          "token": "v5.0"
+        },
+        {
+          "i": 76,
+          "token": "v5.0"
+        },
+        {
+          "i": 80,
+          "token": "v5.0"
+        },
+        {
+          "i": 84,
+          "token": "v5.0"
+        },
+        {
+          "i": 124,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": "X_test"
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:3>n:unncig.0@i:3xg8nf.0.in:y",
+      "from": {
+        "node": "n:15uvz5m.0",
+        "port": "out:3"
+      },
+      "to": {
+        "node": "n:unncig.0@i:3xg8nf.0",
+        "port": "in:y"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 8,
+          "token": "v7.0"
+        },
+        {
+          "i": 12,
+          "token": "v7.0"
+        },
+        {
+          "i": 16,
+          "token": "v7.0"
+        },
+        {
+          "i": 20,
+          "token": "v7.0"
+        },
+        {
+          "i": 24,
+          "token": "v7.0"
+        },
+        {
+          "i": 28,
+          "token": "v7.0"
+        },
+        {
+          "i": 32,
+          "token": "v7.0"
+        },
+        {
+          "i": 36,
+          "token": "v7.0"
+        },
+        {
+          "i": 40,
+          "token": "v7.0"
+        },
+        {
+          "i": 44,
+          "token": "v7.0"
+        },
+        {
+          "i": 48,
+          "token": "v7.0"
+        },
+        {
+          "i": 52,
+          "token": "v7.0"
+        },
+        {
+          "i": 56,
+          "token": "v7.0"
+        },
+        {
+          "i": 60,
+          "token": "v7.0"
+        },
+        {
+          "i": 64,
+          "token": "v7.0"
+        },
+        {
+          "i": 68,
+          "token": "v7.0"
+        },
+        {
+          "i": 72,
+          "token": "v7.0"
+        },
+        {
+          "i": 76,
+          "token": "v7.0"
+        },
+        {
+          "i": 80,
+          "token": "v7.0"
+        },
+        {
+          "i": 84,
+          "token": "v7.0"
+        },
+        {
+          "i": 124,
+          "token": "v7.0"
+        }
+      ],
+      "nameLabel": "y_test"
+    },
+    {
+      "id": "e:n:wehbtt.0.out:0>x:amvtlp.0.",
+      "from": {
+        "node": "n:wehbtt.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:amvtlp.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "df"
+    },
+    {
+      "id": "e:n:wehbtt.0.out:0>x:xaeoav.0.",
+      "from": {
+        "node": "n:wehbtt.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:xaeoav.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": "df"
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    10,
+    11,
+    12,
+    14,
+    15,
+    16,
+    18,
+    19,
+    20,
+    22,
+    23,
+    24,
+    26,
+    27,
+    28,
+    30,
+    31,
+    32,
+    34,
+    35,
+    36,
+    38,
+    39,
+    40,
+    42,
+    43,
+    44,
+    46,
+    47,
+    48,
+    50,
+    51,
+    52,
+    54,
+    55,
+    56,
+    58,
+    59,
+    60,
+    62,
+    63,
+    64,
+    66,
+    67,
+    68,
+    70,
+    71,
+    72,
+    74,
+    75,
+    76,
+    78,
+    79,
+    80,
+    82,
+    83,
+    84,
+    122,
+    123,
+    124
+  ]
+}
