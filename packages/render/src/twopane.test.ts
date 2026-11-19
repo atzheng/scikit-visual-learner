@@ -5,7 +5,16 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { buildGraph, shelfAt, stageAt, stateAt } from '@machines/log';
 import type { EventLog, GraphModel, StageParticipant } from '@machines/log';
-import { cardKey, FLY_Z, MOVE_MS, mountTwoPane, planMoves, planStage, valueLine } from './twopane';
+import {
+  cardKey,
+  FLY_Z,
+  MOVE_MS,
+  PH_MAX_H,
+  mountTwoPane,
+  planMoves,
+  planStage,
+  valueLine,
+} from './twopane';
 import type { Rect, TwoPaneController } from './twopane';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'logs');
@@ -435,6 +444,16 @@ describe('instance cards hold their method boxes (svl-faf)', () => {
       }
     }
     expect(sawUncalled).toBe(true);
+  });
+
+  test('the placeholder of a card on the stage is at most one shelf row tall', async () => {
+    const { model } = await open('golden_linreg');
+    const { id } = linreg(model);
+    tp!.setStep(model.steps.length); // the model is the owner at the last line
+    const ph = slot(id).querySelector<HTMLElement>('.md-slot-ph')!;
+    expect(ph.hidden).toBe(false);
+    expect(parseFloat(ph.style.height)).toBeLessThanOrEqual(PH_MAX_H);
+    expect(ph.style.width).not.toBe('');
   });
 
   test('the card is as wide as the measured text needs', async () => {
