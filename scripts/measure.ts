@@ -15,27 +15,25 @@
  * Run times come from the worker's hidden `debug` run option ('plain' = no recorder, 'timing' = recorder
  * plus the time spent in content hashing). The page never sets it; this script talks to a second worker.
  */
-import { spawn, type ChildProcess } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { Transform } from 'node:stream';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright-core';
+import {
+  CHROME,
+  ROOT,
+  freePort,
+  newPage,
+  startPreview as startPreviewOn,
+  stopPreview,
+  waitReady as waitReadyOn,
+} from './lib/browser';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
 /** Free ports are picked at start (other sessions may be running previews). */
 let PORT = 0;
 let PREVIEW_PORT = 0;
-async function freePort(): Promise<number> {
-  const s = http.createServer();
-  await new Promise<void>((r) => s.listen(0, '127.0.0.1', r));
-  const port = (s.address() as { port: number }).port;
-  await new Promise((r) => s.close(r));
-  return port;
-}
-const CHROME =
-  process.env.MEASURE_CHROME ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const QUICK = process.argv.includes('--quick');
 const READY_TIMEOUT = 15 * 60_000;
 
@@ -50,32 +48,7 @@ const median = (xs: number[]): number => {
 
 // ---- servers ---------------------------------------------------------------------------------------
 
-function startPreview(): Promise<ChildProcess> {
-  const child = spawn(
-    'pnpm',
-    [
-      '--filter',
-      '@machines/web',
-      'exec',
-      'vite',
-      'preview',
-      '--host',
-      '127.0.0.1',
-      '--port',
-      String(PREVIEW_PORT),
-      '--strictPort',
-    ],
-    { cwd: ROOT, stdio: ['ignore', 'pipe', 'inherit'] },
-  );
-  return new Promise((resolve, reject) => {
-    child.stdout?.on('data', (d: Buffer) => {
-      if (/Local:/.test(d.toString())) resolve(child);
-    });
-    child.on('exit', (c) =>
-      reject(new Error(`vite preview exited (${c}); did you run pnpm build?`)),
-    );
-  });
-}
+const startPreview = (): ReturnType<typeof startPreviewOn> => startPreviewOn(PREVIEW_PORT);
 
 interface Link {
   /** Bytes per second shared by all connections; Infinity for none. */
@@ -128,16 +101,7 @@ function startProxy(link: Link): Promise<http.Server> {
 
 const pageUrl = (): string => `http://127.0.0.1:${PORT}/?debug`;
 
-async function waitReady(page: Page): Promise<void> {
-  await page.waitForFunction(
-    () =>
-      (
-        window as unknown as { __machines?: { getState(): { runtime: { state: string } } } }
-      ).__machines?.getState().runtime.state === 'ready',
-    undefined,
-    { timeout: READY_TIMEOUT, polling: 20 },
-  );
-}
+const waitReady = (page: Page): Promise<void> => waitReadyOn(page, READY_TIMEOUT);
 
 /** Time from navigation start to the runtime reporting ready. */
 async function loadToReady(page: Page): Promise<number> {
@@ -145,11 +109,6 @@ async function loadToReady(page: Page): Promise<number> {
   await page.goto(pageUrl(), { waitUntil: 'commit' });
   await waitReady(page);
   return performance.now() - t0;
-}
-
-async function newPage(browser: Browser): Promise<{ ctx: BrowserContext; page: Page }> {
-  const ctx = await browser.newContext();
-  return { ctx, page: await ctx.newPage() };
 }
 
 async function cdpCacheDisabled(ctx: BrowserContext, page: Page, off: boolean): Promise<void> {
@@ -486,7 +445,7 @@ async function main(): Promise<void> {
   } finally {
     await browser.close();
     proxy.close();
-    preview.kill();
+    stopPreview(preview);
   }
 }
 
