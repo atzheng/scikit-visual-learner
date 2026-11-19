@@ -1307,7 +1307,8 @@ export function applyState(
           setAttr(r.g, 'data-doc-node', h.id);
           setAttr(r.g, 'data-doc-attr', '1');
           setAttr(r.g, 'role', 'button');
-          setAttr(r.g, 'tabindex', '0');
+          // roving: the box is the tab stop, mount.ts moves focus between rows with the arrow keys
+          setAttr(r.g, 'tabindex', '-1');
           setAttr(r.g, 'aria-keyshortcuts', '?');
           setAttr(r.g, 'aria-label', `${row.name}, press question mark for documentation`);
         }

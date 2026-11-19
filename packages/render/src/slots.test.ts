@@ -526,7 +526,7 @@ describe('attribute docs (svl-3du)', () => {
     );
     const coef = rows.find((r) => r.getAttribute('data-doc-name') === 'LinearRegression.coef_')!;
     expect(coef).toBeDefined();
-    expect(coef.getAttribute('tabindex')).toBe('0');
+    expect(coef.getAttribute('tabindex')).toBe('-1');
     expect(coef.getAttribute('data-doc-node')).toBe(inst.id);
     coef.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(docs).toEqual([]);
@@ -540,6 +540,66 @@ describe('attribute docs (svl-3du)', () => {
       node: inst.id,
     };
     expect(docs).toEqual([want, want, want]);
+  });
+
+  test('roving focus: one tab stop per box; arrows move between visible rows (svl-62w)', async () => {
+    const { log, model, laid } = await prepare('edge_expr');
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log);
+    const inst = instOf(model, 'LinearRegression');
+    const box = host.querySelector(`g.md-node[data-node="${inst.id}"]`) as SVGElement;
+    const rows = [...box.querySelectorAll('.md-attr[data-doc-attr]')].filter(
+      (r) => !r.classList.contains('md-hidden'),
+    ) as SVGElement[];
+    expect(rows.length).toBeGreaterThan(2);
+    expect(rows.every((r) => r.getAttribute('tabindex') === '-1')).toBe(true);
+    expect(box.getAttribute('tabindex')).toBe('0');
+    const key = (el: Element, k: string): KeyboardEvent => {
+      const ev = new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true });
+      el.dispatchEvent(ev);
+      return ev;
+    };
+    box.focus();
+    expect(key(box, 'ArrowDown').defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(rows[0]);
+    key(rows[0]!, 'ArrowDown');
+    expect(document.activeElement).toBe(rows[1]);
+    key(rows[1]!, 'ArrowDown');
+    expect(document.activeElement).toBe(rows[2]);
+    key(rows[2]!, 'ArrowUp');
+    expect(document.activeElement).toBe(rows[1]);
+    // Escape returns to the box; ArrowDown re-enters at the remembered row
+    key(rows[1]!, 'Escape');
+    expect(document.activeElement).toBe(box);
+    key(box, 'ArrowDown');
+    expect(document.activeElement).toBe(rows[1]);
+    // ArrowUp from the first row returns to the box; the last row stops at the end
+    key(rows[1]!, 'ArrowUp');
+    key(rows[0]!, 'ArrowUp');
+    expect(document.activeElement).toBe(box);
+    rows.at(-1)!.focus();
+    key(rows.at(-1)!, 'ArrowDown');
+    expect(document.activeElement).toBe(rows.at(-1));
+    // Left/Right are not consumed (they step the timeline); Enter still opens the docs
+    expect(key(rows[0]!, 'ArrowLeft').defaultPrevented).toBe(false);
+    docs.length = 0;
+    key(rows[0]!, 'Enter');
+    expect(docs).toHaveLength(1);
+  });
+
+  test('roving focus skips rows hidden at the current step', async () => {
+    const { log, model, laid } = await prepare('edge_expr');
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, 0), log);
+    const inst = instOf(model, 'LinearRegression');
+    const box = host.querySelector(`g.md-node[data-node="${inst.id}"]`) as SVGElement;
+    box.focus();
+    box.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+    );
+    expect(document.activeElement).toBe(box);
   });
 
   test('without a docs handler rows have no button and are not focusable', async () => {
