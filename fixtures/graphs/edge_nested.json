@@ -172,35 +172,20 @@
       "student": false
     },
     {
-      "id": "i:1rjye1a.0",
-      "kind": "instance",
-      "parent": null,
-      "order": 700032,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 1,
-      "createdBy": "n:m1pltk3k@i:wcu5tk.0",
-      "params": [],
-      "versions": [
-        {
-          "i": 1,
-          "token": "v1.0"
-        }
-      ]
-    },
-    {
       "id": "n:m1kx8kay@i:1rjye1a.0",
       "kind": "call",
       "mergeKey": "s3",
       "name": "DataFrame.head",
       "module": "pandas",
-      "parent": "i:1rjye1a.0",
+      "parent": null,
       "order": 700032,
       "executions": [
         {
           "i": 2,
           "ret": 2,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v1.0"
+          },
           "outputs": {
             "out:0": "v2.0"
           },
@@ -211,6 +196,12 @@
         }
       ],
       "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        },
         {
           "id": "in:n",
           "param": "n",
@@ -230,52 +221,20 @@
       "student": false
     },
     {
-      "id": "i:tpbvbi.0",
-      "kind": "instance",
-      "parent": null,
-      "order": 700032,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 2,
-      "createdBy": "n:m1kx8kay@i:1rjye1a.0",
-      "params": [],
-      "versions": [
-        {
-          "i": 2,
-          "token": "v2.0"
-        }
-      ]
-    },
-    {
-      "id": "i:1rjye1a.1",
-      "kind": "instance",
-      "parent": null,
-      "order": 800008,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 4,
-      "createdBy": "n:m1pltk3k@i:wcu5tk.0",
-      "params": [],
-      "versions": [
-        {
-          "i": 4,
-          "token": "v4.0"
-        }
-      ]
-    },
-    {
       "id": "n:m1kx8kay@i:1rjye1a.1",
       "kind": "call",
       "mergeKey": "s7",
       "name": "DataFrame.head",
       "module": "pandas",
-      "parent": "i:1rjye1a.1",
+      "parent": null,
       "order": 800008,
       "executions": [
         {
           "i": 5,
           "ret": 5,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v4.0"
+          },
           "outputs": {
             "out:0": "v5.0"
           },
@@ -286,6 +245,12 @@
         }
       ],
       "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        },
         {
           "id": "in:n",
           "param": "n",
@@ -364,10 +329,38 @@
       "callee": true
     },
     {
-      "id": "e:i:tpbvbi.0.>n:1qcc8mf.0.in:self",
+      "id": "f:i:1rjye1a.0",
       "from": {
-        "node": "i:tpbvbi.0",
-        "port": null
+        "node": "n:m1pltk3k@i:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:m1kx8kay@i:1rjye1a.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1rjye1a.0",
+        "token": "v1.0",
+        "type": "DF",
+        "shape": [
+          471,
+          7
+        ]
+      }
+    },
+    {
+      "id": "f:i:tpbvbi.0",
+      "from": {
+        "node": "n:m1kx8kay@i:1rjye1a.0",
+        "port": "out:0"
       },
       "to": {
         "node": "n:1qcc8mf.0",
@@ -380,7 +373,44 @@
           "token": "v2.0"
         }
       ],
-      "nameLabel": null
+      "nameLabel": null,
+      "chip": {
+        "node": "i:tpbvbi.0",
+        "token": "v2.0",
+        "type": "DF",
+        "shape": [
+          50,
+          7
+        ]
+      }
+    },
+    {
+      "id": "f:i:1rjye1a.1",
+      "from": {
+        "node": "n:m1pltk3k@i:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:m1kx8kay@i:1rjye1a.1",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1rjye1a.1",
+        "token": "v4.0",
+        "type": "DF",
+        "shape": [
+          471,
+          7
+        ]
+      }
     },
     {
       "id": "e:n:wcu5tk.0.out:0>i:wcu5tk.0.",
@@ -402,44 +432,6 @@
       "nameLabel": null
     },
     {
-      "id": "e:n:m1pltk3k@i:wcu5tk.0.out:0>i:1rjye1a.0.",
-      "from": {
-        "node": "n:m1pltk3k@i:wcu5tk.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "i:1rjye1a.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 1,
-          "token": "v1.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:n:m1kx8kay@i:1rjye1a.0.out:0>i:tpbvbi.0.",
-      "from": {
-        "node": "n:m1kx8kay@i:1rjye1a.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "i:tpbvbi.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 2,
-          "token": "v2.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
       "id": "e:n:1qcc8mf.0.out:0>i:1qcc8mf.0.",
       "from": {
         "node": "n:1qcc8mf.0",
@@ -454,25 +446,6 @@
         {
           "i": 3,
           "token": "v3.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:n:m1pltk3k@i:wcu5tk.0.out:0>i:1rjye1a.1.",
-      "from": {
-        "node": "n:m1pltk3k@i:wcu5tk.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "i:1rjye1a.1",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 4,
-          "token": "v4.0"
         }
       ],
       "nameLabel": null
@@ -504,5 +477,6 @@
     3,
     4,
     5
-  ]
+  ],
+  "folded": 3
 }

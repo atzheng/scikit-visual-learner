@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import ELKBundled from 'elkjs/lib/elk.bundled.js';
 import type { ELK } from 'elkjs/lib/elk-api';
@@ -438,5 +440,30 @@ describe('snapshots', () => {
     c.setGraph(model, laid);
     c.setState(stateAt(model, log, at === 'end' ? model.steps.length : at), log);
     expect(strip(host.innerHTML)).toMatchSnapshot();
+  });
+});
+
+describe('folded temporaries', () => {
+  test('a chip is a labelled button on its wire; click and Enter report the edge', async () => {
+    // the real pandas-heavy fixture: unnamed one-use Series fold into chips
+    const log = JSON.parse(
+      readFileSync(join(__dirname, '../../../fixtures/logs/notebook.json'), 'utf8'),
+    ) as EventLog;
+    const { model, laid } = await prepare(log);
+    const chip = model.edges.find((e) => e.chip);
+    expect(chip, 'the notebook fixture folds at least one temporary').toBeDefined();
+    const c = setup();
+    c.setGraph(model, laid);
+    c.setState(stateAt(model, log, model.steps.length), log);
+    const el = host.querySelector(`.md-edge-label.md-chip[data-edge="${chip!.id}"]`)!;
+    expect(el.classList.contains('md-hidden')).toBe(false);
+    expect(el.textContent).toMatch(/^\+ /);
+    expect(el.getAttribute('aria-label')).toMatch(/^temporary .*press Enter/);
+    expect(el.getAttribute('tabindex')).toBe('0');
+    (el as SVGElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(calls.click).toEqual([chip!.id, chip!.id]);
+    // plain value wires are not chips
+    expect(host.querySelectorAll('.md-chip').length).toBe(model.edges.filter((e) => e.chip).length);
   });
 });

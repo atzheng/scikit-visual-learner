@@ -38,7 +38,7 @@ export function layoutSignature(
         return [n.id, 's', n.parent, n.order, n.label];
     }
   });
-  const edges = model.edges.map((e) => [e.id, e.from, e.to, e.dashed, e.nameLabel]);
+  const edges = model.edges.map((e) => [e.id, e.from, e.to, e.dashed, e.nameLabel, e.chip ? 1 : 0]);
   return JSON.stringify([nodes, edges, attrRows, edgeLabels, model.tooMany ?? 0, moreMethods]);
 }
 

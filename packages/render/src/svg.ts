@@ -90,6 +90,17 @@ export function summaryLabel(s: ValueSummary | undefined): string {
   return s.type;
 }
 
+/**
+ * The text of a folded temporary's chip: `+` (it expands to a box), its type and shape. The value summary
+ * wins when the log is at hand; the chip's own type is the fallback.
+ */
+export function chipLabel(
+  chip: NonNullable<GEdge['chip']>,
+  values: Record<Token, ValueSummary> | undefined,
+): string {
+  return `+ ${summaryLabel(values?.[chip.token]) || chip.type}`;
+}
+
 /** A wire's type text: scalars only. An object is a box that shows its own type and shape. */
 export function wireTypeLabel(
   token: Token,
@@ -423,10 +434,12 @@ export function edgeLabelsFor(model: GraphModel, log: EventLog): Record<string, 
   const out: Record<string, string> = {};
   for (const e of model.edges) {
     let best = '';
-    for (const u of e.uses) {
-      const t = wireTypeLabel(u.token, log.values);
-      if (t.length > best.length) best = t;
-    }
+    if (e.chip) best = chipLabel(e.chip, log.values);
+    else
+      for (const u of e.uses) {
+        const t = wireTypeLabel(u.token, log.values);
+        if (t.length > best.length) best = t;
+      }
     out[e.id] = best;
   }
   return out;
@@ -852,8 +865,10 @@ export function buildSvg(
       doc,
       'g',
       { 'data-edge': e.id, tabindex: 0, role: 'button' },
-      'md-edge-label md-hidden',
+      e.chip ? 'md-edge-label md-chip md-hidden' : 'md-edge-label md-hidden',
     );
+    if (e.chip)
+      label.append(s(doc, 'rect', { x: 0, y: 0, width: 0, height: 0, rx: 8 }, 'md-chip-bg'));
     const text = s(
       doc,
       'text',
@@ -1036,6 +1051,13 @@ function fitLabelRing(h: EdgeHandle): void {
   setAttr(ring, 'y', String(h.anchor.y - 12));
   setAttr(ring, 'width', String(w));
   setAttr(ring, 'height', '18');
+  const bg = h.label.querySelector('.md-chip-bg');
+  if (bg) {
+    setAttr(bg, 'x', String(x));
+    setAttr(bg, 'y', String(h.anchor.y - 12));
+    setAttr(bg, 'width', String(w));
+    setAttr(bg, 'height', '18');
+  }
 }
 
 /**
@@ -1191,7 +1213,14 @@ export function applyState(
     toggle(h.g, 'md-hidden', !visible);
     toggle(h.g, 'md-inactive', visible && !active);
     const token = state.activeToken.get(h.id);
-    const type = visible && active && token !== undefined ? wireTypeLabel(token, log?.values) : '';
+    const chip = h.edge.chip;
+    const type = chip
+      ? visible
+        ? chipLabel(chip, log?.values)
+        : ''
+      : visible && active && token !== undefined
+        ? wireTypeLabel(token, log?.values)
+        : '';
     const name = visible && active ? (h.edge.nameLabel ?? '') : '';
     setText(h.typeEl, type);
     setText(h.nameEl, name);
@@ -1200,7 +1229,13 @@ export function applyState(
     toggle(h.label, 'md-hidden', !hasText);
     if (hasText) {
       const desc = [type, name && `named ${name}`].filter(Boolean).join(', ');
-      setAttr(h.label, 'aria-label', `wire: ${desc}`);
+      setAttr(
+        h.label,
+        'aria-label',
+        chip
+          ? `temporary ${type.slice(2)}, not named: press Enter to show it as a box`
+          : `wire: ${desc}`,
+      );
       fitLabelRing(h);
     }
   }

@@ -9,6 +9,7 @@ import type {
   InstanceNode,
   Port,
 } from '@machines/log';
+import { MAX_NODES } from '@machines/log';
 import {
   buildElk,
   buildElkGraph,
@@ -724,6 +725,29 @@ describe('label distance and dense graphs', () => {
       expect(performance.now() - t0).toBeLessThan(5000);
     },
     60000,
+  );
+
+  // MAX_NODES (600) is the most boxes a graph draws: the dense worst case at that size must stay in budget.
+  test.skipIf(!slow)(
+    'dense graphs at the node cap (600, with and without instances) lay out in under 10 s',
+    async () => {
+      await layout(linregModel(), { measure }); // warm up ELK
+      for (const withInstances of [false, true]) {
+        const m = denseModel(
+          withInstances,
+          MAX_NODES - (withInstances ? 24 : 0),
+          withInstances ? 24 : 0,
+        );
+        const t0 = performance.now();
+        const laid = await layout(m, { measure });
+        expect(
+          performance.now() - t0,
+          `${m.nodes.length} nodes, ${m.edges.length} edges`,
+        ).toBeLessThan(10000);
+        checkDense(m, laid);
+      }
+    },
+    120000,
   );
 
   test('layout with instances is deterministic and independent of input order', async () => {

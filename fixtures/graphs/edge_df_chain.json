@@ -101,35 +101,20 @@
       "student": false
     },
     {
-      "id": "i:1rjye1a.0",
-      "kind": "instance",
-      "parent": null,
-      "order": 700008,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 1,
-      "createdBy": "n:m1pltk3k@i:wcu5tk.0",
-      "params": [],
-      "versions": [
-        {
-          "i": 1,
-          "token": "v1.0"
-        }
-      ]
-    },
-    {
       "id": "n:m69bsx0@i:1rjye1a.0",
       "kind": "call",
       "mergeKey": "s3",
       "name": "DataFrame.reset_index",
       "module": "pandas",
-      "parent": "i:1rjye1a.0",
+      "parent": null,
       "order": 700008,
       "executions": [
         {
           "i": 2,
           "ret": 2,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v1.0"
+          },
           "outputs": {
             "out:0": "v2.0"
           },
@@ -139,7 +124,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -190,6 +182,34 @@
       "callee": true
     },
     {
+      "id": "f:i:1rjye1a.0",
+      "from": {
+        "node": "n:m1pltk3k@i:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:m69bsx0@i:1rjye1a.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:1rjye1a.0",
+        "token": "v1.0",
+        "type": "DF",
+        "shape": [
+          471,
+          7
+        ]
+      }
+    },
+    {
       "id": "e:n:wcu5tk.0.out:0>i:wcu5tk.0.",
       "from": {
         "node": "n:wcu5tk.0",
@@ -204,25 +224,6 @@
         {
           "i": 0,
           "token": "v0.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:n:m1pltk3k@i:wcu5tk.0.out:0>i:1rjye1a.0.",
-      "from": {
-        "node": "n:m1pltk3k@i:wcu5tk.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "i:1rjye1a.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 1,
-          "token": "v1.0"
         }
       ],
       "nameLabel": null
@@ -251,5 +252,6 @@
     0,
     1,
     2
-  ]
+  ],
+  "folded": 1
 }

@@ -82,7 +82,7 @@ class B {
 }
 const wired = (param: string, value: string): Input => ({ param, origin: 'name', value });
 const konst = (param: string, text: string): Input => ({ param, origin: 'const', text });
-const build = (log: EventLog): GraphModel => buildGraph(log, { expanded: new Set() });
+const build = (log: EventLog): GraphModel => buildGraph(log, { expanded: new Set(), fold: false });
 const call = (m: GraphModel, name: string): CallNode => {
   const c = m.nodes.find((n): n is CallNode => n.kind === 'call' && n.name === name);
   if (!c) throw new Error(`no call ${name}`);

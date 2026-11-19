@@ -21,21 +21,29 @@ export function EventList() {
   }, [cur]);
   if (running) return <p className="muted">The event list appears when the run finishes.</p>;
   if (labels.length === 0) return <p className="muted">No steps yet.</p>;
+  const t = model?.truncated;
   return (
-    <ol className="event-list" aria-label="Events">
-      {labels.map((label, k) => (
-        <li key={k}>
-          <button
-            type="button"
-            ref={k + 1 === cur ? currentRef : undefined}
-            className="event-item"
-            aria-current={k + 1 === cur ? 'step' : undefined}
-            onClick={() => setStep(k + 1)}
-          >
-            {label}
-          </button>
-        </li>
-      ))}
-    </ol>
+    <>
+      {t && (
+        <p className="muted" role="status" data-testid="event-list-truncated">
+          Showing the first {t.shown} boxes (up to line {t.line}): later calls are not listed.
+        </p>
+      )}
+      <ol className="event-list" aria-label="Events">
+        {labels.map((label, k) => (
+          <li key={k}>
+            <button
+              type="button"
+              ref={k + 1 === cur ? currentRef : undefined}
+              className="event-item"
+              aria-current={k + 1 === cur ? 'step' : undefined}
+              onClick={() => setStep(k + 1)}
+            >
+              {label}
+            </button>
+          </li>
+        ))}
+      </ol>
+    </>
   );
 }

@@ -69,35 +69,20 @@
       "student": false
     },
     {
-      "id": "i:wcu5tk.0",
-      "kind": "instance",
-      "parent": null,
-      "order": 700005,
-      "className": "DF",
-      "varName": null,
-      "createdAt": 0,
-      "createdBy": "n:wcu5tk.0",
-      "params": [],
-      "versions": [
-        {
-          "i": 0,
-          "token": "v0.0"
-        }
-      ]
-    },
-    {
       "id": "n:m1pltk3k@i:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s1",
       "name": "DataFrame.dropna",
       "module": "pandas",
-      "parent": "i:wcu5tk.0",
+      "parent": null,
       "order": 700005,
       "executions": [
         {
           "i": 1,
           "ret": 1,
-          "inputs": {},
+          "inputs": {
+            "in:self": "v0.0"
+          },
           "outputs": {
             "out:0": "v1.0"
           },
@@ -107,7 +92,14 @@
           "interrupted": false
         }
       ],
-      "inPorts": [],
+      "inPorts": [
+        {
+          "id": "in:self",
+          "param": "self",
+          "typeLabel": "",
+          "nameLabel": null
+        }
+      ],
       "outPorts": [
         {
           "id": "out:0",
@@ -713,6 +705,34 @@
       "callee": true
     },
     {
+      "id": "f:i:wcu5tk.0",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "n:m1pltk3k@i:wcu5tk.0",
+        "port": "in:self"
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null,
+      "chip": {
+        "node": "i:wcu5tk.0",
+        "token": "v0.0",
+        "type": "DF",
+        "shape": [
+          500,
+          7
+        ]
+      }
+    },
+    {
       "id": "e:i:f2rqav.0.>n:12eqf14.0.in:arrays[0]",
       "from": {
         "node": "i:f2rqav.0",
@@ -879,25 +899,6 @@
         {
           "i": 9,
           "token": "v10.1"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:n:wcu5tk.0.out:0>i:wcu5tk.0.",
-      "from": {
-        "node": "n:wcu5tk.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "i:wcu5tk.0",
-        "port": null
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 0,
-          "token": "v0.0"
         }
       ],
       "nameLabel": null
@@ -1143,5 +1144,6 @@
     8,
     9,
     10
-  ]
+  ],
+  "folded": 1
 }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildGraph } from './graph';
+import { buildGraph, MAX_NODES } from './graph';
 import type { CallNode, ExprNode, GraphModel, InstanceNode, SourceNode } from './graph';
 import type { Event, EventLog, Input, Site, ValueSummary } from './types';
 import { validateLog } from './validate';
@@ -88,7 +88,7 @@ const wired = (param: string, value: string, origin: Input['origin'] = 'name'): 
 });
 const konst = (param: string, text: string): Input => ({ param, origin: 'const', text });
 
-const build = (log: EventLog): GraphModel => buildGraph(log, { expanded: new Set() });
+const build = (log: EventLog): GraphModel => buildGraph(log, { expanded: new Set(), fold: false });
 type Many<T> = [T, T, T, T, ...T[]];
 const calls = (m: GraphModel): Many<CallNode> =>
   m.nodes.filter((n): n is CallNode => n.kind === 'call') as Many<CallNode>;
@@ -655,20 +655,24 @@ describe('errors and interruption', () => {
 });
 
 describe('limits, determinism, stability', () => {
-  test('more than 300 nodes: first 300 by order, tooMany set', () => {
+  test('more than MAX_NODES nodes: the first MAX_NODES by order, tooMany and truncated set', () => {
     const b = new B();
-    for (let k = 0; k < 350; k++) {
+    const total = MAX_NODES + 50;
+    for (let k = 0; k < total; k++) {
       const s = b.site(`f${k}()`, k + 1);
       b.ev(s, 'function', `f${k}`);
     }
     const m = build(b.log());
-    expect(m.nodes).toHaveLength(300);
-    expect(m.tooMany).toBe(350);
+    expect(m.nodes).toHaveLength(MAX_NODES);
+    expect(m.tooMany).toBe(total);
+    expect(m.truncated).toEqual({ shown: MAX_NODES, total, line: MAX_NODES });
     expect(m.nodes.map((n) => n.order)).toEqual(
       [...m.nodes.map((n) => n.order)].sort((a, c) => a - c),
     );
-    expect(m.steps).toHaveLength(300);
+    expect(m.steps).toHaveLength(MAX_NODES);
+    expect(buildGraph(b.log(), { maxNodes: 10 }).truncated?.line).toBe(10);
     expect(build(splitLog()).tooMany).toBeUndefined();
+    expect(build(splitLog()).truncated).toBeUndefined();
   });
 
   test('deterministic', () => {
@@ -818,5 +822,111 @@ describe('producer order', () => {
     expect(insts(m).map((x) => x.createdBy?.startsWith('x:'))).toEqual([false, true]);
     expect(insts(m).map((x) => x.versions[0]!.token)).toEqual(['v2.0', 'v1.0']);
     expect(m.nodes.some((n) => n.kind === 'source')).toBe(false);
+  });
+});
+
+describe('folding unnamed temporaries', () => {
+  // df = read_csv(); df["a"].isna() -> mask (named); df["b"] -> used once as an input of f; df["c"] bound to c
+  function tempsLog(): EventLog {
+    const b = new B();
+    b.val('v0.0', 'DataFrame', { shape: [3, 3] });
+    b.val('v1.0', 'Series', { shape: [3] });
+    b.val('v2.0', 'Series', { shape: [3] });
+    b.val('v3.0', 'Series', { shape: [3] });
+    b.val('v4.0', 'Series', { shape: [3] });
+    b.val('v5.0', 'Series', { shape: [3] });
+    const s0 = b.site('pd.read_csv("x")', 1);
+    b.ev(s0, 'function', 'read_csv', { outputs: ['v0.0'] });
+    b.bind('df', 'v0.0');
+    const s1 = b.site('df["a"]', 2, { func_text: undefined });
+    b.ev(s1, 'expr', 'df["a"]', { inputs: [wired('df', 'v0.0')], outputs: ['v1.0'] });
+    const s2 = b.site('df["a"].isna()', 2);
+    b.ev(s2, 'method', 'Series.isna', {
+      owner: 'v1.0',
+      inputs: [wired('self', 'v1.0')],
+      outputs: ['v2.0'],
+    });
+    b.bind('mask', 'v2.0');
+    const s3 = b.site('df["b"]', 3, { func_text: undefined });
+    b.ev(s3, 'expr', 'df["b"]', { inputs: [wired('df', 'v0.0')], outputs: ['v3.0'] });
+    const s4 = b.site('f(df["b"])', 3);
+    b.ev(s4, 'function', 'f', { inputs: [wired('x', 'v3.0')], outputs: ['v4.0'] });
+    b.bind('r', 'v4.0');
+    // v5.0 is used twice: stays a box
+    const s5 = b.site('df["c"]', 4, { func_text: undefined });
+    b.ev(s5, 'expr', 'df["c"]', { inputs: [wired('df', 'v0.0')], outputs: ['v5.0'] });
+    const s6 = b.site('g(c)', 5);
+    b.ev(s6, 'function', 'g', { inputs: [wired('x', 'v5.0')] });
+    const s7 = b.site('h(c)', 6);
+    b.ev(s7, 'function', 'h', { inputs: [wired('x', 'v5.0')] });
+    return b.log();
+  }
+
+  test('folds one-use unnamed objects into the wire between producer and consumer', () => {
+    const m = buildGraph(tempsLog());
+    const chips = m.edges.filter((e) => e.chip);
+    expect(chips.map((e) => e.chip!.token).sort()).toEqual(['v1.0', 'v3.0']);
+    expect(m.folded).toBe(2);
+    // v1.0 owned a method: the method box stands alone with a self port fed by the chip wire
+    const isna = byName(m, 'Series.isna');
+    expect(isna.parent).toBeNull();
+    expect(isna.inPorts.map((p) => p.id)).toEqual(['in:self']);
+    const e1 = chips.find((e) => e.chip!.token === 'v1.0')!;
+    expect(e1.to).toEqual({ node: isna.id, port: 'in:self' });
+    expect(e1.chip).toMatchObject({ type: 'Series', shape: [3] });
+    expect(e1.uses).toEqual([{ i: 2, token: 'v1.0' }]);
+    expect(isna.executions[0]!.inputs['in:self']).toBe('v1.0');
+    // the other chip goes from the expr to f's x port
+    const f = byName(m, 'f');
+    const e3 = chips.find((e) => e.chip!.token === 'v3.0')!;
+    expect(e3.to).toEqual({ node: f.id, port: 'in:x' });
+    // named (v0.0, v2.0, v4.0) and twice-used (v5.0) objects keep boxes
+    expect(insts(m).map((n) => n.versions[0]!.token)).toEqual(['v0.0', 'v2.0', 'v4.0', 'v5.0']);
+  });
+
+  test('fold:false and unfold give the plain graph back', () => {
+    const plain = buildGraph(tempsLog(), { fold: false });
+    expect(plain.folded).toBeUndefined();
+    expect(plain.edges.some((e) => e.chip)).toBe(false);
+    expect(insts(plain)).toHaveLength(6);
+    const chip = buildGraph(tempsLog()).edges.find((e) => e.chip)!;
+    const some = buildGraph(tempsLog(), { unfold: new Set([chip.chip!.node]) });
+    expect(some.folded).toBe(1);
+    expect(insts(some)).toHaveLength(5);
+  });
+
+  test('mutated, bound, constructed and multiply-used objects never fold', () => {
+    const b = new B();
+    b.val('v0.0', 'Model');
+    b.val('v0.1', 'Model');
+    const s0 = b.site('M()', 1);
+    b.ev(s0, 'constructor', 'M', { outputs: ['v0.0'] });
+    const s1 = b.site('M().fit(1)', 1);
+    b.ev(s1, 'method', 'M.fit', {
+      owner: 'v0.0',
+      inputs: [wired('self', 'v0.0')],
+      mutates: [['v0.0', 'v0.1']],
+    });
+    b.val('v1.0', 'DataFrame');
+    b.val('v1.1', 'DataFrame');
+    const s2 = b.site('mk()', 2);
+    b.ev(s2, 'function', 'mk', { outputs: ['v1.0'] });
+    const s3 = b.site('p(mk())', 2);
+    b.ev(s3, 'function', 'p', { inputs: [wired('x', 'v1.0')], mutates: [['v1.0', 'v1.1']] });
+    const m = buildGraph(b.log());
+    expect(m.edges.some((e) => e.chip)).toBe(false);
+    expect(m.folded).toBeUndefined();
+  });
+
+  test('a producer that runs in a loop (one box, many objects) never folds', () => {
+    const b = new B();
+    const s0 = b.site('mk()', 1);
+    const s1 = b.site('use(mk())', 1);
+    for (let k = 0; k < 3; k++) {
+      b.val(`v${k}.0`, 'Series');
+      b.ev(s0, 'function', 'mk', { outputs: [`v${k}.0`], count: k + 1 });
+      b.ev(s1, 'function', 'use', { inputs: [wired('x', `v${k}.0`)], count: k + 1 });
+    }
+    expect(buildGraph(b.log()).edges.some((e) => e.chip)).toBe(false);
   });
 });

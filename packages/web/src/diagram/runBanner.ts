@@ -24,6 +24,6 @@ export function bannerForLog(log: EventLog): string | null {
   );
 }
 
-export function tooManyMessage(total: number, shown = 300): string {
-  return `This program makes ${total} boxes. The diagram shows the first ${shown}. Narrow the code (fewer calls, or a smaller loop body) to see the rest.`;
+export function tooManyMessage(t: { shown: number; total: number; line: number }): string {
+  return `Showing the first ${t.shown} boxes (up to line ${t.line}). This program makes ${t.total}. Narrow the code (fewer calls, or a smaller loop body) to see the rest.`;
 }

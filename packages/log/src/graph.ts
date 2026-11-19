@@ -5,7 +5,12 @@ export interface GraphModel {
   nodes: GNode[];
   edges: GEdge[];
   steps: number[];
+  /** Set when the graph was cut at the node cap: the number of boxes it would have had. */
   tooMany?: number;
+  /** Set with `tooMany`: what is shown, and the source line of the last box shown. */
+  truncated?: { shown: number; total: number; line: number };
+  /** Number of unnamed temporaries folded into chips on their wire (`GEdge.chip`). */
+  folded?: number;
 }
 export type GNode = CallNode | InstanceNode | ExprNode | StoreNode | SourceNode | ImportNode;
 export interface NodeBase {
@@ -86,9 +91,21 @@ export interface GEdge {
   nameLabel: string | null;
   /** A callee wire: an import node to a call that resolves its callee through the imported name. Carries no value. */
   callee?: true;
+  /**
+   * A folded temporary: an object never bound to a name and used exactly once. The wire runs from the
+   * producer straight to its one consumer and carries exactly `token`; `node` is the id the object's box
+   * would have (pass it in `buildGraph`'s `unfold` to draw the box instead).
+   */
+  chip?: { node: string; token: Token; type: string; shape: number[] | null };
 }
 
-export const MAX_NODES = 300;
+/**
+ * Most boxes one graph draws; later ones (by source order) are cut and `GraphModel.truncated` says so.
+ * Measured (svl-lo6): the 98-line pandas program has 460 boxes unfolded (364 folded) and lays out in under
+ * 0.7 s. The dense worst case (every box 3 ports, 3 wires, 24 instances with children) takes about 8 s at
+ * 600 and 12 s at 700, in the worker, so 600 keeps the worst case under 10 s.
+ */
+export const MAX_NODES = 600;
 /** Most call boxes one import node is wired to. */
 export const MAX_CALLEE_WIRES = 5;
 
@@ -134,8 +151,18 @@ function hash(s: string): string {
 
 export const keyOf = (t: Token): string => (t.startsWith('v') ? t.slice(0, t.indexOf('.')) : t);
 
-export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): GraphModel {
-  void _opts; // expansion of student functions is M4
+export interface BuildOptions {
+  /** Expansion of student functions: M4, ignored. */
+  expanded?: Set<string>;
+  /** Fold unnamed temporaries into chips on their wire (default true). false draws every object as a box. */
+  fold?: boolean;
+  /** Ids of folded objects (`GEdge.chip.node`) to draw as boxes anyway. */
+  unfold?: ReadonlySet<string>;
+  /** Node cap (default MAX_NODES); for tests and measurements. */
+  maxNodes?: number;
+}
+
+export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
   const { values, sites } = log;
   const typeOf = (t: Token): string => values[t]?.type ?? '';
   // THE predicate for "this value is drawn as an instance box": it creates the box (via the creating call's
@@ -192,6 +219,64 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   const plainNameOf = (t: Token): string | null => firstNameByKey.get(keyOf(t)) ?? null;
 
   const events = log.events.filter((e) => e.scope === 0);
+
+  // ---- unnamed temporaries to fold (svl-lo6). An object (key) folds only when every one of these holds,
+  // so that the chip's wire is exactly the two wires the box would have had, joined:
+  //  - no scope binds it to a name, no event mutates it, and it is not a constructed machine;
+  //  - exactly one event outputs it, and that event's output slot (site, index) holds no other object;
+  //  - exactly one use in the whole log: an input port or the owner of a method call, by a scope-0 event
+  //    that is neither an expression read nor before the producer.
+  // foldKeys: object key -> id of the box it would have; the creator and consumer are found after pass 1.
+  const foldKeys = new Map<string, string>();
+  if (opts.fold !== false) {
+    const named = new Set<string>();
+    for (const sc of log.scopes) for (const [, , t] of sc.bindings) named.add(keyOf(t));
+    const producedBy = new Map<string, Event[]>();
+    const slotObjs = new Map<string, Set<string>>();
+    const useCount = new Map<string, number>();
+    const useEvent = new Map<string, Event>();
+    const touched = new Set<string>();
+    for (const e of log.events) {
+      e.outputs.forEach((t, k) => {
+        if (!isObject(t)) return;
+        const key = keyOf(t);
+        producedBy.set(key, [...(producedBy.get(key) ?? []), e]);
+        if (e.scope !== 0) return;
+        const slot = `${e.merge_key}#${k}`;
+        const set = slotObjs.get(slot) ?? new Set<string>();
+        slotObjs.set(slot, set);
+        set.add(key);
+      });
+      for (const [b, a] of e.mutates) {
+        touched.add(keyOf(b));
+        touched.add(keyOf(a));
+      }
+      const owner = e.kind === 'method' && e.owner !== null && isObject(e.owner) ? e.owner : null;
+      for (const x of e.inputs) {
+        if (x.value === undefined || !isObject(x.value)) continue;
+        if (owner !== null && x.param === 'self' && x.value === owner) continue;
+        const key = keyOf(x.value);
+        useCount.set(key, (useCount.get(key) ?? 0) + 1);
+        useEvent.set(key, e);
+      }
+      if (owner !== null) {
+        const key = keyOf(owner);
+        useCount.set(key, (useCount.get(key) ?? 0) + 1);
+        useEvent.set(key, e);
+      }
+    }
+    for (const [key, made] of producedBy) {
+      const c = made[0]!;
+      const u = useEvent.get(key);
+      if (made.length !== 1 || c.scope !== 0 || c.kind === 'constructor') continue;
+      if (named.has(key) || touched.has(key) || useCount.get(key) !== 1) continue;
+      if (u === undefined || u.scope !== 0 || u.kind === 'expr' || u.i <= c.i) continue;
+      const k = c.outputs.findIndex((t) => keyOf(t) === key);
+      if (k < 0 || slotObjs.get(`${c.merge_key}#${k}`)?.size !== 1) continue;
+      const id = `i:${baseFor(c.merge_key, c.site)}${k > 0 ? `#${k}` : ''}`;
+      if (!opts.unfold?.has(id)) foldKeys.set(key, id);
+    }
+  }
 
   // ---- import bindings that nothing can have rebound (the transformer's `sole` flag)
   const soleImports = new Map<string, { site: Site; binding: ImportBinding }>();
@@ -423,8 +508,13 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   function drawnInputs(e: Event): Input[] {
     let ins = e.inputs;
     if (e.kind === 'method' && e.owner !== null) {
-      if (isObject(e.owner)) ins = ins.filter((x) => !(x.param === 'self' && x.value === e.owner));
-      else if (!ins.some((x) => x.param === 'self'))
+      if (isObject(e.owner)) {
+        // the owner of a folded temporary is its method's own `self` port (the object has no box)
+        if (foldKeys.has(keyOf(e.owner))) {
+          if (!ins.some((x) => x.param === 'self'))
+            ins = [{ param: 'self', origin: 'name', value: e.owner }, ...ins];
+        } else ins = ins.filter((x) => !(x.param === 'self' && x.value === e.owner));
+      } else if (!ins.some((x) => x.param === 'self'))
         ins = [{ param: 'self', origin: 'name', value: e.owner }, ...ins];
     }
     return ins;
@@ -439,6 +529,16 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
         inst.node.versions.push({ i: e.i, token: after });
     }
   }
+
+  // ---- folded temporaries: the object has no box; the method it owns (if any) stands alone
+  const foldedBoxes = new Set<string>();
+  for (const key of foldKeys.keys()) {
+    // every folded object was output by exactly one scope-0 event, so its box has a creator and a port
+    const info = instByObj.get(key);
+    if (info) foldedBoxes.add(info.node.id);
+  }
+  for (const info of calls.values())
+    if (info.node.parent !== null && foldedBoxes.has(info.node.parent)) info.node.parent = null;
 
   // ---- pass 2: edges and sources
   const retOf = new Map<number, number>(events.map((e) => [e.i, e.ret]));
@@ -463,6 +563,26 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     }
     edge.uses.push(use);
     edge.nameLabel = nameLabel;
+  };
+
+  /** The wire of a folded temporary: from the node that made it straight to the consumer, carrying its token. */
+  const addChipEdge = (token: Token, to: Ref, i: number): void => {
+    const info = instByObj.get(keyOf(token))!;
+    const id = `f:${info.node.id}`;
+    edges.set(id, {
+      id,
+      from: { node: info.node.createdBy!, port: info.createdByPort! },
+      to,
+      dashed: false,
+      uses: [{ i, token }],
+      nameLabel: null,
+      chip: {
+        node: info.node.id,
+        token,
+        type: typeOf(token),
+        shape: values[token]?.shape ?? null,
+      },
+    });
   };
 
   const resolve = (
@@ -547,6 +667,10 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     for (const e of info.events) {
       for (const x of drawnInputs(e)) {
         if (x.value === undefined) continue;
+        if (isObject(x.value) && foldKeys.has(keyOf(x.value))) {
+          addChipEdge(x.value, { node: info.node.id, port: `in:${x.param}` }, e.i);
+          continue;
+        }
         const { ref, source } = resolve(x.value, e, info.node.id, x.param);
         addEdge(
           ref,
@@ -562,6 +686,10 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     for (const e of info.events) {
       for (const x of e.inputs) {
         if (x.value === undefined) continue;
+        if (isObject(x.value) && foldKeys.has(keyOf(x.value))) {
+          addChipEdge(x.value, { node: info.node.id, port: null }, e.i);
+          continue;
+        }
         const { ref, source } = resolve(x.value, e, info.node.id, x.param);
         addEdge(
           ref,
@@ -591,7 +719,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
         }
       }
     }
-    if (node.createdBy !== null && info.createdByPort !== undefined) {
+    if (node.createdBy !== null && info.createdByPort !== undefined && !foldedBoxes.has(node.id)) {
       const tok = node.versions[0]?.token;
       if (tok !== undefined)
         addEdge(
@@ -691,9 +819,11 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   let nodes = nodeOrder.filter((n) =>
     n.kind === 'expr'
       ? live.has(n.id)
-      : n.kind === 'source' || n.kind === 'import'
-        ? connected.has(n.id)
-        : true,
+      : foldedBoxes.has(n.id)
+        ? false
+        : n.kind === 'source' || n.kind === 'import'
+          ? connected.has(n.id)
+          : true,
   );
 
   // ---- truncate to MAX_NODES by source order
@@ -702,9 +832,16 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     .map((n, idx) => ({ n, idx }))
     .sort((a, b) => a.n.order - b.n.order || a.idx - b.idx)
     .map((x) => x.n);
-  if (nodes.length > MAX_NODES) {
+  const maxNodes = opts.maxNodes ?? MAX_NODES;
+  let truncated: GraphModel['truncated'];
+  if (nodes.length > maxNodes) {
     tooMany = nodes.length;
-    nodes = nodes.slice(0, MAX_NODES);
+    nodes = nodes.slice(0, maxNodes);
+    truncated = {
+      shown: nodes.length,
+      total: tooMany,
+      line: Math.floor((nodes[nodes.length - 1]?.order ?? 0) / 100000),
+    };
     const kept = new Set(nodes.map((n) => n.id));
     for (const n of nodes) if (n.parent !== null && !kept.has(n.parent)) n.parent = null;
     keptEdges = keptEdges.filter((ed) => kept.has(ed.from.node) && kept.has(ed.to.node));
@@ -719,5 +856,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   }
   const model: GraphModel = { nodes, edges: keptEdges, steps: [...stepSet].sort((a, b) => a - b) };
   if (tooMany !== undefined) model.tooMany = tooMany;
+  if (truncated) model.truncated = truncated;
+  if (foldedBoxes.size > 0) model.folded = foldedBoxes.size;
   return model;
 }
