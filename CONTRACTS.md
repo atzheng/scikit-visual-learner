@@ -383,7 +383,7 @@ type ToWorker =
 type FromWorker =
   | {
       type: 'progress';
-      phase: 'pyodide' | 'packages' | 'recorder' | 'datasets';
+      phase: 'pyodide' | 'packages' | 'recorder' | 'datasets' | 'matplotlib';
       done: number;
       total: number;
     }
@@ -460,7 +460,7 @@ class RuntimeClient {
 
 The wall clock (`config.wall_ms`) is enforced by the client and goes through the same path as `stop()`, but finishes with `timeout`. It starts when `started` arrives (the worker may first be loading imports such as matplotlib); until then a 15 s grace plus `wall_ms` bounds the wait. A `done(stopped)` that follows a stop request is relabelled `stopped` or `timeout` by the client; any other `done` status is kept. A worker `error` event mid-run finishes the run with status `error` and a `WorkerError` `RunError`, then respawns; during load it calls `onError` and does not loop (`restart()` retries).
 
-**Worker** (`runtime/worker.ts`) on start: load the self-hosted Pyodide from `/pyodide/` with progress messages. Load numpy, pandas, scipy and scikit-learn. Write `python/machines/*.py` (bundled with `import.meta.glob('…/python/machines/**/*.py', { query: '?raw', eager: true })`) to `/home/pyodide/machines/`. Write the datasets from `course.ts`. Install the hooks. Send `ready`. Before each run, call `pyodide.loadPackagesFromImports(source)` (this is how matplotlib loads lazily), then `machines.run`. Translate `emit` dicts to messages with `toJs({ dict_converter: Object.fromEntries })`, then replace `undefined` (Python `None`) with `null` and BigInt with Number. Datasets are fetched from `/datasets/<name>` (`packages/web/public/datasets/`, a copy of `fixtures/data/listings.csv`). The worker keeps a stack of open calls so `on_exit(i)` restores the outer call in `currentCall`. The interrupt buffer is zeroed at the start and end of each run. `file` messages return a CSV row count of non-empty lines minus the header.
+**Worker** (`runtime/worker.ts`) on start: load the self-hosted Pyodide from `/pyodide/` with progress messages. Load numpy, pandas, scipy and scikit-learn. Write `python/machines/*.py` (bundled with `import.meta.glob('…/python/machines/**/*.py', { query: '?raw', eager: true })`) to `/home/pyodide/machines/`. Write the datasets from `course.ts`. Install the hooks. Send `ready`. Before each run, call `pyodide.loadPackagesFromImports(source)` (this is how matplotlib loads lazily; while it loads for code that imports matplotlib the worker sends `progress` phase `matplotlib` 0/1, then 1/1, and the status line reads "Loading matplotlib…"), then `machines.run`. Translate `emit` dicts to messages with `toJs({ dict_converter: Object.fromEntries })`, then replace `undefined` (Python `None`) with `null` and BigInt with Number. Datasets are fetched from `/datasets/<name>` (`packages/web/public/datasets/`, a copy of `fixtures/data/listings.csv`). The worker keeps a stack of open calls so `on_exit(i)` restores the outer call in `currentCall`. The interrupt buffer is zeroed at the start and end of each run. `file` messages return a CSV row count of non-empty lines minus the header.
 
 **App store** (`store.ts`, zustand), the single source of state shared by the UI beads:
 
@@ -536,7 +536,7 @@ interface InstanceNode extends NodeBase {
   createdAt: number; // i of the creating event (constructor, a function or method returning it, or an expr)
   createdBy: string | null; // id of the call or expr node that created it (the constructor box, read_csv, a method box inside another box, an expr node); null only for a lazy instance
   params: { name: string; text: string }[]; // constructor const/label args (also ports of the constructor box)
-  versions: { i: number; token: Token }[]; // the instance's versions with the event that made each
+  versions: { i: number; token: Token; kind: 'new' | 'mutate' | 'store' }[]; // the instance's versions with the event that made each; kind: `new` = the first version of an object (a box merged from a loop gets one `new` per pass: v4.0, then v15.0 is another object, not v4.1 changed), `mutate` = a method changed it in place, `store` = an item/attribute assignment did (svl-tcy)
 }
 interface ExprNode extends NodeBase {
   kind: 'expr';
@@ -590,7 +590,7 @@ Construction follows SPEC "Graph construction" with these decisions:
 - `make_pipeline(...)` is a function box whose output creates an instance node (`createdBy`). Step instances wire into it. There are no nested step boxes in M1–3 (decided).
 - A `method` event whose owner is an object (any reference value: data or machine; svl-skw) is a call node with `parent` set to the owner's instance node, owner input (`self`) not drawn as a port. Only a method whose owner is a scalar keeps a `self` in-port.
 - An object passed as an argument (a DataFrame, a model, a list) is an edge from its instance border (`port: null`); the wire's `nameLabel` is null.
-- `returns_self` gives no out-port. `mutates` on any object only adds a version `{ i, token: after }` to its instance (svl-skw: data no longer gets an `out:mut:` port; `Port.changedInPlace` and `out:mut:` ids remain in the type but are produced only for a non-object `before`, which the recorder does not emit).
+- `returns_self` gives no out-port. `mutates` on any object only adds a version `{ i, token: after, kind: 'mutate' }` to its instance; a `store` event whose output object already has a box adds `{ i, token: out, kind: 'store' }` (svl-tcy); the first version of each object is `kind: 'new'` (svl-skw: data no longer gets an `out:mut:` port; `Port.changedInPlace` and `out:mut:` ids remain in the type but are produced only for a non-object `before`, which the recorder does not emit).
 - Expr nodes whose output reaches no call/store/instance node are dropped, transitively. An expr whose output is an object creates that object's instance (`createdBy` = the expr node id, creating edge from `port: null`, dashed), so it is kept; an expr that returns an object which already has a box adds no box and no edge.
 - More than `MAX_NODES` (600) nodes after merging and folding: return only the first 600 by `order`, set `tooMany` to the total and `truncated` to `{shown, total, line}`; the diagram pane and the event list say "Showing the first N boxes (up to line L)". 600 is where the dense worst case (every box 3 ports and 3 wires, 24 instances with children) still lays out in under 10 s; the 98-line pandas fixture `large_pandas` has 460 boxes unfolded (364 folded), about 0.7 s.
 - Port and node ids are stable across re-runs of the same source, so the layout stays put. Ids are `n:<h>` (call), `i:<h>` (instance), `x:<h>` (expr), `t:<h>` (store), `src:<consumer id>:<param>` (source), with `<h>` = hash of the site's kind and text plus the occurrence number among sites with equal text. They use no site ids or tokens, so editing an unrelated line (even adding one) keeps them. Port ids: `in:<param>`, `out:<k>` (k = index in `outputs`), `out:mut:<param>` (changed in place).
@@ -627,6 +627,7 @@ interface StepState {
   activeExecution: Map<string, Execution>; // per node: latest execution with i <= current
   activeToken: Map<string, Token>; // per edge
   activeVersion: Map<string, Token>; // per visible instance node: its latest version token with version.i <= current (draw attrs from log.values[token].attrs; a data box's rows come from the same summary: shape, dtype or columns)
+  objectBadge: Map<string, { k: number; n: number }>; // boxes holding more than one object (versions of kind `new`, n > 1): k = 1-based position of the active object, n = total; drawn as "2 of 3 objects" while stepping, "×3 objects" at the end (svl-tcy)
   currentNode: string | null; // node of the current event: the call/expr/store box that executed, or the instance created or mutated by it; null at step 0
   attrsBefore?: Record<string, Token>;
   attrsAfter?: Record<string, Token>; // when current is a method on an instance

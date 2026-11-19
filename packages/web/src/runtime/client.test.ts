@@ -9,7 +9,7 @@ import {
   statusAfterDone,
   type WorkerLike,
 } from './client';
-import { elapsedLabel, progressText, versionsText } from './status';
+import { elapsedLabel, loadsMatplotlib, progressText, versionsText } from './status';
 
 class FakeWorker implements WorkerLike {
   onmessage: WorkerLike['onmessage'] = null;
@@ -540,6 +540,15 @@ describe('pure helpers', () => {
     expect(versionsText({ python: '3.14.0', numpy: '2.0', pandas: '3.0', sklearn: '1.8' })).toBe(
       'Python 3.14.0 · numpy 2.0 · pandas 3.0 · scikit-learn 1.8',
     );
+    expect(progressText({ type: 'progress', phase: 'matplotlib', done: 0, total: 1 })).toBe(
+      'Loading matplotlib…',
+    );
+    expect(progressText({ type: 'progress', phase: 'matplotlib', done: 1, total: 1 })).toBe(
+      'Running…',
+    );
+    expect(loadsMatplotlib('Loading numpy, matplotlib, pytz')).toBe(true);
+    expect(loadsMatplotlib('Loading numpy, pandas')).toBe(false);
+    expect(loadsMatplotlib('Loaded matplotlib')).toBe(false);
     expect(elapsedLabel(1999)).toBeNull();
     expect(elapsedLabel(3400)).toBe('3 s');
   });

@@ -63,15 +63,18 @@
       "versions": [
         {
           "i": 0,
-          "token": "v0.0"
+          "token": "v0.0",
+          "kind": "new"
         },
         {
           "i": 2,
-          "token": "v0.1"
+          "token": "v0.1",
+          "kind": "mutate"
         },
         {
           "i": 3,
-          "token": "v0.2"
+          "token": "v0.2",
+          "kind": "mutate"
         }
       ]
     },

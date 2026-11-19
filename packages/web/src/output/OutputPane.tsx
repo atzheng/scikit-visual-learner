@@ -81,7 +81,7 @@ export function OutputPane(props: { editor: RefObject<EditorController | null> }
                       src={`data:image/png;base64,${it.png}`}
                       width={it.width}
                       height={it.height}
-                      alt={`Figure ${it.n}`}
+                      alt={it.i >= 0 ? `Figure ${it.n} (event ${it.i})` : `Figure ${it.n}`}
                     />
                     <figcaption>Figure {it.n}</figcaption>
                   </figure>
