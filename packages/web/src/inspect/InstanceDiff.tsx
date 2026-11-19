@@ -1,5 +1,7 @@
 import { stateAt, type ValueSummary } from '@machines/log';
-import { useEffect, useMemo, useState } from 'react';
+import { attrDocTarget } from '@machines/render';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { DocsOpenerContext } from '../docs/opener';
 import { useStore } from '../store';
 import { clampStep } from '../timeline/steps';
 import './inspect.css';
@@ -18,6 +20,7 @@ export function InstanceDiff() {
   const selected = useStore((s) => s.selection.node);
   const [open, setOpen] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<string | null>(null);
+  const openDocsFn = useContext(DocsOpenerContext);
 
   const state = useMemo(
     () => (model && log ? stateAt(model, log, clampStep(step, model.steps.length)) : null),
@@ -46,6 +49,9 @@ export function InstanceDiff() {
   const title = target.node.varName ?? target.node.className;
   const changedCount = rows.filter((r) => r.changed).length;
   const toggle = (id: string) => setOpen(open === id ? null : id);
+  const openDocs = (name: string) => {
+    if (model && openDocsFn) openDocsFn(attrDocTarget(model, target.node, name), target.node.id);
+  };
 
   return (
     <aside className="inspect-panel" aria-label={`Attributes of ${title}`}>
@@ -84,6 +90,7 @@ export function InstanceDiff() {
                 values={log.values}
                 open={open}
                 onToggle={toggle}
+                onDocs={openDocsFn ? openDocs : undefined}
               />
             ))}
           </tbody>
@@ -97,18 +104,25 @@ export function InstanceDiff() {
  * One attribute: its name (never broken mid-word: it is cut with an ellipsis and carries a title), the
  * before and after values as buttons, and the inline preview of the value that is open.
  */
+/** `valueLine` shows a type (and shape) rather than a repr: draw it with the type signifier (svl-465). */
+const isTypeLine = (v: ValueSummary | undefined): boolean =>
+  v !== undefined && !(v.repr !== undefined && v.shape === undefined);
+
 export function AttrRowView({
   row,
   call,
   values,
   open,
   onToggle,
+  onDocs,
 }: {
   row: AttrRow;
   call: boolean;
   values: Record<string, ValueSummary>;
   open: string | null;
   onToggle(id: string): void;
+  /** Opens the docs of this attribute (the "?" button, or the "?" key on the row). */
+  onDocs?(name: string): void;
 }) {
   const cell = (side: 'before' | 'after', tok: string | null, changed: boolean) => {
     if (tok === null) return <span className="pv-none">not set</span>;
@@ -121,7 +135,11 @@ export function AttrRowView({
         title="Show a preview of this value"
         onClick={() => onToggle(id)}
       >
-        {valueLine(values[tok])}
+        {isTypeLine(values[tok]) ? (
+          <span className="md-type-tag">{valueLine(values[tok])}</span>
+        ) : (
+          valueLine(values[tok])
+        )}
       </button>
     );
   };
@@ -133,7 +151,15 @@ export function AttrRowView({
         : undefined;
   return (
     <>
-      <tr className={row.changed ? 'changed' : undefined}>
+      <tr
+        className={row.changed ? 'changed' : undefined}
+        onKeyDown={(e) => {
+          if (e.key === '?' && onDocs && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            e.preventDefault();
+            onDocs(row.name);
+          }
+        }}
+      >
         <th scope="row">
           {row.changed && (
             <span className="inspect-flag">
@@ -141,9 +167,23 @@ export function AttrRowView({
               <span className="inspect-changed">changed</span>
             </span>
           )}
-          <code className="inspect-name" title={row.name}>
-            {row.name}
-          </code>
+          <div className="inspect-namerow">
+            <code className="inspect-name" title={row.name}>
+              {row.name}
+            </code>
+            {onDocs && (
+              <button
+                type="button"
+                className="inspect-docs"
+                aria-label={`Documentation for ${row.name}`}
+                aria-keyshortcuts="?"
+                title="Show documentation"
+                onClick={() => onDocs(row.name)}
+              >
+                ?
+              </button>
+            )}
+          </div>
         </th>
         {call && <td>{cell('before', row.before, false)}</td>}
         <td>{cell('after', row.after, row.changed)}</td>

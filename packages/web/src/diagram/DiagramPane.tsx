@@ -16,6 +16,7 @@ import {
   moreMethodsFor,
   type DiagramController,
   type Laid,
+  type MethodDocTarget,
 } from '@machines/render';
 import elkWorkerUrl from 'elkjs/lib/elk-worker.min.js?url';
 import {
@@ -28,6 +29,7 @@ import {
 } from 'react';
 import { DocsPanel } from '../docs/DocsPanel';
 import { docRequest } from '../docs/model';
+import { DocsOpenerContext } from '../docs/opener';
 import { useStore } from '../store';
 import { clampStep, nodeForSite, stepForKey } from '../timeline/steps';
 import './diagram.css';
@@ -159,6 +161,10 @@ export function DiagramPane({
     docsOpener.current = null;
     if (o instanceof HTMLElement || o instanceof SVGElement) o.focus();
   }, []);
+  const openDocs = useCallback((t: MethodDocTarget, nodeId: string) => {
+    docsOpener.current ??= document.activeElement;
+    setDocs({ target: docRequest(t, useStore.getState().runSource), nodeId });
+  }, []);
   const latest = useRef({ onHoverEdge, onClickEdge });
   latest.current = { onHoverEdge, onClickEdge };
 
@@ -231,13 +237,7 @@ export function DiagramPane({
     if (!stage) return;
     const ctl = mount(stage, {
       onSelectNode: (id) => useStore.getState().selectNode(id),
-      onOpenDocs: (t, nodeId) => {
-        docsOpener.current ??= document.activeElement;
-        setDocs({
-          target: docRequest(t, useStore.getState().runSource),
-          nodeId,
-        });
-      },
+      onOpenDocs: openDocs,
       onHoverEdge: (id, at) => latest.current.onHoverEdge?.(id, at),
       onClickEdge: (id) => {
         // a folded temporary's chip opens into its box
@@ -582,7 +582,7 @@ export function DiagramPane({
             </p>
           )}
         </div>
-        {children}
+        <DocsOpenerContext.Provider value={openDocs}>{children}</DocsOpenerContext.Provider>
         {docs && (
           <DocsPanel
             target={docs.target}
