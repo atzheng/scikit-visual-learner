@@ -1,19 +1,19 @@
-# Machine Diagrams: Client-Side Execution Visualizer for Python + scikit-learn — Spec
+# Code Diagrams: Client-Side Execution Visualizer for Python + scikit-learn — Spec
 
 Nov 18, 2026 · @Andy · revision 2
 
 ## Overview
 
-Machine Diagrams runs a student's real Python + scikit-learn code entirely in the browser and draws each call as a "machine": a box with typed inputs and outputs, wired to the machines that produced and consume its values. It turns the course's slide metaphor (functions are machines, classes are machines with memory) into a live picture of the student's own program.
+Code Diagrams runs a student's real Python + scikit-learn code entirely in the browser and draws each call as a box with typed inputs and outputs, wired to the calls that produced and consume its values. It turns the course's slide metaphor (a function takes inputs and gives outputs; an object of a class also has memory) into a live picture of the student's own program. User-facing text uses the standard words "class", "instance", "object" and "function", never "machine" (owner decision, 2026-11-19).
 
 Existing tools cover the neighbours but not this view. Python Tutor and Thonny show memory state line by line; Pandas Tutor shows table transformations; scikit-learn's HTML repr shows an estimator's structure and parameters. None that we know of draws the dataflow between library calls with types, shapes and fitted state.
 
 **Goals**
 
 - Run unmodified student code (base Python, pandas, scikit-learn) with no server, and with the same behaviour and output as uninstrumented Python.
-- Draw every library call the student wrote as one machine, with input and output ports labelled by parameter name, type and shape.
-- Draw estimators and student class instances as machines with memory: methods inside, attributes that change when `fit` runs.
-- Draw student-defined functions as machines that look like library ones from outside and expand to show their wiring.
+- Draw every library call the student wrote as one box, with input and output ports labelled by parameter name, type and shape.
+- Draw estimators and student class instances as boxes with memory: methods inside, attributes that change when `fit` runs.
+- Draw student-defined functions as boxes that look like library ones from outside and expand to show their wiring.
 - Never draw a wire that isn't real dataflow. A missing wire is acceptable; a false one is not.
 - Let students step through execution in order, synced with the source.
 
@@ -31,7 +31,7 @@ The page has a code editor (CodeMirror 6) on the left, the diagram on the right 
 
 1. **Load.** Pyodide and the packages start downloading as soon as the page opens. A status line shows progress. The Run button becomes active when the runtime is ready. The editor opens with the course's starter example, or with the student's last code (autosaved to `localStorage`), so the page is never blank.
 2. **Write and run.** The student writes or pastes code and presses Run (or Ctrl/Cmd+Enter). While code runs, Run becomes Stop and an elapsed-time counter appears after 2 seconds. Course datasets are preloaded; an upload button adds the student's own CSVs, which never leave the browser.
-3. **See the diagram.** The full graph of the run appears, with the slider at the end. Function calls are orange boxes, estimators and student class instances are blue boxes containing their method calls, and wires carry type and shape labels with the variable name as a gray subscript. Literal arguments (`test_size=0.2`) are written on the port itself rather than drawn as a separate node. Imported names that a call uses appear as small gray pills at the top, with the module under the name, and a faint dotted wire leads from each to the calls that use it. A legend explains the shapes and colours.
+3. **See the diagram.** The full graph of the run appears, with the slider at the end. Function calls are orange boxes, estimators and student class instances are blue boxes containing their method calls, and wires carry type and shape labels with the variable name as a gray subscript. A constructor (`LinearRegression()`) is an ordinary function box, with a wire to the instance it creates. A method the program has not called yet looks like a called one and carries the small text "not called yet". Literal arguments (`test_size=0.2`) are written on the port itself rather than drawn as a separate node. An imported name shows its module in parentheses in the box that uses it (`read_csv (pandas)`, `LinearRegression (sklearn.linear_model)`); there are no separate import shapes or dotted wires (svl-1x4). A legend explains the shapes: two entries at first (class instance; function or method call), the rest behind a "More" control.
 4. **Step.** Dragging the slider (or pressing ←/→) reveals the graph one event at a time. The current event's box is highlighted, and so is its exact source span in the editor (the call, not just the line). Clicking a box jumps the slider and the editor to that call; placing the cursor on a call in the editor highlights its box.
 5. **Inspect.** Hovering a wire shows a preview of the value: column names and first rows of a DataFrame, or an array's shape and dtype. Clicking pins the preview (touch screens have no hover). Clicking an instance shows its attributes before and after the selected method call; attributes that changed are highlighted.
 6. **Expand.** A student-defined function draws as a collapsed box. Clicking ▸ expands it in place to show its interior; the wires entering it relabel from the caller's names (`data`) to the parameter names (`df`).
@@ -112,7 +112,7 @@ Hook names end in a double underscore so Python's private-name mangling inside c
 - `Return` with a value → `return __ret__(site, <expr>)`.
 - `Global` / `Nonlocal` declarations in a function body set `where="global"` / `"nonlocal"` in the site entries of that function's binds for those names.
 - Statements directly in a class body get no `__bind__` (class attributes are not names in the enclosing scope).
-- `NamedExpr` (`:=`) and `del` are not bound in v1. `import` is not bound either, but each module-level import statement is recorded as an `import` site (no hook; the statement runs unchanged) so the diagram can draw an import node and a faint dotted callee wire from it to each call whose callee goes through the imported name (`pd` to `pd.read_csv`, `LinearRegression` to `LinearRegression()`). A name that is bound anywhere else in the program (rebound, shadowed, star-imported over) gets no node and no wire.
+- `NamedExpr` (`:=`) and `del` are not bound in v1. `import` is not bound either, but each module-level import statement is recorded as an `import` site (no hook; the statement runs unchanged) so the diagram can show the module in parentheses in each call box whose callee goes through the imported name (`pd` to `pd.read_csv`, `LinearRegression` to `LinearRegression()`). A name that is bound anywhere else in the program (rebound, shadowed, star-imported over) gets no node and no wire.
 
 **Hook behaviour**
 
@@ -133,7 +133,7 @@ The recorder decides what to record from the callee's top-level module, using th
 | methods of `str`, `list`, `dict` | no (toggle in settings) |
 | everything else (`math`, `random`, `os`, …) | no, unless the course allowlist adds the module |
 
-Changing a toggle re-runs the code. A call that isn't recorded is treated like any other expression: if its result reaches a machine, it appears as an expression node labelled with its source text (`round(score, 3)`). Hidden calls do not count against the event cap.
+Changing a toggle re-runs the code. A call that isn't recorded is treated like any other expression: if its result reaches a call box, it appears as an expression node labelled with its source text (`round(score, 3)`). Hidden calls do not count against the event cap.
 
 ## Value model
 
@@ -151,7 +151,7 @@ Wires connect the event that produced a value to the events that consumed it. Th
 
 **Tuple returns** are split into separate outputs only when the call is the right-hand side of an unpacking assignment with the same number of targets (`X_train, X_test, y_train, y_test = train_test_split(...)`), or when a student function returns a tuple literal. Otherwise the tuple is one output of type `tuple[n]`.
 
-**Stores.** `__store__` records an event of kind `store`, drawn as a small machine labelled with the target text (`df["age2"] = …`). Its inputs are the old version of the base object and the right-hand side; its output is the new version.
+**Stores.** `__store__` records an event of kind `store`, drawn as a small box, styled like a function call, labelled with the target text (`df["age2"] = …`). Its inputs are the old version of the base object and the right-hand side; its output is the new version.
 
 ## Scoping model
 
@@ -238,7 +238,7 @@ The main thread assembles the streamed messages into one JSON document. It is th
 | `values[*].type` | display type: `DF`, `Series`, `array`, `sparse`, `int`, `float`, `str`, `bool`, `None`, `list[n]`, `dict[n]`, `tuple[n]`, or the class name |
 | `values[*].columns` | DataFrames: column names, up to 50 |
 | `values[*].preview` | DataFrame: first 5 rows × first 8 columns; array or sparse matrix: first 5 × 5 entries; scalars: `reprlib.repr` truncated to 40 characters |
-| `values[*].attrs` | machines only: `{name: token}`. For estimators, constructor parameters plus public attributes ending in `_`. For student classes, all public instance attributes. |
+| `values[*].attrs` | instances with memory only (the summary's `machine` flag): `{name: token}`. For estimators, constructor parameters plus public attributes ending in `_`. For student classes, all public instance attributes. |
 | `events[*].kind` | `function`, `method`, `constructor`, `student_function`, `expr`, `store` |
 | `events[*].i`, `ret` | `i` is the event's index, assigned when the call starts. `ret` is the index of the last event that started before it returned (equal to `i` for a library call). |
 | `inputs[*].param` | the parameter name from `inspect.signature`, indexed for varargs (`arrays[0]`); `arg0`, `arg1`… when binding fails. Only arguments the student passed are listed. |
@@ -254,7 +254,7 @@ The main thread turns the event log into a graph, lays it out with ELK.js, and d
 
 **Objects and scalars**
 
-Every **reference value** (a token like `v12.0`) is an **object** and is drawn as its own blue instance box, one box per object: DataFrames, Series, arrays, sparse matrices, lists, dicts, estimators and student class instances alike (owner decision, 2026-11-18). A **machine with memory** (an instance of `sklearn.base.BaseEstimator` or of a student-defined class; the course configuration can add classes) is the same kind of box with more to show: its parameters and fitted attributes. A **data box** shows what the summary already holds: `shape`, then `dtype` (Series, arrays) or the first few `columns` (DataFrames, cut with "…"). Its title carries the type and the name: `X_train: DF`. Lists, dicts and tuples show only their title (`models: dict[2]`). Click opens the preview (inspect).
+Every **reference value** (a token like `v12.0`) is an **object** and is drawn as its own blue instance box, one box per object: DataFrames, Series, arrays, sparse matrices, lists, dicts, estimators and student class instances alike (owner decision, 2026-11-18). An **object with memory** (an instance of `sklearn.base.BaseEstimator` or of a student-defined class; the course configuration can add classes) is the same kind of box with more to show: its parameters and fitted attributes. A **data box** shows what the summary already holds: `shape`, then `dtype` (Series, arrays) or the first few `columns` (DataFrames, cut with "…"). Its title carries the type and the name: `X_train: DF`. Lists, dicts and tuples show only their title (`models: dict[2]`). Click opens the preview (inspect).
 
 **Scalars** (`s` tokens: numbers, strings, `None`, small tuples) are not boxes. They stay as const text on ports and as labelled wires (`float 0.2`, `r2`).
 
@@ -264,9 +264,9 @@ In-place mutation (`df.dropna(inplace=True)`, `df["c"] = …`) is a **new versio
 
 | Graph element | Built from |
 | --- | --- |
-| Function machine (orange box) | a `function` or `student_function` event; a `constructor` event (`LinearRegression()` or `pd.DataFrame(...)` is an orange box whose args are on input ports and whose output wire creates the instance box) |
+| Function call (orange box) | a `function` or `student_function` event; a `constructor` event (`LinearRegression()` or `pd.DataFrame(...)` is an ordinary orange function box whose args are on input ports and whose output wire creates the instance box; its name carries `(module)` when the program imported it) |
 | Instance box (blue) | one per object, created by the output wire of the call or expression that first returns it: a constructor box, `pd.read_csv`, each of `train_test_split`'s four outputs, `np.mean` returning an array, `make_pipeline`. An object that no recorded event produced appears at its first use. A loop's objects from one call site share one box (instances merge by creating site). |
-| Method machine (orange box inside the blue one) | a `method` event whose owner is that object, whether a model or data. One box per method name and object: `scaler.transform(X_train)` and `scaler.transform(X_test)` share one `transform` box with a ×2 badge, and its wires switch to each call's values as the timeline steps. `df.dropna()` is a `dropna` box inside the `df` box; its output wire creates the next box, `df′`. The boxes for the methods this run calls on an object exist from the moment the object is created, in a "not called yet" state, and become active at their first call. The owner is the box, so it is not a port (no `self`). |
+| Method call (orange box inside the blue one) | a `method` event whose owner is that object, whether a model or data. One box per method name and object: `scaler.transform(X_train)` and `scaler.transform(X_test)` share one `transform` box with a ×2 badge, and its wires switch to each call's values as the timeline steps. `df.dropna()` is a `dropna` box inside the `df` box; its output wire creates the next box, `df′`. The boxes for the methods this run calls on an object exist from the moment the object is created, with the text "not called yet" under the name (the box is drawn solid, like any other), and become active at their first call. The owner is the box, so it is not a port (no `self`). |
 | Input port (top edge) | one per entry in `inputs`: `param` and, for a scalar, its type. `const` inputs are written on the port as `param = text`. An object input shows only `param`: the box it comes from shows the type and shape. Constructor arguments are ports of the constructor box (and also listed in the instance's parameter list). |
 | Output port (bottom edge) | one per entry in `outputs`, labelled with the bound name (and the type, for a scalar). An object output is wired to its new box. In-place mutation has no port: it is a new version of the owner's box. |
 | Wire | from the event that produced a value to each event that consumed it. An object is wired from its box's border: `train_test_split(X, y)` takes the `X` and `y` boxes, `model.fit(X_train, y_train)` takes the `X_train` and `y_train` boxes. Wires from a box carry no label (the box has the name); scalar wires keep `type` and name. |
@@ -297,11 +297,12 @@ The timeline is also a rail in the code gutter (between the line numbers and the
 
 **Visual style** (matching the course slides)
 
-- Function and method boxes: salmon fill, rounded corners, monospace name.
+- Function and method boxes (constructors included): salmon fill, rounded corners, monospace name, with `(module)` in lighter text after the name of an imported function or class. Stores use the same box.
 - Instance boxes: light-blue container, darker-blue name pill at the top (`model: LinearRegression`), attribute list underneath as `name type` with the type in gray.
 - Port labels: type in black monospace, name in gray monospace one line below.
 - Attributes that changed during the selected method call: bold with a ● marker, and a short highlight animation when stepping onto that event.
-- The current event: thicker outline. Events not yet reached: hidden. Errors: red outline with a ⚠ icon, message under the box. An exception the student's code caught: amber outline.
+- The current event: thicker outline. Events not yet reached: hidden. Errors: red outline with a ⚠ icon, message under the box. An exception the student's code caught: the same outline, and the message says it was handled.
+- Few distinct styles on purpose (owner decision, 2026-11-19): two box shapes (orange call, blue instance), solid and dashed wires, one outline style for the current step and one for errors. Nothing is told apart by colour alone.
 - Colours come from CSS variables so a course can theme them.
 
 ## Edge cases and limits
@@ -389,8 +390,8 @@ Each milestone ends with something students could use.
 
 - [x] Method boxes: one per method name and instance (owner decision, 2026-11-18). An instance used twice shows one `transform` box with ×2; the box exists from instantiation, uncalled until its first call.
 - [x] Every object is a blue box, one per object; scalars stay as port text and wire labels (owner decision, 2026-11-18).
-- [ ] Are dashed expression nodes enough for column selection (`X["price"]`) and attribute reads (`model.coef_`), or should those two draw as small machines?
-- [ ] Should pipelines (`make_pipeline(...)`) draw as one instance box containing its steps, using sklearn's own structure, rather than as a function with machine inputs?
+- [ ] Are dashed expression nodes enough for column selection (`X["price"]`) and attribute reads (`model.coef_`), or should those two draw as small boxes?
+- [ ] Should pipelines (`make_pipeline(...)`) draw as one instance box containing its steps, using sklearn's own structure, rather than as a function with instance inputs?
 - [ ] How much of a DataFrame preview is useful on hover before it clutters?
 - [ ] Is a per-course allowlist of drawn modules enough, or do instructors need per-example hide/show controls in the share link?
 - [ ] Are matplotlib figures in the output pane needed for v1, or can they wait?
