@@ -23,6 +23,7 @@ export function layoutSignature(
   model: GraphModel,
   attrRows: Record<string, string[]>,
   edgeLabels: Record<string, string>,
+  moreMethods: Record<string, number> = {},
 ): string {
   const nodes = model.nodes.map((n) => {
     switch (n.kind) {
@@ -38,7 +39,7 @@ export function layoutSignature(
     }
   });
   const edges = model.edges.map((e) => [e.id, e.from, e.to, e.dashed, e.nameLabel]);
-  return JSON.stringify([nodes, edges, attrRows, edgeLabels, model.tooMany ?? 0]);
+  return JSON.stringify([nodes, edges, attrRows, edgeLabels, model.tooMany ?? 0, moreMethods]);
 }
 
 export interface RelayouterOptions<In, Out> {

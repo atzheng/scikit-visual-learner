@@ -566,7 +566,7 @@ Construction follows SPEC "Graph construction" with these decisions:
 
 - Method boxes are one per (owner instance, method name) inside that instance (decided, svl-2gm): two `enc.transform` calls, at the same or different sites, share one `transform` box with `count` 1, 2 and a x2 badge; `for m in models: m.fit(X, y)` gives one `fit` box in each model's instance, and `models["rf"].fit(...)` is drawn on the right instance. Node id is `n:m<h(method name)>@<instance id>`. `count` is per box (the sum over its sites of the site's count minus other boxes' executions at that site). Each execution's wires come from that execution only: a port can have several edges (one per distinct producer), each with its own `uses`; use `StepState.activeEdges` to show only the running execution's wires. `Execution.owner` is the owner token (null for non-methods). A box's `order` is the smallest site order of its calls, and its out-port `nameLabel` is that of the latest execution.
 - A constructor of a machine is an ordinary call node (name e.g. `LinearRegression`, `parent: null`, args on in-ports as for any call) with an `out:0` port, and an edge from that port to the instance border (`createdBy`). The instance's `params` still lists the constructor's const/label args (the attribute list shows them). Constructor args that are references are wired into the constructor box, not the instance. A constructor in a loop gives one box and one instance. The creating edge's single `use` has `i` = the creator's `ret` (the instance has no execution of its own).
-- Method slots: the method boxes of an instance exist in the model from the instance's `createdAt` (`stateAt` shows them from then, in `uncalled`) until the method's first execution. Only methods the run calls on that instance are boxes; an expandable list of other methods is a separate feature.
+- Method slots: the method boxes of an instance exist in the model from the instance's `createdAt` (`stateAt` shows them from then, in `uncalled`) until the method's first execution. Only methods the run calls on that instance are boxes; the class's other public methods are the renderer's "more methods" list (svl-0qe, below).
 - `make_pipeline(...)` is a function box whose output creates an instance node (`createdBy`). Step instances wire into it. There are no nested step boxes in M1–3 (decided).
 - A `method` event whose owner is an object (any reference value: data or machine; svl-skw) is a call node with `parent` set to the owner's instance node, owner input (`self`) not drawn as a port. Only a method whose owner is a scalar keeps a `self` in-port.
 - An object passed as an argument (a DataFrame, a model, a list) is an edge from its instance border (`port: null`); the wire's `nameLabel` is null.
@@ -636,6 +636,7 @@ function layout(
       string,
       string
     > /* type text to reserve per wire label (edgeLabelsFor(model, log)); default a placeholder */;
+    moreMethods?: Record<string, number> /* instance id -> length of its "more methods" list (moreMethodsFor(model, log)); such an instance reserves one control row at the bottom */;
     elk?: ELK; /* createElk({ workerUrl }): elkjs worker build; default: elk.bundled.js, lazily imported, in-thread (Node, tests) */
   },
 ): Promise<Laid>; // expanded ignored until M4
@@ -652,6 +653,8 @@ interface Laid {
       ports: Record<string, { x: number; y: number; w: number /* label width, centred on x */ }>;
       headerH?: number;
       attrsH?: number; /* instances: name pill and attribute list heights, at the top of the box */
+      moreN?: number;
+      moreH?: number; /* instances with a "more methods" list: its length, and the height of the control row at the bottom of the box */
     }
   >;
   edges: Record<string, { points: [number, number][] }>;
@@ -667,12 +670,14 @@ function mount(
     onSelectNode(id: string): void;
     onHoverEdge(id: string | null, at: DOMPoint /* viewport coords */): void;
     onClickEdge(id: string): void;
+    onOpenDocs?(target: { module: string | null; name: string }, nodeId: string): void; // an entry of a "more methods" list was chosen (svl-3ms opens the docs panel from it: `target` is a `DocTarget`, `name` = `Class.method`). When absent the list is plain text
   },
 ): DiagramController;
 interface DiagramController {
   setGraph(model: GraphModel, laid: Laid): void; // builds the SVG once. Re-applies the last state only if every node/edge id in it exists in the new model (a streamed re-layout of the same run keeps its step); otherwise the state is dropped. Callers should call setState right after setGraph. Calls onHoverEdge(null) if a hover was active. After destroy() it is a no-op
   setState(state: StepState, log?: EventLog): void; // reveal, highlight current, badges, active tokens; no re-layout. `log` supplies value types (wire labels) and attributes
   focusNode(id: string): void; // scroll into view (keyboard focus is not moved)
+  toggleMethods(id: string, open?: boolean): void; // open/close the "more methods" list of an instance (the user does it by click, Enter or Space on its control; Escape inside the list closes it and refocuses the control). Open lists survive a re-layout
   hoverNode(id: string | null): void; // hover style (editor cursor sync)
   setSelectedNode(id: string | null): void; // selected style
   nodeBounds(id: string): { x: number; y: number; w: number; h: number } | null; // diagram coordinates
@@ -682,9 +687,19 @@ interface DiagramController {
 function edgeLabelsFor(model: GraphModel, log: EventLog): Record<string, string>; // pass as layout's edgeLabels: longest type text per wire over the run
 function createLegend(doc?: Document, open?: boolean): HTMLElement; // collapsible legend, needs theme.css
 function attrRowsFor(model: GraphModel, log: EventLog): Record<string, string[]>; // pass as layout's attrRows so instance boxes never resize. Machines: params plus attributes; data boxes (svl-skw): `shape (r, c)` and `dtype x` or `columns a, b, c, …` (first columns up to 26 chars), the longest text over the versions
-function dataRowModels(s: ValueSummary | undefined): AttrRow[]; // rows of a data box, from the summary only
+function dataRowModels(s: ValueSummary | undefined): AttrRow[]; // rows of a data box, from the summary only; they carry `data: true` (value in normal text, label muted)
+function moreMethodsFor(model: GraphModel, log: EventLog): Record<string, number>; // pass as layout's moreMethods and re-layout when it changes (the web app includes it in `layoutSignature`)
+function hiddenMethods(model: GraphModel, log: EventLog, inst: InstanceNode): { name: string; doc: string }[]; // the class's `values.methods` (found via any value of the same type) minus the method boxes the instance has; [] unless the instance is a machine (`machine: true`): a data class's list is a capped alphabetical slice, not "other methods"
+function methodDocTarget(model: GraphModel, inst: InstanceNode, method: string): { module: string | null; name: string }; // module of the constructor box (else of a method box), name `Class.method`
+function portViews(model, node: CallNode, exec: Execution | undefined, log): { in: Record<string, PortView>; out: Record<string, PortView> }; // what a call box's ports show for one execution
 function wireTypeLabel(token: Token, values): string; // wire type text: scalars only ('' for an object token)
 ```
+
+**Slots, constructor and shared boxes (svl-0qe).** A call box in `StepState.uncalled` has class `md-uncalled` (dashed outline, lighter fill `--md-uncalled-fill`, ports hidden, name not bold) and `, not called yet` in its aria-label; it turns solid at its first execution. A constructor box (a call node that creates an instance of the class of its own name) has class `md-ctor` and aria-label `constructor <Name>`. An instance of a machine with hidden methods shows a control `▸ more methods (N)` in its last row (a `role=button` group, `tabindex=0`, `aria-expanded`, `data-more=<instance id>`, in a layer above the diagram); opening it draws a list under the box, one entry per method with the one-line doc. Each entry has `data-doc-module`, `data-doc-name`, `data-doc-method` and `data-doc-node`, and is a button (`tabindex=0`) only when `onOpenDocs` is given. The list overlays what is below it and does not change the layout. Data boxes (DataFrame, Series, arrays) get no list (decided): their `methods` are the first 40 alphabetically, not a useful set of other methods; their docs open from the method boxes.
+
+A shared method box draws the running execution only (decided): edges not in `StepState.activeEdges` get class `md-inactive` (faint, label hidden) instead of disappearing, so earlier wires stay as history. The ports of a call box come from `activeExecution`, not the node's latest: a const port shows the `param = text` of that execution's event, a scalar port its value type, an out-port the name bound to the token that execution produced (an object's out-port the name of its box, a scalar's the name label of its out-edge for that token), and a port the execution did not use (no input or output for it) is dimmed (`md-port-unused`). With no execution (an uncalled box) or no log the ports show the graph's own text. A box at the step of its constructor shows the attributes of the object that constructor returned (a constructor in a loop gives one box for all passes), and only a method of an instance marks that instance's attributes as changed. The layout reserves port label widths from the node's latest text, so a wider const text from another execution may be clipped.
+
+An ELK quirk worth knowing: a compound node's `elk.nodeSize.minimum` is read as (height, width) under direction DOWN, so `buildElk` passes `(h,w)`. The other order reserves `w` px of height, which left an empty band under a lone method box in a data box.
 
 ELK options exactly as in SPEC "Layout": `elk.algorithm: layered`, `elk.direction: DOWN`, `elk.portConstraints: FIXED_ORDER` with inputs `NORTH`, outputs `SOUTH` and `elk.port.index` set, `elk.layered.considerModelOrder.strategy: NODES_AND_EDGES` with children sorted by `order`, `elk.hierarchyHandling: INCLUDE_CHILDREN` on the root. Wires entering a method box from outside go through a hierarchical port on the instance's west border below the attribute rows (spaced `laneGap`), so they never cross the header or rows. Wire labels are placed after ELK by `placeLabels` (greedy, deterministic). Node sizes come from measured label text (canvas `measureText` with the theme font) so ELK and SVG agree.
 
@@ -692,7 +707,7 @@ ELK options exactly as in SPEC "Layout": `elk.algorithm: layered`, `elk.directio
 
 `longEdgeLoad` is an estimate: an order-based longest path over the model's nodes, not ELK's own layering. `tierFor(load)` is exported, and `LayoutOptions.minTier` (0|1|2) sets the lowest tier to use. A streaming caller (svl-bwv.4) should keep the tier sticky per run: track the highest tier seen so far (`tierFor(longEdgeLoad(nodes, edges))` per update), pass it as `minTier`, and reset it on a new run, so the layout style does not flip back and forth as the graph grows.
 
-`theme.css` variables: `--md-fn-fill`, `--md-fn-stroke`, `--md-inst-fill`, `--md-inst-pill`, `--md-inst-pill-text`, `--md-wire`, `--md-wire-dashed`, `--md-text`, `--md-text-muted`, `--md-error`, `--md-handled`, `--md-current-stroke-width`, `--md-font-mono`, `--md-bg`, plus `--md-store-fill`, `--md-focus`, `--md-changed-flash`, `--md-badge-fill`, `--md-badge-text`. The file is `packages/render/theme.css`; apps import `@machines/render/theme.css` once. State classes on the SVG: `md-hidden`, `md-current`, `md-error`, `md-handled`, `md-stopped`, `md-hover`, `md-selected`. Light and dark values are set under `prefers-color-scheme` and `[data-theme]`, as SPEC "Visual style" describes. Error boxes carry ⚠ and text; changed attributes carry ●. Nothing is conveyed by colour alone. Animations are off under `prefers-reduced-motion`.
+`theme.css` variables: `--md-fn-fill`, `--md-fn-stroke`, `--md-uncalled-fill`, `--md-inst-fill`, `--md-inst-pill`, `--md-inst-pill-text`, `--md-wire`, `--md-wire-dashed`, `--md-text`, `--md-text-muted`, `--md-error`, `--md-handled`, `--md-current-stroke-width`, `--md-font-mono`, `--md-bg`, plus `--md-store-fill`, `--md-focus`, `--md-changed-flash`, `--md-badge-fill`, `--md-badge-text`. The file is `packages/render/theme.css`; apps import `@machines/render/theme.css` once. State classes on the SVG: `md-hidden`, `md-current`, `md-error`, `md-handled`, `md-stopped`, `md-hover`, `md-selected`, `md-uncalled`, `md-inactive`, `md-port-unused`. Light and dark values are set under `prefers-color-scheme` and `[data-theme]`, as SPEC "Visual style" describes. Error boxes carry ⚠ and text; changed attributes carry ●. Nothing is conveyed by colour alone. Animations are off under `prefers-reduced-motion`.
 
 ## 9. Fixtures, commands and scripts
 

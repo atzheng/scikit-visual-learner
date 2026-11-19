@@ -2,7 +2,14 @@
 import '../theme.css';
 import { buildGraph, eventLabel, stateAt } from '@machines/log';
 import type { EventLog, GraphModel } from '@machines/log';
-import { attrRowsFor, edgeLabelsFor, createLegend, layout, mount } from '../src/index';
+import {
+  attrRowsFor,
+  edgeLabelsFor,
+  moreMethodsFor,
+  createLegend,
+  layout,
+  mount,
+} from '../src/index';
 import type { DiagramController } from '../src/index';
 import { SCENARIOS } from './models';
 
@@ -30,6 +37,7 @@ const controller = (): DiagramController =>
     onHoverEdge: (id, at) =>
       note(id ? `hover ${id} at ${Math.round(at.x)},${Math.round(at.y)}` : 'hover off'),
     onClickEdge: (id) => note(`click wire ${id}`),
+    onOpenDocs: (t, id) => note(`docs ${t.module ?? ''} ${t.name} (from ${id})`),
   }));
 
 function show(step: number): void {
@@ -39,12 +47,20 @@ function show(step: number): void {
   if (st.current !== null) note(eventLabel(log, st.current));
 }
 
+// `?fixture=golden_linreg` loads fixtures/logs/<name>.json instead of a hand-written scenario.
+const fixtures = import.meta.glob('../../../fixtures/logs/*.json', { eager: true }) as Record<
+  string,
+  { default: EventLog }
+>;
 async function load(): Promise<void> {
   const sc = SCENARIOS[Number(scenario.value)]!;
-  log = sc.log();
+  const fx = params.get('fixture');
+  const fixture = fx ? fixtures[`../../../fixtures/logs/${fx}.json`]?.default : undefined;
+  log = fixture ?? sc.log();
   model = buildGraph(log, { expanded: new Set() });
   const laid = await layout(model, {
     attrRows: attrRowsFor(model, log),
+    moreMethods: moreMethodsFor(model, log),
     edgeLabels: edgeLabelsFor(model, log),
   });
   controller().setGraph(model, laid);

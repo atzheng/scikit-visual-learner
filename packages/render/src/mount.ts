@@ -2,7 +2,8 @@
 // `setState` only toggles classes and text, so stepping never re-lays-out.
 import type { EventLog, GraphModel, StepState } from '@machines/log';
 import type { Laid } from './layout';
-import { applyState, buildSvg } from './svg';
+import { applyState, buildSvg, setMoreOpen } from './svg';
+import type { MethodDocTarget } from './svg';
 import type { ApplyContext, SvgDom } from './svg';
 
 export interface MountOptions {
@@ -10,6 +11,12 @@ export interface MountOptions {
   /** `at` is in viewport (client) coordinates, ready for a fixed-position popover. `id` null: the pointer left. */
   onHoverEdge(id: string | null, at: DOMPoint): void;
   onClickEdge(id: string): void;
+  /**
+   * The user chose a method in an instance's "more methods" list (click, Enter or Space). `target` is what
+   * `RuntimeClient.docs` takes (svl-3ms opens the docs panel from it). When this is not given the list
+   * is plain text. The same data is on each entry as `data-doc-module`, `data-doc-name` and `data-doc-method`.
+   */
+  onOpenDocs?(target: MethodDocTarget, nodeId: string): void;
 }
 
 export interface DiagramController {
@@ -18,6 +25,8 @@ export interface DiagramController {
   setState(state: StepState, log?: EventLog): void;
   /** Scroll the box into view (does not move keyboard focus). */
   focusNode(id: string): void;
+  /** Opens (or with `open` false closes) the "more methods" list of an instance. No-op for other ids. */
+  toggleMethods(id: string, open?: boolean): void;
   /** Hover style on a box (editor cursor sync); null clears. */
   hoverNode(id: string | null): void;
   /** Selected style on a box (e.g. the one shown in the inspect panel); null clears. */
@@ -57,6 +66,8 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
   let selectedId: string | null = null;
   let ctx: ApplyContext | null = null;
   let destroyed = false;
+  /** Instances whose "more methods" list is open; kept across a re-layout. */
+  const openMore = new Set<string>();
   const uid = String(uidCounter++);
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const reduced = (): boolean =>
@@ -74,7 +85,40 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
     opts.onHoverEdge(id, at);
   };
 
+  const docTarget = (el: Element | null): [MethodDocTarget, string] | null => {
+    if (!el || !opts.onOpenDocs) return null;
+    const name = el.getAttribute('data-doc-name');
+    if (name === null) return null;
+    return [
+      { module: el.getAttribute('data-doc-module'), name },
+      el.getAttribute('data-doc-node') ?? '',
+    ];
+  };
+  const toggleMore = (id: string, open?: boolean): void => {
+    if (!dom) return;
+    const want = open ?? !openMore.has(id);
+    if (setMoreOpen(dom, id, want)) {
+      if (want) openMore.add(id);
+      else openMore.delete(id);
+    }
+  };
+  /** A user toggle: the panel is moved to the front of its layer, which drops focus, so put it back. */
+  const userToggleMore = (id: string): void => {
+    toggleMore(id);
+    (dom?.nodes.get(id)?.more?.ctl as SVGElement | undefined)?.focus();
+  };
   const onClick = (ev: Event): void => {
+    const doc = closest(ev.target, 'data-doc-name');
+    if (doc) {
+      const t = docTarget(doc);
+      if (t) opts.onOpenDocs?.(t[0], t[1]);
+      return;
+    }
+    const more = closest(ev.target, 'data-more');
+    if (more) {
+      userToggleMore(more.getAttribute('data-more')!);
+      return;
+    }
     const edge = closest(ev.target, 'data-edge');
     if (edge) {
       opts.onClickEdge(edge.getAttribute('data-edge')!);
@@ -85,7 +129,32 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
   };
   const onKeyDown = (ev: Event): void => {
     const k = ev as KeyboardEvent;
+    if (k.key === 'Escape') {
+      // inside an open list: close it and give focus back to its control
+      const wrap = closest(k.target, 'data-more-for');
+      const id = wrap?.getAttribute('data-more-for');
+      if (id && openMore.has(id)) {
+        k.preventDefault();
+        k.stopPropagation();
+        toggleMore(id, false);
+        (dom?.nodes.get(id)?.more?.ctl as SVGElement | undefined)?.focus();
+      }
+      return;
+    }
     if (k.key !== 'Enter' && k.key !== ' ') return;
+    const docEl = closest(k.target, 'data-doc-name');
+    if (docEl && docEl === k.target) {
+      k.preventDefault();
+      const t = docTarget(docEl);
+      if (t) opts.onOpenDocs?.(t[0], t[1]);
+      return;
+    }
+    const moreEl = closest(k.target, 'data-more');
+    if (moreEl && moreEl === k.target) {
+      k.preventDefault();
+      userToggleMore(moreEl.getAttribute('data-more')!);
+      return;
+    }
     const edge = closest(k.target, 'data-edge');
     const node = closest(k.target, 'data-node');
     // only act on the focused element itself, so Enter in a nested control is left alone
@@ -146,7 +215,7 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
       if (hoverEdge) setHoverEdge(null, point(0, 0));
       if (dom) for (const [t, f] of listeners) dom.svg.removeEventListener(t, f);
       dom?.svg.remove();
-      dom = buildSvg(doc, m, laid, uid);
+      dom = buildSvg(doc, m, laid, uid, { docs: opts.onOpenDocs !== undefined });
       for (const [t, f] of listeners) dom.svg.addEventListener(t, f);
       el.append(dom.svg);
       hoverEdge = null;
@@ -166,6 +235,7 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
       };
       applyNodeClass(hoverNodeId, 'md-hover');
       applyNodeClass(selectedId, 'md-selected');
+      for (const id of [...openMore]) if (!setMoreOpen(dom, id, true)) openMore.delete(id);
       // Keep the step across a re-layout of the same run (streamed updates), but only when every id the
       // state refers to exists in the new model; otherwise drop it, and the caller sets a fresh state.
       if (lastState) {
@@ -187,6 +257,9 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
       if (!dom || !ctx) return;
       ctx.reducedMotion = reduced();
       applyState(dom, state, lastLog, ctx);
+    },
+    toggleMethods(id, open) {
+      if (!destroyed) toggleMore(id, open);
     },
     focusNode(id) {
       const g = dom?.nodes.get(id)?.g;
@@ -220,6 +293,7 @@ export function mount(el: HTMLElement, opts: MountOptions): DiagramController {
       dom?.svg.remove();
       dom = null;
       lastState = null;
+      openMore.clear();
       hoverEdge = null;
       hoverNodeId = null;
       selectedId = null;

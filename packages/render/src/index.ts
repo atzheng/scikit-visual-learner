@@ -20,6 +20,7 @@ export {
 export type { Laid, LaidLabel, LaidNode, LaidPort, LayoutOptions, Measure } from './layout';
 export { mount } from './mount';
 export type { DiagramController, MountOptions } from './mount';
+export type { MethodDocTarget, MethodEntry, PortView } from './svg';
 export { createLegend, createLegendList, LEGEND_ITEMS } from './legend';
 export {
   attrRowsFor,
@@ -30,6 +31,12 @@ export {
   changedAttrs,
   wrapText,
   instanceRowModels,
+  dataRowModels,
+  hiddenMethods,
+  moreMethodsFor,
+  methodDocTarget,
+  portViews,
+  setMoreOpen,
   labelAnchor,
   roundedPath,
   statusOf,
