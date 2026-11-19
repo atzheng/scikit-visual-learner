@@ -67,7 +67,10 @@ async function load(): Promise<void> {
   model = buildGraph(log, { expanded: new Set() });
   if (params.get('view') === 'twopane') {
     twoPane?.destroy();
-    twoPane = await mountTwoPane($('stage'), model, log);
+    twoPane = await mountTwoPane($('stage'), model, log, {
+      onSelectNode: (id) => note(`select ${id}`),
+      onOpenDocs: (t, id) => note(`docs ${t.module ?? ''} ${t.name} (from ${id})`),
+    });
     slider.max = String(model.steps.length);
     const at = params.get('step');
     slider.value = at === null ? String(model.steps.length) : at;

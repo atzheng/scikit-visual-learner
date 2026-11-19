@@ -505,6 +505,9 @@
   font-family: var(--md-font-mono);
   font-size: 12px;
 }
+.md-stage {
+  overflow-x: auto; /* a wide line scrolls inside the stage (narrow windows) */
+}
 .md-stage,
 .md-shelf-sec {
   border: 1px solid var(--md-inst-stroke);

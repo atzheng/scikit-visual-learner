@@ -413,7 +413,12 @@ export async function mountTwoPane(
   stageNotes.setAttribute('aria-live', 'polite');
   const canvas = el(doc, 'div', 'md-stage-canvas');
   const stageEmpty = el(doc, 'p', 'md-stage-empty', 'Step to a line to see what it does here.');
-  const wiresSvg = sv(doc, 'svg', { 'aria-hidden': 'true' }, 'md-diagram md-stage-wires');
+  const wiresSvg = sv(
+    doc,
+    'svg',
+    { 'aria-hidden': 'true', tabindex: -1 },
+    'md-diagram md-stage-wires',
+  );
   const valuesEl = el(doc, 'div', 'md-stage-values');
   valuesEl.setAttribute('role', 'list');
   valuesEl.setAttribute('aria-label', 'Values');
@@ -470,6 +475,12 @@ export async function mountTwoPane(
         dropped: 0,
       });
     }
+    // the card's focus target is its box (labelled per step in `setStep`); the svg itself is no landmark
+    ctl?.svg?.removeAttribute('aria-label');
+    ctl?.svg?.setAttribute('role', 'presentation');
+    ctl?.svg?.setAttribute('tabindex', '-1'); // some browsers put an svg root in the Tab order
+    const g = wrap.querySelector('.md-node');
+    g?.setAttribute('tabindex', '-1'); // roving: see `rove`
     const c: Card = { key, node, object, wrap, ctl, size };
     cards.set(key, c);
     return c;
@@ -497,7 +508,6 @@ export async function mountTwoPane(
     ph.style.height = `${card.size.h}px`;
     ph.style.margin = `${CARD_PAD.t}px ${CARD_PAD.r}px ${CARD_PAD.b}px ${CARD_PAD.l}px`;
     const label = byId.get(e.node) ? slotLabel(byId.get(e.node)!) : e.node;
-    ph.setAttribute('aria-label', `${label}, on the stage`);
     ph.append(
       el(doc, 'span', 'md-slot-ph-name', label),
       el(doc, 'span', 'md-slot-ph-text', 'on the stage'),
@@ -513,6 +523,7 @@ export async function mountTwoPane(
   const markerId = `md-arrow-tp-${uid++}`;
   let current = 0;
   let plan: StagePlan | null = null;
+  let curBox: Card | null = null;
   let onStage = new Map<string, { card: Card | null; item: PlanItem }>();
   let destroyed = false;
 
@@ -574,6 +585,7 @@ export async function mountTwoPane(
         onStage.set(it.key, { card: stageCardOf(it.participant), item: it });
     }
     const boxCard = plan?.box && stage ? makeCard(stage.node, stage.node, null) : null;
+    curBox = boxCard;
 
     // 2. put every element where it belongs
     for (const slot of slots.values()) {
@@ -645,12 +657,139 @@ export async function mountTwoPane(
       const state: StepState = { ...st, visibleNodes: visible, objectBadge };
       c.ctl?.setState(state, log, { owns, versionOf });
       c.wrap.hidden = visible.size === 0;
+      // unique accessible names: what the card is and what it does on this line (the wires are not read out)
+      const g = focusOf(c.wrap);
+      if (g && !c.wrap.hidden) {
+        const suffix = stageCard
+          ? roleSuffix(stageCard.item.participant, stage)
+          : isBox
+            ? 'current line'
+            : 'on the shelf';
+        g.setAttribute('aria-label', `${g.getAttribute('aria-label') ?? ''}, ${suffix}`);
+      }
     }
+    for (const [key, chip] of chipEls) {
+      const it = onStage.get(key);
+      if (it && !chip.hidden)
+        chip.setAttribute(
+          'aria-label',
+          `${chip.getAttribute('aria-label') ?? ''}, ${roleSuffix(it.item.participant, stage)}`,
+        );
+    }
+    rove();
     if (hadFocus && active instanceof HTMLElement && active.isConnected === false) {
       const again = root.querySelector('[tabindex="0"]');
       if (again instanceof HTMLElement && !root.contains(doc.activeElement)) again.focus();
     }
   }
+
+  const focusOf = (wrap: HTMLElement): HTMLElement | null =>
+    wrap.matches('.md-chipcard') ? wrap : wrap.querySelector<HTMLElement>('.md-node');
+
+  function roleSuffix(p: StageParticipant, stage: StageModel | null): string {
+    const n = stage ? byId.get(stage.node) : undefined;
+    const what =
+      !n || n.kind === 'instance'
+        ? null
+        : n.kind === 'call'
+          ? n.name
+          : n.kind === 'import'
+            ? `import ${n.name}`
+            : n.kind === 'expr' || n.kind === 'store'
+              ? n.text
+              : null;
+    switch (p.role) {
+      case 'input':
+        return p.param ? `input to ${p.param}` : 'input';
+      case 'owner':
+        return what ? `owner of ${what}` : 'changed on this line';
+      case 'output':
+        return what ? `output of ${what}` : 'output';
+      case 'created':
+        return what ? `created by ${what}` : 'created on this line';
+    }
+  }
+
+  // Roving tabindex (one Tab stop for the shelf, one for the stage); arrows move between cards.
+  const active: Record<'shelf' | 'stage', HTMLElement | null> = { shelf: null, stage: null };
+  function members(region: 'shelf' | 'stage'): HTMLElement[] {
+    const out: HTMLElement[] = [];
+    const add = (w: HTMLElement | undefined): void => {
+      const f = w && !w.hidden ? focusOf(w) : null;
+      if (f) out.push(f);
+    };
+    if (region === 'shelf') {
+      for (const slot of slots.values())
+        if (!slot.el.hidden && slot.card.wrap.parentElement === slot.el) add(slot.card.wrap);
+    } else if (plan) {
+      const by = (r: (x: StageParticipant) => boolean): void => {
+        for (const it of plan!.items)
+          if (r(it.participant))
+            add(it.participant.kind === 'chip' ? chipEls.get(it.key) : cards.get(it.key)?.wrap);
+      };
+      by((p) => p.role === 'input');
+      by((p) => p.role === 'owner');
+      if (curBox) add(curBox.wrap);
+      by((p) => p.role === 'output' || p.role === 'created');
+    }
+    return out;
+  }
+  function rove(): void {
+    for (const c of cards.values()) focusOf(c.wrap)?.setAttribute('tabindex', '-1');
+    for (const c of chipEls.values()) c.setAttribute('tabindex', '-1');
+    for (const region of ['shelf', 'stage'] as const) {
+      const m = members(region);
+      if (region === 'shelf')
+        // two unnamed objects of one class would read the same: add the position
+        m.forEach((f, k) =>
+          f.setAttribute(
+            'aria-label',
+            `${f.getAttribute('aria-label') ?? ''}, ${k + 1} of ${m.length}`,
+          ),
+        );
+      const keep = active[region];
+      active[region] = keep && m.includes(keep) ? keep : (m[0] ?? null);
+      active[region]?.setAttribute('tabindex', '0');
+    }
+  }
+  const regionOf = (t: Element): 'shelf' | 'stage' | null =>
+    t.closest('.md-shelf') ? 'shelf' : t.closest('.md-stage-canvas') ? 'stage' : null;
+  const onFocusIn = (ev: Event): void => {
+    const t = ev.target;
+    if (!(t instanceof Element)) return;
+    const region = regionOf(t);
+    const card = t.closest('.md-card, .md-chipcard');
+    if (!region || !card) return;
+    const f = focusOf(card as HTMLElement);
+    if (!f || f === active[region]) return;
+    active[region]?.setAttribute('tabindex', '-1');
+    active[region] = f;
+    f.setAttribute('tabindex', '0');
+  };
+  const onKey = (ev: Event): void => {
+    const k = ev as KeyboardEvent;
+    if (k.ctrlKey || k.metaKey || k.altKey || k.shiftKey || !(k.target instanceof Element)) return;
+    const region = regionOf(k.target);
+    if (!region) return;
+    const m = members(region);
+    const at = m.indexOf(k.target as HTMLElement);
+    if (at < 0) return; // inside a card: its own arrow keys and Escape (mount.ts)
+    let to: HTMLElement | undefined;
+    if (k.key === 'ArrowRight') to = m[Math.min(at + 1, m.length - 1)];
+    else if (k.key === 'ArrowLeft') to = m[Math.max(at - 1, 0)];
+    else if (k.key === 'Home') to = m[0];
+    else if (k.key === 'End') to = m[m.length - 1];
+    else if (k.key === 'Enter') {
+      // dive into the card's rows; Escape comes back to the card
+      to = k.target.querySelector<HTMLElement>('[data-doc-attr]:not(.md-hidden)') ?? undefined;
+      if (!to) return;
+    } else return;
+    k.preventDefault();
+    k.stopPropagation();
+    to?.focus();
+  };
+  root.addEventListener('focusin', onFocusIn);
+  root.addEventListener('keydown', onKey, true);
 
   function place(wrap: HTMLElement, r: Rect, padded: boolean): void {
     const l = padded ? CARD_PAD.l : 0;
@@ -771,9 +910,13 @@ export async function mountTwoPane(
       for (const c of cards.values()) {
         const entry = slots.get(c.node);
         const st = onStage.get(c.key);
-        const isStageBox = plan?.box !== null && !st && c.wrap.parentElement === canvas;
+        const isBox = c === curBox && !st && plan?.box != null;
         const where: CardInfo['where'] =
-          st || isStageBox ? 'stage' : c.wrap.hidden || !c.wrap.isConnected ? 'hidden' : 'shelf';
+          c.wrap.closest('[hidden]') || !c.wrap.isConnected
+            ? 'hidden'
+            : c.wrap.parentElement === canvas
+              ? 'stage'
+              : 'shelf';
         let shelfRect: Rect | null = null;
         if (entry && !entry.el.hidden) {
           const ref = entry.el.firstElementChild;
@@ -783,12 +926,13 @@ export async function mountTwoPane(
           );
         }
         let stageRect: Rect | null = null;
-        if (st)
+        const r = st ? st.item.rect : isBox ? plan!.box : null;
+        if (r && where === 'stage')
           stageRect = {
-            x: canvasAt.left - base.left + st.item.rect.x - CARD_PAD.l,
-            y: canvasAt.top - base.top + st.item.rect.y - CARD_PAD.t,
-            w: st.item.rect.w + CARD_PAD.l + CARD_PAD.r,
-            h: st.item.rect.h + CARD_PAD.t + CARD_PAD.b,
+            x: canvasAt.left - base.left + r.x - CARD_PAD.l,
+            y: canvasAt.top - base.top + r.y - CARD_PAD.t,
+            w: r.w + CARD_PAD.l + CARD_PAD.r,
+            h: r.h + CARD_PAD.t + CARD_PAD.b,
           };
         out.push({
           key: c.key,
@@ -803,6 +947,8 @@ export async function mountTwoPane(
     },
     destroy() {
       destroyed = true;
+      root.removeEventListener('focusin', onFocusIn);
+      root.removeEventListener('keydown', onKey, true);
       for (const c of cards.values()) c.ctl?.destroy();
       cards.clear();
       root.remove();

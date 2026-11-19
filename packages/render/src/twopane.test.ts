@@ -159,7 +159,7 @@ describe('planStage (pure)', () => {
 
 describe('every fixture, every step', () => {
   for (const name of names) {
-    test(name, async () => {
+    test(name, { timeout: 60000 }, async () => {
       const { model, log } = await open(name);
       for (let s = 0; s <= model.steps.length; s++) {
         tp!.setStep(s);
@@ -181,6 +181,26 @@ describe('every fixture, every step', () => {
         const stage = stageAt(model, log, s);
         expect((host.querySelector('.md-stage-empty') as HTMLElement).hidden).toBe(stage !== null);
         expect(host.querySelectorAll('.md-shelf .md-wire')).toHaveLength(0);
+        // cards() agrees with what is visible, and a card on the stage has a stage rectangle
+        for (const c of tp!.cards()) {
+          const el = tp!.card(c.key)!;
+          const hidden = el.closest('[hidden]') !== null;
+          expect(c.where === 'hidden').toBe(hidden);
+          if (c.where === 'stage') expect(c.stage).not.toBeNull();
+          if (c.where === 'shelf') expect(el.parentElement!.matches('.md-slot')).toBe(true);
+        }
+        // one Tab stop per pane; every visible focus target has its own name
+        for (const pane of ['.md-shelf', '.md-stage-canvas']) {
+          const stops = [...host.querySelectorAll(`${pane} [tabindex="0"]`)].filter(
+            (e) => !e.closest('[hidden]') && !e.closest('.md-hidden'),
+          );
+          expect(stops.length).toBeLessThanOrEqual(1);
+        }
+        const names = [...host.querySelectorAll('.md-node[aria-label], .md-chipcard')]
+          .filter((e) => !e.closest('[hidden]') && !e.classList.contains('md-hidden'))
+          .map((e) => e.getAttribute('aria-label'));
+        expect(names.filter((n, k) => names.indexOf(n) !== k)).toEqual([]);
+        expect(host.querySelector('[aria-label="Diagram of the program"]')).toBeNull();
         if (stage?.dropped)
           expect(host.querySelector('.md-stage-notes')!.textContent).toContain('not shown');
       }
@@ -266,6 +286,30 @@ describe('mount', () => {
     expect(host.querySelector('[aria-label="Current line"]')).not.toBeNull();
     expect(host.querySelector('[aria-label="Objects"]')).not.toBeNull();
     expect(host.querySelectorAll('.md-shelf [tabindex="0"]').length).toBeGreaterThan(0);
+  });
+
+  test('keyboard: arrows move between shelf cards, Enter dives in, labels say the role', async () => {
+    const { model } = await open('golden_linreg');
+    tp!.setStep(model.steps.length);
+    const stops = [...host.querySelectorAll<HTMLElement>('.md-shelf .md-node')].filter(
+      (e) => !e.closest('[hidden]'),
+    );
+    expect(stops.filter((e) => e.getAttribute('tabindex') === '0')).toHaveLength(1);
+    const first = stops.find((e) => e.getAttribute('tabindex') === '0')!;
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    const second = host.ownerDocument.activeElement as HTMLElement;
+    expect(second).not.toBe(first);
+    expect(second.getAttribute('tabindex')).toBe('0');
+    expect(first.getAttribute('tabindex')).toBe('-1');
+    expect(second.getAttribute('aria-label')).toContain('on the shelf');
+    // the stage names each card's role
+    tp!.setStep(10);
+    const labels = [...host.querySelectorAll('.md-stage-canvas .md-node')].map((e) =>
+      e.getAttribute('aria-label'),
+    );
+    expect(labels.some((l) => /input to X/.test(l ?? ''))).toBe(true);
+    expect(labels.some((l) => /owner of/.test(l ?? ''))).toBe(true);
   });
 
   test('destroy removes everything', async () => {
