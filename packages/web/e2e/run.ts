@@ -51,7 +51,7 @@ async function step(name: string, f: () => Promise<void>): Promise<void> {
     await f();
     results.push({ name, ok: true, note: `${((Date.now() - t0) / 1000).toFixed(1)} s` });
   } catch (e) {
-    const note = (e instanceof Error ? e.message : String(e)).split('\n')[0] ?? '';
+    const note = (e instanceof Error ? e.message : String(e)).split('\n').slice(0, 8).join(' | ');
     results.push({ name, ok: false, note });
   }
   const r = results[results.length - 1]!;
@@ -350,11 +350,19 @@ async function main(): Promise<void> {
       }
       check(fit > 0, 'no .fit step');
       await settle(page); // Follow pans the diagram after a step; a click while it moves misses
-      await page
+      const id = await page
         .locator('g.md-node[data-kind="instance"]:not(.md-hidden)')
         .filter({ hasText: 'LinearRegression' })
         .first()
-        .click({ timeout: 5000 });
+        .getAttribute('data-node');
+      check(id, 'no visible LinearRegression box');
+      // The instance's frame is drawn in a background layer, so the group's own centre is covered by
+      // that layer's rect (same data-node) and by the calls inside. A real click on the frame's lower
+      // left corner (inside the pane, clear of the calls) is what a student does.
+      const frame = page.locator(`rect.md-inst-box[data-node="${id}"]`);
+      const bb = await frame.boundingBox();
+      check(bb, 'the LinearRegression frame has no box');
+      await page.mouse.click(bb.x + 8, bb.y + bb.height - 8);
       const panel = page.getByRole('complementary', { name: /^Attributes of/ });
       await panel.waitFor({ timeout: 5000 });
       const row = panel.locator('tr.changed', { hasText: 'coef_' });
