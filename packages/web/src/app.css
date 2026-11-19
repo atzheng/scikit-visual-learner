@@ -1,4 +1,4 @@
-/* App theme. TODO: import '@machines/render/theme.css' once that file exists (svl-q3a / render beads). */
+/* App theme. The diagram's --md-* colours come from @machines/render/theme.css (imported by DiagramPane). */
 :root {
   color-scheme: light dark;
   --bg: #f6f7f9;
@@ -233,24 +233,6 @@ button:disabled {
 .muted {
   margin: 0;
   color: var(--muted);
-}
-
-.timeline {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px 12px;
-}
-
-.timeline input[type='range'] {
-  flex: 1;
-}
-
-.event-list {
-  flex-basis: 100%;
-  margin: 0;
-  padding-left: 20px;
 }
 
 .status {

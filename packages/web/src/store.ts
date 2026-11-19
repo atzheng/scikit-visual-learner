@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { DEFAULT_RUN_CONFIG, STARTER_EXAMPLE } from './course';
 import type { RuntimeState } from './runtime/client';
 import { currentRuntime, getRuntime } from './runtime/instance';
+import { clampStep, nextStep, stepForNode } from './timeline/steps';
 import { progressText, versionsText } from './runtime/status';
 
 /** CONTRACTS.md section 7. */
@@ -17,7 +18,13 @@ export interface AppState {
   elapsedMs: number;
   step: number;
   setStep(n: number): void;
+  /** Incremented at each Run (not the worker's runId); lets the diagram reset per-run layout state. */
+  runSeq: number;
+  /** The source text of the last run (the log's site positions refer to it). */
+  runSource: string | null;
   selection: { node?: string; edge?: string; pinned?: boolean };
+  /** A click on a box: select it and move the step to its latest execution. */
+  selectNode(id: string | null): void;
   expanded: Set<string>;
   run(): Promise<void>;
   stop(): void;
@@ -36,20 +43,45 @@ export const useStore = create<AppState>()((set, get) => ({
   running: false,
   elapsedMs: 0,
   step: 0,
-  setStep: (step) => set({ step: Math.max(0, step) }),
+  setStep: (step) => set((s) => ({ step: clampStep(step, s.model?.steps.length ?? Infinity) })),
+  runSeq: 0,
+  runSource: null,
   selection: {},
+  selectNode: (id) => {
+    const { model, step } = get();
+    if (id === null || !model) return set({ selection: {} });
+    const target = stepForNode(model, id, step);
+    set({ selection: { node: id, pinned: true }, ...(target !== null && { step: target }) });
+  },
   expanded: new Set(),
   run: async () => {
     const rt = currentRuntime();
     if (!rt || get().running || rt.state !== 'ready') return;
     const t0 = performance.now();
-    set({ running: true, elapsedMs: 0 });
+    set((s) => ({
+      running: true,
+      elapsedMs: 0,
+      runSeq: s.runSeq + 1,
+      runSource: s.source,
+      // Nothing of the previous run may be linked against the new source text.
+      log: null,
+      model: null,
+      step: 0,
+      selection: {},
+    }));
     const tick = setInterval(() => set({ elapsedMs: performance.now() - t0 }), ELAPSED_TICK_MS);
     // The model is rebuilt on every streamed update (at most once per animation frame) and once
     // for the final log, which `run` delivers through `onUpdate` before it resolves.
     // Note for bwv.4: `snapshot()` is O(n) per update; fine at 5000 events, not measured beyond.
-    const show = (log: EventLog): void =>
-      set({ log, model: buildGraph(log, { expanded: get().expanded }) });
+    // The slider follows the newest step unless the student stepped back (nextStep).
+    let first = true;
+    const show = (log: EventLog): void => {
+      const model = buildGraph(log, { expanded: get().expanded });
+      const prev = get();
+      const step = nextStep(prev.step, prev.model?.steps.length ?? 0, model.steps.length, first);
+      first = false;
+      set({ log, model, step });
+    };
     try {
       await rt.run(get().source, DEFAULT_RUN_CONFIG, show);
     } catch {

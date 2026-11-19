@@ -3,6 +3,7 @@ import { createReadStream, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
+import { buildServiceWorker } from './scripts/build-sw';
 import { preparePyodide } from './scripts/fetch-pyodide';
 
 const MIME: Record<string, string> = {
@@ -50,6 +51,18 @@ function pyodide(): Plugin {
   };
 }
 
+/** After the Pyodide copy: writes dist/sw.js with the precache manifest (src/sw.ts). Must stay after pyodide(). */
+function serviceWorker(): Plugin {
+  return {
+    name: 'machines-sw',
+    async closeBundle() {
+      if (process.env.VITEST || this.environment?.config.command !== 'build') return;
+      // The nested SW build has no plugins, so this hook does not recurse.
+      await buildServiceWorker(import.meta.dirname);
+    },
+  };
+}
+
 /** COOP/COEP make `crossOriginIsolated` true (SharedArrayBuffer for interrupts). CSP is left to public/_headers. */
 const isolationHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin',
@@ -57,7 +70,7 @@ const isolationHeaders = {
 };
 
 export default defineConfig({
-  plugins: [react(), pyodide()],
+  plugins: [react(), pyodide(), serviceWorker()],
   server: { port: 5173, headers: isolationHeaders },
   preview: { headers: isolationHeaders },
   optimizeDeps: { exclude: ['pyodide'] },

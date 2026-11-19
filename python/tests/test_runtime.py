@@ -302,12 +302,6 @@ def test_on_enter_on_exit_called() -> None:
     assert seen == [("in", 0), ("out", 0)]
 
 
-@pytest.mark.no_pyodide(
-    reason=(
-        "Pyodide's matplotlib build warns (MatplotlibDeprecationWarning: float x/y in "
-        "draw_text_image) for every drawn text, and the recorder reports the warnings as output"
-    )
-)
 def test_figure_entry_for_edge_mpl(in_data: None) -> None:
     cfg = {"draw_modules": ["sklearn", "pandas", "numpy", "matplotlib"]}
     log = record(program("edge_mpl"), cfg)
@@ -322,12 +316,6 @@ def test_figure_entry_for_edge_mpl(in_data: None) -> None:
     assert "show" in names and "plot" in names
 
 
-@pytest.mark.no_pyodide(
-    reason=(
-        "Pyodide's matplotlib build warns (MatplotlibDeprecationWarning: float x/y in "
-        "draw_text_image) for every drawn text, and the recorder reports the warnings as output"
-    )
-)
 def test_figures_closed_after_show() -> None:
     src = (
         "import matplotlib.pyplot as plt\n"
@@ -407,3 +395,33 @@ def test_every_fixture_records_like_plain_python(name: str) -> None:
         return
     assert (got["s"] in ("ok", "limit")) == (base.returncode == 0)
     assert got["o"] == base.stdout
+
+
+def test_render_float_xy_warning_hidden_but_student_warning_kept(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Simulates Pyodide's draw_text warning: not reported, while the student's own warning is."""
+    from matplotlib import MatplotlibDeprecationWarning
+    from matplotlib.backends.backend_agg import RendererAgg
+
+    orig = RendererAgg.draw_text
+
+    def noisy(self: Any, *args: Any, **kwargs: Any) -> Any:
+        warnings.warn(
+            "The x parameter as float was deprecated in Matplotlib 3.10 and will be removed in "
+            "3.12. Use int(x) instead.",
+            MatplotlibDeprecationWarning,
+            stacklevel=2,
+        )
+        return orig(self, *args, **kwargs)
+
+    monkeypatch.setattr(RendererAgg, "draw_text", noisy)
+    src = (
+        "import warnings\nimport matplotlib.pyplot as plt\n"
+        "warnings.warn('mine')\n"
+        "plt.plot([1, 2]); plt.title('t'); plt.show()\n"
+    )
+    log = record(src)
+    assert log["status"] == "ok", log["error"]
+    assert [o["stream"] for o in log["output"]] == ["warning", "figure"]
+    assert "UserWarning: mine" in log["output"][0]["text"]

@@ -1,0 +1,49 @@
+.update-notice {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: 14px var(--font);
+}
+.update-notice button {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.update-notice button:first-of-type {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+.update-notice button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.update-chip {
+  left: auto;
+  right: 16px;
+  transform: none;
+  font: 13px var(--font);
+  cursor: pointer;
+}
