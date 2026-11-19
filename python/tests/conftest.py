@@ -34,7 +34,7 @@ def _ret(site: int, value: Any, /) -> Any:
     return value
 
 
-def _imp(site: int, /) -> None:
+def _imp(site: int, begin: bool = False, /) -> None:
     return None
 
 

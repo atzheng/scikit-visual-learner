@@ -491,7 +491,7 @@ builtins.__bind__ = lambda site, m, /: None
 builtins.__store__ = lambda site, b, /: None
 builtins.__scope__ = lambda fn, /: fn
 builtins.__ret__ = lambda site, v, /: v
-builtins.__imp__ = lambda site, /: None
+builtins.__imp__ = lambda site, begin=False, /: None
 path, mode = sys.argv[1], sys.argv[2]
 source = open(path).read()
 sys.argv = [path]

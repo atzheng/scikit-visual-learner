@@ -197,6 +197,7 @@ def _execute(
 
     rec = Recorder(inst.sites, config, emit, on_enter=enter, on_exit=on_exit, namespace=ns)
     out = _Output(rec)
+    rec.commit_output = out.commit
     holder.append(out)
     mpl = MplHook(
         lambda png, w, h: out.add({"stream": "figure", "png": png, "width": w, "height": h})
