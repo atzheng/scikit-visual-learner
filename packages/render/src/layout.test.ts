@@ -9,7 +9,15 @@ import type {
   InstanceNode,
   Port,
 } from '@machines/log';
-import { buildElk, buildElkGraph, layout, LABEL_MAX_DIST } from './layout';
+import {
+  buildElk,
+  buildElkGraph,
+  layout,
+  longEdgeLoad,
+  tierFor,
+  LABEL_MAX_DIST,
+  ROOT_OPTIONS,
+} from './layout';
 import type { Laid, LaidNode } from './layout';
 
 const measure = (text: string): number => text.length * 7;
@@ -231,6 +239,29 @@ const P = (l: LaidNode, id: string) => {
   return v;
 };
 const finite = (v: number): boolean => Number.isFinite(v);
+
+/** Every wire has a path that starts and ends on its ports (or on the node border for a null port). */
+function checkWires(m: GraphModel, laid: Laid): void {
+  const onBorder = (l: LaidNode, [x, y]: [number, number]): boolean => {
+    const inX = x >= l.x - 1.5 && x <= l.x + l.w + 1.5;
+    const inY = y >= l.y - 1.5 && y <= l.y + l.h + 1.5;
+    const nearX = Math.abs(x - l.x) <= 1.5 || Math.abs(x - (l.x + l.w)) <= 1.5;
+    const nearY = Math.abs(y - l.y) <= 1.5 || Math.abs(y - (l.y + l.h)) <= 1.5;
+    return (inX && nearY) || (inY && nearX);
+  };
+  const at = (r: { node: string; port: string | null }, p: [number, number]): boolean => {
+    const l = N(laid, r.node);
+    if (r.port === null) return onBorder(l, p);
+    const lp = P(l, r.port);
+    return Math.abs(lp.x - p[0]) <= 1.5 && Math.abs(lp.y - p[1]) <= 1.5;
+  };
+  for (const e of m.edges) {
+    const pts = E(laid, e.id);
+    expect(pts.length, `${e.id} has a path`).toBeGreaterThanOrEqual(2);
+    expect(at(e.from, pts[0]!), `${e.id} starts on its port`).toBe(true);
+    expect(at(e.to, pts[pts.length - 1]!), `${e.id} ends on its port`).toBe(true);
+  }
+}
 
 function checkGeometry(m: GraphModel, laid: Laid): void {
   expect(finite(laid.width) && finite(laid.height) && laid.width > 0 && laid.height > 0).toBe(true);
@@ -588,30 +619,123 @@ describe('label distance and dense graphs', () => {
     }
   });
 
-  // Slow (~30 s, almost all ELK): runs only under `pnpm test:slow` (MACHINES_SLOW=1). See svl-2ok.
-  test.skipIf(process.env.MACHINES_SLOW !== '1')(
-    'dense graph (300 nodes, chain plus fan-in from 7 hubs) lays out without throwing',
-    async () => {
-      const nodes: GNode[] = [];
-      const edges: GEdge[] = [];
-      for (let k = 0; k < 300; k++) {
-        const ins = [inP('a'), inP('b'), inP('c')];
-        nodes.push(call(`n:${k}`, `f${k}`, (k + 1) * 100000, ins, [outP(0, 'DF', `v${k}`)]));
-        if (k > 0) edges.push(edge(`c${k}`, [`n:${k - 1}`, 'out:0'], [`n:${k}`, 'in:a']));
-        if (k >= 7) {
-          edges.push(edge(`h${k}`, [`n:${k % 7}`, 'out:0'], [`n:${k}`, 'in:b']));
-        }
+  // ELK's cost follows the long-edge dummy count; `longEdgeLoad` picks a cheaper option tier (CONTRACTS section 8).
+  function denseModel(withInstances: boolean, count = 300, nInst = 10): GraphModel {
+    const nodes: GNode[] = [];
+    const edges: GEdge[] = [];
+    for (let k = 0; k < count; k++) {
+      const ins = [inP('a'), inP('b'), inP('c')];
+      const parent = withInstances && k % 30 < 10 ? `i:${Math.floor(k / 30)}` : null;
+      nodes.push(call(`n:${k}`, `f${k}`, (k + 1) * 100000, ins, [outP(0, 'DF', `v${k}`)], parent));
+      if (k > 0) edges.push(edge(`c${k}`, [`n:${k - 1}`, 'out:0'], [`n:${k}`, 'in:a']));
+      if (k >= 7) edges.push(edge(`h${k}`, [`n:${k % 7}`, 'out:0'], [`n:${k}`, 'in:b']));
+    }
+    if (withInstances)
+      for (let i = 0; i < nInst; i++)
+        nodes.push(inst(`i:${i}`, i * 3000000 + 1, 'Model', `m${i}`, ['alpha']));
+    return model(nodes, edges);
+  }
+
+  test('longEdgeLoad counts the dummy nodes of long edges', () => {
+    // a -> b -> c, plus a -> c spanning two layers: one dummy
+    expect(
+      longEdgeLoad(
+        [
+          { id: 'a', order: 1 },
+          { id: 'b', order: 2 },
+          { id: 'c', order: 3 },
+        ],
+        [
+          { fromNode: 'a', toNode: 'b' },
+          { fromNode: 'b', toNode: 'c' },
+          { fromNode: 'a', toNode: 'c' },
+        ],
+      ),
+    ).toBe(1);
+    expect(longEdgeLoad([{ id: 'a', order: 1 }], [])).toBe(0);
+  });
+
+  test('small graphs keep the full-quality options; dense ones switch tier', () => {
+    expect(buildElk(linregModel(), { measure }).graph.layoutOptions).toEqual(ROOT_OPTIONS);
+    const big = buildElk(denseModel(false), { measure }).graph.layoutOptions!;
+    expect(big['elk.layered.crossingMinimization.strategy']).toBe('NONE');
+    expect(big['elk.layered.considerModelOrder.strategy']).toBe('NONE');
+    // with instances that have children, tier 2 is not used (it would drop wires leaving an instance)
+    const withInst = buildElk(denseModel(true), { measure }).graph.layoutOptions!;
+    expect(withInst['elk.layered.considerModelOrder.strategy']).toBe('NONE');
+    expect(withInst['elk.layered.crossingMinimization.strategy']).toBeUndefined();
+    expect(withInst['elk.hierarchyHandling']).toBe('INCLUDE_CHILDREN');
+    // minTier keeps a streaming run from flipping back
+    const sticky = buildElk(linregModel(), { measure, minTier: 1 }).graph.layoutOptions!;
+    expect(sticky['elk.layered.thoroughness']).toBe('1');
+    expect(tierFor(0)).toBe(0);
+    expect(tierFor(5000)).toBe(1);
+    expect(tierFor(20000)).toBe(2);
+  });
+
+  const slow = process.env.MACHINES_SLOW === '1';
+  function checkDense(m: GraphModel, laid: Laid): void {
+    expect(Object.keys(laid.edges)).toHaveLength(m.edges.length);
+    expect(laid.dropped).toBe(0);
+    checkWires(m, laid);
+    for (const n of m.nodes) {
+      if (n.kind === 'instance') continue;
+      const l = N(laid, n.id);
+      expect(finite(l.x) && finite(l.y)).toBe(true);
+      if (n.parent) {
+        const p = N(laid, n.parent);
+        expect(l.x, n.id).toBeGreaterThanOrEqual(p.x);
+        expect(l.y, n.id).toBeGreaterThanOrEqual(p.y + (p.headerH ?? 0) + (p.attrsH ?? 0));
+        expect(l.x + l.w, n.id).toBeLessThanOrEqual(p.x + p.w);
+        expect(l.y + l.h, n.id).toBeLessThanOrEqual(p.y + p.h);
       }
-      const m = model(nodes, edges);
+    }
+  }
+
+  test('dense graph (300 nodes, chain plus fan-in from 7 hubs) lays out with every wire routed', async () => {
+    const m = denseModel(false);
+    checkDense(m, await layout(m, { measure }));
+  }, 60000);
+
+  // Timing assertions and the 10-instance graph (~2.4 s warm) run only under `pnpm test:slow` (MACHINES_SLOW=1).
+  test.skipIf(!slow)(
+    'dense graph with 10 instances lays out with every wire routed, in under 5 s',
+    async () => {
+      await layout(linregModel(), { measure }); // warm up ELK
+      const m = denseModel(true);
       const t0 = performance.now();
       const laid = await layout(m, { measure });
-      const dt = performance.now() - t0;
-      console.log(
-        `dense layout: ${m.nodes.length} nodes, ${m.edges.length} edges, ${dt.toFixed(0)} ms`,
-      );
-      expect(Object.keys(laid.nodes)).toHaveLength(300);
-      expect(Object.keys(laid.edges)).toHaveLength(m.edges.length);
+      expect(
+        performance.now() - t0,
+        `${m.nodes.length} nodes, ${m.edges.length} edges`,
+      ).toBeLessThan(5000);
+      checkDense(m, laid);
     },
-    120000,
+    60000,
   );
+
+  test.skipIf(!slow)(
+    'dense graph without instances lays out in under 5 s',
+    async () => {
+      await layout(linregModel(), { measure }); // warm up ELK
+      const m = denseModel(false);
+      const t0 = performance.now();
+      await layout(m, { measure });
+      expect(performance.now() - t0).toBeLessThan(5000);
+    },
+    60000,
+  );
+
+  test('layout with instances is deterministic and independent of input order', async () => {
+    const m = denseModel(true, 80, 3);
+    const flipped: GraphModel = {
+      ...m,
+      nodes: [...m.nodes].reverse(),
+      edges: [...m.edges].reverse(),
+    };
+    const a = await layout(m, { measure });
+    const b = await layout(flipped, { measure });
+    expect(JSON.stringify(b)).toBe(JSON.stringify(a));
+    checkDense(m, a);
+  }, 60000);
 });
