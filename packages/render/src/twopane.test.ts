@@ -804,6 +804,19 @@ describe('a line keeps every call on the stage (svl-qol)', () => {
         );
         expect(g).not.toBeNull();
       }
+      // one current call on the stage, however many places its box is drawn in
+      const cur = new Set(
+        [...host.querySelectorAll('.md-stage-canvas .md-current')]
+          .filter((e) => !e.closest('.md-hidden, [hidden]'))
+          .map((e) => e.closest('[data-node]')?.getAttribute('data-node')),
+      );
+      expect([...cur]).toEqual([line.current.node]);
+      expect(
+        [...host.querySelectorAll('.md-stage-canvas .md-node.md-current')].filter(
+          (e) => !e.closest('.md-hidden, [hidden]'),
+        ),
+      ).toHaveLength(1);
+      expect(host.querySelectorAll('.md-stage-canvas [aria-current="step"]')).toHaveLength(1);
       if (line.calls.some((c, k) => k > 0 && c.stage.participants.some((p) => p.role === 'owner')))
         seen++;
     }

@@ -1466,6 +1466,18 @@ export async function mountTwoPane(
           if (st.visibleNodes.has(k.id)) visible.add(k.id);
       const state: StepState = { ...st, visibleNodes: visible, objectBadge };
       c.ctl?.setState(state, log, { owns, versionOf });
+      // a method drawn as a call box of its own (the fallback of a line, or a method whose owner is not on the
+      // stage) is the current call there: its box inside the owner's card is shown as called, not current
+      for (const bc of boxCards.keys()) {
+        if (bc === c) continue;
+        for (const g of c.wrap.querySelectorAll(`.md-node[data-node="${bc.node}"]`)) {
+          g.classList.remove('md-current');
+          g.removeAttribute('aria-current');
+          for (const e of g.querySelectorAll('.md-current')) e.classList.remove('md-current');
+          const l = g.getAttribute('aria-label');
+          if (l) g.setAttribute('aria-label', l.replace(/, current step$/, ''));
+        }
+      }
       c.wrap.hidden = visible.size === 0;
       // unique accessible names: what the card is and what it does on this line (the wires are not read out)
       const g = focusOf(c.wrap);
