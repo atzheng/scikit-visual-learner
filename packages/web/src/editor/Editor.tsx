@@ -25,6 +25,8 @@ import {
   drawSelection,
   highlightActiveLine,
   highlightActiveLineGutter,
+  GutterMarker,
+  gutter,
   keymap,
   lineNumbers,
   type DecorationSet,
@@ -67,6 +69,18 @@ const setErrorLine = StateEffect.define<number | null>();
 const siteMark = Decoration.mark({ class: 'cm-site-highlight' });
 const errorLineDeco = Decoration.line({ class: 'cm-error-line' });
 
+const stepLineDeco = Decoration.line({ class: 'cm-step-line' });
+
+class StepMarker extends GutterMarker {
+  override toDOM(): Node {
+    const el = document.createElement('span');
+    el.textContent = '▶';
+    el.className = 'cm-step-marker';
+    return el;
+  }
+}
+const stepMarker = new StepMarker();
+
 const siteHighlightField = StateField.define<DecorationSet>({
   create: () => Decoration.none,
   update(deco, tr) {
@@ -76,12 +90,32 @@ const siteHighlightField = StateField.define<DecorationSet>({
       if (e.is(setSiteHighlight)) {
         const v = e.value;
         deco =
-          v && v.to > v.from ? Decoration.set([siteMark.range(v.from, v.to)]) : Decoration.none;
+          v && v.to > v.from
+            ? Decoration.set([
+                stepLineDeco.range(tr.state.doc.lineAt(v.from).from),
+                siteMark.range(v.from, v.to),
+              ])
+            : Decoration.none;
       }
     }
     return deco;
   },
   provide: (f) => EditorView.decorations.from(f),
+});
+
+/** Gutter marker (a triangle, so not colour alone) on the current step's first line. */
+const stepGutter = gutter({
+  class: 'cm-step-gutter',
+  lineMarker(view, line) {
+    let hit = false;
+    view.state.field(siteHighlightField).between(line.from, line.from, (from, _to, value) => {
+      if (from === line.from && value === stepLineDeco) hit = true;
+    });
+    return hit ? stepMarker : null;
+  },
+  lineMarkerChange: (u) =>
+    u.startState.field(siteHighlightField) !== u.state.field(siteHighlightField),
+  initialSpacer: () => stepMarker,
 });
 
 const errorLineField = StateField.define<DecorationSet>({
@@ -132,9 +166,17 @@ const theme = EditorView.theme({
   '.cm-matchingBracket': { outline: '1px solid var(--muted)', backgroundColor: 'transparent' },
   // Not colour alone: the site gets a bottom border as well as a fill.
   '.cm-site-highlight': {
-    backgroundColor: 'var(--hl-site)',
+    backgroundColor: 'var(--hl-span)',
     borderBottom: '2px solid var(--accent)',
+    boxShadow: '0 0 0 1px var(--accent)',
+    borderRadius: '2px',
   },
+  '.cm-step-line': {
+    backgroundColor: 'var(--hl-line)',
+    boxShadow: 'inset 3px 0 0 var(--accent)',
+  },
+  '.cm-step-gutter': { width: '1.2em', textAlign: 'center' },
+  '.cm-step-marker': { color: 'var(--accent)', fontWeight: '700' },
   '.cm-error-line': {
     backgroundColor: 'var(--hl-error)',
     boxShadow: 'inset 3px 0 0 var(--bad)',
@@ -208,6 +250,7 @@ export function Editor({ sites, runSource, onSiteAtCursor, controllerRef }: Edit
 
     const extensions: Extension[] = [
       runKeys,
+      stepGutter,
       lineNumbers(),
       highlightActiveLineGutter(),
       highlightActiveLine(),
