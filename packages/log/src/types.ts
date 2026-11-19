@@ -55,6 +55,8 @@ export interface ImportBinding {
   attr: string | null;
   /** Bound exactly once in the whole module and no star import: nothing can have rebound it. */
   sole: boolean;
+  /** `import a.b.c` (no `as`): `a.b.c`, a module for certain. Absent otherwise (svl-ac6). */
+  dotted?: string;
 }
 
 export interface Scope {
@@ -115,6 +117,8 @@ export interface Event {
   count: number;
   slot?: true;
   merge_key: string;
+  /** Import events: names of a `from m import a` that bound the submodule `m.a` itself (svl-ac6). */
+  submodules?: string[];
   error: EventError | null;
   interrupted?: true;
 }

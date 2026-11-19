@@ -1335,6 +1335,7 @@ class Recorder:
                 return
             i, count, slot = alloc
             self._retag_import_output(i)
+            subs = self._submodules(site, frame)
             self._add_event(
                 {
                     "i": i,
@@ -1351,12 +1352,30 @@ class Recorder:
                     "mutates": [],
                     "count": count,
                     **({"slot": True} if slot else {}),
+                    **({"submodules": subs} if subs else {}),
                     "merge_key": f"s{site}",
                     "error": None,
                 }
             )
         except Exception as e:  # noqa: BLE001
             self._degrade("import", e)
+
+    def _submodules(self, site: int, frame: types.FrameType) -> list[str]:
+        """Names a `from m import a [as b]` statement bound to the submodule `m.a` (svl-ac6).
+
+        Only a plain module object whose `__name__` is exactly `m.a` counts, so
+        `from os import path` (`posixpath`) and a class or function are not. Reads the module
+        dict and `__name__` of a real module only; no student code runs.
+        """
+        out: list[str] = []
+        for b in self.sites[site].get("imports", []):
+            if b.get("attr") is None:
+                continue
+            obj = frame.f_globals.get(b["name"])
+            want = f"{b['module']}.{b['attr']}"
+            if type(obj) is types.ModuleType and obj.__dict__.get("__name__") == want:
+                out.append(b["name"])
+        return out
 
     # -- streaming and the log ----------------------------------------------------------------
 
