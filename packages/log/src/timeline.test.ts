@@ -88,8 +88,9 @@ const call = (m: GraphModel, name: string): CallNode => {
   if (!c) throw new Error(`no call ${name}`);
   return c;
 };
-const inst = (m: GraphModel): InstanceNode =>
-  m.nodes.find((n): n is InstanceNode => n.kind === 'instance')!;
+/** The box of a class (default: the model; every object is a box, so the first instance is a DataFrame). */
+const inst = (m: GraphModel, className = 'LinearRegression'): InstanceNode =>
+  m.nodes.find((n): n is InstanceNode => n.kind === 'instance' && n.className === className)!;
 const edgeBetween = (m: GraphModel, from: string, to: string) =>
   m.edges.find((e) => e.from.node === from && e.to.node === to)!;
 
@@ -168,10 +169,11 @@ describe('stateAt basics', () => {
   test('a box appears at its i; a wire when its consumer has started', () => {
     const read = call(m, 'read_csv');
     const split = call(m, 'train_test_split');
-    const e = edgeBetween(m, read.id, split.id);
+    const df = inst(m, 'DF'); // read_csv's box; the wire to the split leaves the box
+    const e = edgeBetween(m, df.id, split.id);
     const s1 = stateAt(m, log, 1);
     expect(s1.current).toBe(0);
-    expect([...s1.visibleNodes]).toEqual([read.id]);
+    expect([...s1.visibleNodes]).toEqual([read.id, df.id]);
     expect(s1.visibleEdges.has(e.id)).toBe(false);
     expect(s1.activeExecution.get(read.id)?.i).toBe(0);
     const s2 = stateAt(m, log, 2);
@@ -224,8 +226,8 @@ describe('stateAt basics', () => {
   test('sources are shown with their consumer', () => {
     const b = new B();
     const s = b.site('f(x)', 1);
-    b.val('v1.0', 'DF');
-    b.ev(s, 'function', 'f', { inputs: [wired('x', 'v1.0')], outputs: [b.val('v2.0', 'DF')] });
+    b.val('s1', 'int');
+    b.ev(s, 'function', 'f', { inputs: [wired('x', 's1')], outputs: [b.val('s2', 'int')] });
     const lg = b.log();
     const mm = build(lg);
     const src = mm.nodes.find((n) => n.kind === 'source')!;
@@ -240,13 +242,13 @@ describe('merged boxes', () => {
     const b = new B();
     const s0 = b.site('x = load()', 1);
     const s1 = b.site('x = f(x)', 2);
-    b.val('v1.0', 'DF');
-    b.ev(s0, 'function', 'load', { outputs: ['v1.0'] });
+    b.val('s1', 'int');
+    b.ev(s0, 'function', 'load', { outputs: ['s1'] });
     for (let k = 1; k <= 3; k++) {
-      b.val(`v${k + 1}.0`, 'DF');
+      b.val(`s${k + 1}`, 'int');
       b.ev(s1, 'function', 'f', {
-        inputs: [wired('x', `v${k}.0`)],
-        outputs: [`v${k + 1}.0`],
+        inputs: [wired('x', `s${k}`)],
+        outputs: [`s${k + 1}`],
         count: k,
       });
     }
@@ -263,16 +265,16 @@ describe('merged boxes', () => {
     const s2 = stateAt(m, lg, 2);
     expect(s2.badge.get(f.id)).toEqual({ k: 1, n: 3 });
     expect(s2.badge.has(load.id)).toBe(false);
-    expect(s2.activeToken.get(fromLoad.id)).toBe('v1.0');
+    expect(s2.activeToken.get(fromLoad.id)).toBe('s1');
     expect(s2.visibleEdges.has(self.id)).toBe(false);
     const s3 = stateAt(m, lg, 3);
     expect(s3.badge.get(f.id)).toEqual({ k: 2, n: 3 });
-    expect(s3.activeToken.get(self.id)).toBe('v2.0');
-    expect(s3.activeExecution.get(f.id)?.outputs['out:0']).toBe('v3.0');
+    expect(s3.activeToken.get(self.id)).toBe('s2');
+    expect(s3.activeExecution.get(f.id)?.outputs['out:0']).toBe('s3');
     const s4 = stateAt(m, lg, 4);
     expect(s4.badge.get(f.id)).toEqual({ k: 3, n: 3 });
-    expect(s4.activeToken.get(self.id)).toBe('v3.0');
-    expect(s4.activeToken.get(fromLoad.id)).toBe('v1.0');
+    expect(s4.activeToken.get(self.id)).toBe('s3');
+    expect(s4.activeToken.get(fromLoad.id)).toBe('s1');
   });
 
   test('slot executions (non-contiguous i) step correctly', () => {
@@ -362,10 +364,10 @@ describe('ret and function-returning machines', () => {
     const m = build(lg);
     expect(m.steps).toEqual([0, 3]);
     const mk = call(m, 'make_pipeline');
-    const e = edgeBetween(m, mk.id, inst(m).id);
+    const e = edgeBetween(m, mk.id, inst(m, 'Pipeline').id);
     const s1 = stateAt(m, lg, 1);
     expect(s1.visibleNodes.has(mk.id)).toBe(true);
-    expect(s1.visibleNodes.has(inst(m).id)).toBe(true);
+    expect(s1.visibleNodes.has(inst(m, 'Pipeline').id)).toBe(true);
     expect(s1.visibleEdges.has(e.id)).toBe(false);
     const s2 = stateAt(m, lg, 2);
     expect(s2.visibleEdges.has(e.id)).toBe(true);
@@ -451,6 +453,8 @@ describe('review additions', () => {
     const i = inst(m);
     expect(stateAt(m, log, 2).activeVersion.has(i.id)).toBe(false);
     expect(stateAt(m, log, 3).activeVersion.get(i.id)).toBe('v4.0');
+    // data boxes follow too: the DataFrame box exists from read_csv on
+    expect(stateAt(m, log, 1).activeVersion.get(inst(m, 'DF').id)).toBe('v1.0');
     expect(stateAt(m, log, 3).currentNode).toBe(call(m, 'LinearRegression').id); // constructor step
     const fit = stateAt(m, log, 4);
     expect(fit.activeVersion.get(i.id)).toBe('v4.1');

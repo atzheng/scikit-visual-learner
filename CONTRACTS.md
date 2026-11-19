@@ -519,10 +519,10 @@ interface Execution {
 }
 interface InstanceNode extends NodeBase {
   kind: 'instance';
-  className: string;
-  varName: string | null; // "model: LinearRegression"
-  createdAt: number; // i of the creating event (constructor or a function returning it)
-  createdBy: string | null; // id of the call node that created it (the constructor box, or make_pipeline); null only for a lazy instance
+  className: string; // the value's type: LinearRegression, DF, Series, array, list[3]
+  varName: string | null; // "model: LinearRegression", "X_train: DF"; each new object bound to the same name gets one more prime (`df`, `df′`, `df″`)
+  createdAt: number; // i of the creating event (constructor, a function or method returning it, or an expr)
+  createdBy: string | null; // id of the call or expr node that created it (the constructor box, read_csv, a method box inside another box, an expr node); null only for a lazy instance
   params: { name: string; text: string }[]; // constructor const/label args (also ports of the constructor box)
   versions: { i: number; token: Token }[]; // the instance's versions with the event that made each
 }
@@ -558,7 +558,7 @@ interface GEdge {
   to: { node: string; port: string | null }; // null: same
   dashed: boolean; // into or out of an expr node
   uses: { i: number; token: Token }[]; // per consumer execution: which value travelled
-  nameLabel: string | null; // the bound name of the latest token in the drawn scope; superseded names get "′"
+  nameLabel: string | null; // the bound name of the latest token in the drawn scope; each new value bound to a name gets one more prime in time order (`X`, `X′`, `X″`, capped at `‴`)
 }
 ```
 
@@ -568,22 +568,22 @@ Construction follows SPEC "Graph construction" with these decisions:
 - A constructor of a machine is an ordinary call node (name e.g. `LinearRegression`, `parent: null`, args on in-ports as for any call) with an `out:0` port, and an edge from that port to the instance border (`createdBy`). The instance's `params` still lists the constructor's const/label args (the attribute list shows them). Constructor args that are references are wired into the constructor box, not the instance. A constructor in a loop gives one box and one instance. The creating edge's single `use` has `i` = the creator's `ret` (the instance has no execution of its own).
 - Method slots: the method boxes of an instance exist in the model from the instance's `createdAt` (`stateAt` shows them from then, in `uncalled`) until the method's first execution. Only methods the run calls on that instance are boxes; an expandable list of other methods is a separate feature.
 - `make_pipeline(...)` is a function box whose output creates an instance node (`createdBy`). Step instances wire into it. There are no nested step boxes in M1–3 (decided).
-- A `method` event whose owner is data is a call node with a `self` in-port. A method event on a machine is a call node with `parent` set to the instance node, owner input not drawn as a port.
-- A machine passed as an argument is an edge from the instance border (`port: null`).
-- `returns_self` gives no out-port. `mutates` on data gives an out-port with `changedInPlace: true`. `mutates` on the owner updates `versions`.
-- Expr nodes whose output reaches no call/store/instance node are dropped, transitively.
+- A `method` event whose owner is an object (any reference value: data or machine; svl-skw) is a call node with `parent` set to the owner's instance node, owner input (`self`) not drawn as a port. Only a method whose owner is a scalar keeps a `self` in-port.
+- An object passed as an argument (a DataFrame, a model, a list) is an edge from its instance border (`port: null`); the wire's `nameLabel` is null.
+- `returns_self` gives no out-port. `mutates` on any object only adds a version `{ i, token: after }` to its instance (svl-skw: data no longer gets an `out:mut:` port; `Port.changedInPlace` and `out:mut:` ids remain in the type but are produced only for a non-object `before`, which the recorder does not emit).
+- Expr nodes whose output reaches no call/store/instance node are dropped, transitively. An expr whose output is an object creates that object's instance (`createdBy` = the expr node id, creating edge from `port: null`, dashed), so it is kept; an expr that returns an object which already has a box adds no box and no edge.
 - More than 300 nodes after merging: return only the first 300 by `order`, and set `tooMany` to the total.
 - Port and node ids are stable across re-runs of the same source, so the layout stays put. Ids are `n:<h>` (call), `i:<h>` (instance), `x:<h>` (expr), `t:<h>` (store), `src:<consumer id>:<param>` (source), with `<h>` = hash of the site's kind and text plus the occurrence number among sites with equal text. They use no site ids or tokens, so editing an unrelated line (even adding one) keeps them. Port ids: `in:<param>`, `out:<k>` (k = index in `outputs`), `out:mut:<param>` (changed in place).
 
 Decisions made while building `graph.ts` (SPEC was silent):
 
 - Edges are keyed by endpoints (one edge per from/to pair); `uses` has one entry per consumer execution. Ports exist only on call nodes. Edges into and out of expr, store, source and instance nodes use `port: null`; `to.port` is nullable for that reason (contract change). An edge is `dashed` when either end is an expr node.
-- A machine is a value with `values[t].machine`. Its tokens map to an instance by object number (`v12.*`), so any version resolves to the same instance. Instances merge by creating merge key (and output index). A machine with no producing event gets a lazy instance (`createdAt` = first event that mentions it).
-- A function that returns a machine has an out-port for it, and an edge from that port to the instance border (`createdBy`), so layout can place the instance below the function box. A failed machine constructor is a plain call node with the error.
+- An **object** is any reference value: a token starting with `v` (`isObject` in `graph.ts`; `values[t].machine` no longer decides). Its tokens map to an instance by object number (`v12.*`), so any version resolves to the same instance and one object is never in two boxes. Instances merge by creating merge key (and output index). An object with no producing event gets a lazy instance (`createdAt` = first event that mentions it). Scalars (`s` tokens) are never instances: they keep ports/labels/source nodes. An output that already has a box (call returned its argument) adds no instance and no edge.
+- A function that returns an object (`read_csv`, each of `train_test_split`'s outputs, `predict`) has an out-port for it, and an edge from that port to the instance border (`createdBy`), so layout can place the instance below the function box. A method box inside a box `A` that creates box `B` (`df.dropna()`) draws that edge out of `A`. A failed constructor is a plain call node with the error.
 - Constructor args: const and label args are `params` text; scalar args use `Input.text`, else the value's `repr`; reference args show their type in `params` and are wired to the constructor box's in-ports.
-- Port text: wired in-port has `typeLabel` = value type and `param` is the gray name (`nameLabel` is null on in-ports). Const and label inputs have `typeLabel: ''` and `constText` = the full string `param = text`. Out-port `param` is the output index as text, `nameLabel` is the bound name. A `mutates` on data adds an `out:mut:<param>` port (`changedInPlace`); `mutates` on any machine only adds an instance version `{ i: event.i, token: after }` (including nested machines such as a scaler inside a pipeline).
-- Name labels: names come from scope 0 bindings, matched by object (`v12`) for reference values and by token for scalars. The label is the first name bound to the value; if the last binding of that name is a different value, it gets `′`. Edges from source nodes and instances have `nameLabel: null` (the node says it). The label of an edge is that of its latest use.
-- **Producer order.** An edge from a producer to a consumer is drawn only when the producing event's `i` is lower than the consumer event's `i`. A use that ran before the token's producer is treated as having no producer for that use: a source node, as for any token with none. This is a general guard against a late-recorded producer being wired to earlier uses.
+- Port text: a wired in-port has `typeLabel` = the value type for a scalar and `''` for an object (its box shows type and shape), and `param` is the gray name (`nameLabel` is null on in-ports). Const and label inputs have `typeLabel: ''` and `constText` = the full string `param = text`. Out-port `param` is the output index as text, `nameLabel` is the bound name, `typeLabel` is the type for a scalar and `''` for an object. `mutates` on any object only adds an instance version `{ i: event.i, token: after }` (including nested machines such as a scaler inside a pipeline).
+- Name labels: names come from scope 0 bindings, matched by object (`v12`) for reference values and by token for scalars. The label is the first name bound to the value, plus one prime per distinct value bound to that name before it (time order; at most three, so a loop's per-pass scalars stop at `‴`). Edges from source nodes and instances have `nameLabel: null` (the node says it); so does any edge into an object's box, and an expr's wire to the box it creates. An instance's `varName` is the first name bound to any of its objects, named as a wire label is (a loop's objects share a box, so it takes the first one's name; a call's out-port carries its box's name). The label of an edge is that of its latest use.
+- **Producer order.** An edge from a producer to a consumer is drawn only when the producing event's `i` is lower than the consumer event's `i`. A use that ran before the token's producer is treated as having no producer for that use: a source node for a scalar, the (lazy) instance for an object. This is a general guard against a late-recorded producer being wired to earlier uses.
 - A loop's source tokens (a new token each iteration, no producer) share one source node per consumer node and param; `SourceNode.token` is the latest.
 - `steps` = every execution `i` of drawn nodes plus every instance version `i`, sorted and unique. Dropped expr events and events outside scope 0 are not steps.
 - Truncation keeps the first 300 nodes by `order` (sources sort just before their first consumer); a kept node whose parent was cut gets `parent: null`.
@@ -602,7 +602,7 @@ interface StepState {
   visibleEdges: Set<string>; // edge with a use whose consumer has started (use.i <= current) and whose producer has returned (producer ret <= current)
   activeExecution: Map<string, Execution>; // per node: latest execution with i <= current
   activeToken: Map<string, Token>; // per edge
-  activeVersion: Map<string, Token>; // per visible instance node: its latest version token with version.i <= current (draw attrs from log.values[token].attrs)
+  activeVersion: Map<string, Token>; // per visible instance node: its latest version token with version.i <= current (draw attrs from log.values[token].attrs; a data box's rows come from the same summary: shape, dtype or columns)
   currentNode: string | null; // node of the current event: the call/expr/store box that executed, or the instance created or mutated by it; null at step 0
   attrsBefore?: Record<string, Token>;
   attrsAfter?: Record<string, Token>; // when current is a method on an instance
@@ -614,7 +614,7 @@ function attrsAround(
   model: GraphModel,
   log: EventLog,
   executionI: number,
-): { before?: Record<string, Token>; after?: Record<string, Token> } | null; // owner attrs around a chosen machine-method execution (inspect panel); null if not one
+): { before?: Record<string, Token>; after?: Record<string, Token> } | null; // owner attrs around a chosen method execution on an object (inspect panel; data objects have no attrs); null if not one
 function eventLabel(log: EventLog, i: number): string; // "line 10: train_test_split(X, y, test_size=0.2)" for the event list
 ```
 
@@ -681,7 +681,9 @@ interface DiagramController {
 }
 function edgeLabelsFor(model: GraphModel, log: EventLog): Record<string, string>; // pass as layout's edgeLabels: longest type text per wire over the run
 function createLegend(doc?: Document, open?: boolean): HTMLElement; // collapsible legend, needs theme.css
-function attrRowsFor(model: GraphModel, log: EventLog): Record<string, string[]>; // pass as layout's attrRows so instance boxes never resize
+function attrRowsFor(model: GraphModel, log: EventLog): Record<string, string[]>; // pass as layout's attrRows so instance boxes never resize. Machines: params plus attributes; data boxes (svl-skw): `shape (r, c)` and `dtype x` or `columns a, b, c, …` (first columns up to 26 chars), the longest text over the versions
+function dataRowModels(s: ValueSummary | undefined): AttrRow[]; // rows of a data box, from the summary only
+function wireTypeLabel(token: Token, values): string; // wire type text: scalars only ('' for an object token)
 ```
 
 ELK options exactly as in SPEC "Layout": `elk.algorithm: layered`, `elk.direction: DOWN`, `elk.portConstraints: FIXED_ORDER` with inputs `NORTH`, outputs `SOUTH` and `elk.port.index` set, `elk.layered.considerModelOrder.strategy: NODES_AND_EDGES` with children sorted by `order`, `elk.hierarchyHandling: INCLUDE_CHILDREN` on the root. Wires entering a method box from outside go through a hierarchical port on the instance's west border below the attribute rows (spaced `laneGap`), so they never cross the header or rows. Wire labels are placed after ELK by `placeLabels` (greedy, deterministic). Node sizes come from measured label text (canvas `measureText` with the theme font) so ELK and SVG agree.

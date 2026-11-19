@@ -35,11 +35,28 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": "df"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:wcu5tk.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 800005,
+      "className": "DF",
+      "varName": "df",
+      "createdAt": 0,
+      "createdBy": "n:wcu5tk.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ]
     },
     {
       "id": "x:66mkbo.0",
@@ -65,6 +82,23 @@
       ]
     },
     {
+      "id": "i:66mkbo.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 900000,
+      "className": "DF",
+      "varName": "X",
+      "createdAt": 1,
+      "createdBy": "x:66mkbo.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ]
+    },
+    {
       "id": "x:xaeoav.0",
       "kind": "expr",
       "parent": null,
@@ -84,6 +118,23 @@
           "owner": null,
           "error": null,
           "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "i:xaeoav.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1000000,
+      "className": "Series",
+      "varName": "y",
+      "createdAt": 2,
+      "createdBy": "x:xaeoav.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 2,
+          "token": "v2.0"
         }
       ]
     },
@@ -119,13 +170,13 @@
         {
           "id": "in:arrays[0]",
           "param": "arrays[0]",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         },
         {
           "id": "in:arrays[1]",
           "param": "arrays[1]",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": null
         },
         {
@@ -147,29 +198,97 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": "X_train"
         },
         {
           "id": "out:1",
           "param": "1",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": "X_test"
         },
         {
           "id": "out:2",
           "param": "2",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": "y_train"
         },
         {
           "id": "out:3",
           "param": "3",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": "y_test"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:15uvz5m.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1100035,
+      "className": "DF",
+      "varName": "X_train",
+      "createdAt": 3,
+      "createdBy": "n:15uvz5m.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v3.0"
+        }
+      ]
+    },
+    {
+      "id": "i:15uvz5m.0#1",
+      "kind": "instance",
+      "parent": null,
+      "order": 1100035,
+      "className": "DF",
+      "varName": "X_test",
+      "createdAt": 3,
+      "createdBy": "n:15uvz5m.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v4.0"
+        }
+      ]
+    },
+    {
+      "id": "i:15uvz5m.0#2",
+      "kind": "instance",
+      "parent": null,
+      "order": 1100035,
+      "className": "Series",
+      "varName": "y_train",
+      "createdAt": 3,
+      "createdBy": "n:15uvz5m.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v5.0"
+        }
+      ]
+    },
+    {
+      "id": "i:15uvz5m.0#3",
+      "kind": "instance",
+      "parent": null,
+      "order": 1100035,
+      "className": "Series",
+      "varName": "y_test",
+      "createdAt": 3,
+      "createdBy": "n:15uvz5m.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v6.0"
+        }
+      ]
     },
     {
       "id": "n:1ntullb.0",
@@ -206,7 +325,7 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "OneHotEncoder",
+          "typeLabel": "",
           "nameLabel": "enc"
         }
       ],
@@ -264,7 +383,7 @@
         {
           "id": "in:X",
           "param": "X",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
@@ -313,7 +432,7 @@
         {
           "id": "in:X",
           "param": "X",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
@@ -321,57 +440,91 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "sparse",
+          "typeLabel": "",
           "nameLabel": "test_enc"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:dp47c5.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1400012,
+      "className": "sparse",
+      "varName": "train_enc",
+      "createdAt": 6,
+      "createdBy": "n:m1yvdu8o@i:1ntullb.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 6,
+          "token": "v10.0"
+        }
+      ]
+    },
+    {
+      "id": "i:63m8yj.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1500011,
+      "className": "sparse",
+      "varName": "test_enc",
+      "createdAt": 7,
+      "createdBy": "n:m1yvdu8o@i:1ntullb.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 7,
+          "token": "v11.0"
+        }
+      ]
     }
   ],
   "edges": [
     {
-      "id": "e:x:66mkbo.0.>n:15uvz5m.0.in:arrays[0]",
+      "id": "e:i:66mkbo.0.>n:15uvz5m.0.in:arrays[0]",
       "from": {
-        "node": "x:66mkbo.0",
+        "node": "i:66mkbo.0",
         "port": null
       },
       "to": {
         "node": "n:15uvz5m.0",
         "port": "in:arrays[0]"
       },
-      "dashed": true,
+      "dashed": false,
       "uses": [
         {
           "i": 3,
           "token": "v1.0"
         }
       ],
-      "nameLabel": "X"
+      "nameLabel": null
     },
     {
-      "id": "e:x:xaeoav.0.>n:15uvz5m.0.in:arrays[1]",
+      "id": "e:i:xaeoav.0.>n:15uvz5m.0.in:arrays[1]",
       "from": {
-        "node": "x:xaeoav.0",
+        "node": "i:xaeoav.0",
         "port": null
       },
       "to": {
         "node": "n:15uvz5m.0",
         "port": "in:arrays[1]"
       },
-      "dashed": true,
+      "dashed": false,
       "uses": [
         {
           "i": 3,
           "token": "v2.0"
         }
       ],
-      "nameLabel": "y"
+      "nameLabel": null
     },
     {
-      "id": "e:n:15uvz5m.0.out:0>n:m1wzfutv@i:1ntullb.0.in:X",
+      "id": "e:i:15uvz5m.0.>n:m1wzfutv@i:1ntullb.0.in:X",
       "from": {
-        "node": "n:15uvz5m.0",
-        "port": "out:0"
+        "node": "i:15uvz5m.0",
+        "port": null
       },
       "to": {
         "node": "n:m1wzfutv@i:1ntullb.0",
@@ -384,13 +537,13 @@
           "token": "v3.0"
         }
       ],
-      "nameLabel": "X_train"
+      "nameLabel": null
     },
     {
-      "id": "e:n:15uvz5m.0.out:0>n:m1yvdu8o@i:1ntullb.0.in:X",
+      "id": "e:i:15uvz5m.0.>n:m1yvdu8o@i:1ntullb.0.in:X",
       "from": {
-        "node": "n:15uvz5m.0",
-        "port": "out:0"
+        "node": "i:15uvz5m.0",
+        "port": null
       },
       "to": {
         "node": "n:m1yvdu8o@i:1ntullb.0",
@@ -403,13 +556,13 @@
           "token": "v3.0"
         }
       ],
-      "nameLabel": "X_train"
+      "nameLabel": null
     },
     {
-      "id": "e:n:15uvz5m.0.out:1>n:m1yvdu8o@i:1ntullb.0.in:X",
+      "id": "e:i:15uvz5m.0#1.>n:m1yvdu8o@i:1ntullb.0.in:X",
       "from": {
-        "node": "n:15uvz5m.0",
-        "port": "out:1"
+        "node": "i:15uvz5m.0#1",
+        "port": null
       },
       "to": {
         "node": "n:m1yvdu8o@i:1ntullb.0",
@@ -422,13 +575,13 @@
           "token": "v4.0"
         }
       ],
-      "nameLabel": "X_test"
+      "nameLabel": null
     },
     {
-      "id": "e:n:wcu5tk.0.out:0>x:66mkbo.0.",
+      "id": "e:i:wcu5tk.0.>x:66mkbo.0.",
       "from": {
-        "node": "n:wcu5tk.0",
-        "port": "out:0"
+        "node": "i:wcu5tk.0",
+        "port": null
       },
       "to": {
         "node": "x:66mkbo.0",
@@ -441,13 +594,13 @@
           "token": "v0.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
     },
     {
-      "id": "e:n:wcu5tk.0.out:0>x:xaeoav.0.",
+      "id": "e:i:wcu5tk.0.>x:xaeoav.0.",
       "from": {
-        "node": "n:wcu5tk.0",
-        "port": "out:0"
+        "node": "i:wcu5tk.0",
+        "port": null
       },
       "to": {
         "node": "x:xaeoav.0",
@@ -460,7 +613,140 @@
           "token": "v0.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>i:wcu5tk.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:66mkbo.0.>i:66mkbo.0.",
+      "from": {
+        "node": "x:66mkbo.0",
+        "port": null
+      },
+      "to": {
+        "node": "i:66mkbo.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:xaeoav.0.>i:xaeoav.0.",
+      "from": {
+        "node": "x:xaeoav.0",
+        "port": null
+      },
+      "to": {
+        "node": "i:xaeoav.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:0>i:15uvz5m.0.",
+      "from": {
+        "node": "n:15uvz5m.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:15uvz5m.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:1>i:15uvz5m.0#1.",
+      "from": {
+        "node": "n:15uvz5m.0",
+        "port": "out:1"
+      },
+      "to": {
+        "node": "i:15uvz5m.0#1",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:2>i:15uvz5m.0#2.",
+      "from": {
+        "node": "n:15uvz5m.0",
+        "port": "out:2"
+      },
+      "to": {
+        "node": "i:15uvz5m.0#2",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v5.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:15uvz5m.0.out:3>i:15uvz5m.0#3.",
+      "from": {
+        "node": "n:15uvz5m.0",
+        "port": "out:3"
+      },
+      "to": {
+        "node": "i:15uvz5m.0#3",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v6.0"
+        }
+      ],
+      "nameLabel": null
     },
     {
       "id": "e:n:1ntullb.0.out:0>i:1ntullb.0.",
@@ -477,6 +763,44 @@
         {
           "i": 4,
           "token": "v7.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m1yvdu8o@i:1ntullb.0.out:0>i:dp47c5.0.",
+      "from": {
+        "node": "n:m1yvdu8o@i:1ntullb.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:dp47c5.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v10.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m1yvdu8o@i:1ntullb.0.out:0>i:63m8yj.0.",
+      "from": {
+        "node": "n:m1yvdu8o@i:1ntullb.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:63m8yj.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 7,
+          "token": "v11.0"
         }
       ],
       "nameLabel": null

@@ -6,12 +6,14 @@ import {
   attrRowsFor,
   badgeText,
   changedAttrs,
+  dataRowModels,
   instanceRowModels,
   labelAnchor,
   roundedPath,
   statusOf,
   summaryLabel,
   truncate,
+  wireTypeLabel,
   wrapText,
 } from './svg';
 
@@ -139,7 +141,9 @@ describe('labels and status', () => {
 describe('instance rows', () => {
   const log = linregLog();
   const model = buildGraph(log, { expanded: new Set() });
-  const inst = model.nodes.find((n): n is InstanceNode => n.kind === 'instance')!;
+  const inst = model.nodes.find(
+    (n): n is InstanceNode => n.kind === 'instance' && n.className === 'LinearRegression',
+  )!;
   test('rows follow the version: none before fit, three after', () => {
     expect(instanceRowModels(inst, inst.versions[0]!.token, log.values)).toEqual([]);
     const after = instanceRowModels(
@@ -159,6 +163,43 @@ describe('instance rows', () => {
       'intercept_ float',
       'n_features_in_ int',
     ]);
+  });
+});
+
+describe('data box rows', () => {
+  test('a DataFrame shows its shape and the first columns, cut with an ellipsis', () => {
+    expect(
+      dataRowModels({
+        type: 'DF',
+        shape: [120, 4],
+        columns: ['beds', 'baths', 'sqft', 'year_built'],
+      }),
+    ).toEqual([
+      { name: 'shape', detail: '(120, 4)', param: false },
+      { name: 'columns', detail: 'beds, baths, sqft, …', param: false },
+    ]);
+    const wide = dataRowModels({
+      type: 'DF',
+      shape: [3, 9],
+      columns: ['neighbourhood', 'price_per_sqft', 'year_built', 'beds', 'baths'],
+    });
+    expect(wide[1]!.detail).toBe('neighbourhood, …');
+    expect(wide[1]!.detail.length).toBeLessThanOrEqual(30);
+    const long = dataRowModels({ type: 'DF', shape: [1, 1], columns: ['a'.repeat(60)] });
+    expect(long[1]!.detail).toHaveLength(26);
+    expect(long[1]!.detail.endsWith('…')).toBe(true);
+  });
+  test('a Series or array shows shape and dtype; a list or an unknown value shows nothing', () => {
+    expect(
+      dataRowModels({ type: 'Series', shape: [96], dtype: 'float64' }).map((r) => r.name),
+    ).toEqual(['shape', 'dtype']);
+    expect(dataRowModels({ type: 'list[3]' })).toEqual([]);
+    expect(dataRowModels(undefined)).toEqual([]);
+  });
+  test('wire type labels are for scalars only: an object box shows its own type', () => {
+    const values = { s1: { type: 'float', repr: '0.2' }, v1: { type: 'DF', shape: [2, 2] } };
+    expect(wireTypeLabel('s1', values)).toBe('float 0.2');
+    expect(wireTypeLabel('v1.0', { 'v1.0': values.v1 })).toBe('');
   });
 });
 

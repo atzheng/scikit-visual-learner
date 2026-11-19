@@ -94,7 +94,8 @@ interface InstInfo {
   node: InstanceNode;
   objs: string[]; // object keys ("v12") mapped to this instance, in order
   ctorEvents: Event[]; // constructor events that created this instance (for `params`)
-  createdByPort: string | null;
+  /** Port of the creating node the creation wire leaves from (null for an expr node); undefined: no creator. */
+  createdByPort: string | null | undefined;
 }
 
 function hash(s: string): string {
@@ -113,9 +114,10 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
   const { values, sites } = log;
   const typeOf = (t: Token): string => values[t]?.type ?? '';
   // THE predicate for "this value is drawn as an instance box": it creates the box (via the creating call's
-  // output wire), owns method slots keyed by (box, method name), and is wired by its border. Today only
-  // machines; svl-skw widens it to any reference value (timeline.ts `ownerAttrs` follows it).
-  const isObject = (t: Token | null): boolean => t !== null && values[t]?.machine === true;
+  // output wire), owns method slots keyed by (box, method name), and is wired by its border. Every
+  // reference value ("v<obj>.<ver>": DataFrame, Series, array, list, model, student object); scalars
+  // ("s<n>") stay port text and wire labels. timeline.ts `ownerAttrs` follows it.
+  const isObject = (t: Token | null): boolean => t !== null && t.startsWith('v');
 
   // ---- stable ids: hash of the site's text plus the occurrence number among equal texts
   const siteIdBase: string[] = [];
@@ -140,21 +142,27 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
 
   // ---- names (scope 0 bindings)
   const firstNameByKey = new Map<string, string>();
-  const lastKeyByName = new Map<string, string>();
+  const keysByName = new Map<string, string[]>(); // name -> distinct values bound to it, in time order
   {
     const scope0 = log.scopes.find((s) => s.id === 0);
     for (const [, name, token] of scope0?.bindings ?? []) {
       const k = keyOf(token);
       if (!firstNameByKey.has(k)) firstNameByKey.set(k, name);
-      lastKeyByName.set(name, k);
+      const ks = keysByName.get(name);
+      if (!ks) keysByName.set(name, [k]);
+      else if (!ks.includes(k)) ks.push(k);
     }
   }
-  /** Bound name of a value; a name since rebound to a different value gets a prime. */
+  /**
+   * Bound name of a value. Each new value bound to a name gets one more prime, in time order:
+   * `df`, `df′`, `df″`, then `df‴` for any later one (a loop rebinds on every pass).
+   */
   const nameOf = (t: Token): string | null => {
     const k = keyOf(t);
     const name = firstNameByKey.get(k);
     if (name === undefined) return null;
-    return lastKeyByName.get(name) === k ? name : `${name}′`;
+    const idx = Math.min(keysByName.get(name)?.indexOf(k) ?? 0, 3);
+    return name + ['', '′', '″', '‴'][idx];
   };
   const plainNameOf = (t: Token): string | null => firstNameByKey.get(keyOf(t)) ?? null;
 
@@ -190,7 +198,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     e: Event,
     token: Token,
     createdBy: string | null,
-    createdByPort: string | null,
+    createdByPort: string | null | undefined,
     idBase?: string,
   ): InstInfo => {
     const node: InstanceNode = {
@@ -221,7 +229,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
         at,
         token,
         null,
-        null,
+        undefined,
         `${baseFor(at.merge_key, at.site)}!${k}`,
       );
       info.node.versions.push({ i: at.i, token });
@@ -265,7 +273,8 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
       const outs: Record<string, Token> = {};
       e.outputs.forEach((t, k) => {
         outs[`out:${k}`] = t;
-        if (!producers.has(t)) {
+        if (isObject(t)) outputInstance(e, t, k, info!.node.id, null);
+        else if (!producers.has(t)) {
           producers.set(t, { node: info!.node.id, port: null });
           producerAt.set(t, e.i);
         }
@@ -329,22 +338,8 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     e.outputs.forEach((t, k) => {
       const port = `out:${k}`;
       outs[port] = t;
-      if (isObject(t)) {
-        const ik = `${mk}#${k}`;
-        let ii = insts.get(ik);
-        if (!ii)
-          ii = newInstance(
-            ik,
-            e,
-            t,
-            info!.node.id,
-            port,
-            k > 0 ? `${baseFor(mk, e.site)}#${k}` : undefined,
-          );
-        else ii.node.createdAt = Math.min(ii.node.createdAt, e.i);
-        if (e.kind === 'constructor' && k === 0) ii.ctorEvents.push(e);
-        if (!instByObj.has(keyOf(t))) registerObj(ii, t, e.i);
-      } else if (!producers.has(t)) {
+      if (isObject(t)) outputInstance(e, t, k, info!.node.id, port);
+      else if (!producers.has(t)) {
         producers.set(t, { node: info!.node.id, port });
         producerAt.set(t, e.i);
       }
@@ -360,6 +355,36 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     info.node.executions.push({ ...makeExecution(e, ins, outs), count: nodeCount });
     info.events.push(e);
     processMutates(e);
+  }
+
+  /**
+   * An object output of event `e` (output `k`, left by `creator` through `port`) lands in the instance box of
+   * its call site and output index (one box per site, so a loop's objects share a box). An object that already
+   * has a box (the call returned its argument, a lookup returned a known object) gets no new box and no wire:
+   * a missing wire is acceptable, a false one is not.
+   */
+  function outputInstance(
+    e: Event,
+    t: Token,
+    k: number,
+    creator: string,
+    port: string | null,
+  ): void {
+    const ik = `${e.merge_key}#${k}`;
+    let ii = insts.get(ik);
+    if (!ii) {
+      if (instByObj.has(keyOf(t))) return;
+      ii = newInstance(
+        ik,
+        e,
+        t,
+        creator,
+        port,
+        k > 0 ? `${baseFor(e.merge_key, e.site)}#${k}` : undefined,
+      );
+    } else ii.node.createdAt = Math.min(ii.node.createdAt, e.i);
+    if (e.kind === 'constructor' && k === 0) ii.ctorEvents.push(e);
+    if (!instByObj.has(keyOf(t))) registerObj(ii, t, e.i);
   }
 
   /** Inputs drawn as ports: a machine owner is not a port; a data method gets `self`. */
@@ -488,7 +513,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
         }
       }
     }
-    if (node.createdBy !== null && info.createdByPort !== null) {
+    if (node.createdBy !== null && info.createdByPort !== undefined) {
       const tok = node.versions[0]?.token;
       if (tok !== undefined)
         addEdge(
@@ -502,7 +527,7 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
     }
     node.varName = null;
     for (const v of node.versions) {
-      const n = plainNameOf(v.token);
+      const n = nameOf(v.token); // a loop's objects share the box: it takes the first one's name
       if (n !== null) {
         node.varName = n;
         break;
@@ -519,13 +544,20 @@ export function buildGraph(log: EventLog, _opts?: { expanded?: Set<string> }): G
       for (const x of drawnInputs(e)) {
         const id = `in:${x.param}`;
         const port: Port = { id, param: x.param, typeLabel: '', nameLabel: null };
-        if (x.value !== undefined) port.typeLabel = typeOf(x.value);
+        // an object's box shows its type and shape: the port keeps only the name
+        if (x.value !== undefined) port.typeLabel = isObject(x.value) ? '' : typeOf(x.value);
         else if (x.text !== undefined) port.constText = `${x.param} = ${x.text}`;
         inPorts.set(id, port);
       }
       e.outputs.forEach((t, k) => {
         const id = `out:${k}`;
-        outPorts.set(id, { id, param: `${k}`, typeLabel: typeOf(t), nameLabel: nameOf(t) });
+        outPorts.set(id, {
+          id,
+          param: `${k}`,
+          typeLabel: isObject(t) ? '' : typeOf(t),
+          // an object's port carries its box's name (a loop's objects share one box and one name)
+          nameLabel: (isObject(t) ? instByObj.get(keyOf(t))?.node.varName : null) ?? nameOf(t),
+        });
       });
       e.mutates.forEach(([before, after], k) => {
         if (isObject(before)) return;

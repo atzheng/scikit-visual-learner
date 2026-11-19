@@ -59,6 +59,12 @@ const nodeEl = (name: string): Element => {
   return el;
 };
 
+/** The LinearRegression box: data boxes (DataFrames, arrays) have rows too. */
+const modelBox = (): Element =>
+  [...host.querySelectorAll('.md-instance')].find((g) =>
+    g.getAttribute('aria-label')?.includes('LinearRegression'),
+  )!;
+
 describe('setState', () => {
   test('step 0 hides everything; stepping reveals nodes and wires in order', async () => {
     const log = linregLog();
@@ -82,10 +88,15 @@ describe('setState', () => {
     // only the last event's box is current
     expect(host.querySelectorAll('.md-node.md-current').length).toBe(1);
     expect(nodeEl('r2_score').getAttribute('aria-current')).toBe('step');
-    // the sources of the wires show labels with the type and shape of the active token
-    expect(host.querySelector('.md-edge-label:not(.md-hidden)')?.textContent).toContain(
-      'DataFrame (506, 5)',
+    // an object is a box that shows its own shape; the wires out of it carry no type text
+    const rowTexts = [...host.querySelectorAll('.md-attr:not(.md-hidden)')].map(
+      (r) => r.textContent,
     );
+    expect(rowTexts.some((t) => t?.includes('shape') && t.includes('(506, 5)'))).toBe(true);
+    const labels = [...host.querySelectorAll('.md-edge-label:not(.md-hidden)')].map(
+      (l) => l.textContent ?? '',
+    );
+    expect(labels.some((t) => t.includes('DataFrame'))).toBe(false);
   });
 
   test('does not re-lay-out and does not rebuild the DOM', async () => {
@@ -130,7 +141,10 @@ describe('setState', () => {
     c.setState(stateAt(model, failed, model.steps.length), failed);
     let fit = nodeEl('LinearRegression.fit');
     expect(fit.classList.contains('md-error')).toBe(true);
-    expect(fit.querySelector('.md-msg')?.textContent).toBe('⚠ ValueError: Input X contains NaN.');
+    // the message wraps in a narrow box: compare without the break
+    expect(fit.querySelector('.md-msg')?.textContent?.replace(/\s/g, '')).toBe(
+      '⚠ValueError:InputXcontainsNaN.',
+    );
     expect(fit.getAttribute('aria-label')).toContain('ValueError');
 
     const handled = linregLog({ failAt: 'fit' });
@@ -176,7 +190,8 @@ describe('setState', () => {
     const c = setup();
     c.setGraph(model, laid);
     c.setState(stateAt(model, log, 3), log); // the fit step
-    const rows = [...host.querySelectorAll('.md-attr:not(.md-hidden)')];
+    const model_ = modelBox();
+    const rows = [...model_.querySelectorAll('.md-attr:not(.md-hidden)')];
     expect(rows.map((r) => r.querySelector('.md-aname')?.textContent)).toEqual([
       'coef_',
       'intercept_',
@@ -188,7 +203,7 @@ describe('setState', () => {
     );
     // the predict step does not change attributes
     c.setState(stateAt(model, log, 4), log);
-    const after = [...host.querySelectorAll('.md-attr:not(.md-hidden)')];
+    const after = [...modelBox().querySelectorAll('.md-attr:not(.md-hidden)')];
     expect(after.length).toBe(3);
     expect(after.some((r) => r.classList.contains('md-changed'))).toBe(false);
   });
@@ -201,7 +216,9 @@ describe('review fixes', () => {
     const c = setup();
     c.setGraph(model, laid);
     c.setState(stateAt(model, log, model.steps.length), log); // the last event is b.fit
-    const insts = [...host.querySelectorAll('.md-instance')];
+    const insts = [...host.querySelectorAll('.md-instance')].filter((g) =>
+      /Ridge|Lasso|Lars|Linear/.test(g.getAttribute('aria-label') ?? ''),
+    );
     expect(insts.length).toBe(2);
     const changedPer = insts.map((g) => g.querySelectorAll('.md-attr.md-changed').length);
     expect(changedPer.sort()).toEqual([0, 1]);

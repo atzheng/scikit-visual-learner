@@ -36,17 +36,51 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": "X"
         },
         {
           "id": "out:1",
           "param": "1",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": "y"
         }
       ],
       "student": true
+    },
+    {
+      "id": "i:hft6en.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 2400011,
+      "className": "DF",
+      "varName": "X",
+      "createdAt": 0,
+      "createdBy": "n:hft6en.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ]
+    },
+    {
+      "id": "i:hft6en.0#1",
+      "kind": "instance",
+      "parent": null,
+      "order": 2400011,
+      "className": "Series",
+      "varName": "y",
+      "createdAt": 0,
+      "createdBy": "n:hft6en.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 0,
+          "token": "v1.0"
+        }
+      ]
     },
     {
       "id": "n:1t51mtq.0",
@@ -75,7 +109,7 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "Pipeline",
+          "typeLabel": "",
           "nameLabel": "pipe"
         }
       ],
@@ -127,13 +161,13 @@
         {
           "id": "in:X",
           "param": "X",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         },
         {
           "id": "in:y",
           "param": "y",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
@@ -150,10 +184,10 @@
   ],
   "edges": [
     {
-      "id": "e:n:hft6en.0.out:0>n:mk2rxhs@i:1t51mtq.0.in:X",
+      "id": "e:i:hft6en.0.>n:mk2rxhs@i:1t51mtq.0.in:X",
       "from": {
-        "node": "n:hft6en.0",
-        "port": "out:0"
+        "node": "i:hft6en.0",
+        "port": null
       },
       "to": {
         "node": "n:mk2rxhs@i:1t51mtq.0",
@@ -166,13 +200,13 @@
           "token": "v0.0"
         }
       ],
-      "nameLabel": "X"
+      "nameLabel": null
     },
     {
-      "id": "e:n:hft6en.0.out:1>n:mk2rxhs@i:1t51mtq.0.in:y",
+      "id": "e:i:hft6en.0#1.>n:mk2rxhs@i:1t51mtq.0.in:y",
       "from": {
-        "node": "n:hft6en.0",
-        "port": "out:1"
+        "node": "i:hft6en.0#1",
+        "port": null
       },
       "to": {
         "node": "n:mk2rxhs@i:1t51mtq.0",
@@ -185,7 +219,45 @@
           "token": "v1.0"
         }
       ],
-      "nameLabel": "y"
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:hft6en.0.out:0>i:hft6en.0.",
+      "from": {
+        "node": "n:hft6en.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:hft6en.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:hft6en.0.out:1>i:hft6en.0#1.",
+      "from": {
+        "node": "n:hft6en.0",
+        "port": "out:1"
+      },
+      "to": {
+        "node": "i:hft6en.0#1",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
     },
     {
       "id": "e:n:1t51mtq.0.out:0>i:1t51mtq.0.",

@@ -89,6 +89,14 @@ export function summaryLabel(s: ValueSummary | undefined): string {
   return s.type;
 }
 
+/** A wire's type text: scalars only. An object is a box that shows its own type and shape. */
+export function wireTypeLabel(
+  token: Token,
+  values: Record<Token, ValueSummary> | undefined,
+): string {
+  return token.startsWith('v') ? '' : summaryLabel(values?.[token]);
+}
+
 export function truncate(s: string, max: number): string {
   const one = s.replace(/\s+/g, ' ').trim();
   return one.length > max ? `${one.slice(0, max - 1)}…` : one;
@@ -162,6 +170,35 @@ export function instanceRowModels(
       if (names.has(name)) continue;
       rows.push({ name, detail: values?.[t]?.type ?? '', param: false });
     }
+  } else if (token !== undefined) {
+    rows.push(...dataRowModels(values?.[token]));
+  }
+  return rows;
+}
+
+const MAX_COLUMNS_TEXT = 26;
+/**
+ * Rows of a data box (DataFrame, Series, array, sparse), read from its summary only: `shape`, then `dtype`
+ * (Series, array) or the first `columns` (DataFrame, cut at MAX_COLUMNS_TEXT characters, then "…").
+ * Lists, dicts and models have none: the title carries the type and length.
+ */
+export function dataRowModels(s: ValueSummary | undefined): AttrRow[] {
+  const rows: AttrRow[] = [];
+  if (!s) return rows;
+  if (s.shape && s.shape.length > 0)
+    rows.push({ name: 'shape', detail: `(${s.shape.join(', ')})`, param: false });
+  if (s.dtype) rows.push({ name: 'dtype', detail: s.dtype, param: false });
+  else if (s.columns && s.columns.length > 0) {
+    let text = '';
+    let k = 0;
+    for (; k < s.columns.length; k++) {
+      const next = text ? `${text}, ${s.columns[k]}` : String(s.columns[k]);
+      if (next.length > MAX_COLUMNS_TEXT && k > 0) break;
+      text = next;
+    }
+    if (text.length > MAX_COLUMNS_TEXT) text = `${text.slice(0, MAX_COLUMNS_TEXT - 1)}…`;
+    else if (k < s.columns.length) text += ', …';
+    rows.push({ name: 'columns', detail: text, param: false });
   }
   return rows;
 }
@@ -176,7 +213,8 @@ export function attrRowsFor(model: GraphModel, log: EventLog): Record<string, st
       rows.set(r.name, `${r.name} ${r.detail}`);
     for (const v of n.versions) {
       for (const r of instanceRowModels(n, v.token, log.values)) {
-        if (!r.param) rows.set(r.name, `${r.name} ${r.detail}`);
+        const text = `${r.name} ${r.detail}`;
+        if (!r.param && text.length >= (rows.get(r.name)?.length ?? 0)) rows.set(r.name, text);
       }
     }
     out[n.id] = [...rows.values()];
@@ -190,7 +228,7 @@ export function edgeLabelsFor(model: GraphModel, log: EventLog): Record<string, 
   for (const e of model.edges) {
     let best = '';
     for (const u of e.uses) {
-      const t = summaryLabel(log.values[u.token]);
+      const t = wireTypeLabel(u.token, log.values);
       if (t.length > best.length) best = t;
     }
     out[e.id] = best;
@@ -308,7 +346,7 @@ function nodeLabel(n: GNode): string {
     case 'call':
       return n.parent ? `method ${n.name}` : `function ${n.name}`;
     case 'instance':
-      return `machine ${instanceTitle(n)}`;
+      return `object ${instanceTitle(n)}`;
     case 'expr':
       return `expression ${n.text}`;
     case 'store':
@@ -688,7 +726,7 @@ export function applyState(
     const visible = state.visibleEdges.has(h.id);
     toggle(h.g, 'md-hidden', !visible);
     const token = state.activeToken.get(h.id);
-    const type = visible ? summaryLabel(token !== undefined ? log?.values[token] : undefined) : '';
+    const type = visible && token !== undefined ? wireTypeLabel(token, log?.values) : '';
     const name = visible ? (h.edge.nameLabel ?? '') : '';
     setText(h.typeEl, type);
     setText(h.nameEl, name);

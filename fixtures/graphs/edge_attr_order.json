@@ -35,27 +35,42 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
       "student": false
     },
     {
-      "id": "n:wehbtt.0",
+      "id": "i:wcu5tk.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 700005,
+      "className": "DF",
+      "varName": null,
+      "createdAt": 0,
+      "createdBy": "n:wcu5tk.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ]
+    },
+    {
+      "id": "n:m1pltk3k@i:wcu5tk.0",
       "kind": "call",
       "mergeKey": "s1",
       "name": "DataFrame.dropna",
       "module": "pandas",
-      "parent": null,
+      "parent": "i:wcu5tk.0",
       "order": 700005,
       "executions": [
         {
           "i": 1,
           "ret": 1,
-          "inputs": {
-            "in:self": "v0.0"
-          },
+          "inputs": {},
           "outputs": {
             "out:0": "v1.0"
           },
@@ -65,23 +80,33 @@
           "interrupted": false
         }
       ],
-      "inPorts": [
-        {
-          "id": "in:self",
-          "param": "self",
-          "typeLabel": "DF",
-          "nameLabel": null
-        }
-      ],
+      "inPorts": [],
       "outPorts": [
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": "df"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:wehbtt.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 700005,
+      "className": "DF",
+      "varName": "df",
+      "createdAt": 1,
+      "createdBy": "n:m1pltk3k@i:wcu5tk.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ]
     },
     {
       "id": "x:f2rqav.0",
@@ -107,6 +132,23 @@
       ]
     },
     {
+      "id": "i:f2rqav.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 800000,
+      "className": "DF",
+      "varName": "X",
+      "createdAt": 2,
+      "createdBy": "x:f2rqav.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 2,
+          "token": "v2.0"
+        }
+      ]
+    },
+    {
       "id": "x:xaeoav.0",
       "kind": "expr",
       "parent": null,
@@ -126,6 +168,23 @@
           "owner": null,
           "error": null,
           "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "i:xaeoav.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 900000,
+      "className": "Series",
+      "varName": "y",
+      "createdAt": 3,
+      "createdBy": "x:xaeoav.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v3.0"
         }
       ]
     },
@@ -156,7 +215,7 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "LinearRegression",
+          "typeLabel": "",
           "nameLabel": "model"
         }
       ],
@@ -210,26 +269,18 @@
         {
           "id": "in:X",
           "param": "X",
-          "typeLabel": "DF",
+          "typeLabel": "",
           "nameLabel": null
         },
         {
           "id": "in:y",
           "param": "y",
-          "typeLabel": "Series",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
       "outPorts": [],
       "student": false
-    },
-    {
-      "id": "src:n:1g3zaox.0:a",
-      "kind": "source",
-      "parent": null,
-      "order": 1300003.5,
-      "label": "coefs",
-      "token": "v5.0"
     },
     {
       "id": "n:1g3zaox.0",
@@ -259,7 +310,7 @@
         {
           "id": "in:a",
           "param": "a",
-          "typeLabel": "array",
+          "typeLabel": "",
           "nameLabel": null
         }
       ],
@@ -267,75 +318,90 @@
         {
           "id": "out:0",
           "param": "0",
-          "typeLabel": "array",
+          "typeLabel": "",
           "nameLabel": "r"
         }
       ],
       "student": false
+    },
+    {
+      "id": "i:1g3zaox.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1300004,
+      "className": "array",
+      "varName": "r",
+      "createdAt": 6,
+      "createdBy": "n:1g3zaox.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 6,
+          "token": "v8.0"
+        }
+      ]
+    },
+    {
+      "id": "i:1g3zaox.0!v5",
+      "kind": "instance",
+      "parent": null,
+      "order": 1300004,
+      "className": "array",
+      "varName": "coefs",
+      "createdAt": 6,
+      "createdBy": null,
+      "params": [],
+      "versions": [
+        {
+          "i": 6,
+          "token": "v5.0"
+        }
+      ]
     }
   ],
   "edges": [
     {
-      "id": "e:n:wcu5tk.0.out:0>n:wehbtt.0.in:self",
+      "id": "e:i:f2rqav.0.>n:m1gsyoeo@i:10epbgg.0.in:X",
       "from": {
-        "node": "n:wcu5tk.0",
-        "port": "out:0"
-      },
-      "to": {
-        "node": "n:wehbtt.0",
-        "port": "in:self"
-      },
-      "dashed": false,
-      "uses": [
-        {
-          "i": 1,
-          "token": "v0.0"
-        }
-      ],
-      "nameLabel": null
-    },
-    {
-      "id": "e:x:f2rqav.0.>n:m1gsyoeo@i:10epbgg.0.in:X",
-      "from": {
-        "node": "x:f2rqav.0",
+        "node": "i:f2rqav.0",
         "port": null
       },
       "to": {
         "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:X"
       },
-      "dashed": true,
+      "dashed": false,
       "uses": [
         {
           "i": 5,
           "token": "v2.0"
         }
       ],
-      "nameLabel": "X"
+      "nameLabel": null
     },
     {
-      "id": "e:x:xaeoav.0.>n:m1gsyoeo@i:10epbgg.0.in:y",
+      "id": "e:i:xaeoav.0.>n:m1gsyoeo@i:10epbgg.0.in:y",
       "from": {
-        "node": "x:xaeoav.0",
+        "node": "i:xaeoav.0",
         "port": null
       },
       "to": {
         "node": "n:m1gsyoeo@i:10epbgg.0",
         "port": "in:y"
       },
-      "dashed": true,
+      "dashed": false,
       "uses": [
         {
           "i": 5,
           "token": "v3.0"
         }
       ],
-      "nameLabel": "y"
+      "nameLabel": null
     },
     {
-      "id": "e:src:n:1g3zaox.0:a.>n:1g3zaox.0.in:a",
+      "id": "e:i:1g3zaox.0!v5.>n:1g3zaox.0.in:a",
       "from": {
-        "node": "src:n:1g3zaox.0:a",
+        "node": "i:1g3zaox.0!v5",
         "port": null
       },
       "to": {
@@ -352,10 +418,10 @@
       "nameLabel": null
     },
     {
-      "id": "e:n:wehbtt.0.out:0>x:f2rqav.0.",
+      "id": "e:i:wehbtt.0.>x:f2rqav.0.",
       "from": {
-        "node": "n:wehbtt.0",
-        "port": "out:0"
+        "node": "i:wehbtt.0",
+        "port": null
       },
       "to": {
         "node": "x:f2rqav.0",
@@ -368,13 +434,13 @@
           "token": "v1.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
     },
     {
-      "id": "e:n:wehbtt.0.out:0>x:xaeoav.0.",
+      "id": "e:i:wehbtt.0.>x:xaeoav.0.",
       "from": {
-        "node": "n:wehbtt.0",
-        "port": "out:0"
+        "node": "i:wehbtt.0",
+        "port": null
       },
       "to": {
         "node": "x:xaeoav.0",
@@ -387,7 +453,83 @@
           "token": "v1.0"
         }
       ],
-      "nameLabel": "df"
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:wcu5tk.0.out:0>i:wcu5tk.0.",
+      "from": {
+        "node": "n:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:wcu5tk.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 0,
+          "token": "v0.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m1pltk3k@i:wcu5tk.0.out:0>i:wehbtt.0.",
+      "from": {
+        "node": "n:m1pltk3k@i:wcu5tk.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:wehbtt.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:f2rqav.0.>i:f2rqav.0.",
+      "from": {
+        "node": "x:f2rqav.0",
+        "port": null
+      },
+      "to": {
+        "node": "i:f2rqav.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:xaeoav.0.>i:xaeoav.0.",
+      "from": {
+        "node": "x:xaeoav.0",
+        "port": null
+      },
+      "to": {
+        "node": "i:xaeoav.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v3.0"
+        }
+      ],
+      "nameLabel": null
     },
     {
       "id": "e:n:10epbgg.0.out:0>i:10epbgg.0.",
@@ -404,6 +546,25 @@
         {
           "i": 4,
           "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:1g3zaox.0.out:0>i:1g3zaox.0.",
+      "from": {
+        "node": "n:1g3zaox.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1g3zaox.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v8.0"
         }
       ],
       "nameLabel": null

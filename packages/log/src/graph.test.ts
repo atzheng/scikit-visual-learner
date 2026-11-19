@@ -135,9 +135,10 @@ describe('function events', () => {
         constText: 'filepath = "a.csv"',
       },
     ]);
-    expect(read.outPorts).toEqual([{ id: 'out:0', param: '0', typeLabel: 'DF', nameLabel: 'df' }]);
+    // an object's box shows its type and shape: its ports keep only the name
+    expect(read.outPorts).toEqual([{ id: 'out:0', param: '0', typeLabel: '', nameLabel: 'df' }]);
     expect(split.inPorts.map((p) => [p.id, p.typeLabel, p.constText])).toEqual([
-      ['in:arrays[0]', 'DF', undefined],
+      ['in:arrays[0]', '', undefined],
       ['in:test_size', '', 'test_size = 0.2'],
     ]);
     expect(split.outPorts.map((p) => p.nameLabel)).toEqual(['X_train', 'X_test']);
@@ -146,14 +147,24 @@ describe('function events', () => {
       inputs: { 'in:arrays[0]': 'v1.0' },
       outputs: { 'out:0': 'v2.0', 'out:1': 'v3.0' },
     });
-    expect(m.edges).toHaveLength(1);
-    expect(m.edges[0]).toMatchObject({
-      from: { node: read.id, port: 'out:0' },
-      to: { node: split.id, port: 'in:arrays[0]' },
-      dashed: false,
-      nameLabel: 'df',
-    });
-    expect(m.edges[0]!.uses).toEqual([{ i: 1, token: 'v1.0' }]);
+    // read_csv -> df box -> split; the split's two outputs are two boxes
+    const [df, xTrain, xTest] = insts(m);
+    expect(insts(m).map((b) => [b.varName, b.className, b.createdBy])).toEqual([
+      ['df', 'DF', read.id],
+      ['X_train', 'DF', split.id],
+      ['X_test', 'DF', split.id],
+    ]);
+    const wires = m.edges.map((e) => [e.from, e.to, e.nameLabel, e.dashed]);
+    expect(wires).toHaveLength(4);
+    expect(wires).toEqual(
+      expect.arrayContaining([
+        [{ node: read.id, port: 'out:0' }, { node: df.id, port: null }, null, false],
+        [{ node: df.id, port: null }, { node: split.id, port: 'in:arrays[0]' }, null, false],
+        [{ node: split.id, port: 'out:0' }, { node: xTrain.id, port: null }, null, false],
+        [{ node: split.id, port: 'out:1' }, { node: xTest.id, port: null }, null, false],
+      ]),
+    );
+    expect(edgeInto(m, split.id, 'in:arrays[0]')[0]!.uses).toEqual([{ i: 1, token: 'v1.0' }]);
     expect(m.steps).toEqual([0, 1]);
     expect(read.order).toBeLessThan(split.order);
   });
@@ -168,7 +179,8 @@ describe('function events', () => {
     b.val('v1.0', 'DF');
     const m = build(b.log());
     expect(calls(m)[0]!.inPorts[0]!.constText).toBe('func = np.log1p');
-    expect(m.edges).toEqual([]);
+    // nothing is wired into the call; its result is a box
+    expect(m.edges.map((e) => e.to.port)).toEqual([null]);
   });
 });
 
@@ -217,8 +229,15 @@ describe('instances and methods', () => {
 
   test('constructor -> instance with params; methods are one box per site, owner not a port', () => {
     const m = build(scalerLog());
-    const [inst] = insts(m);
-    expect(insts(m)).toHaveLength(1);
+    const inst = insts(m).find((x) => x.className === 'StandardScaler')!;
+    // every object is a box: two DataFrames, the scaler and the two transform results
+    expect(insts(m).map((x) => x.className)).toEqual([
+      'DF',
+      'DF',
+      'StandardScaler',
+      'array',
+      'array',
+    ]);
     expect(inst).toMatchObject({
       className: 'StandardScaler',
       varName: 'scaler',
@@ -249,6 +268,12 @@ describe('instances and methods', () => {
     expect(edgeInto(m, inst.id, null).map((e) => [e.from.node, e.from.port])).toEqual([
       [ctor.id, 'out:0'],
     ]);
+    // the two transform executions each create their own result box, from the shared transform box
+    const outs = insts(m).filter((x) => x.className === 'array');
+    expect(outs.map((x) => x.createdBy)).toEqual([methods[1]!.id, methods[1]!.id]);
+    // X_train feeds fit and the first transform: wired from its own box, never from the constructor
+    const xTrain = insts(m)[0]!;
+    expect(edgeInto(m, methods[0]!.id, 'in:X').map((e) => e.from.node)).toEqual([xTrain.id]);
   });
 
   test('machine passed as argument is an edge from the instance border', () => {
@@ -267,7 +292,9 @@ describe('instances and methods', () => {
     const inst = insts(m)[0];
     const cvs = byName(m, 'cross_val_score');
     expect(edgeInto(m, cvs.id, 'in:estimator')[0]!.from).toEqual({ node: inst.id, port: null });
-    expect(cvs.inPorts[0]!.typeLabel).toBe('Ridge');
+    expect(cvs.inPorts[0]!.typeLabel).toBe(''); // the box shows the type
+    // the other argument is an object with no producing event: a lazy box, not a source
+    expect(edgeInto(m, cvs.id, 'in:X')[0]!.from.node).toBe(insts(m)[1]!.id);
   });
 
   test('function returning a machine: function node + instance with createdBy', () => {
@@ -297,7 +324,7 @@ describe('instances and methods', () => {
     expect(edgeInto(m, pipe.id, null)[0]!.from).toEqual({ node: fn.id, port: 'out:0' });
   });
 
-  test('data method gets a self port; mutates on data gives a changedInPlace out-port', () => {
+  test('a method on data sits in its box; in-place mutation is a new version of the box, not an out-port', () => {
     const b = new B();
     const s0 = b.site('df = load()', 1);
     const s1 = b.site('df.dropna(inplace=True)', 2);
@@ -313,40 +340,57 @@ describe('instances and methods', () => {
     });
     const m = build(b.log());
     const dn = byName(m, 'DataFrame.dropna');
-    expect(dn.parent).toBeNull();
-    expect(dn.inPorts.map((p) => p.param)).toEqual(['self', 'inplace']);
-    expect(dn.outPorts).toEqual([
-      { id: 'out:mut:self', param: 'self', typeLabel: 'DF', nameLabel: 'df', changedInPlace: true },
+    const [df] = insts(m);
+    expect(dn.parent).toBe(df.id);
+    expect(dn.inPorts.map((p) => p.param)).toEqual(['inplace']); // the owner is the box, not a port
+    expect(dn.outPorts).toEqual([]);
+    expect(dn.executions[0]!.outputs).toEqual({});
+    expect(df.versions).toEqual([
+      { i: 0, token: 'v1.0' },
+      { i: 1, token: 'v1.1' },
     ]);
-    expect(dn.executions[0]!.outputs).toEqual({ 'out:mut:self': 'v1.1' });
+    expect(insts(m)).toHaveLength(1);
   });
 
-  test('mutates on a machine updates versions of the instance, including nested machines', () => {
+  test('a method returning a new object creates a second box from the method box; the new binding gets the prime', () => {
     const b = new B();
-    const sa = b.site('a = A()', 1);
-    const sb = b.site('b = B()', 2);
-    const sf = b.site('a.fit(X)', 3);
-    b.val('v1.0', 'A', { machine: true });
-    b.val('v2.0', 'B', { machine: true });
-    b.val('v1.1', 'A', { machine: true });
-    b.val('v2.1', 'B', { machine: true });
-    b.ev(sa, 'constructor', 'A', { outputs: ['v1.0'] });
-    b.ev(sb, 'constructor', 'B', { outputs: ['v2.0'] });
-    b.ev(sf, 'method', 'A.fit', {
+    const s0 = b.site('df = load()', 1);
+    const s1 = b.site('df = df.dropna()', 2);
+    b.val('v1.0', 'DF');
+    b.ev(s0, 'function', 'load', { outputs: ['v1.0'] });
+    b.val('v2.0', 'DF');
+    b.ev(s1, 'method', 'DataFrame.dropna', {
       owner: 'v1.0',
-      returns_self: true,
-      mutates: [
-        ['v1.0', 'v1.1'],
-        ['v2.0', 'v2.1'],
-      ],
+      inputs: [wired('self', 'v1.0')],
+      outputs: ['v2.0'],
     });
+    b.bindings.push([0, 'df', 'v1.0'], [1, 'df', 'v2.0']);
     const m = build(b.log());
-    const [ia, ib] = insts(m);
-    expect(ia.versions.map((v) => v.token)).toEqual(['v1.0', 'v1.1']);
-    expect(ib.versions).toEqual([
-      { i: 1, token: 'v2.0' },
-      { i: 2, token: 'v2.1' },
+    const dn = byName(m, 'DataFrame.dropna');
+    const [first, second] = insts(m);
+    expect([first.varName, second.varName]).toEqual(['df', 'df′']);
+    expect(dn.parent).toBe(first.id);
+    expect(second.createdBy).toBe(dn.id);
+    expect(edgeInto(m, second.id, null).map((e) => e.from)).toEqual([
+      { node: dn.id, port: 'out:0' },
     ]);
+    // a call that returns its argument gives no second box and no wire
+    expect(m.edges).toHaveLength(2);
+  });
+
+  test('a call returning one of its arguments adds no box and no wire', () => {
+    const b = new B();
+    const s0 = b.site('a = load()', 1);
+    const s1 = b.site('same = np.asarray(a)', 2);
+    b.val('v1.0', 'array');
+    b.ev(s0, 'function', 'load', { outputs: ['v1.0'] });
+    b.ev(s1, 'function', 'asarray', { inputs: [wired('a', 'v1.0')], outputs: ['v1.0'] });
+    const m = build(b.log());
+    expect(insts(m)).toHaveLength(1);
+    expect(edgeInto(m, byName(m, 'asarray').id, 'in:a').map((e) => e.from.node)).toEqual([
+      insts(m)[0]!.id,
+    ]);
+    expect(m.edges.filter((e) => e.from.node === byName(m, 'asarray').id)).toEqual([]);
   });
 
   test('machine with no producing event gets a lazy instance', () => {
@@ -356,8 +400,10 @@ describe('instances and methods', () => {
     b.val('v2.0', 'array');
     b.ev(s, 'method', 'Ridge.predict', { owner: 'v1.0', outputs: ['v2.0'] });
     const m = build(b.log());
-    expect(insts(m)).toHaveLength(1);
+    // the machine's box is lazy; the prediction is a box created by the predict method inside it
+    expect(insts(m).map((x) => x.className)).toEqual(['Ridge', 'array']);
     expect(calls(m)[0].parent).toBe(insts(m)[0].id);
+    expect(insts(m)[1]!.createdBy).toBe(calls(m)[0].id);
   });
 });
 
@@ -393,19 +439,26 @@ describe('expr, store and source nodes', () => {
     const exprs = m.nodes.filter((n): n is ExprNode => n.kind === 'expr');
     expect(exprs.map((x) => x.text)).toEqual(['df["price"]', 'y - 1']);
     const dashed = m.edges.filter((e) => e.dashed);
-    expect(dashed).toHaveLength(3); // df -> expr1, expr1 -> expr2, expr2 -> fit
+    // df box -> expr1 -> y box -> expr2 -> fit
+    expect(dashed).toHaveLength(4);
     const fitY = m.edges.find((e) => e.to.port === 'in:y');
     expect(fitY?.from.node).toBe(exprs[1]!.id);
     expect(fitY?.dashed).toBe(true);
-    expect(m.edges.find((e) => e.to.node === exprs[1]!.id)?.nameLabel).toBe('y');
+    const yBox = insts(m).find((x) => x.className === 'Series')!;
+    expect(yBox.varName).toBe('y');
+    expect(yBox.createdBy).toBe(exprs[0]!.id);
+    expect(m.edges.find((e) => e.to.node === exprs[1]!.id)?.from.node).toBe(yBox.id);
+    expect(m.edges.find((e) => e.to.node === exprs[1]!.id)?.nameLabel).toBeNull(); // the box names it
   });
   test('expr nodes reaching nothing are dropped, with their edges', () => {
     const m = build(exprLog(false));
-    expect(m.nodes.some((n) => n.kind === 'expr')).toBe(false);
-    expect(m.edges.every((e) => !e.from.node.startsWith('x:') && !e.to.node.startsWith('x:'))).toBe(
-      true,
-    );
-    expect(m.steps).toEqual([0, 3]); // load and the Ridge constructor
+    // `df["price"]` creates the y box, so it stays; `y - 1` gives a scalar nobody uses, so it goes
+    expect(m.nodes.filter((n) => n.kind === 'expr').map((n) => (n as ExprNode).text)).toEqual([
+      'df["price"]',
+    ]);
+    expect(m.edges.every((e) => !e.from.node.startsWith('src:'))).toBe(true);
+    expect(m.edges.some((e) => e.to.node.startsWith('x:') && !e.dashed)).toBe(false);
+    expect(m.steps).toEqual([0, 1, 3]); // load, the y expression, the Ridge constructor
   });
 
   test('store node: inputs old version and rhs, output new version', () => {
@@ -446,7 +499,11 @@ describe('expr, store and source nodes', () => {
     b.bind('df', 'v1.1');
     const m = build(b.log());
     const srcs = m.nodes.filter((n): n is SourceNode => n.kind === 'source');
-    expect(srcs.map((s) => s.label)).toEqual(['x', 'df']); // the two loop tokens share one source
+    expect(srcs.map((s) => s.label)).toEqual(['x']); // the two loop tokens share one source
+    // a bumped object with no producing event is a (lazy) box, not a source
+    expect(insts(m).map((x) => [x.varName, x.className, x.createdBy])).toEqual([
+      ['df', 'DF', null],
+    ]);
     expect(srcs[0]!.token).toBe('s2');
     expect(m.edges.filter((e) => e.from.node === srcs[0]!.id)[0]!.uses.map((u) => u.token)).toEqual(
       ['s1', 's2'],
@@ -491,9 +548,13 @@ describe('merging', () => {
       [2, 3],
       [40, 50],
     ]);
-    expect(c.outPorts[0]!.typeLabel).toBe('DF');
-    expect(m.edges).toHaveLength(1); // one source edge; uses per execution
-    expect(m.edges[0]!.uses).toHaveLength(4);
+    expect(c.outPorts[0]!.typeLabel).toBe('');
+    // one wire from x's (lazy) box, with a use per execution; one creation wire to the call site's box
+    const fromX = m.edges.filter((e) => e.to.port === 'in:x');
+    expect(fromX).toHaveLength(1);
+    expect(fromX[0]!.uses).toHaveLength(4);
+    expect(m.edges).toHaveLength(2);
+    expect(insts(m)).toHaveLength(2);
     expect(m.steps).toEqual([0, 1, 2, 40]);
   });
 
@@ -506,8 +567,12 @@ describe('merging', () => {
     b.ev(s, 'function', 'f', { inputs: [wired('x', 'v1.0')], outputs: ['v2.0'], count: 1 });
     b.ev(s, 'function', 'f', { inputs: [wired('x', 'v2.0')], outputs: ['v3.0'], count: 2 });
     const m = build(b.log());
-    const self = m.edges.find((e) => e.from.node === e.to.node);
-    expect(self?.uses).toEqual([{ i: 1, token: 'v2.0' }]);
+    // f -> its box -> f again: the second execution consumes the box the first one created
+    const f = byName(m, 'f');
+    const box = insts(m).find((x) => x.createdBy === f.id)!;
+    expect(box.versions.map((v) => v.token)).toEqual(['v2.0', 'v3.0']);
+    const back = m.edges.find((e) => e.from.node === box.id && e.to.node === f.id);
+    expect(back?.uses).toEqual([{ i: 1, token: 'v2.0' }]);
   });
 
   test('instances created in a loop by one site merge', () => {
@@ -524,7 +589,7 @@ describe('merging', () => {
 });
 
 describe('name labels', () => {
-  test('X = X.drop(...) puts a prime on the superseded wire', () => {
+  test('X = X.drop(...) puts the prime on the new binding', () => {
     const b = new B();
     const s0 = b.site('X = load()', 1);
     const s1 = b.site('X = X.drop("a")', 2);
@@ -542,9 +607,12 @@ describe('name labels', () => {
     b.ev(s2, 'function', 'fit', { inputs: [wired('X', 'v2.0')] });
     const m = build(b.log());
     const drop = byName(m, 'DataFrame.drop');
-    expect(drop.outPorts[0]!.nameLabel).toBe('X');
-    expect(edgeInto(m, drop.id, 'in:self')[0]!.nameLabel).toBe('X′');
-    expect(edgeInto(m, byName(m, 'fit').id, 'in:X')[0]!.nameLabel).toBe('X');
+    expect(drop.outPorts[0]!.nameLabel).toBe('X′');
+    const [old, cur] = insts(m);
+    expect([old.varName, cur.varName]).toEqual(['X', 'X′']); // the new binding gets the prime
+    expect(drop.parent).toBe(old.id);
+    expect(edgeInto(m, byName(m, 'fit').id, 'in:X')[0]!.from.node).toBe(cur.id);
+    expect(edgeInto(m, byName(m, 'fit').id, 'in:X')[0]!.nameLabel).toBeNull();
   });
 
   test('nested call output wires unlabelled', () => {
@@ -628,11 +696,13 @@ describe('limits, determinism, stability', () => {
     const a = build(make('print_a()', false));
     const c = build(make('print_b()', true));
     const ids = (m: GraphModel): string[] => m.nodes.map((n) => n.id);
-    expect(new Set(ids(a)).size).toBe(4);
-    expect(ids(a).filter((id) => ids(c).includes(id))).toHaveLength(3);
+    // 4 calls and the 3 boxes the loads create; only the `other` call changes its id
+    expect(new Set(ids(a)).size).toBe(7);
+    expect(ids(a).filter((id) => ids(c).includes(id))).toHaveLength(6);
     expect(ids(a)[0]).toBe(ids(c)[0]);
-    expect(ids(a)[2]).toBe(ids(c)[2]);
-    expect(ids(a)[3]).toBe(ids(c)[3]);
+    expect(ids(a)[1]).toBe(ids(c)[1]);
+    expect(ids(a)[5]).toBe(ids(c)[5]);
+    expect(ids(a)[6]).toBe(ids(c)[6]);
   });
 
   test('5,000-event synthetic log builds in under 200 ms', () => {
@@ -708,7 +778,7 @@ describe('methods split per owner instance', () => {
     expect(byName(m, 'RF.fit').parent).toBe(insts(m).find((i) => i.className === 'RF')!.id);
   });
 
-  test('in-place data method: mutate port is out:mut:self, matching in:self', () => {
+  test('in-place data method: no self port and no mutate port; the box gets the version', () => {
     const b = new B();
     const s0 = b.site('X = load()', 1);
     const s1 = b.site('X.fillna(0, inplace=True)', 2);
@@ -722,13 +792,15 @@ describe('methods split per owner instance', () => {
     });
     const m = build(b.log());
     const f = byName(m, 'DataFrame.fillna');
-    expect(f.inPorts.map((p) => p.id)).toContain('in:self');
-    expect(f.outPorts.map((p) => p.id)).toEqual(['out:mut:self']);
+    expect(f.inPorts.map((p) => p.id)).toEqual(['in:value']);
+    expect(f.outPorts).toEqual([]);
+    expect(f.parent).toBe(insts(m)[0]!.id);
+    expect(insts(m)[0]!.versions.map((v) => v.token)).toEqual(['v1.0', 'v1.1']);
   });
 });
 
 describe('producer order', () => {
-  test('a consumer that ran before the producing event gets a source node, not a wire', () => {
+  test('an object used before its producing event is one box, not a source', () => {
     const b = new B();
     const s0 = b.site('np.round(coefs)', 1);
     const s1 = b.site('model.coef_', 2);
@@ -741,6 +813,10 @@ describe('producer order', () => {
     const into = edgeInto(m, round.id, 'in:a');
     expect(into).toHaveLength(1);
     const from = m.nodes.find((n) => n.id === into[0]?.from.node);
-    expect(from?.kind).toBe('source');
+    expect(from?.kind).toBe('instance'); // a lazy box for the object (no wire from the later expression)
+    // the later expression returned that very object (same token), so it is the box's creator
+    expect(insts(m).map((x) => x.createdBy?.startsWith('x:'))).toEqual([false, true]);
+    expect(insts(m).map((x) => x.versions[0]!.token)).toEqual(['v2.0', 'v1.0']);
+    expect(m.nodes.some((n) => n.kind === 'source')).toBe(false);
   });
 });
