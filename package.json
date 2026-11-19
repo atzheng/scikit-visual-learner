@@ -17,7 +17,7 @@
     "preview": "pnpm --filter @machines/web preview",
     "fixtures": "uv run python -m machines.tools.gen_fixtures && pnpm --filter @machines/log gen:graphs",
     "e2e": "echo 'e2e: not yet'",
-    "measure": "echo 'measure: not yet'"
+    "measure": "pnpm --filter @machines/web exec tsx ../../scripts/measure.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -25,6 +25,7 @@
     "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.14.0",
+    "playwright-core": "^1.65.1",
     "prettier": "^3.10.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.73.0",

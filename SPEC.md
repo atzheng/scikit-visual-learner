@@ -355,6 +355,31 @@ The tool runs student code only inside that student's own browser tab, in a work
 - Each run re-uses the warm interpreter but a fresh namespace, so runs after the first take only the student code's own time plus instrumentation.
 - Instrumentation overhead per recorded call is a cached signature bind, fingerprints of the inputs, and a few summaries. Hidden calls and calls past the per-site cap take the fast path. Content hashing is the one cost that scales with data size; if it exceeds 10% of run time on course examples, lower the cell threshold.
 
+**Measured (milestone 1)**, by `pnpm measure` (`scripts/measure.ts`): Apple M2 Pro, 10 cores, 32 GB, macOS 26 (Darwin 25.5); Chrome 157 headless; 2026-11-19; production build served from localhost by `vite preview` (uncompressed, so transfer sizes are an upper bound). Medians; n=3 unless noted.
+
+| Measurement | Result |
+| --- | --- |
+| Cold load to ready (cache disabled) | 6.8 s (6.8 to 7.1 s); 39.3 MB transferred |
+| Warm load to ready (service worker cache) | 6.4 s (6.0 to 6.9 s) |
+| Worker restart: Stop on a long C call (`eigvals` of a 4000x4000 matrix), to ready | 8.1 s (7.8 to 8.4 s), including the 2 s stop grace |
+| `heavy.py` (10,000 rows, GridSearchCV over a random forest), plain Python | 7.5 s |
+| `heavy.py` instrumented | 7.5 s; overhead 15 ms, within noise |
+| `heavy.py` content hashing | 0.3% of the instrumented run |
+| `notebook.py` plain / instrumented (n=10) | 7 ms / 40 ms; overhead 33 ms |
+| `notebook.py` content hashing | 29% of the instrumented run (about 12 ms) |
+| Cold load at ~10 Mbps (40 ms RTT) | 40.9 s |
+| Cold load at Fast 3G (1.6 Mbps, 150 ms RTT) | 206.6 s |
+| Classroom wifi, a full section loading at once | not measured: a human test for the pilot |
+
+Notes.
+
+- On localhost the 6 to 7 s is mostly CPU (starting Pyodide, unpacking and importing numpy, pandas, scipy and scikit-learn), not download, so warm is barely faster than cold. The cache matters on a real network, where cold scales with bandwidth: about 40 s at 10 Mbps and over 3 minutes on Fast 3G (both uncompressed; a host that serves brotli will be well under that). A restart costs about the same as a warm load, plus the 2 s grace.
+- The throttled loads go through a local proxy with a shared bandwidth cap and a round trip per request. CDP network emulation was not used because it does not reach dedicated workers, where Pyodide downloads happen.
+- Runs time the in-Python part (transform and run for instrumented, `exec` for plain) in the same warm worker, using the worker's debug-only `debug` run option, which the page never sets.
+- Instrumentation costs a fixed 30 to 40 ms on a notebook-sized program (mostly the AST transform and the first-use setup) and nothing measurable once the program does real work. The hashing share is high on `notebook.py` only because the whole run is 40 ms; in absolute terms it is 12 ms, and it is 0.3% on the heavy example. `hash_cells` stays at 100,000: lowering it below the size of the course datasets (about 2,000 to 50,000 cells) would stop detecting in-place changes to them, to save milliseconds.
+- `wall_ms` stays at 30 s: the heaviest example takes 7.5 s here, which leaves 4x headroom for a slower student laptop.
+- `n_jobs=2` and `n_jobs=-1` are accepted and run, but sequentially: RandomForest with 60 trees took 1.1 s, 1.0 s and 1.0 s for `n_jobs` 1, 2 and -1. There is no speed-up from `n_jobs` in the browser (no threads or processes in Pyodide).
+
 **Deployment**
 
 The recorder (`machines/recorder.py`) is plain Python with no browser dependency. Two frontends share it:

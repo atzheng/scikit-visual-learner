@@ -66,6 +66,47 @@ def _machines_versions():
     }
 `;
 
+/** Measurement only (msg.debug, see `pnpm measure`): plain exec without the recorder, or a recorded run timing content hashing. */
+const DEBUG_RUN = `
+def _machines_debug_run(source, config, emit, on_enter, on_exit, mode):
+    import contextlib, io, json, time
+    if mode == "plain":
+        buf = io.StringIO()
+        t0 = time.perf_counter()
+        try:
+            with contextlib.redirect_stdout(buf):
+                exec(compile(source, "<student>", "exec"), {"__name__": "__main__"})
+        finally:
+            ms = (time.perf_counter() - t0) * 1000
+        return json.dumps({"mode": mode, "ms": ms})
+    import machines.values as _v
+    spent = [0.0]
+    depth = [0]
+    def timed(fn):
+        def wrapper(*a, **k):
+            if depth[0]:
+                return fn(*a, **k)
+            depth[0] = 1
+            t = time.perf_counter()
+            try:
+                return fn(*a, **k)
+            finally:
+                spent[0] += time.perf_counter() - t
+                depth[0] = 0
+        return wrapper
+    old_digest, old_ph = _v._digest, _v.ValueTable.__dict__["_pandas_hash"]
+    _v._digest = timed(old_digest)
+    _v.ValueTable._pandas_hash = staticmethod(timed(old_ph.__func__))
+    t0 = time.perf_counter()
+    try:
+        _machines_runtime.run(source, config, emit, on_enter=on_enter, on_exit=on_exit)
+    finally:
+        ms = (time.perf_counter() - t0) * 1000
+        _v._digest = old_digest
+        _v.ValueTable._pandas_hash = old_ph
+    return json.dumps({"mode": mode, "ms": ms, "hash_ms": spent[0] * 1000})
+`;
+
 let pyodide: PyodideInterface;
 let interrupt: Int32Array | undefined;
 let currentCall: Int32Array | undefined;
@@ -227,7 +268,16 @@ async function run(msg: Extract<ToWorker, { type: 'run' }>): Promise<void> {
     const cfg = pyodide.toPy(config satisfies RunConfig);
     const fn = pyodide.globals.get('_machines_worker_run') as (...a: unknown[]) => void;
     try {
-      fn(source, cfg, emit, onEnter, onExit);
+      if (msg.debug) {
+        pyodide.runPython(DEBUG_RUN);
+        const dbg = pyodide.globals.get('_machines_debug_run') as (...a: unknown[]) => string;
+        const out = dbg(source, cfg, emit, onEnter, onExit, msg.debug);
+        console.log(`[machines-debug] ${out}`);
+        if (msg.debug === 'plain') {
+          send({ type: 'started', sites: [] });
+          send({ type: 'done', status: 'ok', error: null });
+        }
+      } else fn(source, cfg, emit, onEnter, onExit);
     } finally {
       cfg.destroy();
     }
