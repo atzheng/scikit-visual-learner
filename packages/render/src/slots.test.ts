@@ -108,6 +108,18 @@ describe('uncalled method slots', () => {
   });
 });
 
+describe('method on a temporary', () => {
+  test('an unparented method call is labelled as a method, not a function', async () => {
+    const { model, laid } = await prepare('golden_linreg');
+    const c = setup();
+    c.setGraph(model, laid);
+    const dropna = callNode(model, 'DataFrame.dropna');
+    expect(dropna.parent).toBeNull();
+    expect(el(dropna.id).getAttribute('aria-label')).toMatch(/^method DataFrame.dropna/);
+    expect(el(dropna.id).textContent).toContain('DataFrame.dropna');
+  });
+});
+
 describe('constructor box', () => {
   test('is an ordinary function box (svl-1x4) and its wire into the instance shows at its step', async () => {
     const { log, model, laid } = await prepare('golden_linreg');
