@@ -282,10 +282,6 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
   const aliases = new Map<string, string[]>();
   for (const n of ix.instances) {
     if (!visibleNodes.has(n.id)) continue;
-    const names = (n.aliases ?? [])
-      .filter((a) => a.from <= cur && (a.until === null || cur < a.until))
-      .map((a) => a.name);
-    if (names.length > 0) aliases.set(n.id, [...new Set(names)]);
     let tok = n.versions[0]?.token;
     let k = 0;
     let total = 0;
@@ -297,6 +293,14 @@ export function stateAt(model: GraphModel, log: EventLog, step: number): StepSta
       if (v.i <= cur) tok = v.token;
     }
     if (tok !== undefined) activeVersion.set(n.id, tok);
+    if (tok !== undefined) {
+      // an alias shows only while the box holds the object the name is bound to (a loop's box holds one per pass)
+      const obj = keyOf(tok);
+      const names = (n.aliases ?? [])
+        .filter((a) => a.object === obj && a.from <= cur && (a.until === null || cur < a.until))
+        .map((a) => a.name);
+      if (names.length > 0) aliases.set(n.id, [...new Set(names)]);
+    }
     if (total > 1) objectBadge.set(n.id, { k, n: total });
   }
   // A source is shown when any consumer of its edges is.

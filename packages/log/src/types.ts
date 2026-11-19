@@ -37,6 +37,7 @@ export interface Site {
   keywords?: Record<string, Origin>;
   unpack?: number;
   targets?: string[];
+  volatile?: true; // svl-35d: a target is a name the recorder cannot follow (`del`, `global`, `:=`, an import, `def`...), or the module reaches its namespace dynamically (section 3); the graph shows none of its targets as an alias
   value?: Origin;
   where?: 'local' | 'global' | 'nonlocal';
   root?: string;

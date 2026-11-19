@@ -1,0 +1,489 @@
+{
+  "nodes": [
+    {
+      "id": "m:6w14qy.0.lg6rbl",
+      "kind": "import",
+      "parent": null,
+      "order": 400000,
+      "name": "pd",
+      "source": "pandas",
+      "site": 13,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:1kp0hxq.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "DataFrame",
+      "module": "pandas",
+      "parent": null,
+      "order": 600005,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:data",
+          "param": "data",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "data = {\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]}"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "df"
+        }
+      ],
+      "student": false,
+      "importedFrom": "pandas"
+    },
+    {
+      "id": "i:1kp0hxq.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 600005,
+      "className": "DF",
+      "varName": "df",
+      "createdAt": 1,
+      "createdBy": "n:1kp0hxq.0",
+      "params": [
+        {
+          "name": "data",
+          "text": "{\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]}"
+        }
+      ],
+      "versions": [
+        {
+          "i": 1,
+          "token": "v1.0",
+          "kind": "new"
+        }
+      ],
+      "aliases": [
+        {
+          "name": "first",
+          "object": "v1",
+          "from": 1,
+          "until": null
+        },
+        {
+          "name": "prev",
+          "object": "v1",
+          "from": 1,
+          "until": 3
+        }
+      ]
+    },
+    {
+      "id": "n:m4xwfev@i:1kp0hxq.0",
+      "kind": "call",
+      "mergeKey": "s6",
+      "name": "DataFrame.sort_values",
+      "module": "pandas",
+      "parent": "i:1kp0hxq.0",
+      "order": 1000010,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {
+            "in:ascending": "s1"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:by",
+          "param": "by",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "by = \"a\""
+        },
+        {
+          "id": "in:ascending",
+          "param": "ascending",
+          "typeLabel": "bool",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "cur"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "i:1fh4vh.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1000010,
+      "className": "DF",
+      "varName": "cur",
+      "createdAt": 3,
+      "createdBy": "n:m4xwfev@i:1kp0hxq.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 3,
+          "token": "v2.0",
+          "kind": "new"
+        },
+        {
+          "i": 5,
+          "token": "v3.0",
+          "kind": "new"
+        },
+        {
+          "i": 7,
+          "token": "v4.0",
+          "kind": "new"
+        }
+      ],
+      "aliases": [
+        {
+          "name": "alias",
+          "object": "v2",
+          "from": 3,
+          "until": 5
+        },
+        {
+          "name": "keep",
+          "object": "v2",
+          "from": 3,
+          "until": null
+        },
+        {
+          "name": "prev",
+          "object": "v2",
+          "from": 3,
+          "until": 5
+        },
+        {
+          "name": "alias",
+          "object": "v3",
+          "from": 5,
+          "until": 7
+        },
+        {
+          "name": "prev",
+          "object": "v3",
+          "from": 5,
+          "until": 7
+        },
+        {
+          "name": "alias",
+          "object": "v4",
+          "from": 7,
+          "until": null
+        },
+        {
+          "name": "prev",
+          "object": "v4",
+          "from": 7,
+          "until": null
+        }
+      ]
+    },
+    {
+      "id": "n:m4xwfev@i:1fh4vh.0",
+      "kind": "call",
+      "mergeKey": "s6",
+      "name": "DataFrame.sort_values",
+      "module": "pandas",
+      "parent": "i:1fh4vh.0",
+      "order": 1000010,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {
+            "in:ascending": "s3"
+          },
+          "outputs": {
+            "out:0": "v3.0"
+          },
+          "count": 1,
+          "owner": "v2.0",
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 7,
+          "ret": 7,
+          "inputs": {
+            "in:ascending": "s5"
+          },
+          "outputs": {
+            "out:0": "v4.0"
+          },
+          "count": 2,
+          "owner": "v3.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:by",
+          "param": "by",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "by = \"a\""
+        },
+        {
+          "id": "in:ascending",
+          "param": "ascending",
+          "typeLabel": "bool",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "cur"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "src:x:w3ufui.0:k",
+      "kind": "source",
+      "parent": null,
+      "order": 1000041.5,
+      "label": "k",
+      "token": "s4"
+    },
+    {
+      "id": "x:w3ufui.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 1000042,
+      "text": "bool(k % 2)",
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {
+            "in:k": "s0"
+          },
+          "outputs": {
+            "out:0": "s1"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:k": "s2"
+          },
+          "outputs": {
+            "out:0": "s3"
+          },
+          "count": 2,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        },
+        {
+          "i": 6,
+          "ret": 6,
+          "inputs": {
+            "in:k": "s4"
+          },
+          "outputs": {
+            "out:0": "s5"
+          },
+          "count": 3,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:x:w3ufui.0.>n:m4xwfev@i:1kp0hxq.0.in:ascending",
+      "from": {
+        "node": "x:w3ufui.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:m4xwfev@i:1kp0hxq.0",
+        "port": "in:ascending"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 3,
+          "token": "s1"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:x:w3ufui.0.>n:m4xwfev@i:1fh4vh.0.in:ascending",
+      "from": {
+        "node": "x:w3ufui.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:m4xwfev@i:1fh4vh.0",
+        "port": "in:ascending"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 5,
+          "token": "s3"
+        },
+        {
+          "i": 7,
+          "token": "s5"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:src:x:w3ufui.0:k.>x:w3ufui.0.",
+      "from": {
+        "node": "src:x:w3ufui.0:k",
+        "port": null
+      },
+      "to": {
+        "node": "x:w3ufui.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 2,
+          "token": "s0"
+        },
+        {
+          "i": 4,
+          "token": "s2"
+        },
+        {
+          "i": 6,
+          "token": "s4"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:1kp0hxq.0.out:0>i:1kp0hxq.0.",
+      "from": {
+        "node": "n:1kp0hxq.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1kp0hxq.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m4xwfev@i:1kp0hxq.0.out:0>i:1fh4vh.0.",
+      "from": {
+        "node": "n:m4xwfev@i:1kp0hxq.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1fh4vh.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 3,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m4xwfev@i:1fh4vh.0.out:0>i:1fh4vh.0.",
+      "from": {
+        "node": "n:m4xwfev@i:1fh4vh.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1fh4vh.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 5,
+          "token": "v3.0"
+        },
+        {
+          "i": 7,
+          "token": "v4.0"
+        }
+      ],
+      "nameLabel": null
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}

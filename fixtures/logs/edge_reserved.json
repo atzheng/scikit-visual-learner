@@ -428,6 +428,7 @@
         "origin": "call",
         "site": 0
       },
+      "volatile": true,
       "where": "local"
     },
     {

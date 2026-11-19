@@ -109,11 +109,13 @@
       "aliases": [
         {
           "name": "df2",
+          "object": "v1",
           "from": 2,
           "until": 3
         },
         {
           "name": "prev",
+          "object": "v1",
           "from": 7,
           "until": 9
         }
@@ -172,6 +174,7 @@
       "aliases": [
         {
           "name": "df2",
+          "object": "v2",
           "from": 3,
           "until": null
         }
@@ -236,6 +239,7 @@
       "aliases": [
         {
           "name": "r",
+          "object": "v3",
           "from": 7,
           "until": null
         }
@@ -406,7 +410,20 @@
       "aliases": [
         {
           "name": "prev",
+          "object": "v9",
           "from": 9,
+          "until": 11
+        },
+        {
+          "name": "prev",
+          "object": "v10",
+          "from": 11,
+          "until": 13
+        },
+        {
+          "name": "prev",
+          "object": "v11",
+          "from": 13,
           "until": null
         }
       ]

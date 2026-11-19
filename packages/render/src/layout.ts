@@ -207,13 +207,16 @@ const MAX_ALIASES = 3;
  * The box title with the names its object is also bound to (svl-35d): `df (also df2, prev): DF`. At most
  * three names; more end in an ellipsis.
  */
+export function aliasText(n: InstanceNode, aliases: readonly string[]): string | null {
+  if (aliases.length === 0 || !n.varName) return null;
+  return aliases.slice(0, MAX_ALIASES).join(', ') + (aliases.length > MAX_ALIASES ? ', …' : '');
+}
+
 export function instanceTitleWith(n: InstanceNode, aliases: readonly string[]): string {
   const base = instanceTitle(n);
-  if (aliases.length === 0 || !n.varName) return base;
-  const shown =
-    aliases.slice(0, MAX_ALIASES).join(', ') + (aliases.length > MAX_ALIASES ? ', …' : '');
-  const name = n.varName;
-  return `${name} (also ${shown})${base.slice(name.length)}`;
+  const shown = aliasText(n, aliases);
+  if (shown === null || !n.varName) return base;
+  return `${n.varName} (also ${shown})${base.slice(n.varName.length)}`;
 }
 
 /** The widest title the box can show over the run, so a step that adds or drops a name never moves the box. */

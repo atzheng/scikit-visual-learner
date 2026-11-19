@@ -14,7 +14,7 @@ import type {
   Token,
   ValueSummary,
 } from '@machines/log';
-import { M, callModules, instanceTitle, instanceTitleWith, typeText } from './layout';
+import { M, aliasText, callModules, instanceTitle, instanceTitleWith, typeText } from './layout';
 import type { Laid, LaidNode } from './layout';
 
 export const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -1280,18 +1280,19 @@ export function applyState(
         if (h.more.panel) h.more.wrap.append(h.more.panel);
       }
     }
+    // the title and the aria label come from the same names
+    const aliasShown =
+      h.node.kind === 'instance' ? aliasText(h.node, state.aliases.get(h.id) ?? []) : null;
+    if (h.title && h.node.kind === 'instance')
+      setText(h.title, instanceTitleWith(h.node, state.aliases.get(h.id) ?? []));
     let aria =
       h.label +
       (uncalled ? ', not called yet' : '') +
       (b ? `, run ${b.k} of ${b.n}` : '') +
-      (isInst && state.aliases.has(h.id)
-        ? `, also named ${state.aliases.get(h.id)!.join(', ')}`
-        : '') +
+      (aliasShown !== null ? `, also named ${aliasShown}` : '') +
       (status ? `, ${status.text.replace(/^(⚠|⏹) /, '')}` : '') +
       (isCurrent ? ', current step' : '');
 
-    if (h.title && h.node.kind === 'instance')
-      setText(h.title, instanceTitleWith(h.node, state.aliases.get(h.id) ?? []));
     if (h.rows && h.node.kind === 'instance') {
       const token = displayVersion(h.node, state, mi);
       const rows = instanceRowModels(h.node, token, log?.values);

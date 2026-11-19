@@ -62,12 +62,15 @@ export interface InstanceNode extends NodeBase {
   versions: InstanceVersion[];
   /**
    * svl-35d: other names the box's objects are bound to, as intervals of event indexes: the name shows at the
-   * steps `from <= current < until` (`until` null: never rebound). Omitted when there are none.
+   * steps `from <= current < until` (`until` null: never rebound) while the box holds `object`. Omitted when
+   * there are none. Names the recorder cannot follow (`Site.volatile`) are never listed.
    */
   aliases?: InstanceAlias[];
 }
 export interface InstanceAlias {
   name: string;
+  /** The object (`v12`) the name was bound to over this interval: it shows only while the box holds that object. */
+  object: string;
   from: number;
   until: number | null;
 }
@@ -801,24 +804,30 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
   // as `prev = cur` does in a loop, keeps the interval open; rebinding to anything else closes it).
   {
     const scope0 = log.scopes.find((sc) => sc.id === 0);
-    const boundTo = new Map<string, InstInfo | null>();
-    const open = new Map<InstInfo, Map<string, number>>();
+    const volatile = new Set<string>();
+    for (const st of sites)
+      if (st.kind === 'bind' && st.volatile) for (const t of st.targets ?? []) volatile.add(t);
+    const boundTo = new Map<string, { info: InstInfo; key: string } | null>();
+    const open = new Map<InstInfo, Map<string, { from: number; object: string }>>();
     const close = (info: InstInfo, name: string, until: number | null): void => {
-      const from = open.get(info)?.get(name);
-      if (from === undefined) return;
+      const o = open.get(info)?.get(name);
+      if (o === undefined) return;
       open.get(info)!.delete(name);
-      if (until !== null && until <= from) return; // rebound before any step could show it
-      (info.node.aliases ??= []).push({ name, from, until });
+      if (until !== null && until <= o.from) return; // rebound before any step could show it
+      (info.node.aliases ??= []).push({ name, object: o.object, from: o.from, until });
     };
     for (const [at, name, token] of scope0?.bindings ?? []) {
-      const next = isObject(token) ? (instByObj.get(keyOf(token)) ?? null) : null;
+      if (volatile.has(name)) continue;
+      const key = isObject(token) ? keyOf(token) : '';
+      const info = key ? (instByObj.get(key) ?? null) : null;
+      const next = info ? { info, key } : null;
       const prev = boundTo.get(name) ?? null;
-      if (prev === next) continue;
-      if (prev) close(prev, name, at);
+      if (prev?.key === next?.key) continue;
+      if (prev) close(prev.info, name, at);
       if (next) {
-        let m = open.get(next);
-        if (!m) open.set(next, (m = new Map()));
-        m.set(name, at);
+        let m = open.get(next.info);
+        if (!m) open.set(next.info, (m = new Map()));
+        m.set(name, { from: at, object: next.key });
       }
       boundTo.set(name, next);
     }

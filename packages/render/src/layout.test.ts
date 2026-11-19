@@ -16,6 +16,7 @@ import {
   layout,
   longEdgeLoad,
   instanceTitleWith,
+  aliasText,
   instanceWidestTitle,
   M,
   tierFor,
@@ -772,8 +773,8 @@ describe('alias names and loop-carried boxes (svl-35d)', () => {
     const m = linregModel();
     const box = m.nodes.find((x) => x.id === 'i:m') as InstanceNode;
     box.aliases = [
-      { name: 'r', from: 3, until: null },
-      { name: 'estimator_alias', from: 4, until: 9 },
+      { name: 'r', object: 'v3', from: 3, until: null },
+      { name: 'estimator_alias', object: 'v3', from: 4, until: 9 },
     ];
     return m;
   };
@@ -788,7 +789,7 @@ describe('alias names and loop-carried boxes (svl-35d)', () => {
     // alone, the aliases are what sets the width
     const lone = inst('i:d', 1, 'DF', 'df');
     const before = await layout(model([lone], []), { measure });
-    lone.aliases = [{ name: 'a_rather_long_alias_name', from: 1, until: 2 }];
+    lone.aliases = [{ name: 'a_rather_long_alias_name', object: 'v1', from: 1, until: 2 }];
     const after = await layout(model([lone], []), { measure });
     expect(N(after, 'i:d').w).toBeGreaterThan(N(before, 'i:d').w);
   });
@@ -799,6 +800,10 @@ describe('alias names and loop-carried boxes (svl-35d)', () => {
     expect(instanceTitleWith(b, ['a'])).toBe('df (also a): DF');
     expect(instanceTitleWith(b, ['a', 'b', 'c', 'd'])).toBe('df (also a, b, c, …): DF');
     expect(instanceTitleWith(inst('i:x', 1, 'DF', null), ['a'])).toBe('DF');
+    // the aria label uses aliasText: none when the title shows no alias
+    expect(aliasText(b, [])).toBeNull();
+    expect(aliasText(inst('i:x', 1, 'DF', null), ['a'])).toBeNull();
+    expect(aliasText(b, ['a', 'b', 'c', 'd'])).toBe('a, b, c, …');
   });
 
   test('a wire from a method box inside a box to that same box lays out (a loop-carried creation wire)', async () => {

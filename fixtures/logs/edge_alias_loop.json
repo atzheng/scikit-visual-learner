@@ -1,0 +1,764 @@
+{
+  "diagnostics": [],
+  "error": null,
+  "events": [
+    {
+      "count": 1,
+      "error": null,
+      "i": 0,
+      "inputs": [],
+      "kind": "import",
+      "merge_key": "s13",
+      "module": null,
+      "mutates": [],
+      "name": "import pandas as pd",
+      "outputs": [],
+      "owner": null,
+      "ret": 0,
+      "returns_self": false,
+      "scope": 0,
+      "site": 13
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 1,
+      "inputs": [
+        {
+          "origin": "const",
+          "param": "data",
+          "text": "{\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]}"
+        }
+      ],
+      "kind": "constructor",
+      "merge_key": "s0",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame",
+      "outputs": [
+        "v1.0"
+      ],
+      "owner": null,
+      "ret": 1,
+      "returns_self": false,
+      "scope": 0,
+      "site": 0
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 2,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "k",
+          "value": "s0"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s5",
+      "module": null,
+      "mutates": [],
+      "name": "bool(k % 2)",
+      "outputs": [
+        "s1"
+      ],
+      "owner": null,
+      "ret": 2,
+      "returns_self": false,
+      "scope": 0,
+      "site": 5
+    },
+    {
+      "count": 1,
+      "error": null,
+      "i": 3,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "self",
+          "value": "v1.0"
+        },
+        {
+          "origin": "const",
+          "param": "by",
+          "text": "\"a\""
+        },
+        {
+          "origin": "call",
+          "param": "ascending",
+          "value": "s1"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s6",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.sort_values",
+      "outputs": [
+        "v2.0"
+      ],
+      "owner": "v1.0",
+      "ret": 3,
+      "returns_self": false,
+      "scope": 0,
+      "site": 6
+    },
+    {
+      "count": 2,
+      "error": null,
+      "i": 4,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "k",
+          "value": "s2"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s5",
+      "module": null,
+      "mutates": [],
+      "name": "bool(k % 2)",
+      "outputs": [
+        "s3"
+      ],
+      "owner": null,
+      "ret": 4,
+      "returns_self": false,
+      "scope": 0,
+      "site": 5
+    },
+    {
+      "count": 2,
+      "error": null,
+      "i": 5,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "self",
+          "value": "v2.0"
+        },
+        {
+          "origin": "const",
+          "param": "by",
+          "text": "\"a\""
+        },
+        {
+          "origin": "call",
+          "param": "ascending",
+          "value": "s3"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s6",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.sort_values",
+      "outputs": [
+        "v3.0"
+      ],
+      "owner": "v2.0",
+      "ret": 5,
+      "returns_self": false,
+      "scope": 0,
+      "site": 6
+    },
+    {
+      "count": 3,
+      "error": null,
+      "i": 6,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "k",
+          "value": "s4"
+        }
+      ],
+      "kind": "expr",
+      "merge_key": "s5",
+      "module": null,
+      "mutates": [],
+      "name": "bool(k % 2)",
+      "outputs": [
+        "s5"
+      ],
+      "owner": null,
+      "ret": 6,
+      "returns_self": false,
+      "scope": 0,
+      "site": 5
+    },
+    {
+      "count": 3,
+      "error": null,
+      "i": 7,
+      "inputs": [
+        {
+          "origin": "name",
+          "param": "self",
+          "value": "v3.0"
+        },
+        {
+          "origin": "const",
+          "param": "by",
+          "text": "\"a\""
+        },
+        {
+          "origin": "call",
+          "param": "ascending",
+          "value": "s5"
+        }
+      ],
+      "kind": "method",
+      "merge_key": "s6",
+      "module": "pandas",
+      "mutates": [],
+      "name": "DataFrame.sort_values",
+      "outputs": [
+        "v4.0"
+      ],
+      "owner": "v3.0",
+      "ret": 7,
+      "returns_self": false,
+      "scope": 0,
+      "site": 6
+    }
+  ],
+  "output": [
+    {
+      "i": 7,
+      "stream": "stdout",
+      "text": "(3, 2)\n"
+    }
+  ],
+  "scopes": [
+    {
+      "bindings": [
+        [
+          1,
+          "df",
+          "v1.0"
+        ],
+        [
+          1,
+          "first",
+          "v1.0"
+        ],
+        [
+          1,
+          "prev",
+          "v1.0"
+        ],
+        [
+          1,
+          "k",
+          "s0"
+        ],
+        [
+          3,
+          "cur",
+          "v2.0"
+        ],
+        [
+          3,
+          "alias",
+          "v2.0"
+        ],
+        [
+          3,
+          "keep",
+          "v2.0"
+        ],
+        [
+          3,
+          "prev",
+          "v2.0"
+        ],
+        [
+          3,
+          "k",
+          "s2"
+        ],
+        [
+          5,
+          "cur",
+          "v3.0"
+        ],
+        [
+          5,
+          "alias",
+          "v3.0"
+        ],
+        [
+          5,
+          "prev",
+          "v3.0"
+        ],
+        [
+          5,
+          "k",
+          "s4"
+        ],
+        [
+          7,
+          "cur",
+          "v4.0"
+        ],
+        [
+          7,
+          "alias",
+          "v4.0"
+        ],
+        [
+          7,
+          "prev",
+          "v4.0"
+        ]
+      ],
+      "id": 0,
+      "lexical_parent": null,
+      "name": "<module>",
+      "parent_event": null
+    }
+  ],
+  "sites": [
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "{\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]}"
+        }
+      ],
+      "col": 5,
+      "end_col": 57,
+      "end_line": 6,
+      "func_text": "pd.DataFrame",
+      "id": 0,
+      "keywords": {},
+      "kind": "call",
+      "line": 6,
+      "text": "pd.DataFrame({\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]})"
+    },
+    {
+      "col": 0,
+      "end_col": 57,
+      "end_line": 6,
+      "id": 1,
+      "kind": "bind",
+      "line": 6,
+      "targets": [
+        "df"
+      ],
+      "text": "df = pd.DataFrame({\"a\": [3, 1, 2], \"b\": [1.0, 2.0, 3.0]})",
+      "value": {
+        "origin": "call",
+        "site": 0
+      },
+      "where": "local"
+    },
+    {
+      "col": 0,
+      "end_col": 10,
+      "end_line": 7,
+      "id": 2,
+      "kind": "bind",
+      "line": 7,
+      "targets": [
+        "first"
+      ],
+      "text": "first = df",
+      "value": {
+        "name": "df",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "col": 0,
+      "end_col": 9,
+      "end_line": 8,
+      "id": 3,
+      "kind": "bind",
+      "line": 8,
+      "targets": [
+        "prev"
+      ],
+      "text": "prev = df",
+      "value": {
+        "name": "df",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "3"
+        }
+      ],
+      "col": 9,
+      "end_col": 17,
+      "end_line": 9,
+      "func_text": "range",
+      "id": 4,
+      "keywords": {},
+      "kind": "call",
+      "line": 9,
+      "text": "range(3)"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "k"
+          ],
+          "text": "k % 2"
+        }
+      ],
+      "col": 42,
+      "end_col": 53,
+      "end_line": 10,
+      "func_text": "bool",
+      "id": 5,
+      "keywords": {},
+      "kind": "call",
+      "line": 10,
+      "text": "bool(k % 2)"
+    },
+    {
+      "args": [
+        {
+          "origin": "const",
+          "text": "\"a\""
+        }
+      ],
+      "col": 10,
+      "end_col": 54,
+      "end_line": 10,
+      "func_text": "prev.sort_values",
+      "id": 6,
+      "keywords": {
+        "ascending": {
+          "origin": "call",
+          "site": 5
+        }
+      },
+      "kind": "call",
+      "line": 10,
+      "text": "prev.sort_values(\"a\", ascending=bool(k % 2))"
+    },
+    {
+      "col": 4,
+      "end_col": 54,
+      "end_line": 10,
+      "id": 7,
+      "kind": "bind",
+      "line": 10,
+      "targets": [
+        "cur"
+      ],
+      "text": "cur = prev.sort_values(\"a\", ascending=bool(k % 2))",
+      "value": {
+        "origin": "call",
+        "site": 6
+      },
+      "where": "local"
+    },
+    {
+      "col": 4,
+      "end_col": 15,
+      "end_line": 11,
+      "id": 8,
+      "kind": "bind",
+      "line": 11,
+      "targets": [
+        "alias"
+      ],
+      "text": "alias = cur",
+      "value": {
+        "name": "cur",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "col": 8,
+      "end_col": 18,
+      "end_line": 13,
+      "id": 9,
+      "kind": "bind",
+      "line": 13,
+      "targets": [
+        "keep"
+      ],
+      "text": "keep = cur",
+      "value": {
+        "name": "cur",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "col": 4,
+      "end_col": 14,
+      "end_line": 14,
+      "id": 10,
+      "kind": "bind",
+      "line": 14,
+      "targets": [
+        "prev"
+      ],
+      "text": "prev = cur",
+      "value": {
+        "name": "cur",
+        "origin": "name"
+      },
+      "where": "local"
+    },
+    {
+      "col": 4,
+      "end_col": 5,
+      "end_line": 9,
+      "id": 11,
+      "kind": "bind",
+      "line": 9,
+      "targets": [
+        "k"
+      ],
+      "text": "k",
+      "where": "local"
+    },
+    {
+      "args": [
+        {
+          "origin": "expr",
+          "reads": [
+            "prev"
+          ],
+          "text": "prev.shape"
+        }
+      ],
+      "col": 0,
+      "end_col": 17,
+      "end_line": 15,
+      "func_text": "print",
+      "id": 12,
+      "keywords": {},
+      "kind": "call",
+      "line": 15,
+      "text": "print(prev.shape)"
+    },
+    {
+      "col": 0,
+      "end_col": 19,
+      "end_line": 4,
+      "id": 13,
+      "imports": [
+        {
+          "attr": null,
+          "module": "pandas",
+          "name": "pd",
+          "sole": true
+        }
+      ],
+      "kind": "import",
+      "line": 4,
+      "text": "import pandas as pd"
+    }
+  ],
+  "status": "ok",
+  "values": {
+    "s0": {
+      "repr": "0",
+      "type": "int"
+    },
+    "s1": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "s2": {
+      "repr": "1",
+      "type": "int"
+    },
+    "s3": {
+      "repr": "True",
+      "type": "bool"
+    },
+    "s4": {
+      "repr": "2",
+      "type": "int"
+    },
+    "s5": {
+      "repr": "False",
+      "type": "bool"
+    },
+    "v1.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "0",
+          "1",
+          "2"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "3",
+            "1.0"
+          ],
+          [
+            "1",
+            "2.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    },
+    "v2.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "0",
+          "2",
+          "1"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "3",
+            "1.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ],
+          [
+            "1",
+            "2.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    },
+    "v3.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "1",
+          "2",
+          "0"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "1",
+            "2.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ],
+          [
+            "3",
+            "1.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    },
+    "v4.0": {
+      "columns": [
+        "a",
+        "b"
+      ],
+      "dtypes": [
+        "int64",
+        "float64"
+      ],
+      "preview": {
+        "columns": [
+          "a",
+          "b"
+        ],
+        "index": [
+          "0",
+          "2",
+          "1"
+        ],
+        "kind": "table",
+        "rows": [
+          [
+            "3",
+            "1.0"
+          ],
+          [
+            "2",
+            "3.0"
+          ],
+          [
+            "1",
+            "2.0"
+          ]
+        ]
+      },
+      "shape": [
+        3,
+        2
+      ],
+      "type": "DF"
+    }
+  },
+  "version": 2
+}
