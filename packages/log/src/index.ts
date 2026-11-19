@@ -12,6 +12,8 @@ export type {
   NodeBase,
   CallNode,
   InstanceNode,
+  InstanceVersion,
+  VersionKind,
   ExprNode,
   StoreNode,
   SourceNode,

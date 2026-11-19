@@ -123,7 +123,8 @@
       "versions": [
         {
           "i": 1,
-          "token": "v1.0"
+          "token": "v1.0",
+          "kind": "new"
         }
       ]
     },
@@ -163,7 +164,8 @@
       "versions": [
         {
           "i": 2,
-          "token": "v2.0"
+          "token": "v2.0",
+          "kind": "new"
         }
       ]
     },
@@ -203,7 +205,8 @@
       "versions": [
         {
           "i": 3,
-          "token": "v3.0"
+          "token": "v3.0",
+          "kind": "new"
         }
       ]
     },
@@ -304,7 +307,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v4.0"
+          "token": "v4.0",
+          "kind": "new"
         }
       ]
     },
@@ -321,7 +325,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v5.0"
+          "token": "v5.0",
+          "kind": "new"
         }
       ]
     },
@@ -338,7 +343,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v6.0"
+          "token": "v6.0",
+          "kind": "new"
         }
       ]
     },
@@ -355,7 +361,8 @@
       "versions": [
         {
           "i": 4,
-          "token": "v7.0"
+          "token": "v7.0",
+          "kind": "new"
         }
       ]
     },
@@ -405,11 +412,13 @@
       "versions": [
         {
           "i": 5,
-          "token": "v8.0"
+          "token": "v8.0",
+          "kind": "new"
         },
         {
           "i": 6,
-          "token": "v8.1"
+          "token": "v8.1",
+          "kind": "mutate"
         }
       ]
     },
@@ -508,7 +517,8 @@
       "versions": [
         {
           "i": 7,
-          "token": "v12.0"
+          "token": "v12.0",
+          "kind": "new"
         }
       ]
     },

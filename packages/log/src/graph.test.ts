@@ -246,8 +246,8 @@ describe('instances and methods', () => {
       params: [{ name: 'with_std', text: 'True' }],
     });
     expect(inst.versions).toEqual([
-      { i: 2, token: 'v3.0' },
-      { i: 3, token: 'v3.1' },
+      { i: 2, token: 'v3.0', kind: 'new' },
+      { i: 3, token: 'v3.1', kind: 'mutate' },
     ]);
     const methods = calls(m).filter((c) => c.parent === inst.id);
     expect(methods.map((c) => c.name)).toEqual(['StandardScaler.fit', 'StandardScaler.transform']);
@@ -346,10 +346,62 @@ describe('instances and methods', () => {
     expect(dn.outPorts).toEqual([]);
     expect(dn.executions[0]!.outputs).toEqual({});
     expect(df.versions).toEqual([
-      { i: 0, token: 'v1.0' },
-      { i: 1, token: 'v1.1' },
+      { i: 0, token: 'v1.0', kind: 'new' },
+      { i: 1, token: 'v1.1', kind: 'mutate' },
     ]);
     expect(insts(m)).toHaveLength(1);
+  });
+
+  test('a store (df["a"] = 0) adds a store version to the box of its root', () => {
+    const b = new B();
+    const s0 = b.site('df = load()', 1);
+    const s1 = b.site('df["a"] = 0', 2, { kind: 'store' });
+    b.val('v1.0', 'DF');
+    b.ev(s0, 'function', 'load', { outputs: ['v1.0'] });
+    b.bind('df', 'v1.0');
+    b.val('v1.1', 'DF');
+    b.ev(s1, 'store', 'df["a"] = 0', {
+      inputs: [wired('target', 'v1.0'), konst('value', '0')],
+      outputs: ['v1.1'],
+    });
+    const m = build(b.log());
+    const [df] = insts(m);
+    expect(insts(m)).toHaveLength(1);
+    expect(df!.versions).toEqual([
+      { i: 0, token: 'v1.0', kind: 'new' },
+      { i: 1, token: 'v1.1', kind: 'store' },
+    ]);
+  });
+
+  test("a loop box: each pass's object is a `new` version, in-place changes are `mutate`", () => {
+    const b = new B();
+    const s0 = b.site('d = make()', 1);
+    const s1 = b.site('d.drop(inplace=True)', 2);
+    b.val('v1.0', 'DF');
+    b.val('v1.1', 'DF');
+    b.val('v2.0', 'DF');
+    b.val('v2.1', 'DF');
+    b.ev(s0, 'function', 'make', { outputs: ['v1.0'], count: 1 });
+    b.ev(s1, 'method', 'DataFrame.drop', {
+      owner: 'v1.0',
+      inputs: [konst('inplace', 'True')],
+      mutates: [['v1.0', 'v1.1']],
+    });
+    b.ev(s0, 'function', 'make', { outputs: ['v2.0'], count: 2 });
+    b.ev(s1, 'method', 'DataFrame.drop', {
+      owner: 'v2.0',
+      inputs: [konst('inplace', 'True')],
+      mutates: [['v2.0', 'v2.1']],
+      count: 2,
+    });
+    const m = build(b.log());
+    expect(insts(m)).toHaveLength(1);
+    expect(insts(m)[0]!.versions.map((v) => [v.token, v.kind])).toEqual([
+      ['v1.0', 'new'],
+      ['v1.1', 'mutate'],
+      ['v2.0', 'new'],
+      ['v2.1', 'mutate'],
+    ]);
   });
 
   test('a method returning a new object creates a second box from the method box; the new binding gets the prime', () => {

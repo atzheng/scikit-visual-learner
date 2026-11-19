@@ -53,7 +53,17 @@ export interface InstanceNode extends NodeBase {
   createdAt: number;
   createdBy: string | null;
   params: { name: string; text: string }[];
-  versions: { i: number; token: Token }[];
+  versions: InstanceVersion[];
+}
+/**
+ * `new`: the first version of an object, so a box merged from a loop's objects gets one per pass;
+ * `mutate`: a method changed this object in place; `store`: an item/attribute assignment (`df['a'] = 0`) did.
+ */
+export type VersionKind = 'new' | 'mutate' | 'store';
+export interface InstanceVersion {
+  i: number;
+  token: Token;
+  kind: VersionKind;
 }
 export interface ExprNode extends NodeBase {
   kind: 'expr';
@@ -349,7 +359,7 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
         undefined,
         `${baseFor(at.merge_key, at.site)}!${k}`,
       );
-      info.node.versions.push({ i: at.i, token });
+      info.node.versions.push({ i: at.i, token, kind: 'new' });
       info.objs.push(k);
       instByObj.set(k, info);
     }
@@ -362,7 +372,7 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
       instByObj.set(k, info);
       info.objs.push(k);
     }
-    info.node.versions.push({ i, token });
+    info.node.versions.push({ i, token, kind: 'new' });
   };
 
   // ---- pass 1: nodes, executions, producers
@@ -400,6 +410,7 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
       info.node.text = e.name;
       info.events.push(e);
       processMutates(e);
+      if (e.kind === 'store') processStore(e);
       continue;
     }
 
@@ -526,7 +537,18 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
       const inst = instanceFor(before, e);
       const last = inst.node.versions[inst.node.versions.length - 1];
       if (!last || last.token !== after || last.i !== e.i)
-        inst.node.versions.push({ i: e.i, token: after });
+        inst.node.versions.push({ i: e.i, token: after, kind: 'mutate' });
+    }
+  }
+
+  /** A store's output is a forced new version of an object that already has a box: add it to that box. */
+  function processStore(e: Event): void {
+    for (const t of e.outputs) {
+      if (!isObject(t)) continue;
+      const inst = instByObj.get(keyOf(t));
+      if (!inst) continue;
+      if (inst.node.versions.some((v) => v.token === t)) continue;
+      inst.node.versions.push({ i: e.i, token: t, kind: 'store' });
     }
   }
 
