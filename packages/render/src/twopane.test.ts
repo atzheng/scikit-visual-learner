@@ -11,6 +11,7 @@ import {
   MOVE_MS,
   PH_MAX_H,
   mountTwoPane,
+  planCreations,
   planMoves,
   planStage,
   valueLine,
@@ -1075,6 +1076,36 @@ describe('planMoves (pure)', () => {
       planMoves(shelfAt0, stageAt1, { before: rel0, after: rel1 }).every((m) => m.phase === 2),
     ).toBe(true);
   });
+  test('creation flourish (svl-2db): only new cards of a forward step', () => {
+    const R = (x: number, y: number): Rect => ({ x, y, w: 50, h: 30 });
+    const shelf0 = new Map<string, Rect | null>([
+      ['i', R(0, 0)],
+      ['o', R(60, 0)],
+      ['n', null],
+    ]);
+    const stage1 = new Map<string, Rect | null>([
+      ['i', R(200, 100)],
+      ['o', R(300, 100)],
+      ['n', R(400, 100)],
+    ]);
+    const rel0 = new Map<string, Rect | null>([
+      ['i', R(0, 0)],
+      ['o', R(60, 0)],
+      ['n', null],
+    ]);
+    const rel1 = new Map<string, Rect | null>([
+      ['i', null],
+      ['o', null],
+      ['n', null],
+    ]);
+    const keys = new Set(['o', 'n']);
+    const fwd = planMoves(shelf0, stage1, { before: rel0, after: rel1 }, { keys, reverse: false });
+    // n is new; o was on the shelf already and just flies in; i is an input
+    expect([...planCreations(fwd, false)]).toEqual(['n']);
+    const back = planMoves(stage1, shelf0, { before: rel1, after: rel0 }, { keys, reverse: true });
+    expect(planCreations(back, true).size).toBe(0);
+    expect(planCreations([], false).size).toBe(0);
+  });
   test('cards that stay put or are not visible do not move', () => {
     const b = new Map([['a', R(0, 0)]]);
     const a = new Map([
@@ -1170,7 +1201,9 @@ describe('animation', () => {
     const s = await usesShelf();
     tp!.setStep(s - 1);
     tp!.setStep(s, { animate: true });
-    const cardCalls = calls.filter((c) => c.el.matches('.md-card, .md-chipcard'));
+    const cardCalls = calls.filter(
+      (c) => c.el.matches('.md-card, .md-chipcard') && !c.frames.some((f) => f.boxShadow),
+    );
     const delays = cardCalls.map((c) => Number(c.opts?.delay ?? 0));
     for (const d of delays) expect([0, MOVE_MS, 2 * MOVE_MS]).toContain(d);
     const last = Math.max(...delays);
@@ -1329,11 +1362,56 @@ describe('animation', () => {
     // the ghost carries no data-wire/data-edge: it is neither hit-tested nor counted
     expect(ghost?.querySelector('[data-wire], [data-edge]') ?? null).toBeNull();
     const faded = calls.filter((c) => c.el instanceof SVGElement && c.el.hasAttribute('data-wire'));
-    for (const c of faded) expect(c.frames).toEqual([{ opacity: 0 }, { opacity: 1 }]);
+    // a wire that draws (svl-2db) holds back its arrowhead until the end of the draw
+    for (const c of faded)
+      expect(c.frames.map((f) => f.opacity)).toEqual(c.frames.length === 3 ? [0, 0, 1] : [0, 1]);
     tp!.setStep(s - 1); // snap: the ghost is gone
     expect(
       host.querySelector('.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]'),
     ).toBeNull();
+  });
+  test('creation flourish (svl-2db): forward steps only, never on snaps, reverse or reduced motion', async () => {
+    const { model } = await open('golden_linreg');
+    const ringed = (cs: typeof calls): number =>
+      cs.filter((c) => c.frames.some((f) => f.boxShadow)).length;
+    const drawn = (cs: typeof calls): number =>
+      cs.filter((c) => c.frames.some((f) => f.strokeDashoffset !== undefined)).length;
+    let found = 0;
+    for (let s = 1; s <= model.steps.length; s++) {
+      setup(false);
+      tp!.setStep(s - 1);
+      tp!.setStep(s, { animate: true });
+      const rings = ringed(calls);
+      if (rings === 0) continue;
+      found++;
+      expect(drawn(calls)).toBeLessThanOrEqual(rings * 4);
+      // a wire draws only into a card that gets the ring (a created one), not one that flew in plain
+      const ringedEls = new Set(
+        calls.filter((c) => c.frames.some((f) => f.boxShadow)).map((c) => c.el),
+      );
+      for (const c of calls.filter((x) => x.frames.some((f) => f.strokeDashoffset !== undefined))) {
+        const to = c.el.parentElement?.getAttribute('data-wire')?.split('>')[1] ?? '';
+        expect(ringedEls.has(tp!.card(to)!)).toBe(true);
+      }
+      // the ring starts after the card has landed
+      for (const c of calls.filter((x) => x.frames.some((f) => f.boxShadow)))
+        expect(Number(c.opts?.delay ?? 0)).toBeGreaterThanOrEqual(MOVE_MS);
+      // stepping back: plain mirrored reverse
+      const n = calls.length;
+      tp!.setStep(s - 1, { animate: true });
+      expect(ringed(calls.slice(n))).toBe(0);
+      expect(drawn(calls.slice(n))).toBe(0);
+      // a snap and a reduced-motion step animate nothing
+      const m = calls.length;
+      tp!.setStep(s);
+      expect(calls).toHaveLength(m);
+      setup(true);
+      tp!.setStep(s - 1);
+      tp!.setStep(s, { animate: true });
+      expect(calls).toHaveLength(0);
+      break;
+    }
+    expect(found).toBeGreaterThan(0);
   });
   test('focus stays on a card that moved to the stage', async () => {
     setup(false);
