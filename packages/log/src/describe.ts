@@ -112,7 +112,7 @@ function bindingsOf(log: EventLog): Map<string, Binding[]> {
     if (s.kind === 'bind' && s.volatile) for (const n of s.targets ?? []) volatile.add(n);
   const scope0 = log.scopes.find((s) => s.id === 0);
   for (const [at, name, token] of scope0?.bindings ?? []) {
-    if (volatile.has(name)) continue;
+    if (volatile.has(name) || token === '') continue;
     const k = keyOf(token);
     const l = m.get(k);
     if (l) l.push({ at, name });

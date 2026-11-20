@@ -256,7 +256,7 @@ The main thread turns the event log into a graph, lays it out with ELK.js, and d
 
 Every **reference value** (a token like `v12.0`) is an **object** and is drawn as its own blue instance box, one box per object: DataFrames, Series, arrays, sparse matrices, lists, dicts, estimators and student class instances alike (owner decision, 2026-11-18). An **object with memory** (an instance of `sklearn.base.BaseEstimator` or of a student-defined class; the course configuration can add classes) is the same kind of box with more to show: its parameters and fitted attributes. A **data box** shows what the summary already holds: `shape`, then `dtype` (Series, arrays) or the first few `columns` (DataFrames, cut with "…"). Its title carries the type and the name: `X_train: DF`. Lists, dicts and tuples show only their title (`models: dict[2]`). Click opens the preview (inspect).
 
-**Scalars** (`s` tokens: numbers, strings, `None`, small tuples) are not boxes. They stay as const text on ports and as labelled wires (`float 0.2`, `r2`).
+**Scalars** (`s` tokens: numbers, strings, `None`, small tuples) are not boxes. They stay as const text on ports and as labelled wires (`float 0.2`, `r2`). In the two-pane view (shelf and stage) every module-level name is a shelf object, plain values too (svl-o6m): `score = model.score(...)` leaves a small `score = 0.42` card on the shelf, which flies onto the stage when a later line uses it. Names that hold one value share its card (`a, b = 1.43`); rebinding a name to a different value moves it to a new card (never the same object); function locals have no card; a name the recorder cannot follow gets none. CONTRACTS section 8, "Value cards".
 
 In-place mutation (`df.dropna(inplace=True)`, `df["c"] = …`) is a **new version of the same box**, not a new box and not an output port. Two different objects are never merged into one box, and a call that returns an object that already has a box (`np.asarray(a)` returning `a`) adds no box and no wire: a missing wire is acceptable, a false one is not.
 
@@ -417,6 +417,7 @@ Each milestone ends with something students could use.
 
 - [x] Method boxes: one per method name and instance (owner decision, 2026-11-18). An instance used twice shows one `transform` box with ×2; the box exists from instantiation, uncalled until its first call.
 - [x] Every object is a blue box, one per object; scalars stay as port text and wire labels (owner decision, 2026-11-18).
+- [x] Every named variable is a shelf object in the two-pane view, plain values included (owner decision, svl-o6m). In the full diagram scalars stay as port text and wire labels.
 - [ ] Are dashed expression nodes enough for column selection (`X["price"]`) and attribute reads (`model.coef_`), or should those two draw as small boxes?
 - [ ] Should pipelines (`make_pipeline(...)`) draw as one instance box containing its steps, using sklearn's own structure, rather than as a function with instance inputs?
 - [ ] How much of a DataFrame preview is useful on hover before it clutters?

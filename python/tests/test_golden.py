@@ -133,7 +133,9 @@ def test_log_invariants(name: str) -> None:
         assert all(t in values for t in toks), (name, e["i"])
         assert not e["returns_self"] or e["outputs"] == []
     for _, _, tok in log["scopes"][0]["bindings"]:
-        assert tok in values
+        assert (
+            tok == "" or tok in values
+        )  # '' closes a name rebound to something untracked (svl-o6m)
     text = json.dumps({**log, "output": [o for o in log["output"] if o["stream"] != "figure"]})
     assert " at 0x" not in text  # no memory addresses
 
