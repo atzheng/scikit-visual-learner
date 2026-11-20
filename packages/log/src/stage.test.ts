@@ -34,7 +34,7 @@ function compact(n: string): string[] {
           ? `import ${x.name}`
           : x?.kind === 'def'
             ? `${x.defKind === 'class' ? 'class' : 'def'} ${x.name}`
-            : id;
+            : id; // a value card: `val:r2:0`
     };
     const ps = st.participants.map(
       (p) =>
@@ -63,14 +63,15 @@ describe('stageAt and shelfOrder on the golden fixtures', () => {
       const log = readLog(n);
       const g = buildGraph(log);
       expect(stageAt(g, log, 0)).toBeNull();
-      const shelf = shelfOrder(g);
-      // creation order, every instance and import once
+      const shelf = shelfOrder(g, log);
+      // creation order, every instance and import once, then the named plain values
       expect(shelf.map((e) => e.at)).toEqual([...shelf.map((e) => e.at)].sort((a, b) => a - b));
       expect(new Set(shelf.map((e) => e.node)).size).toBe(shelf.length);
-      expect(shelf.length).toBe(
+      expect(shelf.filter((e) => e.kind !== 'value').length).toBe(
         g.nodes.filter((x) => x.kind === 'instance' || x.kind === 'import' || x.kind === 'def')
           .length,
       );
+      expect(shelfOrder(g).every((e) => e.kind !== 'value')).toBe(true);
       const byId = new Map(g.nodes.map((x) => [x.id, x]));
       for (let s = 1; s <= g.steps.length; s++) {
         const st = stageAt(g, log, s);
@@ -80,6 +81,16 @@ describe('stageAt and shelfOrder on the golden fixtures', () => {
           if (p.kind === 'chip') {
             expect(byId.has(p.node), 'a chip has no box').toBe(false);
             expect(p.edge).not.toBeNull();
+            continue;
+          }
+          if (p.kind === 'value') {
+            // a value card is a scalar token of the event, and the shelf knows the card
+            expect(shelf.some((e) => e.node === p.node)).toBe(true);
+            expect(
+              Object.values(st.execution?.inputs ?? {}).concat(
+                Object.values(st.execution?.outputs ?? {}),
+              ),
+            ).toContain(p.token);
             continue;
           }
           expect(byId.get(p.node)?.kind).toBe(p.kind);
@@ -118,7 +129,8 @@ describe('golden_linreg, hand-checked', () => {
       '9: L12 LinearRegression [callee:import LinearRegression created:model@out:0]',
       '10: L13 LinearRegression.fit [owner:model* input:X_train@in:X input:y_train@in:y]',
       '11: L14 LinearRegression.predict [owner:model input:X_test@in:X created:pred@out:0]',
-      '12: L15 LinearRegression.score [owner:model input:X_test@in:X input:y_test@in:y] {output:0=0.4162894314248661}',
+      // r2 is a named value: a card, not an inline value
+      '12: L15 LinearRegression.score [owner:model input:X_test@in:X input:y_test@in:y output:val:r2:0@out:0]',
     ]);
   });
 
@@ -157,7 +169,7 @@ describe('review fixes (svl-61q.1)', () => {
     for (const n of names) {
       for (const st of stages(n).all) {
         if (st.kind !== 'store' && st.kind !== 'expr') continue;
-        const objs = st.participants.map((p) => p.object);
+        const objs = st.participants.filter((p) => p.kind !== 'value').map((p) => p.object);
         expect(new Set(objs).size, `${n} step ${st.i}`).toBe(objs.length);
       }
     }

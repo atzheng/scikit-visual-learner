@@ -174,7 +174,7 @@ describe('every fixture, every step', () => {
       const { model, log } = await open(name);
       for (let s = 0; s <= model.steps.length; s++) {
         tp!.setStep(s);
-        const on = shelfAt(model, s);
+        const on = shelfAt(model, s, log);
         const shown = [...host.querySelectorAll('.md-slot')].filter(
           (e) => !(e as HTMLElement).hidden,
         );
@@ -207,7 +207,7 @@ describe('every fixture, every step', () => {
           );
           expect(stops.length).toBeLessThanOrEqual(1);
         }
-        const names = [...host.querySelectorAll('.md-node[aria-label], .md-chipcard')]
+        const names = [...host.querySelectorAll('.md-node[aria-label], .md-chipcard, .md-vcard')]
           .filter((e) => !e.closest('[hidden]') && !e.classList.contains('md-hidden'))
           .map((e) => e.getAttribute('aria-label'));
         expect(names.filter((n, k) => names.indexOf(n) !== k)).toEqual([]);
@@ -551,8 +551,10 @@ describe('a method is drawn inside its owner (svl-a9e)', () => {
       expect(m.x + m.w).toBeLessThanOrEqual(owner.rect.x + owner.rect.w);
       expect(m.y).toBeGreaterThanOrEqual(owner.rect.y);
       expect(m.y + m.h).toBeLessThanOrEqual(owner.rect.y + owner.rect.h);
-      // no owner line: every wire is a graph edge with an arrow
-      expect(plan.wires.every((w) => w.edge !== null && w.arrow)).toBe(true);
+      // no owner line: every wire is a graph edge with an arrow (a named value made by the call may have no edge)
+      expect(plan.wires.every((w) => (w.edge !== null || w.to.startsWith('val:')) && w.arrow)).toBe(
+        true,
+      );
       for (const w of plan.wires) {
         const first = w.points[0]!;
         const last = w.points[w.points.length - 1]!;
@@ -1433,5 +1435,77 @@ describe('animation', () => {
     tp!.setStep(s, { animate: true });
     expect(tp!.card(card.dataset.card!)!.parentElement).toBe(tp!.stageEl);
     expect(document.activeElement).toBe(g);
+  });
+});
+
+describe('value cards (svl-o6m)', () => {
+  const card = (id: string): HTMLElement | null =>
+    host.querySelector(`.md-card[data-card="${id}"]`);
+
+  test('golden_linreg: r2 is an output on the stage at its call', async () => {
+    const { model } = await open('golden_linreg');
+    tp!.setStep(model.steps.length);
+    const c = card('val:r2:0')!;
+    expect(c.parentElement).toBe(tp!.stageEl);
+    expect(c.hidden).toBe(false);
+    const box = c.querySelector<HTMLElement>('.md-vcard')!;
+    expect(box.textContent).toBe('r2 = 0.4162894314248661');
+    expect(box.getAttribute('aria-label')).toContain('value r2 = 0.4162894314248661, float');
+    expect(box.getAttribute('aria-label')).toContain('output of');
+    // stepping again does not pile up the role suffix
+    tp!.setStep(model.steps.length);
+    expect(box.getAttribute('aria-label')!.match(/output of/g)).toHaveLength(1);
+    // no inline duplicate of the value
+    expect(host.querySelector('.md-stage-value')).toBeNull();
+    // the shelf keeps its place for it while it is away
+    expect(slot('val:r2:0').dataset.state).toBe('stage');
+  });
+
+  test('the end of the run: the card is on the shelf; the wire to it is drawn while on the stage', async () => {
+    const { model } = await open('edge_values');
+    const s = model.steps.length;
+    tp!.setStep(s);
+    const z = tp!.cards().find((c) => c.node === 'val:z:0')!;
+    expect(z.where).toBe('stage'); // made by the last call
+    const m = tp!.cards().find((c) => c.node === 'val:n:0')!;
+    expect(m.where).toBe('shelf');
+    expect(card('val:n:0')!.parentElement!.matches('.md-slot')).toBe(true);
+    expect(visible('.md-wire').length).toBeGreaterThan(0);
+  });
+
+  test('a rebound name is another card; names that share a value share a card', async () => {
+    const { model, log } = await open('edge_values');
+    const sum = log.events.find((e) => e.name === 'ndarray.sum')!;
+    const max = log.events.find((e) => e.name === 'ndarray.max')!;
+    tp!.setStep(model.steps.indexOf(sum.i) + 1);
+    expect(card('val:n:0')!.parentElement).toBe(tp!.stageEl);
+    tp!.setStep(model.steps.indexOf(max.i) + 1);
+    // n = a.max(): the new n is made on the stage; the old value (held by n and m) waits on the shelf as one card
+    expect(card('val:n:1')!.parentElement).toBe(tp!.stageEl);
+    expect(slot('val:n:0').dataset.state).toBe('shelf');
+    expect(slot('val:n:0').querySelector('.md-vcard')!.textContent).toBe('n, m = 6');
+    expect(host.querySelector('[data-card="val:m:0"]')).toBeNull();
+    // add(m, m): one card for both ports, two wires, and it says m now that n is rebound
+    const add = log.events.find((e) => e.name === 'add')!;
+    tp!.setStep(model.steps.indexOf(add.i) + 1);
+    expect(host.querySelectorAll('.md-card[data-card="val:n:0"]')).toHaveLength(1);
+    expect(card('val:n:0')!.parentElement).toBe(tp!.stageEl);
+    expect(card('val:n:0')!.querySelector('.md-vcard')!.textContent).toBe('m = 6');
+    expect(tp!.plan!.items.filter((i) => i.key === 'val:n:0')).toHaveLength(1);
+    expect(tp!.plan!.wires.filter((w) => w.from === 'val:n:0')).toHaveLength(2);
+    expect(card('val:c:0')!.parentElement).toBe(tp!.stageEl);
+    expect(slot('val:n:1').dataset.state).toBe('hidden'); // replaced by `n += 1`
+  });
+
+  test('keyboard: a value card is one roving focus target with its own name', async () => {
+    const { model } = await open('edge_values');
+    tp!.setStep(model.steps.length);
+    const stops = [...host.querySelectorAll('.md-shelf [tabindex="0"]')].filter(
+      (e) => !e.closest('[hidden]'),
+    );
+    expect(stops).toHaveLength(1);
+    const labels = visible('.md-vcard').map((e) => e.getAttribute('aria-label'));
+    expect(new Set(labels).size).toBe(labels.length);
+    for (const l of labels) expect(l).toMatch(/^value /);
   });
 });

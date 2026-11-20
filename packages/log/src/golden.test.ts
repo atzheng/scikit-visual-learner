@@ -76,8 +76,8 @@ function checkChip(log: EventLog, g: GraphModel, ed: GEdge): void {
 }
 
 describe('fixtures', () => {
-  it('has the 33 programs', () => {
-    expect(names.length).toBe(33);
+  it('has the 34 programs', () => {
+    expect(names.length).toBe(34);
   });
 
   describe.each(names)('%s', (n) => {

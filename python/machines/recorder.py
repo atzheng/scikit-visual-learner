@@ -1059,7 +1059,9 @@ class Recorder:
         for name, obj in mapping.items():
             cls = vt.classify(obj)
             if cls == "label":
-                rows.append((name, None))
+                # a tracked name now holding a function, module or the like: an empty token closes
+                # its old binding (svl-o6m); a name never tracked gets no row, as before
+                rows.append((name, "" if name in self._names else None))
                 new_names.append((name, None))
                 continue
             tok = self._bind_token(site, info, o, name, obj, cls, targets, rebound)
