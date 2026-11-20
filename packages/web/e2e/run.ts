@@ -127,12 +127,13 @@ async function runAndWait(page: Page): Promise<void> {
   );
 }
 
-/** "N of M" from the timeline's step label. */
+/** Overall step N of M, from the data attributes of the timeline's step label. */
 async function stepCount(page: Page): Promise<{ n: number; m: number }> {
-  const t = (await page.locator('output.step-label').textContent()) ?? '';
-  const mt = /(\d+) of (\d+)/.exec(t);
-  check(mt, `step label "${t}" is not "N of M"`);
-  return { n: Number(mt[1]), m: Number(mt[2]) };
+  const l = page.locator('output.step-label');
+  const n = Number(await l.getAttribute('data-step'));
+  const m = Number(await l.getAttribute('data-total'));
+  check(Number.isFinite(n) && Number.isFinite(m), 'step label has no data-step / data-total');
+  return { n, m };
 }
 
 const currentEvent = (page: Page) => page.getByTestId('current-event').textContent();
