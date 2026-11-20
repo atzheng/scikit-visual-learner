@@ -48,6 +48,9 @@ export {
 export {
   mountTwoPane,
   planStage,
+  planLine,
+  currentFocus,
+  MAX_CARD_ROWS,
   planMoves,
   cardKey,
   valueLine,

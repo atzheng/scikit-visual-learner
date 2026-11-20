@@ -180,7 +180,7 @@
     flex-direction: row;
   }
   .twopane-host .md-stage {
-    flex: 1.2 1 0;
+    flex: 2 1 0; /* about 60/40 or more: the stage is the focus, the shelf is a list of what exists */
     min-width: 280px;
     max-height: none;
   }

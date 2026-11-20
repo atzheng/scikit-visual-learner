@@ -1,6 +1,6 @@
 import '@machines/render/theme.css';
 import { describeStep, type EventLog, type GraphModel } from '@machines/log';
-import { createElk, mountTwoPane, type TwoPaneController } from '@machines/render';
+import { createElk, currentFocus, mountTwoPane, type TwoPaneController } from '@machines/render';
 import elkWorkerUrl from 'elkjs/lib/elk-worker.min.js?url';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -122,7 +122,7 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
    * Scale the stage canvas to fit its pane, by width and by height (floor 0.6, then the stage scrolls), and
    * show a cue while content is still below the fold.
    */
-  const fitStage = useCallback((opts?: { zoom?: boolean }) => {
+  const fitStage = useCallback((opts?: { zoom?: boolean; focus?: boolean }) => {
     const ctl = ctlRef.current;
     const sec = ctl?.stageEl.parentElement;
     const root = sec?.parentElement;
@@ -161,6 +161,38 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
       // (and a transform would make the stage the containing block of the flying cards, which are fixed).
       ctl.stageEl.style.zoom = k < 1 ? String(k) : '';
       scale.current = k;
+      // svl-17v: a line whose stage is still taller or wider than the pane keeps its current call in view,
+      // not its top. Part of the fit, before the cards' landing places are measured, so the flight lands right.
+      const f = opts?.focus ? currentFocus(ctl.plan) : null;
+      if (f) {
+        const head = sec.querySelector<HTMLElement>('.stage-head')?.offsetHeight ?? 0;
+        const base =
+          ctl.stageEl.getBoundingClientRect().top - sec.getBoundingClientRect().top + sec.scrollTop;
+        const baseX =
+          ctl.stageEl.getBoundingClientRect().left -
+          sec.getBoundingClientRect().left +
+          sec.scrollLeft;
+        const top = base + f.y * k;
+        const bottom = base + (f.y + f.h) * k;
+        const left = baseX + f.x * k;
+        const right = baseX + (f.x + f.w) * k;
+        if (sec.scrollHeight > sec.clientHeight) {
+          const view = sec.clientHeight - head;
+          if (top < sec.scrollTop + head || bottom > sec.scrollTop + sec.clientHeight)
+            sec.scrollTop = Math.max(
+              0,
+              bottom - top > view ? top - head - 12 : bottom - sec.clientHeight + 12,
+            );
+        }
+        if (
+          sec.scrollWidth > sec.clientWidth &&
+          (left < sec.scrollLeft || right > sec.scrollLeft + sec.clientWidth)
+        )
+          sec.scrollLeft = Math.max(0, right - sec.clientWidth + 12);
+      } else if (opts?.focus) {
+        sec.scrollTop = 0;
+        sec.scrollLeft = 0;
+      }
     }
     // a few px of blank under the last card is not "more": the cue needs real hidden content
     if (
@@ -186,7 +218,7 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
       useStore.getState().stepSingle;
     applied.current = { mounted, step: n };
     // the zoom for this step's stage is set inside setStep, before the cards' landing places are measured
-    ctl.setStep(n, { animate, fit: fitStage });
+    ctl.setStep(n, { animate, fit: () => fitStage({ focus: true }) });
     if (useStore.getState().stepSingle) useStore.setState({ stepSingle: false });
     hover.current = null;
     // the cue measures overflow, which is only true once the cards have landed (no zoom change here)

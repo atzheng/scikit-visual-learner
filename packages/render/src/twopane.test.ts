@@ -6,8 +6,11 @@ import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { buildGraph, lineStageAt, shelfAt, stageAt, stateAt } from '@machines/log';
 import type { EventLog, GraphModel, StageParticipant } from '@machines/log';
 import {
+  capAttrRows,
   cardKey,
+  currentFocus,
   diffWires,
+  MAX_CARD_ROWS,
   FLY_Z,
   MOVE_MS,
   PH_MAX_H,
@@ -1619,5 +1622,181 @@ describe('value cards (svl-o6m)', () => {
     const labels = visible('.md-vcard').map((e) => e.getAttribute('aria-label'));
     expect(new Set(labels).size).toBe(labels.length);
     for (const l of labels) expect(l).toMatch(/^value /);
+  });
+});
+
+describe('a compact stage (svl-17v)', () => {
+  /** The zoom the stage gets in a pane of about 600 x 700 px (a 1440 x 900 window), as `fitStage` computes it. */
+  const zoomOf = (w: number, h: number): number => Math.min(1, 600 / w, 700 / h);
+  const overlap = (a: Rect, b: Rect): boolean =>
+    a.x < b.x + b.w - 1 && b.x < a.x + a.w - 1 && a.y < b.y + b.h - 1 && b.y < a.y + a.h - 1;
+
+  test('long lines are laid out in columns that fit (edge_nosig 18, edge_mpl 11, edge_dict_models 10)', async () => {
+    // before this layout: 2042 x 478 (zoom 0.34), 2362 x 539 and 1570 x 705 in this test's text measure
+    const cases: [string, number, number][] = [
+      ['edge_nosig', 18, 0.65],
+      ['edge_mpl', 11, 0.75],
+      ['edge_dict_models', 10, 0.75],
+    ];
+    for (const [name, step, minZoom] of cases) {
+      await open(name);
+      tp!.setStep(step);
+      const plan = tp!.plan!;
+      expect(plan.calls!.length).toBeGreaterThan(1);
+      expect(plan.height).toBeLessThanOrEqual(900);
+      expect(zoomOf(plan.width, plan.height)).toBeGreaterThanOrEqual(minZoom);
+      tp!.destroy();
+      host.remove();
+    }
+  });
+
+  test('calls read in order: the next call is below the last one or in the next column', async () => {
+    let lines = 0;
+    let columns = 0;
+    for (const name of names) {
+      const { model } = await open(name);
+      for (let s = 1; s <= model.steps.length; s++) {
+        tp!.setStep(s);
+        const plan = tp!.plan;
+        if (!plan?.calls) continue;
+        lines++;
+        // the column of a call: its box's left edge (every call of one column stands in the same band of x)
+        const calls = plan.calls;
+        for (let k = 1; k < calls.length; k++) {
+          const a = calls[k - 1]!.rect;
+          const b = calls[k]!.rect;
+          const next = b.y >= a.y || b.x > a.x + a.w;
+          if (!next)
+            throw new Error(`${name} step ${s}: call ${k} is above and left of call ${k - 1}`);
+          if (b.y < a.y) columns++;
+        }
+      }
+    }
+    expect(lines).toBeGreaterThan(5);
+    expect(columns).toBeGreaterThan(0); // some line did go into a second column
+  }, 120000);
+
+  test('no card, call box or value of a line overlaps another, and every card is on the canvas', async () => {
+    let checked = 0;
+    for (const name of names) {
+      const { model } = await open(name);
+      for (let s = 1; s <= model.steps.length; s++) {
+        tp!.setStep(s);
+        const plan = tp!.plan;
+        if (!plan?.calls) continue;
+        checked++;
+        const rects: [string, Rect][] = plan.items.map((i) => [i.key, i.rect]);
+        for (const c of plan.calls)
+          if (!c.nested && !c.calleeBox) rects.push([`box#${c.call}`, c.rect]);
+        for (const v of plan.valuesAll ?? [])
+          rects.push(['values', { x: v.x, y: v.y, w: v.w, h: v.lines.length * 18 }]);
+        for (let i = 0; i < rects.length; i++) {
+          const [ka, ra] = rects[i]!;
+          expect(ra.x).toBeGreaterThanOrEqual(0);
+          expect(ra.y).toBeGreaterThanOrEqual(0);
+          expect(ra.x + ra.w).toBeLessThanOrEqual(plan.width);
+          expect(ra.y + ra.h).toBeLessThanOrEqual(plan.height);
+          for (let j = i + 1; j < rects.length; j++) {
+            const [kb, rb] = rects[j]!;
+            // a nested method box lies inside its owner's card by design; values sit beside boxes
+            if (overlap(ra, rb)) throw new Error(`${name} step ${s}: ${ka} overlaps ${kb}`);
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(20);
+  }, 120000);
+
+  test('an object two bands share takes no room on the band that only uses it (stubs)', async () => {
+    // edge_mpl step 11 chains calls through temporaries: each one is drawn once, as its call's output
+    const { model, log } = await open('edge_mpl');
+    tp!.setStep(11);
+    const plan = tp!.plan!;
+    const line = lineStageAt(model, log, 11)!;
+    expect(plan.items.length).toBeLessThan(
+      line.calls.reduce((a, c) => a + c.stage.participants.length, 0),
+    );
+    const keys = new Set(plan.items.map((i) => i.key));
+    expect(keys.size).toBe(plan.items.length);
+    // the wires are unchanged by the layout: one per edge of each call, ending at the cards or call boxes
+    const tags = new Set(plan.calls!.map((c) => `box#${c.call}`));
+    for (const w of plan.wires) {
+      expect(keys.has(w.from) || tags.has(w.from)).toBe(true);
+      expect(keys.has(w.to) || tags.has(w.to)).toBe(true);
+    }
+  });
+
+  test('currentFocus is the current call and the cards that belong to it', async () => {
+    const { model } = await open('edge_nosig');
+    tp!.setStep(model.steps.length);
+    const plan = tp!.plan!;
+    const f = currentFocus(plan)!;
+    const cur = plan.calls!.find((c) => c.current)!;
+    expect(f.x).toBeLessThanOrEqual(cur.rect.x);
+    expect(f.y).toBeLessThanOrEqual(cur.rect.y);
+    expect(f.x + f.w).toBeGreaterThanOrEqual(cur.rect.x + cur.rect.w);
+    expect(f.y + f.h).toBeGreaterThanOrEqual(cur.rect.y + cur.rect.h);
+    expect(f.y + f.h).toBeLessThanOrEqual(plan.height);
+    tp!.setStep(1);
+    expect(currentFocus(tp!.plan)).toBeNull(); // one call: shown from the top
+  });
+
+  test('earlier calls of the line are quieter than the current one', async () => {
+    const { model } = await open('edge_nosig');
+    tp!.setStep(model.steps.length);
+    const plan = tp!.plan!;
+    const cur = plan.calls!.find((c) => c.current)!;
+    const past = plan.items.filter((i) => i.call !== undefined && i.call < cur.call);
+    expect(past.length).toBeGreaterThan(0);
+    expect(host.querySelectorAll('.md-past').length).toBeGreaterThan(0);
+    for (const i of plan.items.filter((i) => i.call === cur.call)) {
+      const el = tp!.card(i.key) ?? host.querySelector(`[data-card="${CSS.escape(i.key)}"]`);
+      expect(el?.classList.contains('md-past')).toBe(false);
+    }
+    tp!.setStep(1);
+    expect(host.querySelectorAll('.md-past').length).toBe(0);
+  });
+
+  test('capAttrRows keeps a card to MAX_CARD_ROWS rows, as wide as its widest row', () => {
+    const rows = Array.from({ length: 15 }, (_, k) => `attr${k} float`);
+    rows[12] = 'a_very_long_attribute_name ndarray';
+    const out = capAttrRows({ a: rows, b: ['x 1', 'y 2'] });
+    expect(out.a).toHaveLength(MAX_CARD_ROWS);
+    expect(out.a![MAX_CARD_ROWS - 1]).toBe('a_very_long_attribute_name ndarray');
+    expect(out.b).toEqual(['x 1', 'y 2']);
+  });
+
+  test('an instance card shows at most MAX_CARD_ROWS rows, and keeps the changed attributes in view', async () => {
+    const { model } = await open('edge_dict_models');
+    let cut = 0;
+    for (let s = 1; s <= model.steps.length; s++) {
+      tp!.setStep(s);
+      for (const card of visible('.md-card')) {
+        const rows = [...card.querySelectorAll('.md-attr')].filter(
+          (r) => !r.classList.contains('md-hidden'),
+        );
+        expect(rows.length).toBeLessThanOrEqual(MAX_CARD_ROWS);
+        if (rows.some((r) => /… \d+ more/.test(r.textContent ?? ''))) {
+          cut++;
+          // the step's changes are among the rows shown, even though the first rows are others
+          if (card.querySelector('.md-attr.md-changed')) expect(rows.length).toBe(MAX_CARD_ROWS);
+        }
+      }
+    }
+    expect(cut).toBeGreaterThan(0);
+    tp!.setStep(11);
+    expect(host.querySelector('.md-attr.md-changed')).not.toBeNull();
+  });
+
+  test('a shelf placeholder is one line tall and as wide as its text', async () => {
+    const { model } = await open('golden_linreg');
+    tp!.setStep(model.steps.length);
+    const phs = [...host.querySelectorAll<HTMLElement>('.md-slot-ph')].filter((p) => !p.hidden);
+    expect(phs.length).toBeGreaterThan(0);
+    for (const ph of phs) {
+      expect(parseFloat(ph.style.height)).toBe(PH_MAX_H);
+      const text = `${ph.querySelector('.md-slot-ph-name')!.textContent} · ${ph.querySelector('.md-slot-ph-text')!.textContent}`;
+      expect(parseFloat(ph.style.width)).toBeGreaterThanOrEqual(text.length * 7);
+    }
   });
 });

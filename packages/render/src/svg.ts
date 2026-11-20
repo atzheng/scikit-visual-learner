@@ -1342,7 +1342,16 @@ export function applyState(
       const rows = instanceRowModels(h.node, token, log?.values);
       const cap = h.rows.length;
       const overflow = rows.length > cap;
-      const shown = overflow ? rows.slice(0, Math.max(cap - 1, 0)) : rows;
+      // svl-17v: a card that cuts its rows keeps the attributes the step changed in view, then the first rows
+      let shown = rows;
+      if (overflow) {
+        const room = Math.max(cap - 1, 0);
+        const pinned = new Set(
+          rows.filter((r) => ownsCurrent && !r.param && changed.has(r.name)).slice(0, room),
+        );
+        let free = room - pinned.size;
+        shown = rows.filter((r) => pinned.has(r) || free-- > 0);
+      }
       const flashing = ownsCurrent && stepping && !ctx.reducedMotion;
       h.rows.forEach((r, k) => {
         const row = shown[k];

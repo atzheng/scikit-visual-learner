@@ -629,18 +629,22 @@ g[data-doc-attr]:focus-visible > .md-docs-btn {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
-  gap: 2px;
-  border: 2px dashed var(--md-inst-stroke);
-  border-radius: 10px;
+  gap: 6px;
+  border: 1.5px dashed var(--md-inst-stroke);
+  border-radius: 15px;
   color: var(--md-text-muted);
   text-align: center;
+  white-space: nowrap;
   overflow: hidden;
 }
 .md-slot-ph-name {
   font-weight: bold;
   color: var(--md-text);
+}
+.md-slot-ph-text::before {
+  content: '· ';
 }
 .md-slot-cap {
   text-align: center;
@@ -659,6 +663,11 @@ g[data-doc-attr]:focus-visible > .md-docs-btn {
   background: var(--md-type-fill);
   color: var(--md-type-text);
   white-space: nowrap;
+}
+/* svl-17v: what an earlier call of the line made or used: kept, with its wires, but quieter than the current call */
+.md-stage-canvas .md-card.md-past:not(:hover):not(:focus-within),
+.md-stage-canvas .md-chipcard.md-past:not(:hover):not(:focus-within) {
+  opacity: 0.72;
 }
 /* svl-a9e: a method call is drawn inside its owner's card, so the wires end inside it: draw them above the cards */
 .md-stage-canvas.md-nested .md-stage-wires {
