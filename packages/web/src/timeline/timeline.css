@@ -16,8 +16,16 @@
 }
 
 .step-label {
-  min-width: 6ch;
+  min-width: 14ch;
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.25;
   font-variant-numeric: tabular-nums;
+}
+
+.step-overall {
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .current-event {

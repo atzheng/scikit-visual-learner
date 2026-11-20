@@ -3,12 +3,13 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useStore } from '../store';
 import { EventList } from './EventList';
 import { SummaryText } from './SummaryText';
+import { stepCounter } from './counter';
 import { clampStep, endCue, hasLaterOutput, stepForKey } from './steps';
 import './timeline.css';
 
 const ANNOUNCE_DELAY_MS = 300;
 
-/** Slider over steps 0..N with prev/next, a "k of n" label and a collapsible event list. */
+/** Slider over steps 0..N with prev/next, a position-in-line label and a collapsible event list. */
 export function Timeline() {
   const model = useStore((s) => s.model);
   const log = useStore((s) => s.log);
@@ -29,7 +30,12 @@ export function Timeline() {
   const [announced, setAnnounced] = useState('');
   // The end cue is spoken once per run, with the first update after the run finishes; stepping never repeats it.
   const cueSpokenFor = useRef<unknown>(null);
-  const spoken = useMemo(() => summaryText(summary), [summary]);
+  const counter = useMemo(() => stepCounter(model, log, cur, max), [model, log, cur, max]);
+  // the live region says the new position once, then the sentence
+  const spoken = useMemo(
+    () => (cur > 0 ? `${counter.primary}. ${summaryText(summary)}` : summaryText(summary)),
+    [summary, counter, cur],
+  );
   useEffect(() => {
     if (running) {
       setAnnounced('');
@@ -53,7 +59,7 @@ export function Timeline() {
         : false,
     [model, log, running, cur, max],
   );
-  const text = `Step ${cur} of ${max}`;
+  const text = counter.spoken;
   const onKeyDown = (e: KeyboardEvent) => {
     const next = stepForKey(e.nativeEvent, cur, max, { vertical: true });
     if (next === null) return;
@@ -65,6 +71,7 @@ export function Timeline() {
       <div className="timeline-row">
         <button
           type="button"
+          className="step-btn primary"
           aria-label="Previous step"
           disabled={cur <= 0}
           onClick={() => setStep(cur - 1, true)}
@@ -88,14 +95,28 @@ export function Timeline() {
         />
         <button
           type="button"
+          className="step-btn primary"
           aria-label="Next step"
           disabled={cur >= max}
           onClick={() => setStep(cur + 1, true)}
         >
           ▶
         </button>
-        <output className="step-label" htmlFor="timeline-slider">
-          {cur} of {max}
+        <output
+          className="step-label"
+          htmlFor="timeline-slider"
+          aria-live="off"
+          data-step={cur}
+          data-total={max}
+          data-in-line={counter.inLine}
+          data-line-total={counter.lineTotal}
+        >
+          <span className="step-primary">{counter.primary}</span>
+          {counter.overall && (
+            <span className="step-overall" aria-hidden="true">
+              {counter.overall}
+            </span>
+          )}
         </output>
         <button
           type="button"
