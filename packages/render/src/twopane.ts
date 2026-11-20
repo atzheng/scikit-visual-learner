@@ -2,7 +2,15 @@
 // creation order, no wires) and a STAGE (the current line: its call box, the objects it uses and the wires
 // between them). Framework-free. The layout of the stage is a pure function (`planStage`); `mountTwoPane`
 // builds the DOM. Each object card is one stable element that moves between its shelf slot and the stage.
-import { lineStageAt, reprTruncated, shelfAt, shelfOrder, stageAt, stateAt } from '@machines/log';
+import {
+  lineStageAt,
+  reprTruncated,
+  shelfAt,
+  shelfOrder,
+  stageAt,
+  stateAt,
+  valueNames,
+} from '@machines/log';
 import type {
   CallNode,
   EventLog,
@@ -107,14 +115,15 @@ export interface NestedBox {
 }
 
 /** A value card's text, `name = repr`: the card shows it on one line (cut by CSS), the title and the label say it whole. */
-export function valueCardText(v: ValueCard): string {
-  return v.text === null ? v.name : `${v.name} = ${v.text}`;
+export function valueCardText(v: ValueCard, names: string[] = v.names.map((n) => n.name)): string {
+  const who = [...new Set(names)].join(', ');
+  return v.text === null ? who : `${who} = ${v.text}`;
 }
 /** The size of a value card's box (svl-o6m): one line of its text, at most `VALUE_CARD_MAX_CHARS` characters wide. */
 export const VALUE_CARD_MAX_CHARS = 26;
 export function valueCardSize(v: ValueCard): Size {
   const chars = Math.min(VALUE_CARD_MAX_CHARS, Math.max(4, valueCardText(v).length));
-  return { w: Math.ceil(chars * 7.2) + 22, h: 30 };
+  return { w: Math.ceil(chars * 7.4) + 28, h: 30 };
 }
 
 /** The key of a participant's card. */
@@ -185,6 +194,14 @@ export function planStage(
     items.push(it);
     return it;
   };
+  // one card per key: an object two ports take (`np.add(a, a)`) is one card with a wire per port
+  const firstOf = (ps: StageParticipant[]): StageParticipant[] => {
+    const seen = new Set<string>();
+    return ps.filter((p) => {
+      const k = cardKey(p, mergedOf(p));
+      return !seen.has(k) && seen.add(k);
+    });
+  };
 
   if (!box) {
     const row = stage.participants;
@@ -212,6 +229,7 @@ export function planStage(
   );
   const ins = stage.participants.filter((p) => p.role === 'input');
   const outs = stage.participants.filter((p) => p.role === 'output' || p.role === 'created');
+  const inCards = firstOf(ins);
   const inH = Math.max(0, ...S(ins).map((s) => s.h));
   const outH = Math.max(0, ...S(outs).map((s) => s.h));
   const ownerSpace = owner ? sz.get(owner)!.w + STAGE.sideGap : 0;
@@ -244,11 +262,17 @@ export function planStage(
     ownerS && ownerTop < rowBottom && ownerBottom > rowTop
       ? Math.max(x0, ownerS.w + STAGE.colGap)
       : x0;
-  let x = clearOwner(cx - rowWidth(S(ins)) / 2, inH + 0, 0);
+  let x = clearOwner(cx - rowWidth(S(inCards)) / 2, inH + 0, 0);
+  const placed = new Map<string, PlanItem>();
   ins.forEach((p, k) => {
     const s = sz.get(p)!;
-    const it = place(p, x, inH - s.h);
-    x += s.w + STAGE.colGap;
+    const key = cardKey(p, mergedOf(p));
+    let it = placed.get(key);
+    if (!it) {
+      it = place(p, x, inH - s.h);
+      placed.set(key, it);
+      x += s.w + STAGE.colGap;
+    }
     const sx = it.rect.x + s.w / 2;
     const sy = it.rect.y + s.h;
     const px = portX(p, k, ins.length);
@@ -1227,6 +1251,21 @@ export async function mountTwoPane(
     onOpenDocs: opts.onOpenDocs,
   };
 
+  /** The names a value card shows are those holding the value at the step: `a, b = 1.43` (event null: the end of the run). */
+  function paintValue(box: HTMLElement, value: ValueCard, event: number | null): void {
+    const names = valueNames(value, event);
+    const shown = valueCardText(value, names.length ? names : [value.name]);
+    box.firstElementChild!.textContent = shown;
+    box.title = `${shown}${value.type ? ` (${value.type})` : ''}${
+      value.text !== null && reprTruncated(value.text) ? ', shortened' : ''
+    }`;
+    const label = `value ${shown}${value.type ? `, ${value.type}` : ''}`.replace(
+      /\.\.\.|…/g,
+      ' and more',
+    );
+    box.setAttribute('aria-label', label);
+    box.dataset.label = label;
+  }
   const cards = new Map<string, Card>();
   const makeCard = (key: string, node: string, object: string | null): Card => {
     const existing = cards.get(key);
@@ -1243,23 +1282,15 @@ export async function mountTwoPane(
     wrap.style.height = `${size.h + CARD_PAD.t + CARD_PAD.b}px`;
     if (value) {
       // a plain value: a light box with `name = value`, solid outline (an instance's is a full card; a chip's is dashed)
-      const box = el(doc, 'div', 'md-vcard', valueCardText(value));
+      const box = el(doc, 'div', 'md-vcard');
+      box.append(el(doc, 'span', 'md-vcard-text'));
       box.dataset.node = node;
       box.style.left = `${CARD_PAD.l}px`;
       box.style.top = `${CARD_PAD.t}px`;
       box.style.width = `${size.w}px`;
       box.style.height = `${size.h}px`;
-      const shown = value.text === null ? value.name : `${value.name} = ${value.text}`;
-      box.title = `${shown}${value.type ? ` (${value.type})` : ''}${
-        value.text !== null && reprTruncated(value.text) ? ', shortened' : ''
-      }`;
       box.setAttribute('role', 'group');
-      const label = `value ${shown}${value.type ? `, ${value.type}` : ''}`.replace(
-        /\.\.\.|…/g,
-        ' and more',
-      );
-      box.setAttribute('aria-label', label);
-      box.dataset.label = label;
+      paintValue(box, value, null);
       wrap.append(box);
     } else if (ln) {
       const dx = CARD_PAD.l - ln.x;
@@ -1759,7 +1790,10 @@ export async function mountTwoPane(
       // unique accessible names: what the card is and what it does on this line (the wires are not read out)
       const g = focusOf(c.wrap);
       // a value card's name is fixed text, not redrawn by `setState`: start from it again, or the suffixes pile up
-      if (g?.dataset.label !== undefined) g.setAttribute('aria-label', g.dataset.label);
+      const vc = valueOf.get(c.node);
+      if (g && vc)
+        paintValue(g, vc, current === 0 || current === total ? null : model.steps[current - 1]!);
+      else if (g?.dataset.label !== undefined) g.setAttribute('aria-label', g.dataset.label);
       if (g && !c.wrap.hidden) {
         const suffix = stageCard ? suffixOf(stageCard.item) : isBox ? boxSuffix(c) : 'on the shelf';
         const base = g.getAttribute('aria-label') ?? '';

@@ -151,29 +151,24 @@
       "inputs": [
         {
           "origin": "name",
-          "param": "self",
-          "value": "v1.0"
-        },
-        {
-          "origin": "const",
-          "param": "min",
-          "text": "0"
+          "param": "x1",
+          "value": "s0"
         },
         {
           "origin": "name",
-          "param": "max",
-          "value": "s2"
+          "param": "x2",
+          "value": "s0"
         }
       ],
-      "kind": "method",
+      "kind": "function",
       "merge_key": "s11",
       "module": "numpy",
       "mutates": [],
-      "name": "ndarray.clip",
+      "name": "add",
       "outputs": [
-        "v2.0"
+        "s4"
       ],
-      "owner": "v1.0",
+      "owner": null,
       "ret": 6,
       "returns_self": false,
       "scope": 0,
@@ -196,7 +191,7 @@
       "mutates": [],
       "name": "ndarray.min",
       "outputs": [
-        "s4"
+        "s5"
       ],
       "owner": "v1.0",
       "ret": 7,
@@ -247,12 +242,12 @@
         [
           6,
           "c",
-          "v2.0"
+          "s4"
         ],
         [
           7,
           "z",
-          "s4"
+          "s5"
         ]
       ],
       "id": 0,
@@ -440,23 +435,23 @@
     {
       "args": [
         {
-          "origin": "const",
-          "text": "0"
+          "name": "m",
+          "origin": "name"
         },
         {
-          "name": "n",
+          "name": "m",
           "origin": "name"
         }
       ],
       "col": 4,
       "end_col": 16,
       "end_line": 16,
-      "func_text": "a.clip",
+      "func_text": "np.add",
       "id": 11,
       "keywords": {},
       "kind": "call",
       "line": 16,
-      "text": "a.clip(0, n)"
+      "text": "np.add(m, m)"
     },
     {
       "col": 0,
@@ -468,7 +463,7 @@
       "targets": [
         "c"
       ],
-      "text": "c = a.clip(0, n)",
+      "text": "c = np.add(m, m)",
       "value": {
         "origin": "call",
         "site": 11
@@ -541,27 +536,14 @@
       "type": "float64"
     },
     "s4": {
+      "repr": "12",
+      "type": "int64"
+    },
+    "s5": {
       "repr": "1",
       "type": "int64"
     },
     "v1.0": {
-      "dtype": "int64",
-      "preview": {
-        "kind": "matrix",
-        "rows": [
-          [
-            "1",
-            "2",
-            "3"
-          ]
-        ]
-      },
-      "shape": [
-        3
-      ],
-      "type": "array"
-    },
-    "v2.0": {
       "dtype": "int64",
       "preview": {
         "kind": "matrix",

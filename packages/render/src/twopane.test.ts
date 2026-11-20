@@ -1467,31 +1467,34 @@ describe('value cards (svl-o6m)', () => {
     tp!.setStep(s);
     const z = tp!.cards().find((c) => c.node === 'val:z:0')!;
     expect(z.where).toBe('stage'); // made by the last call
-    const m = tp!.cards().find((c) => c.node === 'val:m:0')!;
+    const m = tp!.cards().find((c) => c.node === 'val:n:0')!;
     expect(m.where).toBe('shelf');
-    expect(card('val:m:0')!.parentElement!.matches('.md-slot')).toBe(true);
+    expect(card('val:n:0')!.parentElement!.matches('.md-slot')).toBe(true);
     expect(visible('.md-wire').length).toBeGreaterThan(0);
   });
 
-  test('a rebound name is another card: the old one leaves the shelf', async () => {
+  test('a rebound name is another card; names that share a value share a card', async () => {
     const { model, log } = await open('edge_values');
     const sum = log.events.find((e) => e.name === 'ndarray.sum')!;
     const max = log.events.find((e) => e.name === 'ndarray.max')!;
     tp!.setStep(model.steps.indexOf(sum.i) + 1);
     expect(card('val:n:0')!.parentElement).toBe(tp!.stageEl);
     tp!.setStep(model.steps.indexOf(max.i) + 1);
-    // n = a.max(): the new n is made on the stage; the old one (and its alias m) wait on the shelf
+    // n = a.max(): the new n is made on the stage; the old value (held by n and m) waits on the shelf as one card
     expect(card('val:n:1')!.parentElement).toBe(tp!.stageEl);
     expect(slot('val:n:0').dataset.state).toBe('shelf');
-    expect(slot('val:m:0').dataset.state).toBe('shelf');
-    expect(card('val:n:0')).not.toBe(card('val:n:1'));
-    // the clip call takes n (the value after `n += 1`) in as an input
-    const clip = log.events.find((e) => e.name === 'ndarray.clip')!;
-    tp!.setStep(model.steps.indexOf(clip.i) + 1);
-    expect(card('val:n:2')!.parentElement).toBe(tp!.stageEl);
+    expect(slot('val:n:0').querySelector('.md-vcard')!.textContent).toBe('n, m = 6');
+    expect(host.querySelector('[data-card="val:m:0"]')).toBeNull();
+    // add(m, m): one card for both ports, two wires, and it says m now that n is rebound
+    const add = log.events.find((e) => e.name === 'add')!;
+    tp!.setStep(model.steps.indexOf(add.i) + 1);
+    expect(host.querySelectorAll('.md-card[data-card="val:n:0"]')).toHaveLength(1);
+    expect(card('val:n:0')!.parentElement).toBe(tp!.stageEl);
+    expect(card('val:n:0')!.querySelector('.md-vcard')!.textContent).toBe('m = 6');
+    expect(tp!.plan!.items.filter((i) => i.key === 'val:n:0')).toHaveLength(1);
+    expect(tp!.plan!.wires.filter((w) => w.from === 'val:n:0')).toHaveLength(2);
+    expect(card('val:c:0')!.parentElement).toBe(tp!.stageEl);
     expect(slot('val:n:1').dataset.state).toBe('hidden'); // replaced by `n += 1`
-    expect(slot('val:n:2').dataset.state).toBe('stage');
-    expect(tp!.cards().find((c) => c.node === 'val:n:2')!.where).toBe('stage');
   });
 
   test('keyboard: a value card is one roving focus target with its own name', async () => {

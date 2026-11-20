@@ -6,7 +6,7 @@ import { buildGraph } from './graph';
 import type { GraphModel } from './graph';
 import { lineStageAt, shelfAt, shelfOrder, stageAt } from './stage';
 import type { EventLog } from './types';
-import { valueCards } from './valuecards';
+import { valueCards, valueNames } from './valuecards';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'logs');
 const load = (n: string): { log: EventLog; g: GraphModel } => {
@@ -16,7 +16,10 @@ const load = (n: string): { log: EventLog; g: GraphModel } => {
 const shelfNames = (g: GraphModel, log: EventLog, s: number): string[] =>
   shelfAt(g, s, log)
     .filter((e) => e.kind === 'value')
-    .map((e) => `${e.value!.name}=${e.value!.text}`);
+    .map(
+      (e) =>
+        `${valueNames(e.value!, s === g.steps.length ? null : g.steps[s - 1]!).join(',')}=${e.value!.text}`,
+    );
 
 describe('value cards (svl-o6m)', () => {
   test('golden_linreg: r2 is on the stage at its call, then on the shelf', () => {
@@ -48,33 +51,46 @@ describe('value cards (svl-o6m)', () => {
   test('rebinding: a different value is a different card, never the same object', () => {
     const { log, g } = load('edge_values');
     const cards = shelfOrder(g, log).filter((e) => e.kind === 'value');
-    const n = cards.filter((e) => e.value!.name === 'n');
-    // n = a.sum(), n = a.max(), n += 1: three values, three cards, three ids and three tokens
+    // n = a.sum() (shared with m), n = a.max(), n += 1: three values, three cards, three ids and tokens
+    const n = cards.filter((e) => e.value!.names[0]!.name === 'n');
     expect(n.map((e) => e.value!.text)).toEqual(['6', '3', '4']);
     expect(new Set(n.map((e) => e.node)).size).toBe(3);
     expect(new Set(n.map((e) => e.value!.token)).size).toBe(3);
-    // each card ends where the next begins; the last one stays bound
-    expect(n.map((e) => e.value!.until)).toEqual([3, 4, null]);
-    // at the end only the current cards are on the shelf: one per name
-    expect(shelfNames(g, log, g.steps.length).sort()).toEqual(['m=6', 'n=4', 'z=1']);
-    // `n = a.max()` (event 3): n=6 and m=6 are on the shelf, the new n=3 is on the stage as the output
+    // n leaves the first card when rebound, but m still holds it: it stays until the end of the run
+    expect(n.map((e) => e.value!.until)).toEqual([null, 4, null]);
+    expect(n[0]!.value!.names).toEqual([
+      { name: 'n', from: 2, until: 3 },
+      { name: 'm', from: 2, until: null },
+    ]);
+    // at the end only the current cards are on the shelf, under the names that hold them now
+    expect(shelfNames(g, log, g.steps.length).sort()).toEqual(['c=12', 'm=6', 'n=4', 'z=1']);
+    // `n = a.max()` (event 3): n=6 and m=6 are one card on the shelf, the new n=3 is on the stage
     const s = g.steps.indexOf(3) + 1;
-    expect(shelfNames(g, log, s).sort()).toEqual(['m=6', 'n=6']);
+    expect(shelfNames(g, log, s)).toEqual(['n,m=6']);
     const st = stageAt(g, log, s)!;
     expect(
       st.participants.filter((p) => p.kind === 'value').map((p) => `${p.role}:${p.node}`),
     ).toEqual(['output:val:n:1']);
   });
 
-  test('an alias is its own card and shares the value, not the identity of the name', () => {
-    const { log } = load('edge_values');
+  test('names that share a token share one card, listed as the line writes them', () => {
+    const { log, g } = load('edge_values');
     const cards = valueCards(log);
-    const m = cards.find((c) => c.name === 'm')!;
-    const n0 = cards.find((c) => c.id === 'val:n:0')!;
-    expect(m.token).toBe(n0.token);
-    expect(m.id).not.toBe(n0.id);
-    // `m = n` made no event: the card takes the latest event before the binding
-    expect(m.at).toBe(2);
+    const c0 = cards.find((c) => c.id === 'val:n:0')!;
+    expect(cards.filter((c) => c.token === c0.token)).toHaveLength(1);
+    // `m = n` made no event: m joins at the latest event before the binding
+    expect(c0.names[1]).toMatchObject({ name: 'm', from: 2 });
+    // before the rebinding both names, after it only m
+    expect(valueNames(c0, 2)).toEqual(['n']);
+    expect(valueNames(c0, 3)).toEqual(['n', 'm']);
+    expect(valueNames(c0, 5)).toEqual(['m']);
+    expect(valueNames(c0, null)).toEqual(['m']);
+    // the add call takes m, and the card says m, not n
+    const add = log.events.find((e) => e.name === 'add')!;
+    const st = stageAt(g, log, g.steps.indexOf(add.i) + 1)!;
+    const ins = st.participants.filter((p) => p.kind === 'value' && p.role === 'input');
+    expect(ins.map((p) => p.node)).toEqual(['val:n:0', 'val:n:0']);
+    expect(valueNames(c0, add.i)).toEqual(['m']);
   });
 
   test('a name rebound to a function ends its card', () => {
@@ -90,13 +106,15 @@ describe('value cards (svl-o6m)', () => {
 
   test('a card passed to a call is an input on the stage, flown in from the shelf', () => {
     const { log, g } = load('edge_values');
-    const clip = log.events.find((e) => e.name === 'ndarray.clip')!;
-    const s = g.steps.indexOf(clip.i) + 1;
+    const add = log.events.find((e) => e.name === 'add')!;
+    const s = g.steps.indexOf(add.i) + 1;
     const st = stageAt(g, log, s)!;
     const v = st.participants.filter((p) => p.kind === 'value');
-    expect(v.map((p) => `${p.role}:${p.node}:${p.param}`)).toEqual(['input:val:n:2:max']);
-    expect(v[0]!.token).toBe('s2');
-    expect(st.values.map((x) => x.param)).toEqual(['min']); // the literal stays inline
+    expect(v.map((p) => `${p.role}:${p.node}:${p.param}`)).toEqual([
+      'input:val:n:0:x1',
+      'input:val:n:0:x2',
+      'output:val:c:0:0',
+    ]);
     expect(shelfNames(g, log, s).sort()).toEqual(['m=6', 'n=4']);
   });
 

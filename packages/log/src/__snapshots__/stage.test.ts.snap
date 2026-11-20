@@ -1849,10 +1849,9 @@ exports[`stageAt and shelfOrder on the golden fixtures > edge_values 1`] = `
   "2: L9 array [callee:import np created:a@out:0] {input:object=[1, 2, 3]}",
   "3: L10 ndarray.sum [owner:a output:val:n:0@out:0]",
   "4: L12 ndarray.max [owner:a output:val:n:1@out:0]",
-  "5: L13 expr [input:val:n:1 output:val:n:2]",
-  "6: L14 ndarray.mean [owner:a output:val:k:0@out:0]",
-  "7: L16 ndarray.clip [owner:a input:val:n:2@in:max created:c@out:0] {input:min=0}",
-  "8: L17 ndarray.min [owner:a output:val:z:0@out:0]",
+  "5: L14 ndarray.mean [owner:a output:val:k:0@out:0]",
+  "6: L16 add [callee:import np input:val:n:0@in:x1 input:val:n:0@in:x2 output:val:c:0@out:0]",
+  "7: L17 ndarray.min [owner:a output:val:z:0@out:0]",
 ]
 `;
 
@@ -1878,12 +1877,6 @@ exports[`stageAt and shelfOrder on the golden fixtures > edge_values 2`] = `
   ],
   [
     "value",
-    "val:m:0",
-    2,
-    1,
-  ],
-  [
-    "value",
     "val:n:1",
     3,
     1,
@@ -1901,8 +1894,8 @@ exports[`stageAt and shelfOrder on the golden fixtures > edge_values 2`] = `
     1,
   ],
   [
-    "instance",
-    "i:1zgqbf.0",
+    "value",
+    "val:c:0",
     6,
     1,
   ],
