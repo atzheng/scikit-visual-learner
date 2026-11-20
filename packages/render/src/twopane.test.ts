@@ -7,6 +7,7 @@ import { buildGraph, lineStageAt, shelfAt, stageAt, stateAt } from '@machines/lo
 import type { EventLog, GraphModel, StageParticipant } from '@machines/log';
 import {
   cardKey,
+  diffWires,
   FLY_Z,
   MOVE_MS,
   PH_MAX_H,
@@ -16,7 +17,7 @@ import {
   planStage,
   valueLine,
 } from './twopane';
-import type { Rect, TwoPaneController } from './twopane';
+import type { PlanWire, Rect, TwoPaneController } from './twopane';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'logs');
 const names = readdirSync(ROOT)
@@ -1076,6 +1077,29 @@ describe('planMoves (pure)', () => {
       planMoves(shelfAt0, stageAt1, { before: rel0, after: rel1 }).every((m) => m.phase === 2),
     ).toBe(true);
   });
+  test('wire diff (svl-jhe): kept, added and removed by from, to and edge', () => {
+    const w = (from: string, to: string, edge: string | null): PlanWire => ({
+      edge,
+      from,
+      to,
+      points: [],
+      arrow: true,
+      label: null,
+    });
+    const a = w('a', 'b', 'e1');
+    const b = w('b', 'c', 'e2');
+    const c = w('c', 'd', 'e3');
+    const d = diffWires([a, b], [b, c]);
+    expect(d.kept).toEqual([b]);
+    expect(d.added).toEqual([c]);
+    expect(d.removed).toEqual([a]);
+    // the same cards under another edge are a different wire; the owner line (no edge) has an identity too
+    expect(diffWires([w('a', 'b', 'x')], [w('a', 'b', 'y')]).kept).toEqual([]);
+    expect(diffWires([w('a', 'b', null)], [w('a', 'b', null)]).kept).toHaveLength(1);
+    // a line's first call is `box` alone and `box#0` in a group: the same wire
+    expect(diffWires([w('a', 'box', 'x')], [w('a', 'box#0', 'x')]).kept).toHaveLength(1);
+    expect(diffWires([], [])).toEqual({ kept: [], added: [], removed: [] });
+  });
   test('creation flourish (svl-2db): only new cards of a forward step', () => {
     const R = (x: number, y: number): Rect => ({ x, y, w: 50, h: 30 });
     const shelf0 = new Map<string, Rect | null>([
@@ -1369,6 +1393,94 @@ describe('animation', () => {
     expect(
       host.querySelector('.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]'),
     ).toBeNull();
+  });
+  test('wires kept between two steps of a line stay steady (svl-jhe): never faded, a moved one is held then swapped', async () => {
+    setup(false);
+    let kept = 0;
+    for (const name of ['edge_line_calls', 'edge_fit_chain', 'golden_linreg']) {
+      const { model, log } = await open(name);
+      for (let s = 2; s <= model.steps.length; s++) {
+        const prevLn = lineStageAt(model, log, s - 1);
+        const ln = lineStageAt(model, log, s);
+        if (!ln || !prevLn || ln.calls.length < 2 || ln.line !== prevLn.line) continue;
+        tp!.setStep(s - 1);
+        const before = new Map<string, string>();
+        for (const e of host.querySelectorAll('.md-stage-canvas g[data-wid]'))
+          before.set(e.getAttribute('data-wid')!, e.querySelector('path')!.getAttribute('d')!);
+        calls = [];
+        tp!.setStep(s, { animate: true });
+        const hold = host.querySelector(
+          '.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]',
+        );
+        for (const e of host.querySelectorAll('.md-stage-canvas g[data-wid]')) {
+          const id = e.getAttribute('data-wid')!;
+          if (!before.has(id)) continue;
+          kept++;
+          const mine = calls.filter((c) => c.el === e);
+          const moved = before.get(id) !== e.querySelector('path')!.getAttribute('d');
+          if (!moved) expect(mine).toHaveLength(0);
+          else {
+            // hidden only while its old drawing is held at full opacity
+            expect(hold).not.toBeNull();
+            for (const c of mine) expect(c.frames.map((f) => f.opacity)).toEqual([0, 0]);
+          }
+        }
+        // finishing restores everything: no held drawing is left behind
+        tp!.setStep(s);
+        expect(
+          host.querySelectorAll('.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]'),
+        ).toHaveLength(0);
+      }
+    }
+    expect(kept).toBeGreaterThan(0);
+  });
+  const heldLayers = (): number =>
+    host.querySelectorAll('.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]').length;
+  test('kept wires, stepping back and with reduced motion (svl-jhe)', async () => {
+    let checked = 0;
+    for (const reduced of [false, true]) {
+      setup(reduced);
+      for (const name of ['edge_line_calls', 'edge_fit_chain', 'golden_linreg']) {
+        const { model, log } = await open(name);
+        for (let s = 2; s <= model.steps.length; s++) {
+          const a = lineStageAt(model, log, s - 1);
+          const b = lineStageAt(model, log, s);
+          if (!a || !b || b.calls.length < 2 || a.line !== b.line) continue;
+          tp!.setStep(s);
+          const ids = new Set(
+            [...host.querySelectorAll('.md-stage-canvas g[data-wid]')].map((e) =>
+              e.getAttribute('data-wid')!,
+            ),
+          );
+          calls = [];
+          tp!.setStep(s - 1, { animate: true });
+          for (const e of host.querySelectorAll('.md-stage-canvas g[data-wid]')) {
+            if (!ids.has(e.getAttribute('data-wid')!)) continue;
+            checked++;
+            // a wire on both stages never fades in
+            for (const c of calls.filter((x) => x.el === e))
+              expect(c.frames.map((f) => f.opacity)).toEqual([0, 0]);
+          }
+          if (reduced) {
+            expect(calls.filter((c) => c.el instanceof SVGElement)).toHaveLength(0);
+            expect(heldLayers()).toBe(0);
+          }
+          tp!.setStep(s); // a snap settles everything
+          expect(heldLayers()).toBe(0);
+          if (typeof document.getAnimations === 'function')
+            expect(document.getAnimations()).toHaveLength(0);
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+  test('owner wires (no edge) are kept only within one line group (svl-jhe)', () => {
+    const own = { edge: null, from: 'm', to: 'box', points: [], arrow: false, label: null };
+    expect(diffWires([own], [own], 'fitA', 'fitA').kept).toHaveLength(1);
+    expect(diffWires([own], [own], 'fitA', 'predictB').kept).toHaveLength(0);
+    // an edge wire does not depend on the group
+    const e = { ...own, edge: 'e1', arrow: true };
+    expect(diffWires([e], [e], 'fitA', 'predictB').kept).toHaveLength(1);
   });
   test('creation flourish (svl-2db): forward steps only, never on snaps, reverse or reduced motion', async () => {
     const { model } = await open('golden_linreg');
