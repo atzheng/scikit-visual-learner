@@ -7,6 +7,7 @@ import { buildGraph, lineStageAt, shelfAt, stageAt, stateAt } from '@machines/lo
 import type { EventLog, GraphModel, StageParticipant } from '@machines/log';
 import {
   cardKey,
+  diffWires,
   FLY_Z,
   MOVE_MS,
   PH_MAX_H,
@@ -16,7 +17,7 @@ import {
   planStage,
   valueLine,
 } from './twopane';
-import type { Rect, TwoPaneController } from './twopane';
+import type { PlanWire, Rect, TwoPaneController } from './twopane';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'logs');
 const names = readdirSync(ROOT)
@@ -1074,6 +1075,27 @@ describe('planMoves (pure)', () => {
       planMoves(shelfAt0, stageAt1, { before: rel0, after: rel1 }).every((m) => m.phase === 2),
     ).toBe(true);
   });
+  test('wire diff (svl-jhe): kept, added and removed by from, to and edge', () => {
+    const w = (from: string, to: string, edge: string | null): PlanWire => ({
+      edge,
+      from,
+      to,
+      points: [],
+      arrow: true,
+      label: null,
+    });
+    const a = w('a', 'b', 'e1');
+    const b = w('b', 'c', 'e2');
+    const c = w('c', 'd', 'e3');
+    const d = diffWires([a, b], [b, c]);
+    expect(d.kept).toEqual([b]);
+    expect(d.added).toEqual([c]);
+    expect(d.removed).toEqual([a]);
+    // the same cards under another edge are a different wire; the owner line (no edge) has an identity too
+    expect(diffWires([w('a', 'b', 'x')], [w('a', 'b', 'y')]).kept).toEqual([]);
+    expect(diffWires([w('a', 'b', null)], [w('a', 'b', null)]).kept).toHaveLength(1);
+    expect(diffWires([], [])).toEqual({ kept: [], added: [], removed: [] });
+  });
   test('creation flourish (svl-2db): only new cards of a forward step', () => {
     const R = (x: number, y: number): Rect => ({ x, y, w: 50, h: 30 });
     const shelf0 = new Map<string, Rect | null>([
@@ -1367,6 +1389,46 @@ describe('animation', () => {
     expect(
       host.querySelector('.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]'),
     ).toBeNull();
+  });
+  test('wires kept between two steps of a line stay steady (svl-jhe): never faded, a moved one is held then swapped', async () => {
+    setup(false);
+    let kept = 0;
+    for (const name of ['edge_line_calls', 'edge_fit_chain', 'golden_linreg']) {
+      const { model, log } = await open(name);
+      for (let s = 2; s <= model.steps.length; s++) {
+        const prevLn = lineStageAt(model, log, s - 1);
+        const ln = lineStageAt(model, log, s);
+        if (!ln || !prevLn || ln.calls.length < 2 || ln.line !== prevLn.line) continue;
+        tp!.setStep(s - 1);
+        const before = new Map<string, string>();
+        for (const e of host.querySelectorAll('.md-stage-canvas g[data-wid]'))
+          before.set(e.getAttribute('data-wid')!, e.querySelector('path')!.getAttribute('d')!);
+        calls = [];
+        tp!.setStep(s, { animate: true });
+        const hold = host.querySelector(
+          '.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]',
+        );
+        for (const e of host.querySelectorAll('.md-stage-canvas g[data-wid]')) {
+          const id = e.getAttribute('data-wid')!;
+          if (!before.has(id)) continue;
+          kept++;
+          const mine = calls.filter((c) => c.el === e);
+          const moved = before.get(id) !== e.querySelector('path')!.getAttribute('d');
+          if (!moved) expect(mine).toHaveLength(0);
+          else {
+            // hidden only while its old drawing is held at full opacity
+            expect(hold).not.toBeNull();
+            for (const c of mine) expect(c.frames.map((f) => f.opacity)).toEqual([0, 0]);
+          }
+        }
+        // finishing restores everything: no held drawing is left behind
+        tp!.setStep(s);
+        expect(
+          host.querySelectorAll('.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]'),
+        ).toHaveLength(0);
+      }
+    }
+    expect(kept).toBeGreaterThan(0);
   });
   test('creation flourish (svl-2db): forward steps only, never on snaps, reverse or reduced motion', async () => {
     const { model } = await open('golden_linreg');

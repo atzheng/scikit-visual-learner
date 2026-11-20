@@ -1038,6 +1038,28 @@ export function planCreations(moves: readonly CardMove[], reverse: boolean): Set
   return keys;
 }
 
+/** svl-jhe: a wire's identity across steps: its two cards and its graph edge (the owner line has none). */
+export function wireId(w: Pick<PlanWire, 'from' | 'to' | 'edge'>): string {
+  return `${w.from}>${w.to}|${w.edge ?? ''}`;
+}
+
+/**
+ * svl-jhe: which wires of the step being left persist into the next one. `kept` wires stay drawn and steady,
+ * `added` ones animate in, `removed` ones fade out. Order follows `next` (kept, added) and `prev` (removed).
+ */
+export function diffWires(
+  prev: readonly PlanWire[],
+  next: readonly PlanWire[],
+): { kept: PlanWire[]; added: PlanWire[]; removed: PlanWire[] } {
+  const before = new Set(prev.map(wireId));
+  const after = new Set(next.map(wireId));
+  return {
+    kept: next.filter((w) => before.has(wireId(w))),
+    added: next.filter((w) => !before.has(wireId(w))),
+    removed: prev.filter((w) => !after.has(wireId(w))),
+  };
+}
+
 export interface TwoPaneController {
   /** Show step `step` (clamped; NaN is 0). Snaps unless `opts.animate`. A running animation is finished first. */
   setStep(step: number, opts?: SetStepOptions): void;
@@ -1360,6 +1382,7 @@ export async function mountTwoPane(
   let running: Animation[] = [];
   const restores: (() => void)[] = [];
   let wireKeys = new Set<string>(); // the wires drawn by the last step
+  let drawnWires: PlanWire[] = []; // svl-jhe: the plan wires drawn by the last step
   const finishAnimations = (): void => {
     for (const a of running) a.cancel();
     running = [];
@@ -1645,7 +1668,10 @@ export async function mountTwoPane(
     // 3. wires, values, notes
     // the wires of the step being left fade out (see `flyCards`); `drawWires` replaces them
     const oldWires = before ? [...wiresSvg.querySelectorAll('[data-wire]')] : [];
+    const prevWires = drawnWires;
     drawWires();
+    // svl-jhe: wires on both stages stay visible and steady; only the others animate
+    const keptIds = new Set(before ? diffWires(prevWires, plan?.wires ?? []).kept.map(wireId) : []);
     drawValues(stage);
     drawLabels();
     stageEmpty.hidden = stage !== null;
@@ -1756,7 +1782,7 @@ export async function mountTwoPane(
     rove();
     // the host zooms the stage to this step's plan now, so the landing places measured below are final
     sopts.fit?.();
-    if (before) flyCards(before, oldWires, left);
+    if (before) flyCards(before, oldWires, left, keptIds);
     // a card that was re-parented loses focus: it keeps it, wherever it went
     if (
       hadFocus &&
@@ -1786,6 +1812,7 @@ export async function mountTwoPane(
     before: { abs: Map<string, Rect | null>; rel: Map<string, Rect | null> },
     oldWires: Element[],
     left: { outputs: Set<string>; box: Rect | null; clones: Map<string, HTMLElement> } | null,
+    keptIds: ReadonlySet<string>,
   ): void {
     const byKey = new Map(allCards());
     const after = measureCards();
@@ -1956,9 +1983,61 @@ export async function mountTwoPane(
     }
     // the old wires fade out at the start (a ghost layer, so they are not hit-tested or read), the new wires and
     // values fade in once the cards have landed
-    if (oldWires.length > 0) {
+    // a kept wire whose cards moved keeps its old drawing (opacity 1) until the cards have landed, then the new
+    // drawing takes over with no dip; the new one is hidden meanwhile. One that did not move is left alone.
+    const newById = new Map<string, Element[]>();
+    for (const e of wiresSvg.querySelectorAll('[data-wid]')) {
+      const id = e.getAttribute('data-wid') ?? '';
+      newById.set(id, [...(newById.get(id) ?? []), e]);
+    }
+    const swapAt = slotOf(2);
+    const drawing = (e: Element): string =>
+      `${e.querySelector('path.md-wire')?.getAttribute('d') ?? ''}|${e.getAttribute('x') ?? ''}|${e.getAttribute('y') ?? ''}`;
+    const steady = new Set<Element>(); // new drawings that must not fade in
+    const oldKept: Element[] = [];
+    const oldGone: Element[] = [];
+    for (const e of oldWires) {
+      const id = e.getAttribute('data-wid') ?? '';
+      const twin = keptIds.has(id)
+        ? (newById.get(id) ?? []).find((n) => n.tagName === e.tagName && !steady.has(n))
+        : undefined;
+      if (!twin) {
+        oldGone.push(e);
+        continue;
+      }
+      steady.add(twin);
+      if (swapAt > 0 && drawing(e) !== drawing(twin)) {
+        oldKept.push(e);
+        if (typeof twin.animate === 'function')
+          running.push(
+            twin.animate([{ opacity: 0 }, { opacity: 0 }], {
+              duration: swapAt,
+              easing: 'step-end',
+            }),
+          );
+      }
+    }
+    if (oldKept.length > 0) {
+      const hold = sv(doc, 'g', { 'aria-hidden': 'true', 'pointer-events': 'none' });
+      for (const e of oldKept) {
+        e.removeAttribute('data-wire');
+        e.removeAttribute('data-wid');
+        e.removeAttribute('data-edge');
+        hold.append(e);
+      }
+      wiresSvg.append(hold);
+      const gone = (): void => hold.remove();
+      restores.push(gone);
+      if (typeof hold.animate === 'function') {
+        const anim = hold.animate([{ opacity: 1 }, { opacity: 1 }], { duration: swapAt });
+        running.push(anim);
+        anim.onfinish = gone;
+      } else gone();
+    }
+    if (oldGone.length > 0) {
       const ghost = sv(doc, 'g', { 'aria-hidden': 'true', 'pointer-events': 'none' });
-      for (const e of oldWires) {
+      for (const e of oldGone) {
+        e.removeAttribute('data-wid');
         e.removeAttribute('data-wire');
         e.removeAttribute('data-edge');
         ghost.append(e);
@@ -1989,6 +2068,7 @@ export async function mountTwoPane(
     const targetOf = new Map((plan?.wires ?? []).map((w) => [`${w.from}>${w.to}`, w.to]));
     const appear = [{ opacity: 0 }, { opacity: 1 }];
     for (const e of wiresSvg.querySelectorAll('[data-wire]')) {
+      if (steady.has(e)) continue;
       const edge = edgeOf.get(e.getAttribute('data-wire') ?? '');
       const isOut = edge !== undefined && edge !== null && outEdges.has(edge);
       const path = e.querySelector('path.md-wire');
@@ -2228,6 +2308,7 @@ export async function mountTwoPane(
   function drawWires(): void {
     wiresSvg.replaceChildren();
     wireKeys = new Set();
+    drawnWires = plan?.wires ?? [];
     if (!plan) return;
     wiresSvg.setAttribute('width', String(plan.width));
     wiresSvg.setAttribute('height', String(plan.height));
@@ -2253,6 +2334,7 @@ export async function mountTwoPane(
       if (w.edge !== null) g.dataset.edge = w.edge;
       const wk = `${w.from}>${w.to}`;
       g.dataset.wire = wk;
+      g.dataset.wid = wireId(w);
       wireKeys.add(wk);
       g.append(
         sv(
@@ -2277,6 +2359,7 @@ export async function mountTwoPane(
         if (w.label.name)
           t.append(sv(doc, 'tspan', { dx: w.label.type ? 4 : 0 }, 'md-wname', w.label.name));
         t.dataset.wire = wk;
+        t.dataset.wid = wireId(w);
         wiresSvg.append(t);
       }
     }
