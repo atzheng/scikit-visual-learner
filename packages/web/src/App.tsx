@@ -133,18 +133,17 @@ function LoadingOverlay() {
   const { state, progress } = useStore((s) => s.runtime);
   if (state !== 'loading' && state !== 'restarting') return null;
   const failed = progress.startsWith('Python failed');
+  const title = failed
+    ? 'Python could not load'
+    : state === 'restarting'
+      ? 'Restarting Python…'
+      : 'Loading Python…';
   return (
     <div className="loading-overlay" role="status" aria-busy={!failed} data-testid="loading">
       <div className="loading-card">
         {!failed && <div className="spinner" aria-hidden="true" />}
-        <p className="loading-title">
-          {failed
-            ? 'Python could not load'
-            : state === 'restarting'
-              ? 'Restarting Python…'
-              : 'Loading Python…'}
-        </p>
-        {progress !== 'Loading Python…' && <p className="loading-phase">{progress}</p>}
+        <p className="loading-title">{title}</p>
+        {progress !== title && <p className="loading-phase">{progress}</p>}
       </div>
     </div>
   );
