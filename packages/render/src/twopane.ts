@@ -1075,10 +1075,11 @@ export function planCreations(moves: readonly CardMove[], reverse: boolean): Set
 }
 
 /** svl-jhe: a wire's identity across steps: its two cards and its graph edge (the owner line has none). */
-export function wireId(w: Pick<PlanWire, 'from' | 'to' | 'edge'>): string {
+export function wireId(w: Pick<PlanWire, 'from' | 'to' | 'edge'>, scope = ''): string {
   // a line's first call is `box` while it is alone on the stage and `box#0` once the group has more
   const k = (key: string): string => (key === 'box' ? 'box#0' : key);
-  return `${k(w.from)}>${k(w.to)}|${w.edge ?? ''}`;
+  // the owner line has no edge: only the same line group (`scope`) can keep it
+  return `${k(w.from)}>${k(w.to)}|${w.edge ?? `@${scope}`}`;
 }
 
 /**
@@ -1088,13 +1089,15 @@ export function wireId(w: Pick<PlanWire, 'from' | 'to' | 'edge'>): string {
 export function diffWires(
   prev: readonly PlanWire[],
   next: readonly PlanWire[],
+  prevScope = '',
+  nextScope = prevScope,
 ): { kept: PlanWire[]; added: PlanWire[]; removed: PlanWire[] } {
-  const before = new Set(prev.map(wireId));
-  const after = new Set(next.map(wireId));
+  const before = new Set(prev.map((w) => wireId(w, prevScope)));
+  const after = new Set(next.map((w) => wireId(w, nextScope)));
   return {
-    kept: next.filter((w) => before.has(wireId(w))),
-    added: next.filter((w) => !before.has(wireId(w))),
-    removed: prev.filter((w) => !after.has(wireId(w))),
+    kept: next.filter((w) => before.has(wireId(w, nextScope))),
+    added: next.filter((w) => !before.has(wireId(w, nextScope))),
+    removed: prev.filter((w) => !after.has(wireId(w, prevScope))),
   };
 }
 
@@ -1455,6 +1458,8 @@ export async function mountTwoPane(
   const restores: (() => void)[] = [];
   let wireKeys = new Set<string>(); // the wires drawn by the last step
   let drawnWires: PlanWire[] = []; // svl-jhe: the plan wires drawn by the last step
+  let drawnScope = ''; // ... and the line group they belonged to
+  const wireScope = (): string => lineNow?.calls[0]?.stage.node ?? '';
   const finishAnimations = (): void => {
     for (const a of running) a.cancel();
     running = [];
@@ -1741,9 +1746,16 @@ export async function mountTwoPane(
     // the wires of the step being left fade out (see `flyCards`); `drawWires` replaces them
     const oldWires = before ? [...wiresSvg.querySelectorAll('[data-wire]')] : [];
     const prevWires = drawnWires;
+    const drawnScopeBefore = drawnScope;
     drawWires();
     // svl-jhe: wires on both stages stay visible and steady; only the others animate
-    const keptIds = new Set(before ? diffWires(prevWires, plan?.wires ?? []).kept.map(wireId) : []);
+    const keptIds = new Set(
+      before
+        ? diffWires(prevWires, plan?.wires ?? [], drawnScopeBefore, wireScope()).kept.map((w) =>
+            wireId(w, wireScope()),
+          )
+        : [],
+    );
     drawValues(stage);
     drawLabels();
     stageEmpty.hidden = stage !== null;
@@ -2071,7 +2083,26 @@ export async function mountTwoPane(
     const drawing = (e: Element): string =>
       `${e.querySelector('path.md-wire')?.getAttribute('d') ?? ''}|${e.getAttribute('x') ?? ''}|${e.getAttribute('y') ?? ''}`;
     const steady = new Set<Element>(); // new drawings that must not fade in
-    const oldKept: Element[] = [];
+    const oldKept: { e: Element; dx: number; dy: number; slide: boolean }[] = [];
+    const nums = (d: string): number[] => (d.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+    const shape = (d: string): string => d.replace(/-?\d*\.?\d+/g, '#');
+    /** How the new drawing differs from the old: a pure shift (the held drawing can slide along) or a reshape. */
+    const offset = (a: Element, b: Element): { dx: number; dy: number; slide: boolean } => {
+      const da = a.querySelector('path.md-wire')?.getAttribute('d');
+      const db = b.querySelector('path.md-wire')?.getAttribute('d');
+      if (da == null || db == null) {
+        const dx = Number(b.getAttribute('x')) - Number(a.getAttribute('x'));
+        const dy = Number(b.getAttribute('y')) - Number(a.getAttribute('y'));
+        return { dx, dy, slide: true };
+      }
+      const na = nums(da);
+      const nb = nums(db);
+      if (shape(da) !== shape(db) || na.length !== nb.length) return { dx: 0, dy: 0, slide: false };
+      const dx = nb[0]! - na[0]!;
+      const dy = nb[1]! - na[1]!;
+      const same = na.every((v, i) => Math.abs(nb[i]! - v - (i % 2 === 0 ? dx : dy)) < 0.5);
+      return { dx, dy, slide: same };
+    };
     const oldGone: Element[] = [];
     for (const e of oldWires) {
       const id = e.getAttribute('data-wid') ?? '';
@@ -2084,7 +2115,7 @@ export async function mountTwoPane(
       }
       steady.add(twin);
       if (swapAt > 0 && drawing(e) !== drawing(twin)) {
-        oldKept.push(e);
+        oldKept.push({ e, ...offset(e, twin) });
         if (typeof twin.animate === 'function')
           running.push(
             twin.animate([{ opacity: 0 }, { opacity: 0 }], {
@@ -2096,11 +2127,37 @@ export async function mountTwoPane(
     }
     if (oldKept.length > 0) {
       const hold = sv(doc, 'g', { 'aria-hidden': 'true', 'pointer-events': 'none' });
-      for (const e of oldKept) {
+      const moveAt = slotOf(1);
+      for (const { e, dx, dy, slide } of oldKept) {
         e.removeAttribute('data-wire');
         e.removeAttribute('data-wid');
         e.removeAttribute('data-edge');
-        hold.append(e);
+        // a shifted wire slides with its cards (same timing as a card's move); a reshaped one is hidden while
+        // they move and the new drawing shows at the swap
+        const wrap = sv(doc, 'g');
+        wrap.append(e);
+        hold.append(wrap);
+        if (typeof wrap.animate !== 'function') continue;
+        if (slide) {
+          if (moveAt < swapAt)
+            running.push(
+              wrap.animate(
+                [
+                  { transform: 'translate(0px, 0px)' },
+                  { transform: `translate(${dx}px, ${dy}px)` },
+                ],
+                { duration: swapAt - moveAt, delay: moveAt, easing: 'ease-out', fill: 'both' },
+              ),
+            );
+        } else if (moveAt < swapAt)
+          running.push(
+            wrap.animate([{ opacity: 1 }, { opacity: 0 }], {
+              duration: swapAt - moveAt,
+              delay: moveAt,
+              easing: 'step-start',
+              fill: 'both',
+            }),
+          );
       }
       wiresSvg.append(hold);
       const gone = (): void => hold.remove();
@@ -2388,6 +2445,7 @@ export async function mountTwoPane(
     wiresSvg.replaceChildren();
     wireKeys = new Set();
     drawnWires = plan?.wires ?? [];
+    drawnScope = wireScope();
     if (!plan) return;
     wiresSvg.setAttribute('width', String(plan.width));
     wiresSvg.setAttribute('height', String(plan.height));
@@ -2414,7 +2472,7 @@ export async function mountTwoPane(
       if (w.edge !== null) g.dataset.edge = w.edge;
       const wk = `${w.from}>${w.to}`;
       g.dataset.wire = wk;
-      g.dataset.wid = wireId(w);
+      g.dataset.wid = wireId(w, drawnScope);
       wireKeys.add(wk);
       g.append(
         sv(
@@ -2439,7 +2497,7 @@ export async function mountTwoPane(
         if (w.label.name)
           t.append(sv(doc, 'tspan', { dx: w.label.type ? 4 : 0 }, 'md-wname', w.label.name));
         t.dataset.wire = wk;
-        t.dataset.wid = wireId(w);
+        t.dataset.wid = wireId(w, drawnScope);
         wiresSvg.append(t);
       }
     }

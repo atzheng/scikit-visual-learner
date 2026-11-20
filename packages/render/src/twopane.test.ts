@@ -1434,6 +1434,54 @@ describe('animation', () => {
     }
     expect(kept).toBeGreaterThan(0);
   });
+  const heldLayers = (): number =>
+    host.querySelectorAll('.md-stage-canvas g[aria-hidden="true"][pointer-events="none"]').length;
+  test('kept wires, stepping back and with reduced motion (svl-jhe)', async () => {
+    let checked = 0;
+    for (const reduced of [false, true]) {
+      setup(reduced);
+      for (const name of ['edge_line_calls', 'edge_fit_chain', 'golden_linreg']) {
+        const { model, log } = await open(name);
+        for (let s = 2; s <= model.steps.length; s++) {
+          const a = lineStageAt(model, log, s - 1);
+          const b = lineStageAt(model, log, s);
+          if (!a || !b || b.calls.length < 2 || a.line !== b.line) continue;
+          tp!.setStep(s);
+          const ids = new Set(
+            [...host.querySelectorAll('.md-stage-canvas g[data-wid]')].map((e) =>
+              e.getAttribute('data-wid')!,
+            ),
+          );
+          calls = [];
+          tp!.setStep(s - 1, { animate: true });
+          for (const e of host.querySelectorAll('.md-stage-canvas g[data-wid]')) {
+            if (!ids.has(e.getAttribute('data-wid')!)) continue;
+            checked++;
+            // a wire on both stages never fades in
+            for (const c of calls.filter((x) => x.el === e))
+              expect(c.frames.map((f) => f.opacity)).toEqual([0, 0]);
+          }
+          if (reduced) {
+            expect(calls.filter((c) => c.el instanceof SVGElement)).toHaveLength(0);
+            expect(heldLayers()).toBe(0);
+          }
+          tp!.setStep(s); // a snap settles everything
+          expect(heldLayers()).toBe(0);
+          if (typeof document.getAnimations === 'function')
+            expect(document.getAnimations()).toHaveLength(0);
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
+  });
+  test('owner wires (no edge) are kept only within one line group (svl-jhe)', () => {
+    const own = { edge: null, from: 'm', to: 'box', points: [], arrow: false, label: null };
+    expect(diffWires([own], [own], 'fitA', 'fitA').kept).toHaveLength(1);
+    expect(diffWires([own], [own], 'fitA', 'predictB').kept).toHaveLength(0);
+    // an edge wire does not depend on the group
+    const e = { ...own, edge: 'e1', arrow: true };
+    expect(diffWires([e], [e], 'fitA', 'predictB').kept).toHaveLength(1);
+  });
   test('creation flourish (svl-2db): forward steps only, never on snaps, reverse or reduced motion', async () => {
     const { model } = await open('golden_linreg');
     const ringed = (cs: typeof calls): number =>
