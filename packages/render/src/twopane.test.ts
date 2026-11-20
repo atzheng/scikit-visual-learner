@@ -1383,6 +1383,14 @@ describe('animation', () => {
       if (rings === 0) continue;
       found++;
       expect(drawn(calls)).toBeLessThanOrEqual(rings * 4);
+      // a wire draws only into a card that gets the ring (a created one), not one that flew in plain
+      const ringedEls = new Set(
+        calls.filter((c) => c.frames.some((f) => f.boxShadow)).map((c) => c.el),
+      );
+      for (const c of calls.filter((x) => x.frames.some((f) => f.strokeDashoffset !== undefined))) {
+        const to = c.el.parentElement?.getAttribute('data-wire')?.split('>')[1] ?? '';
+        expect(ringedEls.has(tp!.card(to)!)).toBe(true);
+      }
       // the ring starts after the card has landed
       for (const c of calls.filter((x) => x.frames.some((f) => f.boxShadow)))
         expect(Number(c.opts?.delay ?? 0)).toBeGreaterThanOrEqual(MOVE_MS);

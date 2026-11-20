@@ -1900,11 +1900,22 @@ export async function mountTwoPane(
         if (pop && typeof w.animate === 'function') {
           // a soft accent ring expands and fades once the card has landed (a box-shadow: it is not part of the
           // card's layout, and no state is left behind)
+          // the ring follows the card's corner radius (its box's `rx`)
+          const rx = Number.parseFloat(
+            w.querySelector('rect.md-box[rx]')?.getAttribute('rx') ?? '',
+          );
+          const borderRadius = `${Number.isFinite(rx) ? rx * zoomOf(w) : 10}px`;
           running.push(
             w.animate(
               [
-                { boxShadow: '0 0 0 0 color-mix(in srgb, var(--md-focus) 55%, transparent)' },
-                { boxShadow: '0 0 0 9px color-mix(in srgb, var(--md-focus) 0%, transparent)' },
+                {
+                  borderRadius,
+                  boxShadow: '0 0 0 0 color-mix(in srgb, var(--md-focus) 55%, transparent)',
+                },
+                {
+                  borderRadius,
+                  boxShadow: '0 0 0 9px color-mix(in srgb, var(--md-focus) 0%, transparent)',
+                },
               ],
               {
                 duration: RING_MS,
@@ -1921,8 +1932,16 @@ export async function mountTwoPane(
     if (fresh.size > 0 && callEl && typeof callEl.animate === 'function') {
       // an SVG box scales about its own centre
       if (callEl instanceof SVGElement) {
-        callEl.style.transformBox = 'fill-box';
-        callEl.style.transformOrigin = 'center';
+        const box = callEl;
+        const keepBox = box.style.transformBox;
+        const keepOrigin = box.style.transformOrigin;
+        box.style.transformBox = 'fill-box';
+        box.style.transformOrigin = 'center';
+        restores.push(() => {
+          box.style.transformBox = keepBox;
+          box.style.transformOrigin = keepOrigin;
+          if (box.getAttribute('style') === '') box.removeAttribute('style');
+        });
       }
       running.push(
         callEl.animate(
@@ -1967,13 +1986,16 @@ export async function mountTwoPane(
       if ((p.role === 'output' || p.role === 'created') && p.edge) outEdges.add(p.edge);
     for (const v of cs?.values ?? []) if (v.role === 'output' && v.edge) outEdges.add(v.edge);
     const edgeOf = new Map((plan?.wires ?? []).map((w) => [`${w.from}>${w.to}`, w.edge]));
+    const targetOf = new Map((plan?.wires ?? []).map((w) => [`${w.from}>${w.to}`, w.to]));
     const appear = [{ opacity: 0 }, { opacity: 1 }];
     for (const e of wiresSvg.querySelectorAll('[data-wire]')) {
       const edge = edgeOf.get(e.getAttribute('data-wire') ?? '');
       const isOut = edge !== undefined && edge !== null && outEdges.has(edge);
       const path = e.querySelector('path.md-wire');
+      // only a wire into a card the step created draws; one into an output that flew in from the shelf fades
+      const toFresh = fresh.has(targetOf.get(e.getAttribute('data-wire') ?? '') ?? '');
       if (
-        fresh.size > 0 &&
+        toFresh &&
         isOut &&
         path &&
         !e.classList.contains('md-owner-line') &&
@@ -1983,16 +2005,16 @@ export async function mountTwoPane(
         // arrowhead) shows only near the end of the draw
         path.setAttribute('pathLength', '1');
         const at = Math.max(0, outputAt - 120);
-        running.push(
-          path.animate(
-            [
-              { strokeDasharray: '1 1', strokeDashoffset: 1 },
-              { strokeDasharray: '1 1', strokeDashoffset: 0 },
-            ],
-            { duration: DRAW_MS, easing: 'ease-out', delay: at, fill: 'backwards' },
-          ),
+        const draw = path.animate(
+          [
+            { strokeDasharray: '1 1', strokeDashoffset: 1 },
+            { strokeDasharray: '1 1', strokeDashoffset: 0 },
+          ],
+          { duration: DRAW_MS, easing: 'ease-out', delay: at, fill: 'backwards' },
         );
+        running.push(draw);
         const settle = (): void => path.removeAttribute('pathLength');
+        draw.onfinish = settle;
         restores.push(settle);
         play(e, [{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], null, {
           delay: at,
