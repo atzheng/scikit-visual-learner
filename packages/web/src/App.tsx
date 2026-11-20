@@ -144,7 +144,7 @@ function LoadingOverlay() {
               ? 'Restarting Python…'
               : 'Loading Python…'}
         </p>
-        <p className="loading-phase">{progress}</p>
+        {progress !== 'Loading Python…' && <p className="loading-phase">{progress}</p>}
       </div>
     </div>
   );
