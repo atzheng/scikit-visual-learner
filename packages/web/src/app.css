@@ -23,6 +23,8 @@
   --hl-line: rgba(31, 95, 191, 0.12);
   --selection: rgba(255, 196, 0, 0.35);
   --hl-error: rgba(180, 35, 24, 0.14);
+  --accent-glow: rgba(31, 95, 191, 0.18);
+  --accent-glow-strong: rgba(31, 95, 191, 0.35);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,6 +49,8 @@
     --hl-line: rgba(106, 163, 245, 0.16);
     --selection: rgba(255, 180, 84, 0.38);
     --hl-error: rgba(255, 128, 119, 0.18);
+    --accent-glow: rgba(106, 163, 245, 0.22);
+    --accent-glow-strong: rgba(106, 163, 245, 0.4);
   }
 }
 
@@ -72,6 +76,8 @@
   --hl-line: rgba(106, 163, 245, 0.16);
   --selection: rgba(255, 180, 84, 0.38);
   --hl-error: rgba(255, 128, 119, 0.18);
+  --accent-glow: rgba(106, 163, 245, 0.22);
+  --accent-glow-strong: rgba(106, 163, 245, 0.4);
 }
 
 :root[data-theme='light'] {
@@ -86,6 +92,8 @@
   --hl-line: rgba(31, 95, 191, 0.12);
   --selection: rgba(255, 196, 0, 0.35);
   --hl-error: rgba(180, 35, 24, 0.14);
+  --accent-glow: rgba(31, 95, 191, 0.18);
+  --accent-glow-strong: rgba(31, 95, 191, 0.35);
 }
 
 * {
@@ -288,4 +296,121 @@ button:disabled {
 .toolbar .elapsed {
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* Primary inputs (editor, timeline stepper): accent frame and a header label so the eye lands here first. */
+.primary-input {
+  position: relative;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.primary-input:focus-within {
+  box-shadow: 0 0 0 4px var(--accent-glow-strong);
+}
+
+.editor-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.input-label {
+  margin: 0;
+  padding: 3px 12px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.toolbar button.primary {
+  padding: 6px 22px;
+  font-size: 15px;
+}
+
+.step-btn.primary {
+  min-width: 44px;
+  padding: 6px 14px;
+  font-size: 16px;
+}
+
+button.primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.timeline-row input[type='range'] {
+  accent-color: var(--accent);
+  height: 24px;
+}
+
+/* Loading indicator over the diagram area. */
+.pane-diagram {
+  position: relative;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+}
+
+.loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 40px;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  text-align: center;
+  max-width: 80%;
+}
+
+.spinner {
+  width: 72px;
+  height: 72px;
+  border: 8px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.loading-phase {
+  margin: 0;
+  color: var(--muted);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Reduced motion: a slow pulse instead of a spin; the text stays. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: pulse 2.4s ease-in-out infinite !important;
+    border-top-color: var(--accent);
+    border-right-color: var(--accent);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
 }

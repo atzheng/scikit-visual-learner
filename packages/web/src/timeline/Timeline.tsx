@@ -65,6 +65,7 @@ export function Timeline() {
       <div className="timeline-row">
         <button
           type="button"
+          className="step-btn primary"
           aria-label="Previous step"
           disabled={cur <= 0}
           onClick={() => setStep(cur - 1, true)}
@@ -88,6 +89,7 @@ export function Timeline() {
         />
         <button
           type="button"
+          className="step-btn primary"
           aria-label="Next step"
           disabled={cur >= max}
           onClick={() => setStep(cur + 1, true)}
