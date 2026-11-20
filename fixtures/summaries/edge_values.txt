@@ -1,0 +1,9 @@
+0 (event -1): Before the program runs.
+1 (event 0): Imported numpy as np.
+2 (event 1): Called np.array([1, 2, 3]) from numpy. It created a new array (3), a.
+3 (event 2): Called a.sum(). It returned an int64 (6), named n.
+4 (event 3): Called a.max(). It returned an int64 (3), named n.
+5 (event 4): Computed n += 1, an int64 (4), named n.
+6 (event 5): Called a.mean(). It returned a float64 (2.0), named k.
+7 (event 6): Called a.clip(0, n). It created a new array (3), c.
+8 (event 7): Called a.min(). It returned an int64 (1), named z.

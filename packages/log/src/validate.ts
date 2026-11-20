@@ -131,7 +131,8 @@ export function validateLog(x: unknown): EventLog {
       if (ba.length !== 3) fail(bp, 'expected [event, name, token]');
       int(ba[0], `${bp}[0]`);
       str(ba[1], `${bp}[1]`);
-      needToken(ba[2], `${bp}[2]`);
+      // '' closes the name's binding: it was rebound to something the recorder does not track (svl-o6m)
+      if (ba[2] !== '') needToken(ba[2], `${bp}[2]`);
     });
   });
 

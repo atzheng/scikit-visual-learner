@@ -255,6 +255,7 @@ export function buildGraph(log: EventLog, opts: BuildOptions = {}): GraphModel {
   {
     const scope0 = log.scopes.find((s) => s.id === 0);
     for (const [, name, token] of scope0?.bindings ?? []) {
+      if (token === '') continue; // the name was rebound to a value the recorder does not track
       const k = keyOf(token);
       if (!firstNameByKey.has(k)) firstNameByKey.set(k, name);
       const ks = keysByName.get(name);

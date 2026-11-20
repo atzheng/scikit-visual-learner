@@ -1587,3 +1587,59 @@ def test_store_rebind_case_is_transparent() -> None:
     assert a.err is None and b.err is None
     assert a.ns["df"].equals(b.ns["df"])
     assert a.ns["mask"].equals(b.ns["mask"])
+
+
+# -- a name rebound to something untracked closes its binding (svl-o6m) ----------------------------
+
+
+def test_rebinding_a_tracked_name_to_a_function_closes_the_binding() -> None:
+    src = """
+a = np.array([1, 2, 3])
+k = a.mean()
+k = print
+j = print
+f = k
+"""
+    r = record(src)
+    rows = [(n, t) for _, n, t in r.log["scopes"][0]["bindings"] if n in ("k", "j", "f")]
+    # k held a float, then a function: an empty token ends the first binding.
+    # j was never tracked: no row
+    assert rows[0][0] == "k" and rows[0][1].startswith("s")
+    assert ("k", "") in rows
+    assert not any(n == "j" for n, _ in rows)
+    assert not any(
+        n == "f" for n, _ in rows
+    )  # `f = k` binds a function too: not tracked, never was
+    # transparency: instrumented code ends with the same values as plain Python
+    p = plain(src)
+    assert r.err is None and p.err is None
+    assert r.ns["k"] is print and r.ns["f"] is print and r.ns["j"] is print
+    assert p.ns["k"] is print and p.stdout == r.stdout
+
+
+def test_value_rebinding_behaves_as_plain_python() -> None:
+    src = """
+a = np.array([1.0, 2.0, 3.0])
+n = a.sum()
+m = n
+n = a.max()
+n += 1
+for v in a:
+    n = n + v
+t = (n, m)
+n = None
+"""
+    r = record(src)
+    p = plain(src)
+    assert r.err is None and p.err is None
+    assert (r.ns["n"], r.ns["m"], r.ns["t"], r.ns["v"]) == (
+        p.ns["n"],
+        p.ns["m"],
+        p.ns["t"],
+        p.ns["v"],
+    )
+    toks = [(n, t) for _, n, t in r.log["scopes"][0]["bindings"] if n in ("n", "m")]
+    # m = n shares the value's token; n = a.max() is another value, as is every rebinding of n
+    assert dict(toks)["m"] == toks[0][1]
+    ns_tokens = [t for n, t in toks if n == "n"]
+    assert len(set(ns_tokens)) == len(ns_tokens)

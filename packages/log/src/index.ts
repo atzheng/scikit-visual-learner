@@ -37,6 +37,8 @@ export type {
   ShelfEntry,
   ShelfSlot,
 } from './stage';
+export { valueCards, valueCardFor } from './valuecards';
+export type { ValueCard } from './valuecards';
 export { attrRows, reprTruncated, sameValue } from './attrs';
 export type { AttrRow } from './attrs';
 export { describeStep, summaryText } from './describe';

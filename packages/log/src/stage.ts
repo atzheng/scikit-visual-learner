@@ -4,6 +4,8 @@ import { keyOf } from './graph';
 import type { Execution, GEdge, GNode, GraphModel, InstanceNode, InstanceVersion } from './graph';
 import { stateAt } from './timeline';
 import type { EventError, EventLog, Token } from './types';
+import { valueCardFor, valueCards } from './valuecards';
+import type { ValueCard } from './valuecards';
 
 /** `callee` (svl-jl3): the function or class block a call certainly resolves to (an import block or a `def`/`class` object). */
 export type StageRole = 'owner' | 'callee' | 'input' | 'output' | 'created';
@@ -12,10 +14,11 @@ export type StageRole = 'owner' | 'callee' | 'input' | 'output' | 'created';
  * An object that takes part in the step. `kind: 'instance'` is a shelf object (`node` is its instance box);
  * `kind: 'import'` is an import block (created by an import step), `kind: 'def'` a function or class made by a
  * `def` / `class` step (also created by its step, and the callee of later calls); `kind: 'chip'` is a folded temporary: it
- * has no box and never lives on the shelf, the stage draws it only for this step (`chip`).
+ * has no box and never lives on the shelf, the stage draws it only for this step (`chip`); `kind: 'value'` is a
+ * plain value bound to a module-level name (svl-o6m): `node` is the card's id (`val:score:0`), `token` the value.
  */
 export interface StageParticipant {
-  kind: 'instance' | 'import' | 'def' | 'chip';
+  kind: 'instance' | 'import' | 'def' | 'chip' | 'value';
   role: StageRole;
   /** Instance or import node id; for a chip, the id its box would have (`GEdge.chip.node`). */
   node: string;
@@ -45,7 +48,7 @@ export interface StageParticipant {
   chip?: { type: string; shape: number[] | null };
 }
 
-/** A value that is not an object: shown inline in the stage, never on the shelf. */
+/** A value that is not an object and has no name: shown inline in the stage, never on the shelf. A named value is a `value` participant. */
 export interface StageValue {
   role: 'input' | 'output';
   port: string;
@@ -82,11 +85,13 @@ export interface StageModel {
 export interface ShelfEntry {
   /** Instance or import node id. */
   node: string;
-  kind: 'instance' | 'import' | 'def';
-  /** Event i at which the entry appears: `createdAt` (instance), or the first run of the statement (import). */
+  kind: 'instance' | 'import' | 'def' | 'value';
+  /** Event i at which the entry appears: `createdAt` (instance), the first run of the statement (import), `ValueCard.at` (value). */
   at: number;
   /** Instances: how many objects the box holds (a merged loop box is one entry holding n); 1 for an import. */
   objects: number;
+  /** `value` entries: the card (`node` is its id). */
+  value?: ValueCard;
 }
 
 /** An entry of the shelf at one step. */
@@ -120,10 +125,10 @@ function positionIn(n: InstanceNode, key: string): { k: number; n: number } | un
 /**
  * The shelf: every instance and import block in creation order (event i, then source order, then id). A
  * box merged from a loop is one entry whose `objects` says how many it holds. Chips, source nodes and
- * scalars are never entries. A truncated graph lists the boxes it kept. An entry is on the shelf from the
+ * unnamed scalars are never entries. With the `log`, every plain value bound to a module-level name is an entry too, a `value` card (see `valueCards`). A truncated graph lists the boxes it kept. An entry is on the shelf from the
  * step after its `at` line: while that line is the current step its object is on the stage.
  */
-export function shelfOrder(model: GraphModel): ShelfEntry[] {
+export function shelfOrder(model: GraphModel, log?: EventLog): ShelfEntry[] {
   const out: { e: ShelfEntry; order: number }[] = [];
   for (const n of model.nodes) {
     if (n.kind === 'instance')
@@ -137,6 +142,13 @@ export function shelfOrder(model: GraphModel): ShelfEntry[] {
         order: n.order,
       });
   }
+  // plain named values (svl-o6m) come after the boxes of the same event
+  if (log)
+    for (const c of valueCards(log))
+      out.push({
+        e: { node: c.id, kind: 'value', at: c.at, objects: 1, value: c },
+        order: Number.MAX_SAFE_INTEGER / 2 + c.order,
+      });
   out.sort(
     (a, b) =>
       a.e.at - b.e.at ||
@@ -151,7 +163,7 @@ export function shelfOrder(model: GraphModel): ShelfEntry[] {
  * event), each with how many of its objects exist so far. Step 0 is empty; the last step (the end) shows
  * every entry, full. Entries still being made by the current step are on the stage, not here.
  */
-export function shelfAt(model: GraphModel, step: number): ShelfSlot[] {
+export function shelfAt(model: GraphModel, step: number, log?: EventLog): ShelfSlot[] {
   const total = model.steps.length;
   const s = Number.isNaN(step) ? 0 : Math.max(0, Math.min(total, Math.trunc(step)));
   if (s === 0 && total > 0) return [];
@@ -159,7 +171,18 @@ export function shelfAt(model: GraphModel, step: number): ShelfSlot[] {
   const cur = s === 0 ? -1 : model.steps[s - 1]!;
   const byId = new Map(model.nodes.map((n) => [n.id, n]));
   const out: ShelfSlot[] = [];
-  for (const e of shelfOrder(model)) {
+  for (const e of shelfOrder(model, log)) {
+    if (e.value) {
+      // a value card is on the shelf until its name is rebound; at the end only the values still bound
+      if (
+        atEnd
+          ? e.value.until !== null
+          : e.at >= cur || (e.value.until !== null && cur > e.value.until)
+      )
+        continue;
+      out.push({ ...e, filled: 1 });
+      continue;
+    }
     if (!atEnd && e.at >= cur) continue;
     const n = byId.get(e.node);
     const filled =
@@ -341,7 +364,31 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
     else result.dropped++; // no box and no chip (cut by truncation): leave it out
   };
 
+  /** A scalar that a module-level name holds is a value card on the stage (svl-o6m); returns whether it was added. */
+  const valueParticipant = (
+    role: 'input' | 'output',
+    port: string | null,
+    param: string,
+    token: Token,
+  ): boolean => {
+    const card = valueCardFor(log, token, cur, role);
+    if (!card) return false;
+    result.participants.push({
+      kind: 'value',
+      role,
+      node: card.id,
+      object: null,
+      token,
+      port,
+      param,
+      edge: role === 'input' ? inEdge(port, token) : outEdge(port, null),
+      changed: false,
+    });
+    return true;
+  };
+
   const scalar = (role: 'input' | 'output', port: string, param: string, token: Token): void => {
+    if (valueParticipant(role, port, param, token)) return;
     const v = log.values[token];
     result.values.push({
       role,
@@ -422,7 +469,10 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
       ([a], [b]) => Number(b === 'in:target') - Number(a === 'in:target'),
     );
     for (const [id, tok] of ordered) {
-      if (!tok.startsWith('v')) continue;
+      if (!tok.startsWith('v')) {
+        valueParticipant('input', null, id.replace(/^in:/, ''), tok);
+        continue;
+      }
       const key = keyOf(tok);
       if (isStore && written.has(key)) {
         if (!before.has(key)) before.set(key, tok);
@@ -434,7 +484,11 @@ export function stageAt(model: GraphModel, log: EventLog, step: number): StageMo
     }
     const outSeen = new Set<string>();
     for (const [id, tok] of Object.entries(ex.outputs)) {
-      if (!tok.startsWith('v') || outSeen.has(keyOf(tok))) continue;
+      if (!tok.startsWith('v')) {
+        valueParticipant('output', null, id.replace(/^out:/, ''), tok);
+        continue;
+      }
+      if (outSeen.has(keyOf(tok))) continue;
       outSeen.add(keyOf(tok));
       const n0 = result.participants.length;
       add('output', tok, null, id.replace(/^out:/, ''));

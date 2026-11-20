@@ -2,7 +2,7 @@
 // creation order, no wires) and a STAGE (the current line: its call box, the objects it uses and the wires
 // between them). Framework-free. The layout of the stage is a pure function (`planStage`); `mountTwoPane`
 // builds the DOM. Each object card is one stable element that moves between its shelf slot and the stage.
-import { lineStageAt, shelfAt, shelfOrder, stageAt, stateAt } from '@machines/log';
+import { lineStageAt, reprTruncated, shelfAt, shelfOrder, stageAt, stateAt } from '@machines/log';
 import type {
   CallNode,
   EventLog,
@@ -11,6 +11,7 @@ import type {
   GraphModel,
   LineStageModel,
   ShelfEntry,
+  ValueCard,
   StageModel,
   StageParticipant,
   StepState,
@@ -103,6 +104,17 @@ export interface StagePlan {
 /** Where the current method's box sits inside its owner's card (svl-a9e): relative to the owner's box. */
 export interface NestedBox {
   rect: Rect;
+}
+
+/** A value card's text, `name = repr`: the card shows it on one line (cut by CSS), the title and the label say it whole. */
+export function valueCardText(v: ValueCard): string {
+  return v.text === null ? v.name : `${v.name} = ${v.text}`;
+}
+/** The size of a value card's box (svl-o6m): one line of its text, at most `VALUE_CARD_MAX_CHARS` characters wide. */
+export const VALUE_CARD_MAX_CHARS = 26;
+export function valueCardSize(v: ValueCard): Size {
+  const chars = Math.min(VALUE_CARD_MAX_CHARS, Math.max(4, valueCardText(v).length));
+  return { w: Math.ceil(chars * 7.2) + 22, h: 30 };
 }
 
 /** The key of a participant's card. */
@@ -1086,8 +1098,12 @@ export async function mountTwoPane(
   opts: TwoPaneOptions = {},
 ): Promise<TwoPaneController> {
   const doc = host.ownerDocument;
-  const entries = shelfOrder(model);
+  const entries = shelfOrder(model, log);
   const entryOf = new Map<string, ShelfEntry>(entries.map((e) => [e.node, e]));
+  // plain named values (svl-o6m): cards with no box in the graph; they are drawn here, not by the diagram code
+  const valueOf = new Map<string, ValueCard>(
+    entries.flatMap((e) => (e.value ? [[e.node, e.value] as [string, ValueCard]] : [])),
+  );
 
   // one ELK run for the size (and ports) of every box; the wires are drawn by `planStage`, not by ELK
   const attrRows = attrRowsFor(model, log);
@@ -1148,6 +1164,8 @@ export async function mountTwoPane(
   };
   const byId = new Map(model.nodes.map((n) => [n.id, n]));
   const visualSize = (id: string): Size => {
+    const v = valueOf.get(id);
+    if (v) return valueCardSize(v);
     const ln = laid.nodes[id];
     return ln ? { w: ln.w, h: ln.h } : { w: 60, h: 24 };
   };
@@ -1196,6 +1214,7 @@ export async function mountTwoPane(
     if (existing) return existing;
     const ln = laid.nodes[node];
     const wrap = el(doc, 'div', 'md-card');
+    const value = valueOf.get(node);
     wrap.dataset.card = key;
     wrap.dataset.node = node;
     if (object !== null) wrap.dataset.object = object;
@@ -1203,7 +1222,27 @@ export async function mountTwoPane(
     const size = visualSize(node);
     wrap.style.width = `${size.w + CARD_PAD.l + CARD_PAD.r}px`;
     wrap.style.height = `${size.h + CARD_PAD.t + CARD_PAD.b}px`;
-    if (ln) {
+    if (value) {
+      // a plain value: a light box with `name = value`, solid outline (an instance's is a full card; a chip's is dashed)
+      const box = el(doc, 'div', 'md-vcard', valueCardText(value));
+      box.dataset.node = node;
+      box.style.left = `${CARD_PAD.l}px`;
+      box.style.top = `${CARD_PAD.t}px`;
+      box.style.width = `${size.w}px`;
+      box.style.height = `${size.h}px`;
+      const shown = value.text === null ? value.name : `${value.name} = ${value.text}`;
+      box.title = `${shown}${value.type ? ` (${value.type})` : ''}${
+        value.text !== null && reprTruncated(value.text) ? ', shortened' : ''
+      }`;
+      box.setAttribute('role', 'group');
+      const label = `value ${shown}${value.type ? `, ${value.type}` : ''}`.replace(
+        /\.\.\.|…/g,
+        ' and more',
+      );
+      box.setAttribute('aria-label', label);
+      box.dataset.label = label;
+      wrap.append(box);
+    } else if (ln) {
       const dx = CARD_PAD.l - ln.x;
       const dy = CARD_PAD.t - ln.y;
       const shift = (l: LaidNode): LaidNode => ({
@@ -1264,7 +1303,7 @@ export async function mountTwoPane(
     // the cards after it reflow while it is away
     ph.style.height = `${Math.min(card.size.h, PH_MAX_H)}px`;
     ph.style.margin = `${CARD_PAD.t}px ${CARD_PAD.r}px ${CARD_PAD.b}px ${CARD_PAD.l}px`;
-    const label = byId.get(e.node) ? slotLabel(byId.get(e.node)!) : e.node;
+    const label = e.value ? e.value.name : byId.get(e.node) ? slotLabel(byId.get(e.node)!) : e.node;
     ph.append(
       el(doc, 'span', 'md-slot-ph-name', label),
       el(doc, 'span', 'md-slot-ph-text', 'on the stage'),
@@ -1507,7 +1546,7 @@ export async function mountTwoPane(
     const stage = stageAt(model, log, current);
     const line = lineStageAt(model, log, current);
     lineNow = line;
-    const onShelf = new Map(shelfAt(model, current).map((s) => [s.node, s]));
+    const onShelf = new Map(shelfAt(model, current, log).map((s) => [s.node, s]));
     const active = doc.activeElement;
     const hadFocus = active !== null && root.contains(active);
 
@@ -1518,7 +1557,7 @@ export async function mountTwoPane(
       const merged = (p: StageParticipant): boolean =>
         p.kind !== 'chip' && (entryOf.get(p.node)?.objects ?? 0) > 1;
       const sizeOf = (p: StageParticipant): Size =>
-        p.kind === 'chip' ? chipSize(p) : visualSize(p.node);
+        p.kind === 'chip' ? chipSize(p) : visualSize(p.node); // a value card's size is `valueCardSize`
       const boxOf = (sg: StageModel, calleeOk = true): BoxSize | null => {
         if (!(
           (sg.kind === 'call' || sg.kind === 'expr' || sg.kind === 'store') &&
@@ -1700,6 +1739,8 @@ export async function mountTwoPane(
       c.wrap.hidden = visible.size === 0;
       // unique accessible names: what the card is and what it does on this line (the wires are not read out)
       const g = focusOf(c.wrap);
+      // a value card's name is fixed text, not redrawn by `setState`: start from it again, or the suffixes pile up
+      if (g?.dataset.label !== undefined) g.setAttribute('aria-label', g.dataset.label);
       if (g && !c.wrap.hidden) {
         const suffix = stageCard ? suffixOf(stageCard.item) : isBox ? boxSuffix(c) : 'on the shelf';
         const base = g.getAttribute('aria-label') ?? '';
@@ -1920,9 +1961,11 @@ export async function mountTwoPane(
   const focusOf = (wrap: HTMLElement): HTMLElement | null =>
     wrap.matches('.md-chipcard')
       ? wrap
-      : ([...wrap.querySelectorAll<HTMLElement>('.md-node')].find(
-          (g) => g.getAttribute('data-node') === wrap.dataset.node,
-        ) ?? null);
+      : wrap.dataset.node !== undefined && valueOf.has(wrap.dataset.node)
+        ? wrap.querySelector<HTMLElement>('.md-vcard')
+        : ([...wrap.querySelectorAll<HTMLElement>('.md-node')].find(
+            (g) => g.getAttribute('data-node') === wrap.dataset.node,
+          ) ?? null);
   const innerMethods = (wrap: HTMLElement): HTMLElement[] => {
     const own = wrap.dataset.node;
     return [...wrap.querySelectorAll<HTMLElement>('.md-node')].filter(
@@ -2082,7 +2125,7 @@ export async function mountTwoPane(
     let to: HTMLElement | undefined;
     if (k.key === 'i' || k.key === 'I') {
       const node = (k.target as Element).closest('[data-node]')?.getAttribute('data-node');
-      if (!node) return;
+      if (!node || valueOf.has(node)) return; // a value card has no attribute panel
       k.preventDefault();
       k.stopPropagation();
       opts.onSelectNode?.(node);
@@ -2136,7 +2179,8 @@ export async function mountTwoPane(
     defs.append(marker);
     wiresSvg.append(defs);
     for (const w of plan.wires) {
-      const g = sv(doc, 'g', {}, w.edge === null ? 'md-edge md-owner-line' : 'md-edge');
+      // an owner line has no graph edge and no arrow; a wire to a value card without an edge is still a wire
+      const g = sv(doc, 'g', {}, w.edge === null && !w.arrow ? 'md-edge md-owner-line' : 'md-edge');
       if (w.edge !== null) g.dataset.edge = w.edge;
       const wk = `${w.from}>${w.to}`;
       g.dataset.wire = wk;

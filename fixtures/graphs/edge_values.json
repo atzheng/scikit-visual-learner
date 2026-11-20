@@ -1,0 +1,396 @@
+{
+  "nodes": [
+    {
+      "id": "m:65f47k.0.j7c76b",
+      "kind": "import",
+      "parent": null,
+      "order": 700000,
+      "name": "np",
+      "source": "numpy",
+      "site": 15,
+      "executions": [
+        {
+          "i": 0,
+          "ret": 0,
+          "inputs": {},
+          "outputs": {},
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:1itnbtf.0",
+      "kind": "call",
+      "mergeKey": "s0",
+      "name": "array",
+      "module": "numpy",
+      "parent": null,
+      "order": 900004,
+      "executions": [
+        {
+          "i": 1,
+          "ret": 1,
+          "inputs": {},
+          "outputs": {
+            "out:0": "v1.0"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false,
+          "callee": "m:65f47k.0.j7c76b"
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:object",
+          "param": "object",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "object = [1, 2, 3]"
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "a"
+        }
+      ],
+      "student": false,
+      "importedFrom": "numpy"
+    },
+    {
+      "id": "i:1itnbtf.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 900004,
+      "className": "array",
+      "varName": "a",
+      "createdAt": 1,
+      "createdBy": "n:1itnbtf.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 1,
+          "token": "v1.0",
+          "kind": "new"
+        }
+      ]
+    },
+    {
+      "id": "n:mmsh67t@i:1itnbtf.0",
+      "kind": "call",
+      "mergeKey": "s2",
+      "name": "ndarray.sum",
+      "module": "numpy",
+      "parent": "i:1itnbtf.0",
+      "order": 1000004,
+      "executions": [
+        {
+          "i": 2,
+          "ret": 2,
+          "inputs": {},
+          "outputs": {
+            "out:0": "s0"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "int64",
+          "nameLabel": "n"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:m708bo8@i:1itnbtf.0",
+      "kind": "call",
+      "mergeKey": "s5",
+      "name": "ndarray.max",
+      "module": "numpy",
+      "parent": "i:1itnbtf.0",
+      "order": 1200004,
+      "executions": [
+        {
+          "i": 3,
+          "ret": 3,
+          "inputs": {},
+          "outputs": {
+            "out:0": "s1"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "int64",
+          "nameLabel": "n′"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "x:3vczj3.0",
+      "kind": "expr",
+      "parent": null,
+      "order": 1300000,
+      "text": "n += 1",
+      "executions": [
+        {
+          "i": 4,
+          "ret": 4,
+          "inputs": {
+            "in:n": "s1"
+          },
+          "outputs": {
+            "out:0": "s2"
+          },
+          "count": 1,
+          "owner": null,
+          "error": null,
+          "interrupted": false
+        }
+      ]
+    },
+    {
+      "id": "n:m1kyxlbf@i:1itnbtf.0",
+      "kind": "call",
+      "mergeKey": "s8",
+      "name": "ndarray.mean",
+      "module": "numpy",
+      "parent": "i:1itnbtf.0",
+      "order": 1400004,
+      "executions": [
+        {
+          "i": 5,
+          "ret": 5,
+          "inputs": {},
+          "outputs": {
+            "out:0": "s3"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "float64",
+          "nameLabel": "k"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "n:m42l5w0@i:1itnbtf.0",
+      "kind": "call",
+      "mergeKey": "s11",
+      "name": "ndarray.clip",
+      "module": "numpy",
+      "parent": "i:1itnbtf.0",
+      "order": 1600004,
+      "executions": [
+        {
+          "i": 6,
+          "ret": 6,
+          "inputs": {
+            "in:max": "s2"
+          },
+          "outputs": {
+            "out:0": "v2.0"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [
+        {
+          "id": "in:min",
+          "param": "min",
+          "typeLabel": "",
+          "nameLabel": null,
+          "constText": "min = 0"
+        },
+        {
+          "id": "in:max",
+          "param": "max",
+          "typeLabel": "int64",
+          "nameLabel": null
+        }
+      ],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "",
+          "nameLabel": "c"
+        }
+      ],
+      "student": false
+    },
+    {
+      "id": "i:1zgqbf.0",
+      "kind": "instance",
+      "parent": null,
+      "order": 1600004,
+      "className": "array",
+      "varName": "c",
+      "createdAt": 6,
+      "createdBy": "n:m42l5w0@i:1itnbtf.0",
+      "params": [],
+      "versions": [
+        {
+          "i": 6,
+          "token": "v2.0",
+          "kind": "new"
+        }
+      ]
+    },
+    {
+      "id": "n:m495xxu@i:1itnbtf.0",
+      "kind": "call",
+      "mergeKey": "s13",
+      "name": "ndarray.min",
+      "module": "numpy",
+      "parent": "i:1itnbtf.0",
+      "order": 1700004,
+      "executions": [
+        {
+          "i": 7,
+          "ret": 7,
+          "inputs": {},
+          "outputs": {
+            "out:0": "s4"
+          },
+          "count": 1,
+          "owner": "v1.0",
+          "error": null,
+          "interrupted": false
+        }
+      ],
+      "inPorts": [],
+      "outPorts": [
+        {
+          "id": "out:0",
+          "param": "0",
+          "typeLabel": "int64",
+          "nameLabel": "z"
+        }
+      ],
+      "student": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:x:3vczj3.0.>n:m42l5w0@i:1itnbtf.0.in:max",
+      "from": {
+        "node": "x:3vczj3.0",
+        "port": null
+      },
+      "to": {
+        "node": "n:m42l5w0@i:1itnbtf.0",
+        "port": "in:max"
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 6,
+          "token": "s2"
+        }
+      ],
+      "nameLabel": "n″"
+    },
+    {
+      "id": "e:n:m708bo8@i:1itnbtf.0.out:0>x:3vczj3.0.",
+      "from": {
+        "node": "n:m708bo8@i:1itnbtf.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "x:3vczj3.0",
+        "port": null
+      },
+      "dashed": true,
+      "uses": [
+        {
+          "i": 4,
+          "token": "s1"
+        }
+      ],
+      "nameLabel": "n′"
+    },
+    {
+      "id": "e:n:1itnbtf.0.out:0>i:1itnbtf.0.",
+      "from": {
+        "node": "n:1itnbtf.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1itnbtf.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 1,
+          "token": "v1.0"
+        }
+      ],
+      "nameLabel": null
+    },
+    {
+      "id": "e:n:m42l5w0@i:1itnbtf.0.out:0>i:1zgqbf.0.",
+      "from": {
+        "node": "n:m42l5w0@i:1itnbtf.0",
+        "port": "out:0"
+      },
+      "to": {
+        "node": "i:1zgqbf.0",
+        "port": null
+      },
+      "dashed": false,
+      "uses": [
+        {
+          "i": 6,
+          "token": "v2.0"
+        }
+      ],
+      "nameLabel": null
+    }
+  ],
+  "steps": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ]
+}

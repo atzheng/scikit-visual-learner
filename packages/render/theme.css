@@ -674,3 +674,23 @@ g[data-doc-attr]:focus-visible > .md-docs-btn {
   white-space: nowrap;
   pointer-events: none;
 }
+/* svl-o6m: a plain value bound to a name (`score = 0.42`): a light, solid-outlined box, smaller than an object's card */
+.md-vcard {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1.5px solid var(--md-inst-stroke);
+  border-radius: 6px;
+  background: var(--md-bg);
+  color: var(--md-text);
+  font: 12px/1 var(--md-font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.md-vcard:focus-visible {
+  outline: 2px solid var(--md-focus);
+  outline-offset: 2px;
+}
