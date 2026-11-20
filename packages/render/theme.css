@@ -610,6 +610,8 @@ g[data-doc-attr]:focus-visible > .md-docs-btn {
 }
 .md-slot {
   margin: -16px 0 -22px;
+  min-width: 0;
+  max-width: 100%; /* a long placeholder shortens its name instead of running past the shelf */
 }
 .md-card {
   position: relative;
@@ -638,10 +640,18 @@ g[data-doc-attr]:focus-visible > .md-docs-btn {
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
+  max-width: calc(100% - 12px);
+  padding: 0 10px;
 }
 .md-slot-ph-name {
   font-weight: bold;
   color: var(--md-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.md-slot-ph-text {
+  flex: none;
 }
 .md-slot-ph-text::before {
   content: '· ';
@@ -664,10 +674,10 @@ g[data-doc-attr]:focus-visible > .md-docs-btn {
   color: var(--md-type-text);
   white-space: nowrap;
 }
-/* svl-17v: what an earlier call of the line made or used: kept, with its wires, but quieter than the current call */
+/* svl-17v: what an earlier call of the line made or used: kept, with its wires, but less saturated than the current call (text contrast is not reduced) */
 .md-stage-canvas .md-card.md-past:not(:hover):not(:focus-within),
 .md-stage-canvas .md-chipcard.md-past:not(:hover):not(:focus-within) {
-  opacity: 0.72;
+  filter: saturate(0.5);
 }
 /* svl-a9e: a method call is drawn inside its owner's card, so the wires end inside it: draw them above the cards */
 .md-stage-canvas.md-nested .md-stage-wires {

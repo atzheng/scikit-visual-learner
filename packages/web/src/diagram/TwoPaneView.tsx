@@ -189,9 +189,6 @@ export function TwoPaneView({ onHoverEdge, onClickEdge, children }: DiagramPaneP
           (left < sec.scrollLeft || right > sec.scrollLeft + sec.clientWidth)
         )
           sec.scrollLeft = Math.max(0, right - sec.clientWidth + 12);
-      } else if (opts?.focus) {
-        sec.scrollTop = 0;
-        sec.scrollLeft = 0;
       }
     }
     // a few px of blank under the last card is not "more": the cue needs real hidden content

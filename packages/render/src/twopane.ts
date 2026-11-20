@@ -1613,6 +1613,7 @@ export async function mountTwoPane(
     ph.style.width = `${Math.ceil(text.length * 7.4) + 28}px`;
     ph.style.height = `${PH_MAX_H}px`;
     ph.style.margin = `${CARD_PAD.t}px ${CARD_PAD.r}px ${CARD_PAD.b}px ${CARD_PAD.l}px`;
+    ph.title = text;
     ph.append(
       el(doc, 'span', 'md-slot-ph-name', label),
       el(doc, 'span', 'md-slot-ph-text', 'on the stage'),
@@ -2690,6 +2691,11 @@ export async function mountTwoPane(
     wrap.style.position = 'absolute';
     wrap.style.left = `${r.x - l}px`;
     wrap.style.top = `${r.y - t}px`;
+    // a chip is drawn as wide as its plan rect, so the wires that end at it touch it
+    if (!padded) {
+      wrap.style.width = `${r.w}px`;
+      wrap.style.height = `${r.h}px`;
+    }
   }
 
   function drawWires(): void {
