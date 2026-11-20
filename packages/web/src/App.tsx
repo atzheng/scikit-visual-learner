@@ -128,6 +128,28 @@ function Toolbar() {
 const ISOLATION_HELP =
   'This page is not cross-origin isolated, so Stop and the time limit cannot interrupt Python in place. They restart Python instead, which takes several seconds, and a program that is stopped shows no unfinished call.';
 
+/** Large, obvious indicator over the diagram area while Python loads or restarts. */
+function LoadingOverlay() {
+  const { state, progress } = useStore((s) => s.runtime);
+  if (state !== 'loading' && state !== 'restarting') return null;
+  const failed = progress.startsWith('Python failed');
+  return (
+    <div className="loading-overlay" role="status" aria-busy={!failed} data-testid="loading">
+      <div className="loading-card">
+        {!failed && <div className="spinner" aria-hidden="true" />}
+        <p className="loading-title">
+          {failed
+            ? 'Python could not load'
+            : state === 'restarting'
+              ? 'Restarting Python…'
+              : 'Loading Python…'}
+        </p>
+        <p className="loading-phase">{progress}</p>
+      </div>
+    </div>
+  );
+}
+
 function StatusLine() {
   const { state, progress } = useStore((s) => s.runtime);
   const isolated = typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated;
@@ -202,10 +224,19 @@ export function App() {
           ref={leftRef}
           style={{ gridTemplateRows: `auto ${leftRows}fr 6px ${100 - leftRows}fr` }}
         >
-          <div className="pane pane-timeline">
+          <div className="pane pane-timeline primary-input">
+            <h2 className="input-label">Step through</h2>
             <Timeline />
           </div>
-          <div id="pane-editor" className="pane" tabIndex={-1} aria-label="Code editor">
+          <div
+            id="pane-editor"
+            className="pane primary-input editor-pane"
+            tabIndex={-1}
+            aria-label="Code editor"
+          >
+            <h2 className="input-label" aria-hidden="true">
+              Your code
+            </h2>
             <Editor
               sites={sites}
               runSource={runSource ?? undefined}
@@ -232,7 +263,8 @@ export function App() {
           containerRef={mainRef}
         />
         <section className="column" style={{ gridTemplateRows: 'minmax(0, 1fr)' }}>
-          <div className="pane">
+          <div className="pane pane-diagram">
+            <LoadingOverlay />
             <DiagramPane
               cursorSite={cursorSite}
               onHoverEdge={edgeInspect.onHover}

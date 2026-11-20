@@ -69,11 +69,19 @@ type Store = {
   };
 };
 
+let sawLoading = false;
+
 async function open(ctx: BrowserContext, base: string, hash = ''): Promise<Page> {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log(`  [pageerror] ${e.message}`));
   await page.goto(`${base}/?debug${hash}`);
+  if (!sawLoading) {
+    // The big loading indicator shows during the initial load, then goes away when ready.
+    sawLoading = true;
+    await page.getByTestId('loading').waitFor({ state: 'visible', timeout: 15000 });
+  }
   await waitReady(page, LONG);
+  await page.getByTestId('loading').waitFor({ state: 'hidden', timeout: 5000 });
   return page;
 }
 
