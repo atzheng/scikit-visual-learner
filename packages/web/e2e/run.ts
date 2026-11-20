@@ -69,11 +69,30 @@ type Store = {
   };
 };
 
+let sawLoading = false;
+
 async function open(ctx: BrowserContext, base: string, hash = ''): Promise<Page> {
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.log(`  [pageerror] ${e.message}`));
+  const firstLoad = !sawLoading;
+  sawLoading = true;
+  // The first load is held back 1.5 s so the big loading indicator can be seen deterministically.
+  if (firstLoad) {
+    let delayed = false;
+    await page.route(/pyodide\.asm\.wasm/, async (route) => {
+      if (!delayed) {
+        delayed = true;
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      await route.continue();
+    });
+  }
   await page.goto(`${base}/?debug${hash}`);
+  if (firstLoad) {
+    await page.getByTestId('loading').waitFor({ state: 'visible', timeout: 15000 });
+  }
   await waitReady(page, LONG);
+  await page.getByTestId('loading').waitFor({ state: 'hidden', timeout: 5000 });
   return page;
 }
 
