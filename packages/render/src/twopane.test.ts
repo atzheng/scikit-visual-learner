@@ -1369,7 +1369,7 @@ describe('animation', () => {
     ).toBeNull();
   });
   test('creation flourish (svl-2db): forward steps only, never on snaps, reverse or reduced motion', async () => {
-    const { model, log } = await open('golden_linreg');
+    const { model } = await open('golden_linreg');
     const ringed = (cs: typeof calls): number =>
       cs.filter((c) => c.frames.some((f) => f.boxShadow)).length;
     const drawn = (cs: typeof calls): number =>
