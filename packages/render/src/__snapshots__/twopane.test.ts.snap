@@ -5,10 +5,10 @@ exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a
   "box": {
     "h": 60,
     "w": 140,
-    "x": 188,
-    "y": 142,
+    "x": 172,
+    "y": 118,
   },
-  "height": 344,
+  "height": 296,
   "items": [
     {
       "key": "x",
@@ -26,7 +26,7 @@ exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a
       "rect": {
         "h": 50,
         "w": 100,
-        "x": 208,
+        "x": 192,
         "y": 16,
       },
     },
@@ -46,8 +46,8 @@ exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a
       "rect": {
         "h": 50,
         "w": 100,
-        "x": 208,
-        "y": 278,
+        "x": 192,
+        "y": 230,
       },
     },
     {
@@ -67,7 +67,7 @@ exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a
         "h": 50,
         "w": 100,
         "x": 16,
-        "y": 147,
+        "y": 123,
       },
     },
   ],
@@ -76,10 +76,10 @@ exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a
       "in   k = 3",
     ],
     "w": 88,
-    "x": 352,
-    "y": 142,
+    "x": 336,
+    "y": 118,
   },
-  "width": 456,
+  "width": 440,
   "wires": [
     {
       "arrow": true,
@@ -89,17 +89,17 @@ exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a
         "anchor": "start",
         "name": "X",
         "type": "",
-        "x": 263,
+        "x": 247,
         "y": 80,
       },
       "points": [
         [
-          258,
+          242,
           66,
         ],
         [
-          258,
-          142,
+          242,
+          118,
         ],
       ],
       "to": "box",
@@ -112,17 +112,17 @@ exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a
         "anchor": "start",
         "name": "0",
         "type": "",
-        "x": 263,
-        "y": 270,
+        "x": 247,
+        "y": 222,
       },
       "points": [
         [
-          258,
-          202,
+          242,
+          178,
         ],
         [
-          258,
-          278,
+          242,
+          230,
         ],
       ],
       "to": "y",
@@ -135,17 +135,17 @@ exports[`planStage (pure) > plan snapshot: one input, one output, an owner and a
         "anchor": "middle",
         "name": "owner",
         "type": "",
-        "x": 152,
-        "y": 166,
+        "x": 144,
+        "y": 142,
       },
       "points": [
         [
           116,
-          172,
+          148,
         ],
         [
-          188,
           172,
+          148,
         ],
       ],
       "to": "box",

@@ -35,9 +35,9 @@ import type { MethodDocTarget } from './svg';
 
 /** Room around a card's box inside its element: the "x3" badge above, a status message below. */
 export const CARD_PAD = { l: 6, t: 22, r: 6, b: 30 };
-/** Tallest shelf placeholder (px): about one shelf row. */
-export const PH_MAX_H = 100;
-export const STAGE = { margin: 16, colGap: 24, rowGap: 76, sideGap: 72, valuesGap: 24 };
+/** Height of a shelf placeholder (px): one line, so its text is never cut. */
+export const PH_MAX_H = 30;
+export const STAGE = { margin: 16, colGap: 24, rowGap: 52, sideGap: 56, valuesGap: 24 };
 
 export interface Rect {
   x: number;
@@ -109,6 +109,24 @@ export interface StagePlan {
   valuesAll?: NonNullable<StagePlan['values']>[];
 }
 
+/**
+ * svl-17v: the part of a line group's stage to keep in view: the current call's box and the cards that belong to it
+ * (null for a single call: its stage is shown from the top). Canvas coordinates.
+ */
+export function currentFocus(plan: StagePlan | null): Rect | null {
+  const cur = plan?.calls?.find((c) => c.current);
+  if (!plan || !cur) return null;
+  const rs: Rect[] = [
+    cur.rect,
+    ...plan.items.filter((i) => i.call === cur.call).map((i) => i.rect),
+  ];
+  const x0 = Math.min(...rs.map((r) => r.x));
+  const y0 = Math.min(...rs.map((r) => r.y));
+  const x1 = Math.max(...rs.map((r) => r.x + r.w));
+  const y1 = Math.max(...rs.map((r) => r.y + r.h));
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
 /** Where the current method's box sits inside its owner's card (svl-a9e): relative to the owner's box. */
 export interface NestedBox {
   rect: Rect;
@@ -178,6 +196,7 @@ export function planStage(
   mergedOf: (p: StageParticipant) => boolean,
   log?: EventLog,
   nested?: NestedBox | null,
+  skip?: ReadonlyMap<string, 'stub' | 'drop'>,
 ): StagePlan {
   if (nested && !box) {
     const own = stage.participants.find((p) => p.kind === 'instance' && p.role === 'owner');
@@ -229,13 +248,22 @@ export function planStage(
   );
   const ins = stage.participants.filter((p) => p.role === 'input');
   const outs = stage.participants.filter((p) => p.role === 'output' || p.role === 'created');
-  const inCards = firstOf(ins);
-  const inH = Math.max(0, ...S(ins).map((s) => s.h));
-  const outH = Math.max(0, ...S(outs).map((s) => s.h));
+  // svl-17v: an object drawn on another band (`skip`) takes no room here: its wire is a stub that `planLine` joins
+  // to the card's home, or (`drop`) no wire at all
+  const skipOf = (p: StageParticipant): 'stub' | 'drop' | undefined =>
+    skip?.get(cardKey(p, mergedOf(p)));
+  const insHere = ins.filter((p) => !skipOf(p));
+  const outsHere = outs.filter((p) => !skipOf(p));
+  const stubIn = ins.some((p) => skipOf(p) === 'stub');
+  const stubOut = outs.some((p) => skipOf(p) === 'stub');
+  const STUB = 30;
+  const inCards = firstOf(insHere);
+  const inH = Math.max(0, ...S(insHere).map((s) => s.h));
+  const outH = Math.max(0, ...S(outsHere).map((s) => s.h));
   const ownerSpace = owner ? sz.get(owner)!.w + STAGE.sideGap : 0;
   const boxX = ownerSpace;
   const cx = boxX + box.w / 2;
-  const boxY = ins.length ? inH + STAGE.rowGap : 0;
+  const boxY = insHere.length ? inH + STAGE.rowGap : stubIn ? STUB : 0;
   const boxRect: Rect = { x: boxX, y: boxY, w: box.w, h: box.h };
   // svl-u3v: the callee's card is the call box
   if (calleeP) place(calleeP, boxX, boxY);
@@ -267,6 +295,27 @@ export function planStage(
   ins.forEach((p, k) => {
     const s = sz.get(p)!;
     const key = cardKey(p, mergedOf(p));
+    if (skipOf(p)) {
+      const px = portX(p, k, ins.length);
+      wires.push({
+        edge: p.edge,
+        from: key,
+        to: 'box',
+        points: [
+          [px, boxY - STUB],
+          [px, boxY],
+        ],
+        arrow: true,
+        label: {
+          x: px + 5,
+          y: boxY - 8,
+          type: typeText(typeOf(p)),
+          name: p.kind === 'chip' ? '' : (p.param ?? ''),
+          anchor: 'start',
+        },
+      });
+      return;
+    }
     let it = placed.get(key);
     if (!it) {
       it = place(p, x, inH - s.h);
@@ -303,9 +352,33 @@ export function planStage(
       },
     });
   });
-  const outTop = boxY + box.h + STAGE.rowGap;
-  x = clearOwner(cx - rowWidth(S(outs)) / 2, outTop + outH, outTop);
+  const outTop = boxY + box.h + (outsHere.length ? STAGE.rowGap : stubOut ? STUB : 0);
+  x = clearOwner(cx - rowWidth(S(outsHere)) / 2, outTop + outH, outTop);
   outs.forEach((p, k) => {
+    const sk = skipOf(p);
+    if (sk) {
+      if (sk === 'stub') {
+        const px = portX(p, k, outs.length);
+        wires.push({
+          edge: p.edge,
+          from: 'box',
+          to: cardKey(p, mergedOf(p)),
+          points: [
+            [px, boxY + box.h],
+            [px, boxY + box.h + STUB],
+          ],
+          arrow: true,
+          label: {
+            x: px + 5,
+            y: boxY + box.h + 16,
+            type: typeText(typeOf(p)),
+            name: p.kind === 'chip' ? '' : (p.param ?? ''),
+            anchor: 'start',
+          },
+        });
+      }
+      return;
+    }
     const it = place(p, x, outTop);
     x += it.rect.w + STAGE.colGap;
     const ex = it.rect.x + it.rect.w / 2;
@@ -375,7 +448,7 @@ export function planStage(
     if (x + w > VALUES_BESIDE_MAX) {
       const below = { x: Math.max(boxX, boxX + box.w - w), y: boxY + box.h + 6, w, h };
       if (
-        (!outs.length || h + 14 <= STAGE.rowGap - 8) &&
+        (!outsHere.length || h + 14 <= STAGE.rowGap - 8) &&
         !wires.some((wr) => wireHits(wr.points, below))
       ) {
         x = below.x;
@@ -387,7 +460,7 @@ export function planStage(
 
   // shift everything so nothing is left of the margin, then size the canvas
   let maxX = boxRect.x + boxRect.w;
-  let maxY = outs.length ? outTop + outH : boxY + box.h;
+  let maxY = outsHere.length ? outTop + outH : boxY + box.h + (stubOut ? STUB : 0);
   for (const it of items) {
     maxX = Math.max(maxX, it.rect.x + it.rect.w);
     maxY = Math.max(maxY, it.rect.y + it.rect.h);
@@ -652,7 +725,9 @@ export interface PlanCall {
 }
 
 /** Vertical space between the layouts of two calls that do not share a card (px); wires jog across it. */
-const BAND_GAP = 64;
+const BAND_GAP = 40;
+/** About the room the stage has at 1440 x 900 (px): a line group goes into two columns when that gives a bigger zoom. */
+const STAGE_PANE = { w: 600, h: 700 };
 
 /**
  * The stage of a line group (svl-qol): every call of the line that has run so far. Each call is laid out as
@@ -704,9 +779,43 @@ export function planLine(
     for (const p of c.stage.participants)
       if (p.role !== 'output' && p.role !== 'created') used.add(cardOf(p));
   });
+  // svl-17v: where each object is drawn (its home: the band of the owner that hosts method boxes, else the first
+  // band that has it). A plain band takes no room for an input or output that is drawn on another band: the wire
+  // becomes a stub, and the step below joins it to the home card.
+  const bandsOf = new Map<string, number[]>();
+  const hostOf = new Map<string, number>();
+  groups.forEach((g, gi) => {
+    for (const k of g.calls)
+      for (const p of line.calls[k]!.stage.participants) {
+        const key = cardOf(p);
+        const l = bandsOf.get(key);
+        if (!l) bandsOf.set(key, [gi]);
+        else if (!l.includes(gi)) l.push(gi);
+        if (g.nested && p.role === 'owner' && p.kind === 'instance' && !hostOf.has(key))
+          hostOf.set(key, gi);
+      }
+  });
+  const skipsOf = (gi: number): Map<string, 'stub' | 'drop'> => {
+    const skip = new Map<string, 'stub' | 'drop'>();
+    const g = groups[gi]!;
+    if (g.nested) return skip;
+    const ps = line.calls[g.calls[0]!]!.stage.participants;
+    for (const p of ps) {
+      if (p.role !== 'input' && p.role !== 'output' && p.role !== 'created') continue;
+      const key = cardOf(p);
+      const home = hostOf.get(key) ?? bandsOf.get(key)![0]!;
+      if (home === gi) continue;
+      const roles = new Set(ps.filter((q) => cardOf(q) === key).map((q) => q.role === 'input'));
+      if (roles.size > 1) continue; // used and made by the same call: drawn in place as before
+      const isInput = p.role === 'input';
+      if (isInput && home > gi) continue; // cannot be drawn: planLine gives up below
+      skip.set(key, isInput || home > gi ? 'stub' : 'drop');
+    }
+    return skip;
+  };
   // 2. lay each band out
   const calleesUsed = new Set<string>();
-  for (const g of groups) {
+  for (const [gi, g] of groups.entries()) {
     const stages = g.calls.map((k) => line.calls[k]!.stage);
     let plan: StagePlan;
     if (g.nested) {
@@ -728,7 +837,7 @@ export function planLine(
       const cp = stage.participants.find((p) => p.role === 'callee');
       const ok = cp === undefined || !calleesUsed.has(cp.node);
       if (cp && ok) calleesUsed.add(cp.node);
-      plan = planStage(stage, size, boxOf(stage, ok), mergedOf, log);
+      plan = planStage(stage, size, boxOf(stage, ok), mergedOf, log, undefined, skipsOf(gi));
       const tag = `box#${g.calls[0]}`;
       for (const w of plan.wires) {
         if (w.from === 'box') w.from = tag;
@@ -738,25 +847,66 @@ export function planLine(
     }
     bands.push({ nested: g.nested, calls: g.calls, plan, top: 0 });
   }
-  // 3. stack them
+  // 3. arrange them: one column, or two side by side when that is much shorter (svl-17v). A column stacks its
+  // bands top to bottom in call order; the second column starts where the first leaves off (reading order).
   const M = STAGE.margin;
-  let top = 0;
-  for (const b of bands) {
-    b.top = top;
-    top += b.plan.height - 2 * M + BAND_GAP;
-    const p = b.plan;
-    const dy = b.top;
-    for (const it of p.items) it.rect.y += dy;
-    for (const w of p.wires) {
-      w.points = w.points.map(([a, c]) => [a, c + dy] as [number, number]);
-      if (w.label) w.label.y += dy;
+  const bandH = (b: Band): number => b.plan.height - 2 * M;
+  const colHeight = (bs: Band[]): number =>
+    bs.reduce((a, b) => a + bandH(b), 0) + Math.max(0, bs.length - 1) * BAND_GAP;
+  const bandW = (bs: Band[]): number => Math.max(0, ...bs.map((b) => b.plan.width));
+  let split = bands.length; // bands before the index are in column 0
+  {
+    // the zoom the stage would get in a pane of about `STAGE_PANE` (a 1440 x 900 window): width- or height-limited
+    const zoom = (w: number, h: number): number => Math.min(1, STAGE_PANE.w / w, STAGE_PANE.h / h);
+    let best = zoom(bandW(bands), colHeight(bands) + 2 * M);
+    const one = best;
+    for (let m = 1; m < bands.length; m++) {
+      const a = bands.slice(0, m);
+      const c = bands.slice(m);
+      const z = zoom(bandW(a) + bandW(c) + 24, Math.max(colHeight(a), colHeight(c)) + 2 * M);
+      if (z > best && z > one * 1.1) {
+        best = z;
+        split = m;
+      }
     }
-    if (p.values) p.values.y += dy;
-    for (const l of p.callLabels ?? []) l.y += dy;
-    if (p.box) p.box = { ...p.box, y: p.box.y + dy };
-    if (p.boxes) p.boxes = p.boxes.map((r) => ({ ...r, y: r.y + dy }));
   }
-  const gapMid = (band: number): number => bands[band]!.top + M - BAND_GAP / 2;
+  const col = (bi: number): 0 | 1 => (bi < split ? 0 : 1);
+  const colsN = split < bands.length ? 2 : 1;
+  {
+    const tops = [0, BAND_GAP / 2];
+    bands.forEach((b, bi) => {
+      const c = col(bi);
+      b.top = tops[c]!;
+      tops[c] = b.top + bandH(b) + BAND_GAP;
+    });
+  }
+  const shiftPlan = (p: StagePlan, dx: number, dy: number): void => {
+    for (const it of p.items) {
+      it.rect.x += dx;
+      it.rect.y += dy;
+    }
+    for (const w of p.wires) {
+      w.points = w.points.map(([a, c]) => [a + dx, c + dy] as [number, number]);
+      if (w.label) {
+        w.label.x += dx;
+        w.label.y += dy;
+      }
+    }
+    if (p.values) {
+      p.values.x += dx;
+      p.values.y += dy;
+    }
+    for (const l of p.callLabels ?? []) {
+      l.x += dx;
+      l.y += dy;
+    }
+    if (p.box) p.box = { ...p.box, x: p.box.x + dx, y: p.box.y + dy };
+    if (p.boxes) p.boxes = p.boxes.map((r) => ({ ...r, x: r.x + dx, y: r.y + dy }));
+  };
+  for (const b of bands) shiftPlan(b.plan, 0, b.top);
+  const gapAbove = (band: number): number => bands[band]!.top + M - BAND_GAP / 2;
+  const gapBelow = (band: number): number =>
+    bands[band]!.top + bands[band]!.plan.height - M + BAND_GAP / 2;
   // 4. one card per object
   const occ = new Map<string, { band: number; item: PlanItem }[]>();
   bands.forEach((b, bi) => {
@@ -770,17 +920,20 @@ export function planLine(
   const nextJog = (y: number, band: number): number => {
     const n = jogs.get(band) ?? 0;
     jogs.set(band, n + 1);
-    return y - 12 + n * 8;
+    return y - 14 + n * 6;
   };
-  // A wire to a card that is drawn elsewhere runs through a gutter beside the stack, never over a card:
+  // A wire to a card that is drawn elsewhere runs through a gutter beside the columns, never over a card:
   // out of the home card's side, along a lane to the gap above (or below) the layout, and in.
   interface Job {
     kind: 'in' | 'out';
     wire: PlanWire;
     home: PlanItem;
+    homeBand: number;
+    band: number;
     gap: number; // y of the horizontal run in the gap
     side: 'L' | 'R';
     ey: number;
+    lane: 'FL' | 'M' | 'FR';
   }
   const jobs: Job[] = [];
   for (const list of occ.values()) {
@@ -800,7 +953,9 @@ export function planLine(
       const band = bands[o.band]!.plan;
       band.items.splice(band.items.indexOf(o.item), 1);
       const below = home.band > o.band;
-      const gap = below ? gapMid(o.band + 1) : nextJog(gapMid(o.band), o.band);
+      const gap = below
+        ? nextJog(gapBelow(o.band), -o.band - 1)
+        : nextJog(gapAbove(o.band), o.band);
       band.wires = band.wires.filter((w) => {
         // a wire the later call has to an object drawn above (or the earlier call from one drawn below) is not drawn
         if (below ? w.from === o.item.key : w.to === o.item.key) return false;
@@ -809,22 +964,57 @@ export function planLine(
             kind: below ? 'out' : 'in',
             wire: w,
             home: home.item,
+            homeBand: home.band,
+            band: o.band,
             gap,
             side: 'L',
             ey: 0,
+            lane: 'FL',
           });
         return true;
       });
     }
   }
-  // the cards and boxes a wire must not cross
-  const obstacles = (): Rect[] => [
-    ...bands.flatMap((b) => b.plan.items.map((i) => i.rect)),
-    ...bands.flatMap((b) => (b.nested ? [] : b.plan.box ? [b.plan.box] : [])),
-  ];
-  const obs = obstacles();
-  const clear = (side: 'L' | 'R', y: number, home: Rect): boolean =>
-    !obs.some(
+  // a stub (svl-17v): the wire of an object that another band draws, joined to that card the same way
+  const itemOf = (key: string): { band: number; item: PlanItem } | undefined => {
+    for (const [bi, b] of bands.entries()) {
+      const item = b.plan.items.find((i) => i.key === key);
+      if (item) return { band: bi, item };
+    }
+    return undefined;
+  };
+  for (const [bi, b] of bands.entries()) {
+    const here = new Set(b.plan.items.map((i) => i.key));
+    for (const w of b.plan.wires) {
+      if (jobs.some((j) => j.wire === w)) continue; // already joined to its home above
+      const stubIn = !w.from.startsWith('box') && !here.has(w.from);
+      const stubOut = !w.to.startsWith('box') && !here.has(w.to);
+      if (!stubIn && !stubOut) continue;
+      const home = itemOf(stubIn ? w.from : w.to);
+      if (!home) return null;
+      jobs.push({
+        kind: stubIn ? 'in' : 'out',
+        wire: w,
+        home: home.item,
+        homeBand: home.band,
+        band: bi,
+        gap: stubIn ? nextJog(gapAbove(bi), bi) : nextJog(gapBelow(bi), -bi - 1),
+        side: 'L',
+        ey: 0,
+        lane: 'FL',
+      });
+    }
+  }
+  // the cards and boxes a wire must not cross, by column
+  const obsOf = (c: 0 | 1): Rect[] =>
+    bands.flatMap((b, bi) =>
+      col(bi) !== c
+        ? []
+        : [...b.plan.items.map((i) => i.rect), ...(b.nested || !b.plan.box ? [] : [b.plan.box])],
+    );
+  const obs = [obsOf(0), obsOf(1)];
+  const clear = (side: 'L' | 'R', y: number, home: Rect, c: 0 | 1): boolean =>
+    !obs[c]!.some(
       (r) =>
         r !== home &&
         r.y - 4 < y &&
@@ -833,36 +1023,58 @@ export function planLine(
     );
   for (const j of jobs) {
     const hr = j.home.rect;
+    const hc = col(j.homeBand);
+    if (col(j.band) !== hc) {
+      // between the columns: out of the side of the home card that faces the other column
+      j.side = hc === 0 ? 'R' : 'L';
+      j.ey = hr.y + hr.h / 2;
+      j.lane = 'M';
+      continue;
+    }
     const tries: ['L' | 'R', number][] = [];
     for (const y of [hr.y + hr.h / 2, hr.y + 10, hr.y + hr.h - 10]) tries.push(['L', y], ['R', y]);
-    const pick = tries.find(([sd, y]) => clear(sd, y, hr)) ?? tries[0]!;
+    const pick = tries.find(([sd, y]) => clear(sd, y, hr, hc)) ?? tries[0]!;
     j.side = pick[0];
     j.ey = pick[1];
+    j.lane =
+      colsN === 1
+        ? j.side === 'L'
+          ? 'FL'
+          : 'FR'
+        : j.side === 'L'
+          ? hc === 0
+            ? 'FL'
+            : 'M'
+          : hc === 0
+            ? 'M'
+            : 'FR';
   }
   const laneStep = 8;
-  const nL = jobs.filter((j) => j.side === 'L').length;
-  const nR = jobs.length - nL;
+  const count = (l: Job['lane']): number => jobs.filter((j) => j.lane === l).length;
+  const nL = count('FL');
+  const nM = count('M');
+  const nR = count('FR');
   const gl = nL ? 12 + laneStep * nL : 0;
-  const right = Math.max(...bands.map((b) => b.plan.width));
-  // make room for the gutters: everything moves right by the left one
-  if (gl)
-    for (const b of bands) {
-      const p = b.plan;
-      for (const it of p.items) it.rect.x += gl;
-      for (const w of p.wires) {
-        w.points = w.points.map(([a, c]) => [a + gl, c] as [number, number]);
-        if (w.label) w.label.x += gl;
-      }
-      if (p.values) p.values.x += gl;
-      for (const l of p.callLabels ?? []) l.x += gl;
-      if (p.box) p.box = { ...p.box, x: p.box.x + gl };
-      if (p.boxes) p.boxes = p.boxes.map((r) => ({ ...r, x: r.x + gl }));
-    }
-  let iL = 0;
-  let iR = 0;
+  const c0 = bands.filter((_, bi) => col(bi) === 0);
+  const c1 = bands.filter((_, bi) => col(bi) === 1);
+  const w0 = bandW(c0);
+  const w1 = bandW(c1);
+  // make room for the gutters: column 0 moves right by the left one, column 1 beyond column 0 and the middle one
+  const gm = colsN === 2 ? Math.max(24, 12 + laneStep * nM) : 0;
+  const shift1 = gl + w0 + gm - 2 * M;
+  bands.forEach((b, bi) => shiftPlan(b.plan, col(bi) === 0 ? gl : shift1, 0));
+  const midLeft = gl + w0 - M;
+  const right = colsN === 2 ? shift1 + w1 : gl + w0;
+  const lanes = { FL: 0, M: 0, FR: 0 };
   for (const j of jobs) {
     const hr = j.home.rect;
-    const lx = j.side === 'L' ? 6 + laneStep * iL++ : right + gl + 10 + laneStep * iR++;
+    const k = lanes[j.lane]++;
+    const lx =
+      j.lane === 'FL'
+        ? 6 + laneStep * k
+        : j.lane === 'M'
+          ? midLeft + 10 + laneStep * k
+          : right + 10 + laneStep * k;
     const hx = j.side === 'L' ? hr.x : hr.x + hr.w;
     const w = j.wire;
     if (j.kind === 'in') {
@@ -886,7 +1098,7 @@ export function planLine(
     if (j.kind === 'out') w.to = j.home.key;
   }
   const gr = nR ? 12 + laneStep * nR : 0;
-  const extraW = gl + gr;
+  const contentH = Math.max(...bands.map((b) => b.top + bandH(b)));
   // 5. the result
   const items = bands.flatMap((b) => b.plan.items);
   const wires = bands.flatMap((b) => b.plan.wires);
@@ -910,8 +1122,8 @@ export function planLine(
   );
   const cur = planCalls.find((c) => c.current) ?? null;
   const p: StagePlan = {
-    width: Math.max(...bands.map((b) => b.plan.width)) + extraW,
-    height: top - BAND_GAP + 2 * M,
+    width: right + gr,
+    height: contentH + 2 * M,
     box: cur ? cur.rect : null,
     items,
     wires,
@@ -1161,6 +1373,26 @@ function pick<V>(rec: Record<string, V>, ids: ReadonlySet<string>): Record<strin
 const STAGEABLE = new Set<GNode['kind']>(['instance', 'import', 'def', 'call', 'expr', 'store']);
 let uid = 0;
 
+/** An instance card on the stage and the shelf shows at most this many attribute rows (the last may be "… N more"). */
+export const MAX_CARD_ROWS = 6;
+/**
+ * svl-17v: compact cards. A card keeps `MAX_CARD_ROWS` rows at most; the full list is in the inspect panel. The box is
+ * as wide as the widest row it can show, so the longest of the cut rows stands in for them.
+ */
+export function capAttrRows(
+  rows: Record<string, string[]>,
+  max = MAX_CARD_ROWS,
+): Record<string, string[]> {
+  return Object.fromEntries(
+    Object.entries(rows).map(([id, r]) => {
+      if (r.length <= max) return [id, r];
+      const rest = r.slice(max - 1);
+      const widest = rest.reduce((a, b) => (b.length > a.length ? b : a), '');
+      return [id, [...r.slice(0, max - 1), widest]];
+    }),
+  );
+}
+
 export async function mountTwoPane(
   host: HTMLElement,
   model: GraphModel,
@@ -1176,7 +1408,7 @@ export async function mountTwoPane(
   );
 
   // one ELK run for the size (and ports) of every box; the wires are drawn by `planStage`, not by ELK
-  const attrRows = attrRowsFor(model, log);
+  const attrRows = capAttrRows(attrRowsFor(model, log));
   const synth: GraphModel = {
     nodes: model.nodes
       .filter((n) => STAGEABLE.has(n.kind) && n.kind !== 'instance')
@@ -1374,13 +1606,14 @@ export async function mountTwoPane(
     slotEl.hidden = true;
     const ph = el(doc, 'div', 'md-slot-ph');
     ph.hidden = true;
-    // the dashed outline is the card's box; the card's padding becomes its margin, so the slot keeps its size
-    ph.style.width = `${card.size.w}px`;
-    // a tall card (an instance with its attributes and methods) leaves a placeholder of about one shelf row;
-    // the cards after it reflow while it is away
-    ph.style.height = `${Math.min(card.size.h, PH_MAX_H)}px`;
-    ph.style.margin = `${CARD_PAD.t}px ${CARD_PAD.r}px ${CARD_PAD.b}px ${CARD_PAD.l}px`;
+    // svl-17v: a compact chip of one line, not a blank box the size of the card: `name · on the stage`. The card's
+    // own padding still becomes its margin, so the shelf keeps its flow; the chip is as wide as its text needs.
     const label = e.value ? e.value.name : byId.get(e.node) ? slotLabel(byId.get(e.node)!) : e.node;
+    const text = `${label} · on the stage`;
+    ph.style.width = `${Math.ceil(text.length * 7.4) + 28}px`;
+    ph.style.height = `${PH_MAX_H}px`;
+    ph.style.margin = `${CARD_PAD.t}px ${CARD_PAD.r}px ${CARD_PAD.b}px ${CARD_PAD.l}px`;
+    ph.title = text;
     ph.append(
       el(doc, 'span', 'md-slot-ph-name', label),
       el(doc, 'span', 'md-slot-ph-text', 'on the stage'),
@@ -1728,17 +1961,36 @@ export async function mountTwoPane(
             : `${shown.filled} of ${e.objects} objects`) + (inUse ? ' (one is on the stage)' : '');
       } else slot.cap.hidden = true;
     }
-    for (const c of cards.values()) c.wrap.classList.remove('md-on-stage');
+    for (const c of cards.values()) c.wrap.classList.remove('md-on-stage', 'md-past');
     for (const [key, c] of chipEls) if (!onStage.has(key)) c.remove();
+    // svl-17v: what an earlier call of the line made or used, and the current call does not, is de-emphasised
+    const curCallNow = plan?.calls?.find((pc) => pc.current);
+    const curKeys = new Set(
+      (stage?.participants ?? []).map((p) =>
+        cardKey(p, p.kind !== 'chip' && (entryOf.get(p.node)?.objects ?? 0) > 1),
+      ),
+    );
+    for (const c of chipEls.values()) c.classList.remove('md-past');
     for (const [key, s] of onStage) {
       const wrap = s.card ? s.card.wrap : chipEl(key, s.item.participant);
       canvas.append(wrap);
       wrap.classList.add('md-on-stage');
+      wrap.classList.toggle(
+        'md-past',
+        curCallNow !== undefined &&
+          s.item.call !== undefined &&
+          s.item.call < curCallNow.call &&
+          !curKeys.has(key),
+      );
       place(wrap, s.item.rect, s.card !== null);
     }
     for (const [bc, rect] of boxCards) {
       canvas.append(bc.wrap);
       bc.wrap.classList.add('md-on-stage');
+      bc.wrap.classList.toggle(
+        'md-past',
+        plan?.calls?.some((pc) => pc.node === bc.node && !pc.current) === true,
+      );
       place(bc.wrap, rect, true);
     }
 
@@ -2439,6 +2691,11 @@ export async function mountTwoPane(
     wrap.style.position = 'absolute';
     wrap.style.left = `${r.x - l}px`;
     wrap.style.top = `${r.y - t}px`;
+    // a chip is drawn as wide as its plan rect, so the wires that end at it touch it
+    if (!padded) {
+      wrap.style.width = `${r.w}px`;
+      wrap.style.height = `${r.h}px`;
+    }
   }
 
   function drawWires(): void {
