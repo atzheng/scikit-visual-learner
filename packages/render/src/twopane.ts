@@ -1040,7 +1040,9 @@ export function planCreations(moves: readonly CardMove[], reverse: boolean): Set
 
 /** svl-jhe: a wire's identity across steps: its two cards and its graph edge (the owner line has none). */
 export function wireId(w: Pick<PlanWire, 'from' | 'to' | 'edge'>): string {
-  return `${w.from}>${w.to}|${w.edge ?? ''}`;
+  // a line's first call is `box` while it is alone on the stage and `box#0` once the group has more
+  const k = (key: string): string => (key === 'box' ? 'box#0' : key);
+  return `${k(w.from)}>${k(w.to)}|${w.edge ?? ''}`;
 }
 
 /**

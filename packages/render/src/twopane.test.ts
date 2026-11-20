@@ -1094,6 +1094,8 @@ describe('planMoves (pure)', () => {
     // the same cards under another edge are a different wire; the owner line (no edge) has an identity too
     expect(diffWires([w('a', 'b', 'x')], [w('a', 'b', 'y')]).kept).toEqual([]);
     expect(diffWires([w('a', 'b', null)], [w('a', 'b', null)]).kept).toHaveLength(1);
+    // a line's first call is `box` alone and `box#0` in a group: the same wire
+    expect(diffWires([w('a', 'box', 'x')], [w('a', 'box#0', 'x')]).kept).toHaveLength(1);
     expect(diffWires([], [])).toEqual({ kept: [], added: [], removed: [] });
   });
   test('creation flourish (svl-2db): only new cards of a forward step', () => {
