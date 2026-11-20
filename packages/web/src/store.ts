@@ -9,7 +9,13 @@ import { progressText, versionsText } from './runtime/status';
 
 /** CONTRACTS.md section 7. */
 export interface AppState {
-  runtime: { state: RuntimeState; progress: string; versions?: Record<string, string> };
+  runtime: {
+    state: RuntimeState;
+    progress: string;
+    versions?: Record<string, string>;
+    /** True when loading Python failed (the state stays 'loading'). */
+    failed?: boolean;
+  };
   source: string;
   setSource(s: string): void;
   origin: 'starter' | 'autosave' | 'link' | 'edited';
@@ -156,7 +162,8 @@ export function startRuntime(): void {
   const set = useStore.setState;
   let crashNote: string | null = null; // shown while the replacement worker loads
   const rt = getRuntime({
-    onProgress: (p) => set((s) => ({ runtime: { ...s.runtime, progress: progressText(p) } })),
+    onProgress: (p) =>
+      set((s) => ({ runtime: { ...s.runtime, failed: false, progress: progressText(p) } })),
     onReady: (versions) =>
       set((s) => ({ runtime: { ...s.runtime, versions, progress: versionsText(versions) } })),
     onState: (state) =>
@@ -173,7 +180,7 @@ export function startRuntime(): void {
                 ? versionsText(v)
                 : s.runtime.progress;
         if (state === 'ready') crashNote = null;
-        return { runtime: { ...s.runtime, state, progress } };
+        return { runtime: { ...s.runtime, state, progress, failed: false } };
       }),
     onError: (message, kind) => {
       if (kind === 'crash') {
@@ -181,7 +188,12 @@ export function startRuntime(): void {
         return; // the following 'restarting' state carries the note
       }
       set((s) => ({
-        runtime: { ...s.runtime, state: 'loading', progress: `Python failed to load: ${message}` },
+        runtime: {
+          ...s.runtime,
+          state: 'loading',
+          failed: true,
+          progress: `Python failed to load: ${message}`,
+        },
       }));
     },
   });

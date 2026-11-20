@@ -130,9 +130,8 @@ const ISOLATION_HELP =
 
 /** Large, obvious indicator over the diagram area while Python loads or restarts. */
 function LoadingOverlay() {
-  const { state, progress } = useStore((s) => s.runtime);
+  const { state, progress, failed = false } = useStore((s) => s.runtime);
   if (state !== 'loading' && state !== 'restarting') return null;
-  const failed = progress.startsWith('Python failed');
   const title = failed
     ? 'Python could not load'
     : state === 'restarting'
@@ -151,9 +150,11 @@ function LoadingOverlay() {
 
 function StatusLine() {
   const { state, progress } = useStore((s) => s.runtime);
+  // While the loading overlay is up it is the announcer; the footer would repeat it.
+  const overlayUp = state === 'loading' || state === 'restarting';
   const isolated = typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated;
   return (
-    <footer className="status" role="status">
+    <footer className="status" role={overlayUp ? undefined : 'status'}>
       <span>
         {state}: {progress}
       </span>
