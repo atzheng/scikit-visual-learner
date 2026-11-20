@@ -1019,6 +1019,25 @@ export function planMoves(
   return out;
 }
 
+/** Time the output wire takes to draw in the creation flourish, in ms (it starts a little before phase 3 ends). */
+const DRAW_MS = 280;
+/** How long the accent ring around a new card expands and fades, in ms. */
+const RING_MS = 450;
+/** How long the producing call box's press takes, in ms. */
+const PRESS_MS = 220;
+
+/**
+ * svl-2db: which cards get the creation flourish (pop, ring, wire draw). Only cards that were not visible before
+ * the step and arrive in phase 3 of a forward step: objects the step made. An output that was already on the shelf
+ * (kind `move`) flies in plain, and stepping back has no flourish at all.
+ */
+export function planCreations(moves: readonly CardMove[], reverse: boolean): Set<string> {
+  const keys = new Set<string>();
+  if (reverse) return keys;
+  for (const m of moves) if (m.kind === 'enter' && m.phase === 3) keys.add(m.key);
+  return keys;
+}
+
 export interface TwoPaneController {
   /** Show step `step` (clamped; NaN is 0). Snaps unless `opts.animate`. A running animation is finished first. */
   setStep(step: number, opts?: SetStepOptions): void;
@@ -1778,10 +1797,12 @@ export async function mountTwoPane(
       { before: before.rel, after: after.rel },
       { keys: outs, reverse },
     );
+    const fresh = planCreations(moves, reverse);
     const present = [0, 1, 2, 3].map((n) => moves.some((m) => m.phase === n));
     // the delay of a phase: one MOVE_MS for every earlier phase that has something in it
     const slotOf = (n: number): number => present.slice(0, n).filter(Boolean).length * MOVE_MS;
-    const callBox = left ? left.box : rectOf(callBoxEl());
+    const callEl = left ? null : callBoxEl();
+    const callBox = left ? left.box : rectOf(callEl);
     const centre = (r: Rect): [number, number] => [r.x + r.w / 2, r.y + r.h / 2];
     for (const mv of moves) {
       const timing = { delay: slotOf(mv.phase) };
@@ -1860,16 +1881,59 @@ export async function mountTwoPane(
           const [bx, by] = centre(callBox);
           from = `translate(${(bx - cx) / k}px, ${(by - cy) / k}px) scale(0.3)`;
         }
+        const pop = fresh.has(mv.key);
         play(
           w,
-          [
-            { opacity: 0, transform: from },
-            { opacity: 1, transform: 'none' },
-          ],
+          pop
+            ? [
+                { opacity: 0, transform: from, offset: 0 },
+                { opacity: 1, transform: 'scale(1.06)', offset: 0.75 },
+                { opacity: 1, transform: 'none', offset: 1 },
+              ]
+            : [
+                { opacity: 0, transform: from },
+                { opacity: 1, transform: 'none' },
+              ],
           a,
           timing,
         );
+        if (pop && typeof w.animate === 'function') {
+          // a soft accent ring expands and fades once the card has landed (a box-shadow: it is not part of the
+          // card's layout, and no state is left behind)
+          running.push(
+            w.animate(
+              [
+                { boxShadow: '0 0 0 0 color-mix(in srgb, var(--md-focus) 55%, transparent)' },
+                { boxShadow: '0 0 0 9px color-mix(in srgb, var(--md-focus) 0%, transparent)' },
+              ],
+              {
+                duration: RING_MS,
+                easing: 'ease-out',
+                delay: timing.delay + MOVE_MS,
+                fill: 'backwards',
+              },
+            ),
+          );
+        }
       }
+    }
+    // the producing call box gives a short press as the outputs come out
+    if (fresh.size > 0 && callEl && typeof callEl.animate === 'function') {
+      // an SVG box scales about its own centre
+      if (callEl instanceof SVGElement) {
+        callEl.style.transformBox = 'fill-box';
+        callEl.style.transformOrigin = 'center';
+      }
+      running.push(
+        callEl.animate(
+          [
+            { transform: 'scale(1)' },
+            { transform: 'scale(0.96)', offset: 0.4 },
+            { transform: 'scale(1)' },
+          ],
+          { duration: PRESS_MS, easing: 'ease-out', delay: slotOf(3) },
+        ),
+      );
     }
     // the old wires fade out at the start (a ghost layer, so they are not hit-tested or read), the new wires and
     // values fade in once the cards have landed
@@ -1906,10 +1970,37 @@ export async function mountTwoPane(
     const appear = [{ opacity: 0 }, { opacity: 1 }];
     for (const e of wiresSvg.querySelectorAll('[data-wire]')) {
       const edge = edgeOf.get(e.getAttribute('data-wire') ?? '');
-      play(e, appear, null, {
-        delay: edge && outEdges.has(edge) ? outputAt : inputAt,
-        duration: FADE_MS,
-      });
+      const isOut = edge !== undefined && edge !== null && outEdges.has(edge);
+      const path = e.querySelector('path.md-wire');
+      if (
+        fresh.size > 0 &&
+        isOut &&
+        path &&
+        !e.classList.contains('md-owner-line') &&
+        typeof path.animate === 'function'
+      ) {
+        // the output wire draws from the call to the new card as the card settles; the group (with its
+        // arrowhead) shows only near the end of the draw
+        path.setAttribute('pathLength', '1');
+        const at = Math.max(0, outputAt - 120);
+        running.push(
+          path.animate(
+            [
+              { strokeDasharray: '1 1', strokeDashoffset: 1 },
+              { strokeDasharray: '1 1', strokeDashoffset: 0 },
+            ],
+            { duration: DRAW_MS, easing: 'ease-out', delay: at, fill: 'backwards' },
+          ),
+        );
+        const settle = (): void => path.removeAttribute('pathLength');
+        restores.push(settle);
+        play(e, [{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], null, {
+          delay: at,
+          duration: DRAW_MS,
+        });
+        continue;
+      }
+      play(e, appear, null, { delay: isOut ? outputAt : inputAt, duration: FADE_MS });
     }
     // the inline values sit in one block: with the outputs when the call has any, else with the inputs
     const valuesAt = (cs?.values ?? []).some((v) => v.role === 'output') ? outputAt : inputAt;
